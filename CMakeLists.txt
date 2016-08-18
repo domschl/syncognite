@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 
 set(CMAKE_BUILD_TYPE Debug)
-include_directories("/usr/local/include")
+# include_directories("/usr/local/include")
 project(cpneural)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
 add_subdirectory (cptest)
