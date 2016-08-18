@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "cp-layer.h"
+#include "cp-math.h"
 
 bool Layer::checkForward(MatrixN& x, floatN eps=1.0e-6) {
     bool allOk=true;
