@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <eigen3/Eigen/Dense>
 
 #include "cp-layer.h"
 

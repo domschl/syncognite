@@ -7,7 +7,7 @@
 #include <cmath>
 #include <vector>
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 //#include <eigen3/unsupported/Eigen/CXX11/Tensor>
 
 using std::vector;
