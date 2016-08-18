@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
+
+set(CMAKE_BUILD_TYPE Debug)
+include_directories("/usr/local/include")
+project(cpneural)
+
+add_subdirectory (cpneural)
+add_subdirectory (cptest)
+
+set_property(TARGET cpneural PROPERTY CXX_STANDARD 11)
+set_property(TARGET testneural PROPERTY CXX_STANDARD 11)
