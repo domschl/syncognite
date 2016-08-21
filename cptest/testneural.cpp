@@ -217,15 +217,15 @@ bool checkSoftmax(float eps=1.0e-6) {
     if (!ret) allOk=false;
     floatN loss0=sm.loss(y);
     floatN d=loss-loss0;
-    floatN err=d*d;
+    floatN err=abs(d);
     if (err > eps) {
         cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
     } else {
         cout << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
-    MatrixN dchain=x;
-    dchain.setOnes();
+    //MatrixN dchain=x;
+    //dchain.setOnes();
     MatrixN dx0=sm.backward(y);
     ret=matComp(dx,dx0,"Softmax dx",eps);
     if (!ret) allOk=false;
@@ -272,20 +272,20 @@ bool checkTwoLayer(float eps=1.0e-6) {
     if (!ret) allOk=false;
 
     MatrixN dW1(5,4);
-    dW1 << -0.7       , -0.64736842, -0.59473684, -0.54210526,
-           -0.48947368, -0.43684211, -0.38421053, -0.33157895,
-           -0.27894737, -0.22631579, -0.17368421, -0.12105263,
-           -0.06842105, -0.01578947,  0.03684211,  0.08947368,
-            0.14210526,  0.19473684,  0.24736842,  0.3;
+    dW1 << -0.16400759, -0.16400759, -0.16400759, -0.16400759,
+           -0.10147167, -0.10147167, -0.10147167, -0.10147167,
+           -0.03893575, -0.03893575, -0.03893575, -0.03893575,
+            0.02360017,  0.02360017,  0.02360017,  0.02360017,
+            0.08613609,  0.08613609,  0.08613609,  0.08613609;
     MatrixN db1(1,4);
-    db1 << -0.1       ,  0.23333333,  0.56666667,  0.9;
+    db1 << 0.02918343,  0.02918343,  0.02918343,  0.02918343;
     MatrixN dW2(4,2);
-    dW2 << -0.3, -0.2,
-           -0.1,  0. ,
-            0.1,  0.2,
-            0.3,  0.4;
+    dW2 << -1.83041352,  1.83041352,
+           -1.82522911,  1.82522911,
+           -1.8200447 ,  1.8200447 ,
+           -1.81486029,  1.81486029;
     MatrixN db2(1,2);
-    db2 << -0.9,  0.1;
+    db2 << -0.29183429,  0.29183429;
 
     // XXX reg parameter
     floatN reg=0.0;
@@ -293,9 +293,9 @@ bool checkTwoLayer(float eps=1.0e-6) {
     floatN lsc = 1.1925059294331903;
     floatN lse=abs(ls-lsc);
     if (lse < eps) {
-        cout << "TwoLayerNet: loss-err" << lse << " for reg=" << reg << " OK." << endl;
+        cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
     } else {
-        cout << "TwoLayerNet: loss-err" << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
+        cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
     MatrixN dx0=tln.backward(yc);
@@ -315,6 +315,7 @@ bool checkTwoLayer(float eps=1.0e-6) {
 }
 
 int main() {
+    cout << "=== 1.: Numerical gradient tests" << endl;
     bool allOk=true;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
@@ -344,8 +345,11 @@ int main() {
     TwoLayerNet tl({4,5,6});
     MatrixN xtl(30,4);
     xtl.setRandom();
-    if (!tl.checkAll(xtl)) {
+    MatrixN y2(30,1);
+    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%6);
+    if (!tl.checkLoss(xtl,y2)) {
         allOk=false;
+        cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
 
     int smN=10, smC=4;
@@ -357,6 +361,8 @@ int main() {
     if (!mx.checkLoss(xmx, y)) {
         allOk=false;
     }
+
+    cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
         cout << green << "AffineForward (Affine) with test data: OK." << def << endl;

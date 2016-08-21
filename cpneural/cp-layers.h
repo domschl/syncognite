@@ -322,6 +322,10 @@ public:
         params[0]=new MatrixN(1,topo[0]); // x
         grads=vector<MatrixN *>(1);
         grads[0]=new MatrixN(1,topo[0]); // dx
+
+        cache=vector<MatrixN *>(2);   // XXX redundant with softwmax-layer?!
+        cache[0]=new MatrixN(1,topo[1]); // probs
+        cache[1]=new MatrixN(1,1); // y
     }
     ~TwoLayerNet() {
         delete af1;
@@ -338,16 +342,36 @@ public:
             delete grads[i];
             grads[i]=nullptr;
         }
+        for (unsigned int i=0; i<cache.size(); i++) {
+            delete cache[i];
+            cache[i]=nullptr;
+        }
     }
     virtual MatrixN forward(MatrixN& x) override {
+        if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
+            params[0]->resize(x.rows(), x.cols());
+            params[0]->setZero();
+            grads[0]->resize(x.rows(), x.cols());
+            grads[0]->setZero();
+            cache[0]->resize(x.rows(), x.cols());
+            cache[0]->setZero();
+        }
+        if (cache[1]->rows() != x.rows()) {
+            cache[1]->resize(x.rows(),1);
+            cache[1]->setZero();
+            for (int i=0; i<(*(cache[1])).size(); i++) (*(cache[1]))(i)= (-1.0); // XXX: for error testing
+        }
+
         *(params[0])=x;
         MatrixN y0=af1->forward(x);
         MatrixN y1=rl->forward(y0);
-        MatrixN y2=af2->forward(y1);
-        MatrixN y=sm->forward(y2);
+        MatrixN y=af2->forward(y1);
+        MatrixN yu=sm->forward(y);
+        *cache[0]=yu;
         return y;
     }
     virtual floatN loss(MatrixN& y) override {
+        *cache[1]=y;
         return sm->loss(y);
     }
     virtual MatrixN backward(MatrixN& dchain) override {
