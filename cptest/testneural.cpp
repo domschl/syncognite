@@ -233,6 +233,87 @@ bool checkSoftmax(float eps=1.0e-6) {
     return allOk;
 }
 
+bool checkTwoLayer(float eps=1.0e-6) {
+    bool allOk=true;   // N=3, D=5, H=4, C=2
+    MatrixN x(3,5);
+    x << -5.5       , -3.35714286, -1.21428571,  0.92857143,  3.07142857,
+         -4.78571429, -2.64285714, -0.5       ,  1.64285714,  3.78571429,
+         -4.07142857, -1.92857143,  0.21428571,  2.35714286,  4.5;
+    MatrixN yc(3,1);
+    yc << 0, 1, 1;
+    MatrixN W1(5,4);
+    W1 << -0.7       , -0.64736842, -0.59473684, -0.54210526,
+          -0.48947368, -0.43684211, -0.38421053, -0.33157895,
+          -0.27894737, -0.22631579, -0.17368421, -0.12105263,
+          -0.06842105, -0.01578947,  0.03684211,  0.08947368,
+           0.14210526,  0.19473684,  0.24736842,  0.3;
+    MatrixN b1(1,4);
+    b1 << -0.1       ,  0.23333333,  0.56666667,  0.9;
+    MatrixN W2(4,2);
+    W2 << -0.3, -0.2,
+          -0.1,  0.,
+           0.1,  0.2,
+           0.3,  0.4;
+    MatrixN b2(1,2);
+    b2 << -0.9,  0.1;
+
+    MatrixN sc(3,2); // Scores
+    sc << -0.88621554,  2.56401003,
+         -0.69824561,  2.46626566,
+         -0.51027569,  2.3685213;
+
+    TwoLayerNet tln({5,4,2});
+    *(tln.af1->params[1])=W1;
+    *(tln.af1->params[2])=b1;
+    *(tln.af2->params[1])=W2;
+    *(tln.af2->params[2])=b2;
+    MatrixN sc0=tln.forward(x);
+    bool ret=matComp(sc,sc0,"TwoLayerNetScores",eps);
+    if (!ret) allOk=false;
+
+    MatrixN dW1(5,4);
+    dW1 << -0.7       , -0.64736842, -0.59473684, -0.54210526,
+           -0.48947368, -0.43684211, -0.38421053, -0.33157895,
+           -0.27894737, -0.22631579, -0.17368421, -0.12105263,
+           -0.06842105, -0.01578947,  0.03684211,  0.08947368,
+            0.14210526,  0.19473684,  0.24736842,  0.3;
+    MatrixN db1(1,4);
+    db1 << -0.1       ,  0.23333333,  0.56666667,  0.9;
+    MatrixN dW2(4,2);
+    dW2 << -0.3, -0.2,
+           -0.1,  0. ,
+            0.1,  0.2,
+            0.3,  0.4;
+    MatrixN db2(1,2);
+    db2 << -0.9,  0.1;
+
+    // XXX reg parameter
+    floatN reg=0.0;
+    floatN ls = tln.loss(yc);
+    floatN lsc = 1.1925059294331903;
+    floatN lse=abs(ls-lsc);
+    if (lse < eps) {
+        cout << "TwoLayerNet: loss-err" << lse << " for reg=" << reg << " OK." << endl;
+    } else {
+        cout << "TwoLayerNet: loss-err" << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
+        allOk=false;
+    }
+    MatrixN dx0=tln.backward(yc);
+
+    //ret=matComp(dx,dx0,"AffineRelu dx",eps);
+    //if (!ret) allOk=false;
+    ret=matComp(dW1,*(tln.af1->grads[1]),"TwoLayerNet dW1",eps);
+    if (!ret) allOk=false;
+    ret=matComp(db1,*(tln.af1->grads[2]),"TwoLayerNet db1",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dW2,*(tln.af2->grads[1]),"TwoLayerNet dW2",eps);
+    if (!ret) allOk=false;
+    ret=matComp(db2,*(tln.af2->grads[2]),"TwoLayerNet db2",eps);
+    if (!ret) allOk=false;
+
+    return allOk;
+}
+
 int main() {
     bool allOk=true;
     Color::Modifier red(Color::FG_RED);

@@ -301,4 +301,63 @@ public:
         return *grads[0];
     }
 };
+
+
+class TwoLayerNet : public Layer {
+public:
+    Affine *af1;
+    Relu *rl;
+    Affine *af2;
+    Softmax *sm;
+    TwoLayerNet(vector<int> topo) {
+        assert (topo.size()==3);
+        layername="TwoLayerNet";
+        names=vector<string>{"x"};
+        af1=new Affine({topo[0],topo[1]});
+        rl=new Relu({topo[1]});
+        af2=new Affine({topo[1],topo[2]});
+        sm=new Softmax({topo[2]});
+
+        params=vector<MatrixN *>(1);
+        params[0]=new MatrixN(1,topo[0]); // x
+        grads=vector<MatrixN *>(1);
+        grads[0]=new MatrixN(1,topo[0]); // dx
+    }
+    ~TwoLayerNet() {
+        delete af1;
+        af1=nullptr;
+        delete rl;
+        rl=nullptr;
+        delete af2;
+        af2=nullptr;
+        delete sm;
+        sm=nullptr;
+        for (unsigned int i=0; i<params.size(); i++) {
+            delete params[i];
+            params[i]=nullptr;
+            delete grads[i];
+            grads[i]=nullptr;
+        }
+    }
+    virtual MatrixN forward(MatrixN& x) override {
+        *(params[0])=x;
+        MatrixN y0=af1->forward(x);
+        MatrixN y1=rl->forward(y0);
+        MatrixN y2=af2->forward(y1);
+        MatrixN y=sm->forward(y2);
+        return y;
+    }
+    virtual floatN loss(MatrixN& y) override {
+        return sm->loss(y);
+    }
+    virtual MatrixN backward(MatrixN& dchain) override {
+        MatrixN dx3=sm->backward(dchain);
+        MatrixN dx2=af2->backward(dx3);
+        MatrixN dx1=rl->backward(dx2);
+        MatrixN dx=af1->backward(dx1);
+        *(grads[0])=dx;
+        return dx;
+    }
+};
+
 #endif
