@@ -341,6 +341,13 @@ int main() {
         allOk=false;
     }
 
+    TwoLayerNet tl({4,5,6});
+    MatrixN xtl(30,4);
+    xtl.setRandom();
+    if (!tl.checkAll(xtl)) {
+        allOk=false;
+    }
+
     int smN=10, smC=4;
     Softmax mx({smC});
     MatrixN xmx(smN,smC);
@@ -390,6 +397,13 @@ int main() {
         cout << green << "Softmax with test data: OK." << def << endl;
     } else {
         cout << red << "Softmax with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkTwoLayer()) {
+        cout << green << "TwoLayerNet with test data: OK." << def << endl;
+    } else {
+        cout << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
 
