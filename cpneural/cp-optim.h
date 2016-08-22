@@ -3,11 +3,9 @@
 
 #include "cp-layer.h"
 
-typedef map<string, floatN> parmap;
-
 class optimizer {
 public:
-    parmap params;
+    t_params params;
         /*
         optimizer(map<string, floatN>& ps) {
         for (parmap iterator = ps.begin; iterator != ps.end(); iterator++) {
@@ -45,4 +43,23 @@ class sdg : optimizer {
     };
 }
 
+Optimizer *optimizerFactory(string name, t_params params) {
+    if (name=="sdg") return new sdg(params);
+    cout << "optimizerFactory called for unknown optimizer " << name << "." << endl;
+    return nullptr;
+}
+
+floatN learn(MatrixN& x, MatrixN& y, string optimizer, t_params pars) {
+    Optimizer* popti=optimizerFactory("sdg", pars);
+    unsigned int ep=(unsigned int)poti->getPar("epochs", 1.0);
+    unsigned int bs=(unsigned int)poti->getPar("batch_size", 100.0);
+    
+    for (unsigned int i=0; i<ep; i++) {
+        forward(x);
+        loss(y);
+        backward(y);
+        // optimize(poti);
+    }
+    return 0.0;
+}
 #endif
