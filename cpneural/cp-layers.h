@@ -1,7 +1,7 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
-#include <cp-layer.h>
+#include "cp-layer.h"
 
 /*template<typename T> Layer * createInstance() { return new T; }
 

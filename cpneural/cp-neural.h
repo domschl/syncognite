@@ -18,5 +18,6 @@ using std::string;
 #include "cp-layer.h"
 #include "cp-layers.h"
 #include "cp-layer-tests.h"
+#include "cp-optim.h"
 
 #endif
