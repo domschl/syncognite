@@ -314,7 +314,31 @@ bool checkTwoLayer(float eps=1.0e-6) {
     return allOk;
 }
 
+bool registerTest() {
+    bool allOk=true;
+    cout << "Registerd Layers:" << endl;
+    int nr=1;
+    for (auto it : _syncogniteLayerFactory.mapl) {
+        cout << nr << ".: " << it.first << " ";
+        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
+        t_layer_topo tp=std::vector<int>(te);
+        Layer *l = CREATE_LAYER(it.first, tp)
+        if (l->layerType == LT_NORMAL) {
+            cout << "normal layer" << endl;
+        } else if (l->layerType==LT_LOSS) {
+            cout << "loss-layer (final)" << endl;
+        } else {
+            cout << "unspecified layer -- ERROR!" << endl;
+            allOk=false;
+        }
+        ++nr;
+    }
+    return allOk;
+}
+
 int main() {
+    cout << "=== 0.: Init: registering layers" << endl;
+    registerLayers();
     cout << "=== 1.: Numerical gradient tests" << endl;
     bool allOk=true;
     Color::Modifier red(Color::FG_RED);
@@ -410,6 +434,13 @@ int main() {
         cout << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {
         cout << red << "TwoLayerNet with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (registerTest()) {
+        cout << green << "RgisterTest: OK." << def << endl;
+    } else {
+        cout << red << "RgisterTest: ERROR." << def << endl;
         allOk=false;
     }
 

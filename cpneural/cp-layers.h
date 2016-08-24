@@ -3,17 +3,6 @@
 
 #include "cp-layer.h"
 
-/*template<typename T> Layer * createInstance() { return new T; }
-
-typedef std::map<std::string, Layer*(*)()> map_type;
-
-map_type layermap;
-layermap["Affine"] = &createInstance<Affine>;
-layermap["Relu"] = &createInstance<Relu>;
-layermap["AffineRelu"] = &createInstance<AffineRelu>;
-layermap["Softmax"] = &createInstance<Softmax>;
-*/
-
 class Nonlinearities {
 public:
     MatrixN sigmoid(MatrixN& m) {
@@ -34,8 +23,8 @@ class Affine : public Layer {
 public:
     Affine(t_layer_topo topo) {
         assert (topo.size()==2);
-        layername="Affine";
-        lt=LayerType::LT_NORMAL;
+        layerName="Affine";
+        layerType=LayerType::LT_NORMAL;
         names=vector<string>{"x", "W", "b"};
         params=vector<MatrixN *>(3);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -68,7 +57,7 @@ public:
         MatrixN *pW=params[1];
         MatrixN *pb=params[2];
         if (pW->rows() != x.cols()) {
-            cout << layername << ": " << "Forward: dimension mismatch in x*W: x:" << shape(*px) << " W:"<< shape(*pW) << endl;
+            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(*px) << " W:"<< shape(*pW) << endl;
             MatrixN y(0,0);
             return y;
         }
@@ -96,8 +85,8 @@ class Relu : public Layer {
 public:
     Relu(t_layer_topo topo) {
         assert (topo.size()==1);
-        layername="Relu";
-        lt=LayerType::LT_NORMAL;
+        layerName="Relu";
+        layerType=LayerType::LT_NORMAL;
         names=vector<string>{"x"};
         params=vector<MatrixN *>(1);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -116,7 +105,7 @@ public:
     virtual MatrixN forward(MatrixN& x) override {
         MatrixN *px=params[0];
         if (px->cols() != x.cols()) {
-            cout << layername << ": " << "Forward: dimension mismatch in Relu(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
+            cout << layerName << ": " << "Forward: dimension mismatch in Relu(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
             return MatrixN(0,0);
         }
         if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
@@ -153,8 +142,8 @@ public:
     Relu *rl;
     AffineRelu(t_layer_topo topo) {
         assert (topo.size()==2);
-        layername="AffineRelu";
-        lt=LayerType::LT_NORMAL;
+        layerName="AffineRelu";
+        layerType=LayerType::LT_NORMAL;
         names=vector<string>{"x"};
         af=new Affine({topo[0],topo[1]});
         rl=new Relu({topo[1]});
@@ -194,8 +183,8 @@ class Softmax : public Layer {
 public:
     Softmax(t_layer_topo topo) {
         assert (topo.size()==1);
-        layername="Softmax";
-        lt=LayerType::LT_LOSS;
+        layerName="Softmax";
+        layerType=LayerType::LT_LOSS;
         names=vector<string>{"x"};
         params=vector<MatrixN *>(1);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -222,7 +211,7 @@ public:
     virtual MatrixN forward(MatrixN& x) override {
         MatrixN *px=params[0];
         if (px->cols() != x.cols()) {
-            cout << layername << ": " << "Sm forward: dimension mismatch in Softmax(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
+            cout << layerName << ": " << "Sm forward: dimension mismatch in Softmax(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
             return MatrixN(0,0);
         }
         if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
@@ -261,16 +250,16 @@ public:
     virtual floatN loss(MatrixN& y) override {
         MatrixN probs=*cache[0];
         if (y.rows() != probs.rows() || y.cols() != 1) {
-            cout << layername << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
+            cout << layerName << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             cout << "y:" << endl << y << endl;
             return 1000.0;
         }
         if ((*cache[1]).rows() !=y.rows()) {
-            cout << layername << ": Internal error, cache[1] wrong size: " << (*cache[1]).rows() << "!=" << y.rows() << endl;
+            cout << layerName << ": Internal error, cache[1] wrong size: " << (*cache[1]).rows() << "!=" << y.rows() << endl;
             return 1000.0;
         }
         if ((*cache[1]).cols() !=1) {
-            cout << layername << ": Internal error, cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
+            cout << layerName << ": Internal error, cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
             return 1000.0;
         }
         if (y.cols()!=1) {
@@ -278,7 +267,7 @@ public:
         }
         *cache[1]=y;
         if ((*cache[1]).cols() !=1) {
-            cout << layername << ": Internal error (2), cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
+            cout << layerName << ": Internal error (2), cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
             return 1000.0;
         }
         floatN loss=0.0;
@@ -315,8 +304,8 @@ public:
     Softmax *sm;
     TwoLayerNet(t_layer_topo topo) {
         assert (topo.size()==3);
-        layername="TwoLayerNet";
-        lt=LayerType::LT_LOSS;
+        layerName="TwoLayerNet";
+        layerType=LayerType::LT_LOSS;
         names=vector<string>{"x"};
         af1=new Affine({topo[0],topo[1]});
         rl=new Relu({topo[1]});
@@ -389,23 +378,11 @@ public:
     }
 };
 
-/*
-template<typename T>
-Layer* createInstance(t_layer_topo t) {
-    return new T(t);
+void registerLayers() {
+    REGISTER_LAYER("Affine", Affine, 2)
+    REGISTER_LAYER("Relu", Relu, 1)
+    REGISTER_LAYER("AffineRelu", AffineRelu, 2)
+    REGISTER_LAYER("Softmax", Softmax, 1)
+    REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
 }
-
-typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layermap;
-
-t_layermap mapl;
-t_layer_topo tl{0,0};
-mapl["Affine"] = &(createInstance<Affine>(tl));
-
-//layermap["Relu"] = &createInstance<Relu>;
-//layermap["AffineRelu"] = &createInstance<AffineRelu>;
-//layermap["Softmax"] = &createInstance<Softmax>;
-*/
-
-
-
 #endif

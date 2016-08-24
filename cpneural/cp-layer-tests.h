@@ -204,11 +204,11 @@ bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN 
     backward(dchain);
 
     if (params.size() != grads.size()) {
-        cout << layername << ": " << "Internal error: params has " << params.size() << " parameters, ngrads has " << grads.size() << " parameters. Count must be equal!" << endl;
+        cout << layerName << ": " << "Internal error: params has " << params.size() << " parameters, ngrads has " << grads.size() << " parameters. Count must be equal!" << endl;
         return false;
     }
     if (params.size() != names.size()) {
-        cout << layername << ": " << "Internal error: params has " << params.size() << " parameters, names-parameter nms has " << names.size() << " parameters. Count must be equal!" << endl;
+        cout << layerName << ": " << "Internal error: params has " << params.size() << " parameters, names-parameter nms has " << names.size() << " parameters. Count must be equal!" << endl;
         return false;
     }
     vector<MatrixN *> numGrads(grads.size());
@@ -222,7 +222,7 @@ bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN 
             vector<unsigned int> s0, s1;
             s0 = shape(*(params[i]));
             s1 = shape(*(numGrads[i]));
-            cout << layername << ": " << "Dimension mismatch params/numGrads ind[" << names[i] << "]: " << i << ", " << names[i] << s0 << " != d" << names[i] << s1 << endl;
+            cout << layerName << ": " << "Dimension mismatch params/numGrads ind[" << names[i] << "]: " << i << ", " << names[i] << s0 << " != d" << names[i] << s1 << endl;
             return false;
         }
     }
@@ -236,12 +236,12 @@ bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN 
         MatrixN d = *(grads[m]) - *(numGrads[m]);
         floatN df = (d.cwiseProduct(d)).sum();
         if (df < eps) {
-            cout << layername << ": " << "∂/∂" << names[m] << green << " OK, err=" << df << def << endl;
+            cout << layerName << ": " << "∂/∂" << names[m] << green << " OK, err=" << df << def << endl;
         } else {
             cout << "∂/∂" << names[m] << "[num]: " << endl << (*(numGrads[m])).format(CleanFmt) << endl;
             cout << "∂/∂" << names[m] << "[the]: " << endl << (*(grads[m])).format(CleanFmt) << endl;
             cout << "  ð" << names[m] << "    : " << endl << ((*(grads[m])) - (*(numGrads[m]))).format(CleanFmt) << endl;
-            cout << layername << ": " << "∂/∂" << names[m] << red << " ERROR, err=" << df << def << endl;
+            cout << layerName << ": " << "∂/∂" << names[m] << red << " ERROR, err=" << df << def << endl;
             allOk=false;
         }
     }
@@ -263,32 +263,32 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN eps=
 
     ret=checkForward(*(params[0]), eps);
     if (!ret) {
-        cout << layername << ": " << red << "Forward vectorizing test failed!" << def << endl;
+        cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
         return ret;
     } else {
-        cout << layername << ": "<< green << "Forward vectorizing test OK!" << def << endl;
+        cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
     }
 
     ret=checkBackward(dchain, eps);
     if (!ret) {
-        cout << layername << ": " << red << "Backward vectorizing test failed!" << def << endl;
+        cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         return ret;
     } else {
-        cout << layername << ": " << green << "Backward vectorizing test OK!" << def << endl;
+        cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
     }
 
     ret=checkGradients(x, dchain, h, eps, lossFkt);
     if (!ret) {
-        cout << layername << ": " << red << "Gradient numerical test failed!" << def << endl;
+        cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
     } else {
-        cout << layername << ": " << green << "Gradient numerical test OK!" << def << endl;
+        cout << layerName << ": " << green << "Gradient numerical test OK!" << def << endl;
     }
 
     if (allOk) {
-        cout << layername << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
+        cout << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
     } else {
-        cout << layername << ": " << red << "checkLayer: tests ended with error!" << def << endl;
+        cout << layerName << ": " << red << "checkLayer: tests ended with error!" << def << endl;
     }
     return allOk;
 }

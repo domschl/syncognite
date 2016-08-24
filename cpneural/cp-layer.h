@@ -42,12 +42,13 @@ vector<unsigned int> shape(MatrixN& m) {
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
 
 typedef std::vector<int> t_layer_topo;
-
+typedef int t_layer_props_entry;
+typedef std::map<string, t_layer_props_entry> t_layer_props;
 class Layer;
 
 template<typename T>
-Layer* createLayerInstance(int i) {
-    return new T(i);
+Layer* createLayerInstance(t_layer_topo tp) {
+    return new T(tp);
 }
 
 typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
@@ -55,8 +56,10 @@ typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
 class LayerFactory {
 public:
     t_layer_creator_map mapl;
-    void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo) ) {
+    t_layer_props mapprops;
+    void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo), t_layer_props_entry lprops ) {
         mapl[name] = sub;
+        mapprops[name] = lprops;
     }
     Layer* createLayerInstance(std::string name, t_layer_topo tp) {
         return mapl[name](tp);
@@ -65,6 +68,8 @@ public:
 
 LayerFactory _syncogniteLayerFactory;
 
+#define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
+#define CREATE_LAYER(LayerName, topo) _syncogniteLayerFactory.createLayerInstance(LayerName, topo);
 /*
 register:
     _syncogniteLayerFactory.registerInstanceCreator("LayerName",&createLayerInstance<LayerClassName>);
@@ -75,8 +80,8 @@ create a registered layer:
 
 class Layer {
 public:
-    string layername;
-    LayerType lt;
+    string layerName;
+    LayerType layerType;
     vector<MatrixN *> params;
     vector<MatrixN *> grads;
     vector<MatrixN *> cache;
