@@ -41,6 +41,12 @@ vector<unsigned int> shape(MatrixN& m) {
 
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
 
+typedef struct LayerParams {
+    std::string layerName;
+    map<string, int> iParams;
+    map<string, floatN> fParams;
+} t_layer_params;
+
 typedef std::vector<int> t_layer_topo;
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
@@ -70,13 +76,7 @@ LayerFactory _syncogniteLayerFactory;
 
 #define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
 #define CREATE_LAYER(LayerName, topo) _syncogniteLayerFactory.createLayerInstance(LayerName, topo);
-/*
-register:
-    _syncogniteLayerFactory.registerInstanceCreator("LayerName",&createLayerInstance<LayerClassName>);
-create a registered layer:
-    auto layer=_syncogniteLayerFactory.createLayerInstance("LayerName", t_layer_topo tp);
-}
-*/
+
 
 class Layer {
 public:
