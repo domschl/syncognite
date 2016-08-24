@@ -32,9 +32,10 @@ public:
 
 class Affine : public Layer {
 public:
-    Affine(vector<int> topo) {
+    Affine(t_layer_topo topo) {
         assert (topo.size()==2);
         layername="Affine";
+        lt=LayerType::LT_NORMAL;
         names=vector<string>{"x", "W", "b"};
         params=vector<MatrixN *>(3);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -93,9 +94,10 @@ public:
 
 class Relu : public Layer {
 public:
-    Relu(vector<int> topo) {
+    Relu(t_layer_topo topo) {
         assert (topo.size()==1);
         layername="Relu";
+        lt=LayerType::LT_NORMAL;
         names=vector<string>{"x"};
         params=vector<MatrixN *>(1);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -149,9 +151,10 @@ class AffineRelu : public Layer {
 public:
     Affine *af;
     Relu *rl;
-    AffineRelu(vector<int> topo) {
+    AffineRelu(t_layer_topo topo) {
         assert (topo.size()==2);
         layername="AffineRelu";
+        lt=LayerType::LT_NORMAL;
         names=vector<string>{"x"};
         af=new Affine({topo[0],topo[1]});
         rl=new Relu({topo[1]});
@@ -189,9 +192,10 @@ public:
 
 class Softmax : public Layer {
 public:
-    Softmax(vector<int> topo) {
+    Softmax(t_layer_topo topo) {
         assert (topo.size()==1);
         layername="Softmax";
+        lt=LayerType::LT_LOSS;
         names=vector<string>{"x"};
         params=vector<MatrixN *>(1);
         params[0]=new MatrixN(1,topo[0]); // x
@@ -309,9 +313,10 @@ public:
     Relu *rl;
     Affine *af2;
     Softmax *sm;
-    TwoLayerNet(vector<int> topo) {
+    TwoLayerNet(t_layer_topo topo) {
         assert (topo.size()==3);
         layername="TwoLayerNet";
+        lt=LayerType::LT_LOSS;
         names=vector<string>{"x"};
         af1=new Affine({topo[0],topo[1]});
         rl=new Relu({topo[1]});
@@ -383,5 +388,21 @@ public:
         return dx;
     }
 };
+
+template<typename T>
+Layer* createInstance(t_layer_topo t) {
+    return new T(t);
+}
+
+typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layermap;
+
+t_layermap mapl;
+t_layer_topo tl{0,0};
+mapl["Affine"] = &(createInstance<Affine>(tl));
+/*layermap["Relu"] = &createInstance<Relu>;
+layermap["AffineRelu"] = &createInstance<AffineRelu>;
+layermap["Softmax"] = &createInstance<Softmax>;*/
+
+
 
 #endif

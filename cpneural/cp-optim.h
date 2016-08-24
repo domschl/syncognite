@@ -49,11 +49,11 @@ Optimizer *optimizerFactory(string name, t_params params) {
     return nullptr;
 }
 
-floatN learn(MatrixN& x, MatrixN& y, string optimizer, t_params pars) {
+floatN train(MatrixN& x, MatrixN& y, string optimizer, t_params pars) {
     Optimizer* popti=optimizerFactory("sdg", pars);
     unsigned int ep=(unsigned int)poti->getPar("epochs", 1.0);
     unsigned int bs=(unsigned int)poti->getPar("batch_size", 100.0);
-    
+
     for (unsigned int i=0; i<ep; i++) {
         forward(x);
         loss(y);

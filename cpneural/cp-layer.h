@@ -39,9 +39,14 @@ vector<unsigned int> shape(MatrixN& m) {
     return s;
 }
 
+enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
+
+typdef std::vector<int> t_layer_topo;
+
 class Layer {
 public:
     string layername;
+    LayerType lt;
     vector<MatrixN *> params;
     vector<MatrixN *> grads;
     vector<MatrixN *> cache;
@@ -51,9 +56,8 @@ public:
     virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y) { return 1001.0; }
 
-    floatN learn(MatrixN& x, MatrixN& y, string optimizer, t_params pars);
+    floatN train(MatrixN& x, MatrixN& y, string optimizer, t_params pars);
 
-    bool checkLayer(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
     bool checkAll(MatrixN& x);
     bool checkLoss(MatrixN& x, MatrixN& y0);
 private:
@@ -63,6 +67,7 @@ private:
     MatrixN calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h);
     MatrixN calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h);
     bool checkGradients(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
+    bool checkLayer(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
 };
 
 #endif
