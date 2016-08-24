@@ -389,6 +389,7 @@ public:
     }
 };
 
+/*
 template<typename T>
 Layer* createInstance(t_layer_topo t) {
     return new T(t);
@@ -399,9 +400,11 @@ typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layermap;
 t_layermap mapl;
 t_layer_topo tl{0,0};
 mapl["Affine"] = &(createInstance<Affine>(tl));
-/*layermap["Relu"] = &createInstance<Relu>;
-layermap["AffineRelu"] = &createInstance<AffineRelu>;
-layermap["Softmax"] = &createInstance<Softmax>;*/
+
+//layermap["Relu"] = &createInstance<Relu>;
+//layermap["AffineRelu"] = &createInstance<AffineRelu>;
+//layermap["Softmax"] = &createInstance<Softmax>;
+*/
 
 
 

@@ -41,7 +41,37 @@ vector<unsigned int> shape(MatrixN& m) {
 
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
 
-typdef std::vector<int> t_layer_topo;
+typedef std::vector<int> t_layer_topo;
+
+class Layer;
+
+template<typename T>
+Layer* createLayerInstance(int i) {
+    return new T(i);
+}
+
+typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
+
+class LayerFactory {
+public:
+    t_layer_creator_map mapl;
+    void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo) ) {
+        mapl[name] = sub;
+    }
+    Layer* createLayerInstance(std::string name, t_layer_topo tp) {
+        return mapl[name](tp);
+    }
+};
+
+LayerFactory _syncogniteLayerFactory;
+
+/*
+register:
+    _syncogniteLayerFactory.registerInstanceCreator("LayerName",&createLayerInstance<LayerClassName>);
+create a registered layer:
+    auto layer=_syncogniteLayerFactory.createLayerInstance("LayerName", t_layer_topo tp);
+}
+*/
 
 class Layer {
 public:
@@ -58,6 +88,7 @@ public:
 
     floatN train(MatrixN& x, MatrixN& y, string optimizer, t_params pars);
 
+    //bool register(string name, )
     bool checkAll(MatrixN& x);
     bool checkLoss(MatrixN& x, MatrixN& y0);
 private:
