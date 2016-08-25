@@ -20,6 +20,8 @@ using VectorN=Eigen::VectorXd;
 using RowVectorN=Eigen::RowVectorXd;
 using ArrayN=Eigen::ArrayXd;
 using floatN=double;
+#define CP_DEFAULT_NUM_H (1.e-6)
+#define CP_DEFAULT_NUM_EPS (1.e-10)
 #else
 #ifdef USE_FLOAT
 using MatrixN=Eigen::MatrixXf;
@@ -27,8 +29,12 @@ using VectorN=Eigen::VectorXf;
 using RowVectorN=Eigen::RowVectorXf;
 using ArrayN=Eigen::ArrayXf;
 using floatN=float;
+#define CP_DEFAULT_NUM_H (1.e-3)
+#define CP_DEFAULT_NUM_EPS (1.e-6)
 #endif
 #endif
+
+#define NULL_MAT (MatrixN(0,0))
 
 typedef map<string, floatN> t_params;
 
@@ -96,6 +102,7 @@ public:
     //bool register(string name, )
     bool checkAll(MatrixN& x);
     bool checkLoss(MatrixN& x, MatrixN& y0);
+    bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
 private:
     bool checkForward(MatrixN& x, floatN eps);
     bool checkBackward(MatrixN& dchain, floatN eps);
