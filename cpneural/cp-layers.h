@@ -307,7 +307,7 @@ public:
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
         names=vector<string>{"x"};
-        af1=new Affine({topo[0],topo[1]});
+        af1=new Affine({topo[0],topo[1]}); // XXX pointers to sub-objects?!
         rl=new Relu({topo[1]});
         af2=new Affine({topo[1],topo[2]});
         sm=new Softmax({topo[2]});
