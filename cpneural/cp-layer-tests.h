@@ -35,7 +35,7 @@ bool Layer::checkForward(MatrixN& x, floatN eps=1.0e-6) {
     return allOk;
 }
 
-bool Layer::checkBackward(MatrixN& dchain, floatN eps=1.0e-6) {
+bool Layer::checkBackward(MatrixN& dchain, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     MatrixN x = *(params[0]);
@@ -102,7 +102,7 @@ bool Layer::checkBackward(MatrixN& dchain, floatN eps=1.0e-6) {
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h=1.0e-3) {
+MatrixN Layer::calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h=CP_DEFAULT_NUM_H) {
     if (ind >= params.size()) {
         cout << "bad index! " << ind << endl;
         return MatrixN(0,0);
@@ -128,7 +128,7 @@ MatrixN Layer::calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h=1.0e-3) {
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h=1.0e-3) {
+MatrixN Layer::calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h=CP_DEFAULT_NUM_H) {
     if (ind >= params.size()) {
         cout << "bad index! " << ind << endl;
         return MatrixN(0,0);
@@ -153,7 +153,7 @@ MatrixN Layer::calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h=1.0e-
     return grad;
 }
 
-bool Layer::calcNumGrads(MatrixN& dchain, vector<MatrixN *>numGrads, floatN h=1.0e-3, bool lossFkt=false) {
+bool Layer::calcNumGrads(MatrixN& dchain, vector<MatrixN *>numGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
     MatrixN y=forward(*(params[0]));
     if (params.size() != grads.size()) {
         cout << "Internal error: params has " << params.size() << " parameters, grads has " << grads.size() << " parameters. Count must be equal!" << endl;
@@ -188,7 +188,7 @@ bool Layer::calcNumGrads(MatrixN& dchain, vector<MatrixN *>numGrads, floatN h=1.
     return true;
 }
 
-bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN eps=1.0e-6, bool lossFkt=false){
+bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -252,7 +252,7 @@ bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN 
     return allOk;
 }
 
-bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=1.0e-3, floatN eps=1.0e-6, bool lossFkt=false) {
+bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -328,4 +328,7 @@ bool Layer::checkLoss(MatrixN& x, MatrixN& y0) {
     return checkLayer(x, dchain, h, eps, true);
 }
 
+bool selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
+    //if (layerType == )
+}
 #endif
