@@ -337,6 +337,7 @@ bool registerTest() {
 }
 
 int main() {
+    MatrixN yz;
     cout << "=== 0.: Init: registering layers" << endl;
     registerLayers();
     cout << "=== 1.: Numerical gradient tests" << endl;
@@ -348,21 +349,21 @@ int main() {
     Affine pc({30,20});
     MatrixN x(10,30);
     x.setRandom();
-    if (!pc.checkAll(x)) {
+    if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
 
     Relu rl({30});
     MatrixN xr(20,30);
     xr.setRandom();
-    if (!rl.checkAll(xr)) {
+    if (!rl.selfTest(xr,yz)) {
         allOk=false;
     }
 
     AffineRelu rx({2,3});
     MatrixN xarl(30,2);
     xarl.setRandom();
-    if (!rx.checkAll(xarl)) {
+    if (!rx.selfTest(xarl,yz)) {
         allOk=false;
     }
 
@@ -371,7 +372,7 @@ int main() {
     xtl.setRandom();
     MatrixN y2(30,1);
     for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%6);
-    if (!tl.checkLoss(xtl,y2)) {
+    if (!tl.selfTest(xtl,y2)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
@@ -382,7 +383,7 @@ int main() {
     xmx.setRandom();
     MatrixN y(smN,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    if (!mx.checkLoss(xmx, y)) {
+    if (!mx.selfTest(xmx, y)) {
         allOk=false;
     }
 

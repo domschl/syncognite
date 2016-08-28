@@ -96,12 +96,7 @@ public:
     virtual MatrixN forward(MatrixN& lL)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y) { return 1001.0; }
-
     floatN train(MatrixN& x, MatrixN& y, string optimizer, t_params pars);
-
-    //bool register(string name, )
-    bool checkAll(MatrixN& x);
-    bool checkLoss(MatrixN& x, MatrixN& y0);
     bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
 private:
     bool checkForward(MatrixN& x, floatN eps);

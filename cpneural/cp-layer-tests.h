@@ -293,7 +293,7 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
     return allOk;
 }
 
-bool Layer::checkAll(MatrixN& x) {
+/*bool Layer::checkAll(MatrixN& x) {
     MatrixN y = forward(x);
     MatrixN dchain = y;
     dchain.setRandom();
@@ -326,9 +326,27 @@ bool Layer::checkLoss(MatrixN& x, MatrixN& y0) {
     floatN eps=1.e-6;
     #endif
     return checkLayer(x, dchain, h, eps, true);
-}
+}*/
 
-bool selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
-    //if (layerType == )
+bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
+    bool lossFkt=false;
+    MatrixN dchain;
+    MatrixN yf = forward(x);
+    if (layerType == LayerType::LT_NORMAL) {
+        dchain = yf;
+        dchain.setRandom();
+    } else if (layerType == LayerType::LT_LOSS) {
+        if (cache.size() >= 2) {
+            MatrixN probs = yf;
+            *cache[0]=probs;
+            *cache[1]=y;
+            dchain = y;
+        } else {
+            cout << "Internal error, cache not set for loss-layer" << endl;
+            return false;
+        }
+        lossFkt=true;
+    }
+    return checkLayer(x, dchain, h, eps, lossFkt);
 }
 #endif
