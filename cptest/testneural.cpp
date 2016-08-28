@@ -337,7 +337,7 @@ bool registerTest() {
 }
 
 bool trainTest() {
-    book allOk=true;
+    bool allOk=true;
     TwoLayerNet tln({5,4,2});
 
     return allOk;
