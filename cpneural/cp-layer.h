@@ -36,7 +36,8 @@ using floatN=float;
 
 #define NULL_MAT (MatrixN(0,0))
 
-typedef map<string, floatN> t_params;
+template <typename T>
+using cp_t_params = map<string, T>;
 
 vector<unsigned int> shape(MatrixN& m) {
     vector<unsigned int> s(2);
@@ -48,7 +49,6 @@ vector<unsigned int> shape(MatrixN& m) {
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
 
 typedef struct LayerParams {
-    std::string layerName;
     map<string, int> iParams;
     map<string, floatN> fParams;
 } t_layer_params;
@@ -96,7 +96,7 @@ public:
     virtual MatrixN forward(MatrixN& lL)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y) { return 1001.0; }
-    floatN train(MatrixN& x, MatrixN& y, string optimizer, t_params pars);
+    floatN train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
     bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
 private:
     bool checkForward(MatrixN& x, floatN eps);

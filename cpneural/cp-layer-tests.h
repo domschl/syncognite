@@ -293,41 +293,6 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
     return allOk;
 }
 
-/*bool Layer::checkAll(MatrixN& x) {
-    MatrixN y = forward(x);
-    MatrixN dchain = y;
-    dchain.setRandom();
-    #ifdef USE_DOUBLE
-    floatN h=1.e-6;
-    floatN eps=1.e-10;
-    #else
-    floatN h=1.e-3;
-    floatN eps=1.e-6;
-    #endif
-    return checkLayer(x, dchain, h, eps, false);
-}
-
-bool Layer::checkLoss(MatrixN& x, MatrixN& y0) {
-    MatrixN dchain;
-    if (cache.size() >= 2) {
-        MatrixN probs = forward(x);
-        *cache[0]=probs;
-        *cache[1]=y0;
-        dchain = y0;
-    } else {
-        cout << "Internal error, cache not set for loss-layer" << endl;
-        return false;
-    }
-    #ifdef USE_DOUBLE
-    floatN h=1.e-5;
-    floatN eps=1.e-10;
-    #else
-    floatN h=1.e-3;
-    floatN eps=1.e-6;
-    #endif
-    return checkLayer(x, dchain, h, eps, true);
-}*/
-
 bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool lossFkt=false;
     MatrixN dchain;

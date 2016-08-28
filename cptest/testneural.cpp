@@ -336,6 +336,13 @@ bool registerTest() {
     return allOk;
 }
 
+bool trainTest() {
+    book allOk=true;
+    TwoLayerNet tln({5,4,2});
+
+    return allOk;
+}
+
 int main() {
     MatrixN yz;
     cout << "=== 0.: Init: registering layers" << endl;
@@ -439,9 +446,16 @@ int main() {
     }
 
     if (registerTest()) {
-        cout << green << "RgisterTest: OK." << def << endl;
+        cout << green << "RegisterTest: OK." << def << endl;
     } else {
-        cout << red << "RgisterTest: ERROR." << def << endl;
+        cout << red << "RegisterTest: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (trainTest()) {
+        cout << green << "TrainTest: OK." << def << endl;
+    } else {
+        cout << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
 
