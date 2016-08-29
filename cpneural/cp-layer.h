@@ -64,6 +64,12 @@ public:
         }
         return iparams[par];
     }
+    void setPar(string par, int val) {
+        iparams[par]=val;
+    }
+    void setPar(string par, floatN val) {
+        fparams[par]=val;
+    }
     virtual MatrixN update(MatrixN& x, MatrixN& dx) {return x;};
 };
 
