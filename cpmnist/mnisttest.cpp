@@ -8,19 +8,19 @@
 
 typedef struct {
     int index;               // index of the current object
-} iter_info;
+} cp_mnist_iter_info;
 
-herr_t get_all_groups(hid_t loc_id, const char *name, void *opdata);
+herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata);
 
 H5::H5File *cp_Mnist_pfile;
-map<string, MatrixN *> cp_Mnist_data;
+map<string, MatrixN *> cpMnistData;
 
-herr_t get_all_groups(hid_t loc_id, const char *name, void *opdata)
+herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
 {
-    iter_info *info=(iter_info *)opdata;
+    cp_mnist_iter_info *info=(cp_mnist_iter_info *)opdata;
 
     // Here you can do whatever with the name...
-    cout << "Name : " << name << endl;
+    cout << "Reading: " << name << " ";
 
     // you can use this call to select just the groups
     // H5G_LINK    0  Object is a symbolic link.
@@ -28,10 +28,10 @@ herr_t get_all_groups(hid_t loc_id, const char *name, void *opdata)
     // H5G_DATASET 2  Object is a dataset.
     // H5G_TYPE    3  Object is a named datatype.
     int obj_type = H5Gget_objtype_by_idx(loc_id, info->index);
-    if(obj_type == H5G_GROUP)
-	   cout << "        is a group" << endl;
+    //if(obj_type == H5G_GROUP)
+	   //cout << "        is a group" << endl;
     if (obj_type == H5G_DATASET) {
-        cout << " is a dataset" << endl;
+        // cout << " is a dataset" << endl;
         H5::DataSet dataset = cp_Mnist_pfile->openDataSet(name);
         /*
          * Get filespace for rank and dimension
@@ -41,18 +41,21 @@ herr_t get_all_groups(hid_t loc_id, const char *name, void *opdata)
          * Get number of dimensions in the file dataspace
          */
         int rank = filespace.getSimpleExtentNdims();
-        cout << "rank: " << rank << endl;
+        // cout << "rank: " << rank << endl;
         /*
          * Get and print the dimension sizes of the file dataspace
          */
         hsize_t dims[2];    // dataset dimensions
         rank = filespace.getSimpleExtentDims( dims );
-        cout << "dataset rank = " << rank << ", dimensions; ";
-        for (int j=0; j<rank; j++) {
-            cout << (unsigned long)(dims[j]);
-            if (j<rank-1) cout << " x ";
-        }
-        cout << endl;
+        // cout << "dataset rank = " << rank << ", dimensions; ";
+        // for (int j=0; j<rank; j++) {
+        //    cout << (unsigned long)(dims[j]);
+        //    if (j<rank-1) cout << " x ";
+        //}
+        //cout << endl;
+        if (rank==1) dims[1]=1;
+        cpMnistData[name] = new MatrixN(dims[0],dims[1]);
+        MatrixN *pM = cpMnistData[name];
         /*
          * Define the memory space to read dataset.
          */
@@ -64,78 +67,96 @@ herr_t get_all_groups(hid_t loc_id, const char *name, void *opdata)
 
          if(dataClass == H5T_FLOAT)
          {
-             cout << "float data" << endl;
              auto floatType = dataset.getFloatType();
 
              size_t byteSize = floatType.getSize();
 
              if(byteSize == 4)
              {
-                 cout << "4-byte float data" << endl;
-                  // use PredType::NATIVE_FLOAT to write
-                  int *pf = (int *)malloc(sizeof(float) * dims[0] * dims[1]);
+                  float *pf = (float *)malloc(sizeof(float) * dims[0] * dims[1]);
                   if (pf) {
                       dataset.read(pf, H5::PredType::NATIVE_FLOAT, mspace1, filespace );
-                      for (unsigned int p=0; p<2; p++) {
-                          for (unsigned int jy=0; jy<28; jy++) {
-                              for (unsigned int jx=0; jx<28; jx++) { // 784=28*28
-                                  float pt = pf[p*784+jy*28+jx];
-                                  if (pt>0.5) cout << "*";
-                                  else cout << " ";
-                              }
-                              cout << "|"<< endl;
+                      for (int y=0; y<dims[0]; y++) {
+                          for (int x=0; x<dims[1]; x++) {
+                              (*pM)(y,x)=(floatN)pf[y*dims[1]+x];
                           }
-                          cout << endl;
                       }
                       free(pf);
                   }
              }
              else if(byteSize == 8)
              {
-                 cout << "8-byte double float data" << endl;
-                  // use PredType::NATIVE_DOUBLE to write
+                 double *pd = (double *)malloc(sizeof(double) * dims[0] * dims[1]);
+                 if (pd) {
+                     dataset.read(pd, H5::PredType::NATIVE_DOUBLE, mspace1, filespace );
+                     for (int y=0; y<dims[0]; y++) {
+                         for (int x=0; x<dims[1]; x++) {
+                             (*pM)(y,x)=(floatN)pd[y*dims[1]+x];
+                         }
+                     }
+                     free(pd);
+                 }
              }
          } else if (dataClass == H5T_INTEGER) {
-             cout << "Integer data" << endl;
-             int *pi = (int *)malloc(sizeof(int) * dims[0]);
+             int *pi = (int *)malloc(sizeof(int) * dims[0] * dims[1]);
              if (pi) {
                  dataset.read(pi, H5::PredType::NATIVE_INT, mspace1, filespace );
-                 for (unsigned int j=0; j<10; j++) cout << pi[j];
-                 cout << endl;
+                 for (int y=0; y<dims[0]; y++) {
+                     for (int x=0; x<dims[1]; x++) {
+                         (*pM)(y,x)=(floatN)pi[y*dims[1]+x];
+                     }
+                 }
                  free(pi);
              }
          }
-
-/*        int data_out[NX][NY];  // buffer for dataset to be read
-        dataset.read( data_out, PredType::NATIVE_INT, mspace1, filespace );
-        cout << "\n";
-        cout << "Dataset: \n";
-        for (j = 0; j < dims[0]; j++)
-        {
-            cout dims[1]
-//            for (i = 0; i < dims[1]; i++)
-//            cout << data_out[j][i] << " ";
-//            cout << endl;
-        }
-*/
     }
     (info->index)++;
     return 0;
  }
 
 bool  getMnistData(string filepath) {
+    if (cpMnistData.size() > 0) {
+        cout << "cpMnistData contains already elements, not reloading." << endl;
+        return true;
+    }
     H5::H5File fmn((H5std_string)filepath, H5F_ACC_RDONLY);
     cp_Mnist_pfile=&fmn;
     int nr=fmn.getNumObjs();
-    cout << nr << endl;
-    iter_info info;
+    //cout << nr << endl;
+    cp_mnist_iter_info info;
     info.index=0;
-    fmn.iterateElems("/", NULL, get_all_groups, &info);
+    fmn.iterateElems("/", NULL, cp_mnist_get_all_groups, &info);
+    cout << endl;
     return true;
 }
 
- int main() {
-     getMnistData("mnist.hdf5");
+ int main(int argc, char *argv[]) {
+     if (argc!=2) {
+         cout << "mnisttest <path-mnist.h5-file>" << endl;
+         exit(-1);
+     }
+     getMnistData(argv[1]);
+     for (auto it : cpMnistData) {
+         cout << it.first << " " << shape(*(it.second)) << endl;
+     }
 
+     vector<int> ins{0,4,16,25,108, 256,777};
+     for (auto in : ins) {
+         cout << "-------------------------" << endl;
+         cout << "Index: " << in << endl;
+         for (int cy=0; cy<28; cy++) {
+             for (int cx=0; cx<28; cx++) {
+                 floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
+                 if (pt<0.5) cout << " ";
+                 else cout << "*";
+             }
+             cout << endl;
+         }
+         cout << (*cpMnistData["t_test"])(in,0) << endl;
+     }
+
+     for (auto it : cpMnistData) {
+         free(it.second);
+     }
      return 0;
  }
