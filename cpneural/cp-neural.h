@@ -6,12 +6,14 @@
 #include <functional>
 #include <cmath>
 #include <vector>
+#include <map>
 
 #include <Eigen/Dense>
 //#include <eigen3/unsupported/Eigen/CXX11/Tensor>
 
-using std::vector;
-using std::string;
+using std::cout; using std::endl;
+using std::vector; using std::string;
+using std::map;
 
 #include "cp-math.h"
 #include "cp-util.h"
