@@ -2,6 +2,7 @@
 #define _CP_OPTIM_H
 
 #include "cp-layer.h"
+#include "cp-timer.h"
 
 
 class sdg : public Optimizer {
@@ -36,6 +37,8 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
     else verbose=true;
     floatN lr = popti->getPar("learning_rate", 1.0e-2);
     cout << ep << " " << bs << " " << lr << endl;
+    Timer t1;
+    double dfus, dbus;
 
     floatN l=0.0;
     int chunks=(x.rows()+bs-1) / bs;
@@ -49,12 +52,15 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
             MatrixN xb=x.block(y0,0,dy,x.cols());
             MatrixN yb=y.block(y0,0,dy,y.cols());
             //cout << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
+            t1.startCpu();
             forward(xb);
+            dfus=t1.stopCpuMicro()/(double)dy;
+            t1.startCpu();
             l=loss(yb);
             backward(yb);
+            dbus=t1.stopCpuMicro()/(double)dy;
             update(popti);
-            //cout << l << " ";
-            //if ((b+1)%8==0) cout << endl;
+            if ((b+1)%20==0) cout << dfus << " " << dbus << endl;
         }
         cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {
