@@ -46,6 +46,27 @@ vector<unsigned int> shape(MatrixN& m) {
     return s;
 }
 
+class Optimizer {
+public:
+    cp_t_params<int> iparams;
+    cp_t_params<floatN> fparams;
+    floatN getPar(string par, floatN def) {
+        auto it=fparams.find(par);
+        if (it==fparams.end()) {
+            fparams[par]=def;
+        }
+        return fparams[par];
+    }
+    int getPar(string par, int def) {
+        auto it=iparams.find(par);
+        if (it==iparams.end()) {
+            iparams[par]=def;
+        }
+        return iparams[par];
+    }
+    virtual MatrixN update(MatrixN& x, MatrixN& dx) {return x;};
+};
+
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
 
 typedef struct LayerParams {
@@ -96,6 +117,13 @@ public:
     virtual MatrixN forward(MatrixN& lL)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y) { return 1001.0; }
+    virtual bool update(Optimizer *popti) {
+        for (int i=1; i<params.size(); i++) {
+            *params[i] = popti->update(*params[i],*grads[i]);
+        }
+        return true;
+    }
+
     floatN train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
     bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
 private:

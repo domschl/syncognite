@@ -20,7 +20,7 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     cp_mnist_iter_info *info=(cp_mnist_iter_info *)opdata;
 
     // Here you can do whatever with the name...
-    cout << "Reading: " << name << " ";
+    cout << name << " ";
 
     // you can use this call to select just the groups
     // H5G_LINK    0  Object is a symbolic link.
@@ -125,6 +125,7 @@ bool  getMnistData(string filepath) {
     //cout << nr << endl;
     cp_mnist_iter_info info;
     info.index=0;
+    cout << "Reading: ";
     fmn.iterateElems("/", NULL, cp_mnist_get_all_groups, &info);
     cout << endl;
     return true;
@@ -156,7 +157,7 @@ bool  getMnistData(string filepath) {
          cout << (*cpMnistData["t_test"])(in,0) << endl;
      }
      */
-    TwoLayerNet tl({768,1024,10});
+    TwoLayerNet tl({784,1024,10});
     MatrixN X=*(cpMnistData["x_train"]);
     MatrixN y=*(cpMnistData["t_train"]);
     cp_t_params<int> pi;
@@ -164,7 +165,7 @@ bool  getMnistData(string filepath) {
     pi["verbose"]=1;
     pi["epochs"]=10;
     pi["batch_size"]=100;
-    pf["learning_rate"]=1.0e-3;
+    pf["learning_rate"]=4.0e-1;
     tl.train(X, y, "sdg", pi, pf);
 
     for (auto it : cpMnistData) {

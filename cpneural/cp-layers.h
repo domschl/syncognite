@@ -176,6 +176,11 @@ public:
         *(grads[0])=dx;
         return dx;
     }
+    virtual bool update(Optimizer *popti) override {
+        af->update(popti);
+        rl->update(popti);
+        return true;
+    }
 };
 
 
@@ -251,7 +256,7 @@ public:
         MatrixN probs=*cache[0];
         if (y.rows() != probs.rows() || y.cols() != 1) {
             cout << layerName << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
-            cout << "y:" << endl << y << endl;
+            //cout << "y:" << endl << y << endl;
             return 1000.0;
         }
         if ((*cache[1]).rows() !=y.rows()) {
@@ -355,7 +360,7 @@ public:
             cache[1]->setZero();
             for (int i=0; i<(*(cache[1])).size(); i++) (*(cache[1]))(i)= (-1.0); // XXX: for error testing
         }
-
+        //cout << "reshape-2LN:" << shape(*(params[0])) << shape(x) << endl;
         *(params[0])=x;
         MatrixN y0=af1->forward(x);
         MatrixN y1=rl->forward(y0);
@@ -376,6 +381,14 @@ public:
         *(grads[0])=dx;
         return dx;
     }
+    virtual bool update(Optimizer *popti) override {
+        af1->update(popti);
+        rl->update(popti);
+        af2->update(popti);
+        sm->update(popti);
+        return true;
+    }
+
 };
 
 void registerLayers() {

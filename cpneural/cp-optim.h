@@ -3,26 +3,6 @@
 
 #include "cp-layer.h"
 
-class Optimizer {
-public:
-    cp_t_params<int> iparams;
-    cp_t_params<floatN> fparams;
-    floatN getPar(string par, floatN def) {
-        auto it=fparams.find(par);
-        if (it==fparams.end()) {
-            fparams[par]=def;
-        }
-        return fparams[par];
-    }
-    int getPar(string par, int def) {
-        auto it=iparams.find(par);
-        if (it==iparams.end()) {
-            iparams[par]=def;
-        }
-        return iparams[par];
-    }
-    virtual MatrixN update(MatrixN& x, MatrixN& dx) {return x;};
-};
 
 class sdg : public Optimizer {
     floatN lr;
@@ -50,15 +30,32 @@ floatN Layer::train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> i
     popti->iparams=ipars;
     int ep=popti->getPar("epochs", 1);
     int bs=popti->getPar("batch_size", 100);
-    floatN lr = popti->getPar("learning_rate", 1.0e-3);
+    bool verbose;
+    if (popti->getPar("verbose", 0) == 0) verbose=false;
+    else verbose=true;
+    floatN lr = popti->getPar("learning_rate", 1.0e-2);
     cout << ep << " " << bs << " " << lr << endl;
 
-    for (unsigned int i=0; i<ep; i++) {
-
-        //forward(x);
-        //loss(y);
-        //backward(y);
-        // optimize(poti);
+    floatN l=0.0;
+    int chunks=(x.rows()+bs-1) / bs;
+    for (int e=0; e<ep; e++) {
+        cout << "epoch: " << e << endl;
+        for (int b=0; b<chunks; b++) {
+            int y0,dy;
+            y0=b*bs;
+            if (y0+bs > x.rows()) dy=x.rows()-y0;
+            else dy=bs;
+            MatrixN xb=x.block(y0,0,dy,x.cols());
+            MatrixN yb=y.block(y0,0,dy,y.cols());
+            //cout << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
+            forward(xb);
+            l=loss(yb);
+            backward(yb);
+            update(popti);
+            cout << l << " ";
+            if ((b+1)%8==0) cout << endl;
+        }
+        cout << endl << "Ep." << e << " Loss:" << l << endl;
     }
     return 0.0;
 }
