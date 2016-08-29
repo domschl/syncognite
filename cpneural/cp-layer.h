@@ -123,9 +123,29 @@ public:
         }
         return true;
     }
-
-    floatN train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    floatN train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    floatN test(MatrixN& x, MatrixN& y)  {
+        MatrixN yt=forward(x);
+        if (yt.rows() != y.rows()) {
+            return -1000.0;
+        }
+        int co=0;
+        for (int i=0; i<yt.rows(); i++) {
+            int ji=-1;
+            floatN pr=-100;
+            for (int j=0; j<yt.cols(); j++) {
+                if (yt(i,j)>pr) {
+                    pr=yt(i,j);
+                    ji=j;
+                }
+            }
+            if (ji==y(i,0)) ++co;
+        }
+        floatN err=1.0-(floatN)co/(floatN)y.rows();
+        return err;
+    }
     bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
+
 private:
     bool checkForward(MatrixN& x, floatN eps);
     bool checkBackward(MatrixN& dchain, floatN eps);

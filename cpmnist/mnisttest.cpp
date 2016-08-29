@@ -160,14 +160,19 @@ bool  getMnistData(string filepath) {
     TwoLayerNet tl({784,1024,10});
     MatrixN X=*(cpMnistData["x_train"]);
     MatrixN y=*(cpMnistData["t_train"]);
+    MatrixN Xv=*(cpMnistData["x_valid"]);
+    MatrixN yv=*(cpMnistData["t_valid"]);
+    MatrixN Xt=*(cpMnistData["x_test"]);
+    MatrixN yt=*(cpMnistData["t_test"]);
     cp_t_params<int> pi;
     cp_t_params<floatN> pf;
     pi["verbose"]=1;
     pi["epochs"]=10;
     pi["batch_size"]=100;
     pf["learning_rate"]=4.0e-1;
-    tl.train(X, y, "sdg", pi, pf);
-
+    tl.train(X, y, Xv, yv, "sdg", pi, pf);
+    floatN final_err=tl.test(Xt, yt);
+    cout << "Final error on test-set:" << final_err << endl;
     for (auto it : cpMnistData) {
          free(it.second);
      }

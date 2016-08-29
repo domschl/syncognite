@@ -24,7 +24,7 @@ Optimizer *optimizerFactory(string name, cp_t_params<floatN> params) {
 }
 
 
-floatN Layer::train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
+floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
     Optimizer* popti=optimizerFactory("sdg", fpars);
     popti->fparams=fpars;
     popti->iparams=ipars;
@@ -39,7 +39,7 @@ floatN Layer::train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> i
     floatN l=0.0;
     int chunks=(x.rows()+bs-1) / bs;
     for (int e=0; e<ep; e++) {
-        cout << "epoch: " << e << endl;
+        cout << "Epoch: " << e+1 << endl;
         for (int b=0; b<chunks; b++) {
             int y0,dy;
             y0=b*bs;
@@ -52,10 +52,10 @@ floatN Layer::train(MatrixN& x, MatrixN& y, string optimizer, cp_t_params<int> i
             l=loss(yb);
             backward(yb);
             update(popti);
-            cout << l << " ";
-            if ((b+1)%8==0) cout << endl;
+            //cout << l << " ";
+            //if ((b+1)%8==0) cout << endl;
         }
-        cout << endl << "Ep." << e << " Loss:" << l << endl;
+        cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
     }
     return 0.0;
 }
