@@ -140,6 +140,7 @@ bool  getMnistData(string filepath) {
          cout << it.first << " " << shape(*(it.second)) << endl;
      }
 
+     /*
      vector<int> ins{0,4,16,25,108, 256,777};
      for (auto in : ins) {
          cout << "-------------------------" << endl;
@@ -154,8 +155,19 @@ bool  getMnistData(string filepath) {
          }
          cout << (*cpMnistData["t_test"])(in,0) << endl;
      }
+     */
+    TwoLayerNet tl({768,1024,10});
+    MatrixN X=*(cpMnistData["x_train"]);
+    MatrixN y=*(cpMnistData["t_train"]);
+    cp_t_params<int> pi;
+    cp_t_params<floatN> pf;
+    pi["verbose"]=1;
+    pi["epochs"]=10;
+    pi["batch_size"]=100;
+    pf["learning_rate"]=1.0e-3;
+    tl.train(X, y, "sdg", pi, pf);
 
-     for (auto it : cpMnistData) {
+    for (auto it : cpMnistData) {
          free(it.second);
      }
      return 0;
