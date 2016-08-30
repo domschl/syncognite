@@ -38,7 +38,8 @@ using floatN=float;
 
 template <typename T>
 using cp_t_params = map<string, T>;
-using cppl = cp_t_params<MatrixN *>;
+//using t_cppl = cp_t_params<MatrixN *>;
+typedef cp_t_params<MatrixN *> t_cppl;
 
 vector<unsigned int> shape(MatrixN& m) {
     vector<unsigned int> s(2);
@@ -91,10 +92,11 @@ Layer* createLayerInstance(t_layer_topo tp) {
     return new T(tp);
 }
 
-void cppl_delete(ccpl p) {
+void cppl_delete(t_cppl p);
+void cppl_delete(t_cppl p) {
     for (auto it : p) {
         delete it.second;
-        it.second=nullptr;
+        p.erase(it.first);
     }
 }
 
@@ -123,24 +125,24 @@ class Layer {
 public:
     string layerName;
     LayerType layerType;
-    cppl params;
+    t_cppl params;
 
-    virtual MatrixN forward(MatrixN& lL, cppl* pcache)  { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(MatrixN& dtL, cppl* pcache, cppl* pgrads) { MatrixN d(0,0); return d;}
-    virtual floatN loss(MatrixN& y, cppl* pcache) { return 1001.0; }
-    virtual bool update(Optimizer *popti, cppl* pgrads) {
+    virtual MatrixN forward(MatrixN& lL, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
+    virtual floatN loss(MatrixN& y, t_cppl* pcache) { return 1001.0; }
+    virtual bool update(Optimizer *popti, t_cppl* pgrads) {
         /*for (int i=0; i<params.size(); i++) {
             *params[i] = popti->update(*params[i],*grads[i]);
         }*/
         for (auto it : params) {
-            key = it.first;
+            string key = it.first;
             *params[key] = popti->update(*params[key],*((*pgrads)[key]));
         }
         return true;
     }
     floatN train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
     floatN test(MatrixN& x, MatrixN& y)  {
-        MatrixN yt=forward(x);
+        MatrixN yt=forward(x, nullptr);
         if (yt.rows() != y.rows()) {
             return -1000.0;
         }
@@ -164,9 +166,9 @@ public:
 private:
     bool checkForward(MatrixN& x, floatN eps);
     bool checkBackward(MatrixN& x, floatN eps);
-    bool calcNumGrads(MatrixN& dchain, cppl* pnumGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h);
-    MatrixN calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h);
+    bool calcNumGrads(MatrixN& dchain, t_cppl* pnumGrads, floatN h, bool lossFkt);
+    MatrixN calcNumGrad(MatrixN& dchain, string var, floatN h);
+    MatrixN calcNumGradLoss(MatrixN& dchain, t_cppl* pcache, string var, floatN h);
     bool checkGradients(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
     bool checkLayer(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
 };

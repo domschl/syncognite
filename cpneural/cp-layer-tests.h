@@ -7,6 +7,7 @@
 
 #include "cp-layer.h"
 #include "cp-math.h"
+#include "cp-util.h"
 
 bool Layer::checkForward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
@@ -38,23 +39,23 @@ bool Layer::checkForward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
 bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
-    cppl cache;
-    cppl grads;
+    t_cppl cache;
+    t_cppl grads;
     MatrixN dyc = forward(x, &cache);
     dyc.setRandom();
     MatrixN dx = x;
     dx.setZero();
 
     MatrixN dxc = backward(dyc, &cache, &grads);
-    cppl rgrads;
+    t_cppl rgrads;
     for (auto it : grads) {
         rgrads[it.first]=new MatrixN(*grads[it.first]); // grads[it.first].rows(),grads[it.first].cols());
         rgrads[it.first]->setZero();
     }
     //cout << shape(x) << shape(dx) << shape(dxc) << shape(yc) << endl;
     for (unsigned int i=0; i<x.rows(); i++) {
-        cppl chi;
-        cppl gdi;
+        t_cppl chi;
+        t_cppl gdi;
         MatrixN xi=x.row(i);
         MatrixN dyi2 = forward(xi, &chi);
         MatrixN dyi = dyc.row(i);
@@ -124,22 +125,18 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h=CP_DEFAULT_NUM_H) {
-    if (ind >= params.size()) {
-        cout << "bad index! " << ind << endl;
-        return MatrixN(0,0);
-    }
-    MatrixN *pm = params[ind];
+MatrixN Layer::calcNumGrad(MatrixN& dchain, string var, floatN h=CP_DEFAULT_NUM_H) {
+    MatrixN *pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
-        pxold = (*(params[ind]))(i);
-        (*(params[ind]))(i) = (*(params[ind]))(i) - h;
-        MatrixN y0 = forward(*(params[0]));
-        (*(params[ind]))(i) = pxold + h;
-        MatrixN y1 = forward(*(params[0]));
-        (*(params[ind]))(i) = pxold;
+        pxold = (*(params[var]))(i);
+        (*(params[var]))(i) = (*(params[var]))(i) - h;
+        MatrixN y0 = forward(*(params[0]), nullptr);
+        (*(params[var]))(i) = pxold + h;
+        MatrixN y1 = forward(*(params[0]), nullptr);
+        (*(params[var]))(i) = pxold;
         MatrixN dy=y1-y0;
         MatrixN dd;
         dd = dy.cwiseProduct(dchain);
@@ -150,24 +147,22 @@ MatrixN Layer::calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h=CP_DEFAUL
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h=CP_DEFAULT_NUM_H) {
-    if (ind >= params.size()) {
-        cout << "bad index! " << ind << endl;
-        return MatrixN(0,0);
-    }
-    MatrixN *pm = params[ind];
+MatrixN Layer::calcNumGradLoss(MatrixN& dchain, t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+    MatrixN *pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
-        pxold = (*(params[ind]))(i);
-        (*(params[ind]))(i) = (*(params[ind]))(i) - h;
-        MatrixN y0 = forward(*(params[0]));
-        floatN sy0 = loss(*(cache[1]));
-        (*(params[ind]))(i) = pxold + h;
-        MatrixN y1 = forward(*(params[0]));
+        t_cppl cache;
+        pxold = (*(params[var]))(i);
+        (*(params[var]))(i) = (*(params[var]))(i) - h;
+        MatrixN y0 = forward(*(*pcache["x"]), &cache);
+        floatN sy0 = loss(*(*pcache["y"]), &cache);
+        cppl_delete(cache)
+        (*(params[var]))(i) = pxold + h;
+        MatrixN y1 = forward(*(params[0]), &cache);
         floatN sy1 = loss(*(cache[1]));
-        (*(params[ind]))(i) = pxold;
+        (*(params[var]))(i) = pxold;
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
         grad(i)=drs;
@@ -318,8 +313,8 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
 bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool lossFkt=false;
     MatrixN dchain;
-    cppl cache;
-    cppl grads;
+    t_cppl cache;
+    t_cppl grads;
     MatrixN yf = forward(x, &cache);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;

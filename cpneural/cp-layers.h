@@ -37,7 +37,7 @@ public:
     ~Affine() {
         cppl_delete(params);
     }
-    virtual MatrixN forward(MatrixN& x, cppl* pcache) override {
+    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
         if (params["W"]->rows() != x.cols()) {
             cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:"<< shape(*params["W"]) << endl;
             MatrixN y(0,0);
@@ -49,7 +49,7 @@ public:
         y.rowwise() += b;
         return y;
     }
-    virtual MatrixN backward(MatrixN& dchain, cppl* pcache, cppl* pgrads) override {
+    virtual MatrixN backward(MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx = dchain * (*params["W"]).transpose(); // dx
         (*pgrads)["W"] = new MatrixN((*(*pcache)["x"]).transpose() * dchain); //dW
         (*pgrads)["b"] = new MatrixN(dchain.colwise().sum()); //db
