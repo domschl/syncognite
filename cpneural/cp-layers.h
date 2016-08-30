@@ -56,42 +56,19 @@ public:
         return dx;
     }
 };
-/*
+
 class Relu : public Layer {
 public:
     Relu(t_layer_topo topo) {
         assert (topo.size()==1);
         layerName="Relu";
         layerType=LayerType::LT_NORMAL;
-        names=vector<string>{"x"};
-        params=vector<MatrixN *>(1);
-        params[0]=new MatrixN(1,topo[0]); // x
-
-        grads=vector<MatrixN *>(1);
-        grads[0]=new MatrixN(1,topo[0]); // dx
     }
     ~Relu() {
-        for (unsigned int i=0; i<params.size(); i++) {
-            delete params[i];
-            params[i]=nullptr;
-            delete grads[i];
-            grads[i]=nullptr;
-        }
     }
-    virtual MatrixN forward(MatrixN& x) override {
-        MatrixN *px=params[0];
-        if (px->cols() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in Relu(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
-            return MatrixN(0,0);
-        }
-        if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
-            params[0]->resize(x.rows(), x.cols());
-            grads[0]->resize(x.rows(), x.cols());
-        }
-
-        *params[0]=x;
+    virtual MatrixN forward(MatrixN& x, t_cppl *pcache) override {
+        if (pcache!=nullptr) (*pcache)["x"] = new MatrixN(x);
         MatrixN ych=x;
-
         for (unsigned int i=0; i<ych.size(); i++) {
             if (x(i)<0.0) {
                 ych(i)=0.0;
@@ -99,19 +76,17 @@ public:
         }
         return ych;
     }
-    virtual MatrixN backward(MatrixN& dchain) override {
-        MatrixN *px=params[0];
-        MatrixN y=*px;
+    virtual MatrixN backward(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+        MatrixN y=*((*pcache)["x"]);
         for (unsigned int i=0; i<y.size(); i++) {
             if (y(i)>0.0) y(i)=1.0;
             else y(i)=0.0;
         }
-        *grads[0]=y;
-        *grads[0] = y.cwiseProduct(dchain); // dx
-        return *grads[0];
+        MatrixN dx = y.cwiseProduct(dchain); // dx
+        return dx;
     }
 };
-
+/*
 class AffineRelu : public Layer {
 public:
     Affine *af;
@@ -369,8 +344,8 @@ public:
 */
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
-
-/*    REGISTER_LAYER("Relu", Relu, 1)
+    REGISTER_LAYER("Relu", Relu, 1)
+/*
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)

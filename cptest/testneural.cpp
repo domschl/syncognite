@@ -85,7 +85,7 @@ bool checkAffineBackward(float eps=1.0e-6) {
     cppl_delete(grads);
     return allOk;
 }
-/*
+
 bool checkReluForward(floatN eps=1.e-6) {
     MatrixN x(3,4);
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
@@ -98,7 +98,7 @@ bool checkReluForward(floatN eps=1.e-6) {
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
     Relu rl({4});
-    MatrixN y0=rl.forward(x);
+    MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
 
@@ -119,14 +119,18 @@ bool checkReluBackward(float eps=1.0e-6) {
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
     Relu rl({4});
-    MatrixN y=rl.forward(x);
-    MatrixN dx0=rl.backward(dchain);
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=rl.forward(x, &cache);
+    MatrixN dx0=rl.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"ReluBackward dx",eps);
     if (!ret) allOk=false;
+    cppl_delete(cache);
+    cppl_delete(grads);
     return allOk;
 }
-
+/*
 bool checkAffineRelu(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(2,4);
@@ -364,14 +368,14 @@ int main() {
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
-/*
+
     Relu rl({30});
     MatrixN xr(20,30);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
         allOk=false;
     }
-
+/*
     AffineRelu rx({2,3});
     MatrixN xarl(30,2);
     xarl.setRandom();
@@ -414,7 +418,7 @@ int main() {
         cout << red << "AffineBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkReluForward()) {
         cout << green << "ReluForward with test data: OK." << def << endl;
     } else {
@@ -428,7 +432,7 @@ int main() {
         cout << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkAffineRelu()) {
         cout << green << "AffineRelu with test data: OK." << def << endl;
     } else {
