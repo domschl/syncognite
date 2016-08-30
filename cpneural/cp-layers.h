@@ -25,11 +25,11 @@ public:
         assert (topo.size()==2);
         layerName="Affine";
         layerType=LayerType::LT_NORMAL;
-        params["W"]=new MatrixN(topo[0],topo[1]); // W
-        params["b"]=new MatrixN(1,topo[1]); // b
+        cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
+        cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
@@ -43,7 +43,7 @@ public:
             MatrixN y(0,0);
             return y;
         }
-        if (pcache!=nullptr) (*pcache)["x"] = new MatrixN(x);
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN y = x * (*params["W"]);
         RowVectorN b = *params["b"];
         y.rowwise() += b;
@@ -51,8 +51,8 @@ public:
     }
     virtual MatrixN backward(MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx = dchain * (*params["W"]).transpose(); // dx
-        (*pgrads)["W"] = new MatrixN((*(*pcache)["x"]).transpose() * dchain); //dW
-        (*pgrads)["b"] = new MatrixN(dchain.colwise().sum()); //db
+        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
+        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         return dx;
     }
 };
@@ -65,6 +65,7 @@ public:
         layerType=LayerType::LT_NORMAL;
     }
     ~Relu() {
+        cppl_delete(params);
     }
     virtual MatrixN forward(MatrixN& x, t_cppl *pcache) override {
         if (pcache!=nullptr) (*pcache)["x"] = new MatrixN(x);

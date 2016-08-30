@@ -41,18 +41,19 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
     t_cppl grads;
+    t_cppl rgrads;
+
     MatrixN dyc = forward(x, &cache);
     dyc.setRandom();
     MatrixN dx = x;
     dx.setZero();
 
     MatrixN dxc = backward(dyc, &cache, &grads);
-    t_cppl rgrads;
     for (auto it : grads) {
-        rgrads[it.first]=new MatrixN(*grads[it.first]); // grads[it.first].rows(),grads[it.first].cols());
+        cppl_set(&rgrads, it.first, new MatrixN(*grads[it.first])); // grads[it.first].rows(),grads[it.first].cols());
         rgrads[it.first]->setZero();
+        //cout << shape(x) << " " << it.first << " "<< shape(dx) << shape(*rgrads[it.first]) << shape(*grads[it.first]) << endl;
     }
-    //cout << shape(x) << shape(dx) << shape(dxc) << shape(yc) << endl;
     for (unsigned int i=0; i<x.rows(); i++) {
         t_cppl chi;
         t_cppl gdi;
@@ -65,14 +66,6 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
         for (auto it : grads) {
             *rgrads[it.first] += *gdi[it.first];
         }
-        /*
-        for (unsigned int j=1; j<grads.size(); j++) {
-            MatrixN *pmi = grads[j];
-            //cout << i << "-" << j <<"-0:" << (*(dpars[j])).format(CleanFmt) << endl;
-            *(dpars[j]) = *(dpars[j]) + *pmi;
-            //cout << i << "-" << j << "-1:" << (*(dpars[j])).format(CleanFmt) << endl;
-        }
-        */
         cppl_delete(gdi);
         cppl_delete(chi);
     }
@@ -86,27 +79,6 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
         allOk=false;
     }
 
-    //MatrixN dyc2 = forward(x);
-    //dxc = backward(dyc);
-/*    for (unsigned int i=1; i<grads.size(); i++) {
-        MatrixN *pmc = grads[i];
-        MatrixN *pm = dpars[i];
-        MatrixN d = *pm - *pmc;
-        floatN dif = d.cwiseProduct(d).sum();
-        if (dif < eps) {
-            cout << "Backward vectorizer " << "d" << names[i] << " OK, err=" << dif << endl;
-        } else {
-            cout << "d" << names[i] << ":" << endl << (*pm).format(CleanFmt) << endl;
-            cout << "d" << names[i] << "c:" << endl << (*pmc).format(CleanFmt) << endl;
-            cout << "Backward vectorizer " << "d" << names[i] << "Error, err=" << dif << endl;
-            allOk=false;
-        }
-    }
-    for (unsigned int i=1; i<dpars.size(); i++) {
-        delete dpars[i];
-        dpars[i]=nullptr;
-    }
-*/
     for (auto it : grads) {
         MatrixN d = *grads[it.first] - *rgrads[it.first];
         floatN dif = d.cwiseProduct(d).sum();
@@ -179,8 +151,7 @@ bool Layer::calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl
         } else {
             g = calcNumGradLoss(pcache, it.first, h);
         }
-        cout << "numGrad " << it.first << endl;
-        (*pnumGrads)[it.first] = new MatrixN(g);
+        cppl_set(pnumGrads, it.first, new MatrixN(g));
     }
     return true;
 }
@@ -196,7 +167,6 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
 
     t_cppl grads;
     MatrixN x=*(*pcache)["x"];
-    cout << "x:" << shape(x) << endl;
     MatrixN yt=forward(x, pcache);
     if (lossFkt) { // XXX probably not needed!
         loss(dchain, pcache);
@@ -267,21 +237,21 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
 }
 
 bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
-    bool lossFkt=false;
+    bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
-    cache["x"] = new MatrixN(x);
     MatrixN yf = forward(x, &cache);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
-        cache["probs"] = new MatrixN(yf);
-        cache["y"] = new MatrixN(y);
+        cppl_set(&cache, "probs", new MatrixN(yf));
+        cppl_set(&cache, "y", new MatrixN(y));
         dchain = y;
         lossFkt=true;
     }
-    return checkLayer(dchain, &cache, h, eps, lossFkt);
+    ret=checkLayer(dchain, &cache, h, eps, lossFkt);
     cppl_delete(cache);
+    return ret;
 }
 #endif

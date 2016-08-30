@@ -94,10 +94,26 @@ Layer* createLayerInstance(t_layer_topo tp) {
 
 //void cppl_delete(t_cppl p);
 void cppl_delete(t_cppl p) {
+    int nr=0;
+    if (p.size()==0) {
+        return;
+    }
     for (auto it : p) {
         delete it.second;
-        p.erase(it.first);
+        it.second=nullptr;
+        ++nr;
     }
+    p.erase(p.begin(),p.end());
+}
+
+
+void cppl_set(t_cppl *p, string key, MatrixN *val) {
+    auto it=p->find(key);
+    if (it != p->end()) {
+        cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
+        delete it->second;
+    }
+    (*p)[key]=val;
 }
 
 typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;

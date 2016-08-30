@@ -339,6 +339,7 @@ bool registerTest() {
             cout << "unspecified layer -- ERROR!" << endl;
             allOk=false;
         }
+        delete l;
         ++nr;
     }
     return allOk;
@@ -375,6 +376,7 @@ int main() {
     if (!rl.selfTest(xr,yz)) {
         allOk=false;
     }
+
 /*
     AffineRelu rx({2,3});
     MatrixN xarl(30,2);
@@ -454,12 +456,14 @@ int main() {
         allOk=false;
     }
 */
+/*
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
         cout << red << "RegisterTest: ERROR." << def << endl;
         allOk=false;
     }
+*/
 /*
     if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
