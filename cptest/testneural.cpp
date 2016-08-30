@@ -37,9 +37,9 @@ bool checkAffineForward(floatN eps=1.e-6) {
          -0.23480519,  0.03272727,  0.30025974;
 
     Affine pe({4,3});
-    *(pe.params[1])=W;
-    *(pe.params[2])=b;
-    MatrixN y0=pe.forward(x);
+    *(pe.params["W"])= W;
+    *(pe.params["b"])=b;
+    MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }
 
@@ -68,17 +68,21 @@ bool checkAffineBackward(float eps=1.0e-6) {
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
     Affine pe({4,5});
-    *(pe.params[1])=W;
-    *(pe.params[2])=b;
-    MatrixN y=pe.forward(x);
-    MatrixN dx0=pe.backward(dchain);
+    *(pe.params["W"])=W;
+    *(pe.params["b"])=b;
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=pe.forward(x, &cache);
+    MatrixN dx0=pe.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(pe.grads[1]),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(pe.grads[2]),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
     if (!ret) allOk=false;
+    cppl_delete(cache);
+    cppl_delete(grads);
     return allOk;
 }
 /*
@@ -316,7 +320,7 @@ bool checkTwoLayer(float eps=1.0e-6) {
 */
 bool registerTest() {
     bool allOk=true;
-    cout << "Registerd Layers:" << endl;
+    cout << "Registered Layers:" << endl;
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
         cout << nr << ".: " << it.first << " ";

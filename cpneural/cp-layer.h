@@ -92,7 +92,7 @@ Layer* createLayerInstance(t_layer_topo tp) {
     return new T(tp);
 }
 
-void cppl_delete(t_cppl p);
+//void cppl_delete(t_cppl p);
 void cppl_delete(t_cppl p) {
     for (auto it : p) {
         delete it.second;
@@ -127,7 +127,7 @@ public:
     LayerType layerType;
     t_cppl params;
 
-    virtual MatrixN forward(MatrixN& lL, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN forward(MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads) {
@@ -166,11 +166,11 @@ public:
 private:
     bool checkForward(MatrixN& x, floatN eps);
     bool checkBackward(MatrixN& x, floatN eps);
-    bool calcNumGrads(MatrixN& dchain, t_cppl* pnumGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(MatrixN& dchain, string var, floatN h);
-    MatrixN calcNumGradLoss(MatrixN& dchain, t_cppl* pcache, string var, floatN h);
-    bool checkGradients(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
-    bool checkLayer(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
+    bool calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
+    MatrixN calcNumGrad(MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
+    MatrixN calcNumGradLoss(t_cppl* pcache, string var, floatN h);
+    bool checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
+    bool checkLayer(MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
 };
 
 #endif

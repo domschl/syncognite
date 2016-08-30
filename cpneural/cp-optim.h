@@ -46,6 +46,8 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
         cout << "Epoch: " << e+1 << " learning-rate:" << lr << endl;
         for (int b=0; b<chunks; b++) {
             int y0,dy;
+            t_cppl cache;
+            t_cppl grads;
             y0=b*bs;
             if (y0+bs > x.rows()) dy=x.rows()-y0;
             else dy=bs;
@@ -53,14 +55,16 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
             MatrixN yb=y.block(y0,0,dy,y.cols());
             //cout << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
             //t1.startCpu();
-            forward(xb);
+            forward(xb, &cache);
             //dfus=t1.stopCpuMicro()/(double)dy;
             //t1.startCpu();
-            l=loss(yb);
-            backward(yb);
+            l=loss(yb, &cache);
+            backward(yb, &cache, &grads);
             //dbus=t1.stopCpuMicro()/(double)dy;
-            update(popti);
+            update(popti, &grads);
             //if ((b+1)%20==0) cout << dfus << " " << dbus << endl;
+            cppl_delete(cache);
+            cppl_delete(grads);
         }
         cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {

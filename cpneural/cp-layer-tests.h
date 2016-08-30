@@ -125,7 +125,7 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(MatrixN& dchain, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGrad(MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
@@ -133,9 +133,9 @@ MatrixN Layer::calcNumGrad(MatrixN& dchain, string var, floatN h=CP_DEFAULT_NUM_
     for (unsigned int i=0; i<grad.size(); i++) {
         pxold = (*(params[var]))(i);
         (*(params[var]))(i) = (*(params[var]))(i) - h;
-        MatrixN y0 = forward(*(params[0]), nullptr);
+        MatrixN y0 = forward(*((*pcache)["x"]), nullptr);
         (*(params[var]))(i) = pxold + h;
-        MatrixN y1 = forward(*(params[0]), nullptr);
+        MatrixN y1 = forward(*((*pcache)["x"]), nullptr);
         (*(params[var]))(i) = pxold;
         MatrixN dy=y1-y0;
         MatrixN dd;
@@ -147,7 +147,7 @@ MatrixN Layer::calcNumGrad(MatrixN& dchain, string var, floatN h=CP_DEFAULT_NUM_
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(MatrixN& dchain, t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
@@ -156,12 +156,13 @@ MatrixN Layer::calcNumGradLoss(MatrixN& dchain, t_cppl *pcache, string var, floa
         t_cppl cache;
         pxold = (*(params[var]))(i);
         (*(params[var]))(i) = (*(params[var]))(i) - h;
-        MatrixN y0 = forward(*(*pcache["x"]), &cache);
-        floatN sy0 = loss(*(*pcache["y"]), &cache);
-        cppl_delete(cache)
+        MatrixN y0 = forward(*((*pcache)["x"]), &cache);
+        floatN sy0 = loss(*((*pcache)["y"]), &cache);
+        cppl_delete(cache);
         (*(params[var]))(i) = pxold + h;
-        MatrixN y1 = forward(*(params[0]), &cache);
-        floatN sy1 = loss(*(cache[1]));
+        MatrixN y1 = forward(*(params[var]), &cache);
+        floatN sy1 = loss(*((*pcache)["y"]), &cache);
+        cppl_delete(cache);
         (*(params[var]))(i) = pxold;
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
@@ -170,42 +171,21 @@ MatrixN Layer::calcNumGradLoss(MatrixN& dchain, t_cppl *pcache, string var, floa
     return grad;
 }
 
-bool Layer::calcNumGrads(MatrixN& dchain, vector<MatrixN *>numGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
-    MatrixN y=forward(*(params[0]));
-    if (params.size() != grads.size()) {
-        cout << "Internal error: params has " << params.size() << " parameters, grads has " << grads.size() << " parameters. Count must be equal!" << endl;
-        return false;
-    }
-    if (params.size() != numGrads.size()) {
-        cout << "Internal error: params has " << params.size() << " parameters, numGrads has " << numGrads.size() << " parameters. Count must be equal!" << endl;
-        return false;
-    }
-    if (params.size() != names.size()) {
-        cout << "Internal error: params has " << params.size() << " parameters, names-parameter nms has " << names.size() << " parameters. Count must be equal!" << endl;
-        return false;
-    }
-    for (unsigned int i=0; i<params.size(); i++) {
-        if (((*(params[i])).cols() != (*(grads[i])).cols()) || (*(params[i])).rows() != (*(grads[i])).rows()) {
-            vector<unsigned int> s0, s1;
-            s0 = shape(*(params[i]));
-            s1 = shape(*(grads[i]));
-            cout << "Dimension mismatch grads/params ind[" << i << "]: " << names[i] << s0 << " != d" << names[i] << s1 << endl;
-            return false;
-        }
-    }
-    for (unsigned int m=0; m<grads.size(); m++) {
+bool Layer::calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
+    for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
-            g = calcNumGrad(dchain, m, h);
+            g = calcNumGrad(dchain, pcache, it.first, h);
         } else {
-            g = calcNumGradLoss(dchain, m, h);
+            g = calcNumGradLoss(pcache, it.first, h);
         }
-        *(numGrads[m]) = g;
+        cout << "numGrad " << it.first << endl;
+        (*pnumGrads)[it.first] = new MatrixN(g);
     }
     return true;
 }
 
-bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
+bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -214,62 +194,38 @@ bool Layer::checkGradients(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    MatrixN yt=forward(x);
+    t_cppl grads;
+    MatrixN x=*(*pcache)["x"];
+    cout << "x:" << shape(x) << endl;
+    MatrixN yt=forward(x, pcache);
     if (lossFkt) { // XXX probably not needed!
-        loss(dchain);
+        loss(dchain, pcache);
     }
-    backward(dchain);
+    backward(dchain, pcache, &grads);
 
-    if (params.size() != grads.size()) {
-        cout << layerName << ": " << "Internal error: params has " << params.size() << " parameters, ngrads has " << grads.size() << " parameters. Count must be equal!" << endl;
-        return false;
-    }
-    if (params.size() != names.size()) {
-        cout << layerName << ": " << "Internal error: params has " << params.size() << " parameters, names-parameter nms has " << names.size() << " parameters. Count must be equal!" << endl;
-        return false;
-    }
-    vector<MatrixN *> numGrads(grads.size());
-    for (unsigned int i=0; i<numGrads.size(); i++) {
-        MatrixN *pm = grads[i];
-        numGrads[i]= new MatrixN(pm->rows(), pm->cols());
-        numGrads[i]->setZero();
-    }
-    for (unsigned int i=0; i<numGrads.size(); i++) {
-        if ((params[i]->cols() != numGrads[i]->cols()) || (params[i]->rows() != numGrads[i]->rows())) {
-            vector<unsigned int> s0, s1;
-            s0 = shape(*(params[i]));
-            s1 = shape(*(numGrads[i]));
-            cout << layerName << ": " << "Dimension mismatch params/numGrads ind[" << names[i] << "]: " << i << ", " << names[i] << s0 << " != d" << names[i] << s1 << endl;
-            return false;
-        }
-    }
+    t_cppl numGrads;
+    calcNumGrads(dchain, pcache, &grads, &numGrads, h, lossFkt);
 
-    if (!calcNumGrads(dchain, numGrads, h, lossFkt)) {
-        cout << "Bad init!";
-        return false;
-    }
-    for (unsigned int m=0; m<numGrads.size(); m++) {
+    for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-        MatrixN d = *(grads[m]) - *(numGrads[m]);
+        MatrixN d = *(grads[it.first]) - *(numGrads[it.first]);
         floatN df = (d.cwiseProduct(d)).sum();
         if (df < eps) {
-            cout << layerName << ": " << "∂/∂" << names[m] << green << " OK, err=" << df << def << endl;
+            cout << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
         } else {
-            cout << "∂/∂" << names[m] << "[num]: " << endl << (*(numGrads[m])).format(CleanFmt) << endl;
-            cout << "∂/∂" << names[m] << "[the]: " << endl << (*(grads[m])).format(CleanFmt) << endl;
-            cout << "  ð" << names[m] << "    : " << endl << ((*(grads[m])) - (*(numGrads[m]))).format(CleanFmt) << endl;
-            cout << layerName << ": " << "∂/∂" << names[m] << red << " ERROR, err=" << df << def << endl;
+            cout << "∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
+            cout << "∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
+            cout << "  ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
+            cout << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
             allOk=false;
         }
     }
-    for (unsigned int i=0; i<numGrads.size(); i++) {
-        delete numGrads[i];
-        numGrads[i]=nullptr;
-    }
+    cppl_delete(grads);
+    cppl_delete(numGrads);
     return allOk;
 }
 
-bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
+bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -278,7 +234,7 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    ret=checkForward(*(params[0]), eps);
+    ret=checkForward(*(*pcache)["x"], eps);
     if (!ret) {
         cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
         return ret;
@@ -286,7 +242,7 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
         cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
     }
 
-    ret=checkBackward(dchain, eps);
+    ret=checkBackward(*(*pcache)["x"], eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         return ret;
@@ -294,7 +250,7 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
         cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
     }
 
-    ret=checkGradients(x, dchain, h, eps, lossFkt);
+    ret=checkGradients(dchain, pcache, h, eps, lossFkt);
     if (!ret) {
         cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
@@ -314,20 +270,18 @@ bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN e
     bool lossFkt=false;
     MatrixN dchain;
     t_cppl cache;
-    t_cppl grads;
+    cache["x"] = new MatrixN(x);
     MatrixN yf = forward(x, &cache);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
-            cache["probs"] = new MatrixN(yf);
-            cache["y"] = new MatrixN(y);
-            MatrixN probs = yf;
-            *cache[0]=probs;
-            *cache[1]=y;
-            dchain = y;
+        cache["probs"] = new MatrixN(yf);
+        cache["y"] = new MatrixN(y);
+        dchain = y;
         lossFkt=true;
     }
-    return checkLayer(x, dchain, h, eps, lossFkt);
+    return checkLayer(dchain, &cache, h, eps, lossFkt);
+    cppl_delete(cache);
 }
 #endif
