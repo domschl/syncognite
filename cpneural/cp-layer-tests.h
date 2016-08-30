@@ -318,20 +318,19 @@ bool Layer::checkLayer(MatrixN& x, MatrixN& dchain, floatN h=CP_DEFAULT_NUM_H, f
 bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool lossFkt=false;
     MatrixN dchain;
-    MatrixN yf = forward(x);
+    cppl cache;
+    cppl grads;
+    MatrixN yf = forward(x, &cache);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
-        if (cache.size() >= 2) {
+            cache["probs"] = new MatrixN(yf);
+            cache["y"] = new MatrixN(y);
             MatrixN probs = yf;
             *cache[0]=probs;
             *cache[1]=y;
             dchain = y;
-        } else {
-            cout << "Internal error, cache not set for loss-layer" << endl;
-            return false;
-        }
         lossFkt=true;
     }
     return checkLayer(x, dchain, h, eps, lossFkt);
