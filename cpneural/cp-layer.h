@@ -93,17 +93,17 @@ Layer* createLayerInstance(t_layer_topo tp) {
 }
 
 //void cppl_delete(t_cppl p);
-void cppl_delete(t_cppl p) {
+void cppl_delete(t_cppl *p) {
     int nr=0;
-    if (p.size()==0) {
+    if (p->size()==0) {
         return;
     }
-    for (auto it : p) {
+    for (auto it : *p) {
         delete it.second;
-        it.second=nullptr;
+        (*p)[it.first]=nullptr;
         ++nr;
     }
-    p.erase(p.begin(),p.end());
+    p->erase(p->begin(),p->end());
 }
 
 
@@ -123,8 +123,13 @@ public:
     t_layer_creator_map mapl;
     t_layer_props mapprops;
     void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo), t_layer_props_entry lprops ) {
-        mapl[name] = sub;
-        mapprops[name] = lprops;
+        auto it=mapl.find(name);
+        if (it!=mapl.end()) {
+            cout << "Layer " << name << " is already registered, prevent additional registration." << endl;
+        } else {
+            mapl[name] = sub;
+            mapprops[name] = lprops;
+        }
     }
     Layer* createLayerInstance(std::string name, t_layer_topo tp) {
         return mapl[name](tp);
@@ -143,6 +148,7 @@ public:
     LayerType layerType;
     t_cppl params;
 
+    virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN forward(MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
     virtual floatN loss(MatrixN& y, t_cppl* pcache) { return 1001.0; }

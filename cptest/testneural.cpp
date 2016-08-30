@@ -81,8 +81,8 @@ bool checkAffineBackward(float eps=1.0e-6) {
     if (!ret) allOk=false;
     ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
     if (!ret) allOk=false;
-    cppl_delete(cache);
-    cppl_delete(grads);
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 
@@ -126,8 +126,8 @@ bool checkReluBackward(float eps=1.0e-6) {
     bool allOk=true;
     bool ret=matComp(dx,dx0,"ReluBackward dx",eps);
     if (!ret) allOk=false;
-    cppl_delete(cache);
-    cppl_delete(grads);
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 /*
@@ -456,14 +456,14 @@ int main() {
         allOk=false;
     }
 */
-/*
+
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
         cout << red << "RegisterTest: ERROR." << def << endl;
         allOk=false;
     }
-*/
+
 /*
     if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;

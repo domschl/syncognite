@@ -66,8 +66,8 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
         for (auto it : grads) {
             *rgrads[it.first] += *gdi[it.first];
         }
-        cppl_delete(gdi);
-        cppl_delete(chi);
+        cppl_delete(&gdi);
+        cppl_delete(&chi);
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
@@ -91,9 +91,9 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
             allOk=false;
         }
     }
-    cppl_delete(cache);
-    cppl_delete(grads);
-    cppl_delete(rgrads);
+    cppl_delete(&cache);
+    cppl_delete(&grads);
+    cppl_delete(&rgrads);
     return allOk;
 }
 
@@ -130,11 +130,11 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
         (*(params[var]))(i) = (*(params[var]))(i) - h;
         MatrixN y0 = forward(*((*pcache)["x"]), &cache);
         floatN sy0 = loss(*((*pcache)["y"]), &cache);
-        cppl_delete(cache);
+        cppl_delete(&cache);
         (*(params[var]))(i) = pxold + h;
         MatrixN y1 = forward(*(params[var]), &cache);
         floatN sy1 = loss(*((*pcache)["y"]), &cache);
-        cppl_delete(cache);
+        cppl_delete(&cache);
         (*(params[var]))(i) = pxold;
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
@@ -190,8 +190,8 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
             allOk=false;
         }
     }
-    cppl_delete(grads);
-    cppl_delete(numGrads);
+    cppl_delete(&grads);
+    cppl_delete(&numGrads);
     return allOk;
 }
 
@@ -251,7 +251,7 @@ bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN e
         lossFkt=true;
     }
     ret=checkLayer(dchain, &cache, h, eps, lossFkt);
-    cppl_delete(cache);
+    cppl_delete(&cache);
     return ret;
 }
 #endif

@@ -35,7 +35,7 @@ public:
         *params["b"] *= xavier;
     }
     ~Affine() {
-        cppl_delete(params);
+        cppl_delete(&params);
     }
     virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
         if (params["W"]->rows() != x.cols()) {
@@ -65,10 +65,10 @@ public:
         layerType=LayerType::LT_NORMAL;
     }
     ~Relu() {
-        cppl_delete(params);
+        cppl_delete(&params);
     }
     virtual MatrixN forward(MatrixN& x, t_cppl *pcache) override {
-        if (pcache!=nullptr) (*pcache)["x"] = new MatrixN(x);
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN ych=x;
         for (unsigned int i=0; i<ych.size(); i++) {
             if (x(i)<0.0) {

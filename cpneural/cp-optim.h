@@ -63,8 +63,8 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
             //dbus=t1.stopCpuMicro()/(double)dy;
             update(popti, &grads);
             //if ((b+1)%20==0) cout << dfus << " " << dbus << endl;
-            cppl_delete(cache);
-            cppl_delete(grads);
+            cppl_delete(&cache);
+            cppl_delete(&grads);
         }
         cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {
