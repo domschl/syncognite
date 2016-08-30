@@ -1,2 +1,6 @@
 add_executable(mnisttest mnisttest.cpp)
-target_link_libraries(mnisttest LINK_PUBLIC cpneural hdf5 hdf5_cpp)
+find_package(HDF5)
+if (HDF5_FOUND)
+  include_directories(${HDF5_INCLUDE_DIRS})
+  target_link_libraries(mnisttest LINK_PUBLIC cpneural hdf5 hdf5_cpp)
+endif (HDF5_FOUND)

@@ -217,7 +217,7 @@ bool checkSoftmax(float eps=1.0e-6) {
     if (!ret) allOk=false;
     floatN loss0=sm.loss(y);
     floatN d=loss-loss0;
-    floatN err=abs(d);
+    floatN err=std::abs(d);
     if (err > eps) {
         cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
@@ -291,7 +291,7 @@ bool checkTwoLayer(float eps=1.0e-6) {
     floatN reg=0.0;
     floatN ls = tln.loss(yc);
     floatN lsc = 1.1925059294331903;
-    floatN lse=abs(ls-lsc);
+    floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
         cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
     } else {
