@@ -25,62 +25,38 @@ public:
         assert (topo.size()==2);
         layerName="Affine";
         layerType=LayerType::LT_NORMAL;
-        names=vector<string>{"x", "W", "b"};
-        params=vector<MatrixN *>(3);
-        params[0]=new MatrixN(1,topo[0]); // x
-        params[1]=new MatrixN(topo[0],topo[1]); // W
-        params[2]=new MatrixN(1,topo[1]); // b
+        params["W"]=new MatrixN(topo[0],topo[1]); // W
+        params["b"]=new MatrixN(1,topo[1]); // b
 
-        grads=vector<MatrixN *>(3);
-        grads[0]=new MatrixN(1,topo[0]); // dx
-        grads[1]=new MatrixN(topo[0],topo[1]); // dW
-        grads[2]=new MatrixN(1,topo[1]); // db
-
-        MatrixN *pW = params[1];
-        MatrixN *pb = params[2];
-        pW->setRandom();
-        floatN xavier = 2.0/(topo[0]+topo[1]);
-        *pW *= xavier;
-        pb->setRandom();
-        *pb *= xavier;
+        params["W"]->setRandom();
+        floatN xavier = 1.0/(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        *params["W"] *= xavier;
+        params["b"]->setRandom();
+        *params["b"] *= xavier;
     }
     ~Affine() {
-        for (unsigned int i=0; i<params.size(); i++) {
-            delete params[i];
-            params[i]=nullptr;
-            delete grads[i];
-            grads[i]=nullptr;
-        }
+        cppl_delete(params);
     }
-    virtual MatrixN forward(MatrixN& x) override {
-        MatrixN *px=params[0];
-        MatrixN *pW=params[1];
-        MatrixN *pb=params[2];
-        if (pW->rows() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(*px) << " W:"<< shape(*pW) << endl;
+    virtual MatrixN forward(MatrixN& x, cppl* pcache) override {
+        if (params["W"]->rows() != x.cols()) {
+            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:"<< shape(*params["W"]) << endl;
             MatrixN y(0,0);
             return y;
         }
-        if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
-            params[0]->resize(x.rows(), x.cols());
-            grads[0]->resize(x.rows(), x.cols());
-        }
-        *params[0] = x;
-        MatrixN y = (*px) * (*pW);
-        RowVectorN b = *pb;
+        if (pcache!=nullptr) (*pcache)["x"] = new MatrixN(x);
+        MatrixN y = x * (*params["W"]);
+        RowVectorN b = *params["b"];
         y.rowwise() += b;
         return y;
     }
-    virtual MatrixN backward(MatrixN& dchain) override {
-        MatrixN *px=params[0];
-        MatrixN *pW=params[1];
-        *grads[0] = dchain * (*pW).transpose(); // dx
-        *grads[1] = (*px).transpose() * dchain; //dW
-        *grads[2] = dchain.colwise().sum(); //db
-        return *grads[0];
+    virtual MatrixN backward(MatrixN& dchain, cppl* pcache, cppl* pgrads) override {
+        MatrixN dx = dchain * (*params["W"]).transpose(); // dx
+        (*pgrads)["W"] = new MatrixN((*(*pcache)["x"]).transpose() * dchain); //dW
+        (*pgrads)["b"] = new MatrixN(dchain.colwise().sum()); //db
+        return dx;
     }
 };
-
+/*
 class Relu : public Layer {
 public:
     Relu(t_layer_topo topo) {
@@ -243,12 +219,12 @@ public:
         }
         MatrixN probs = xne;
         *cache[0]=probs;
-        /*
-        MatrixN logprobs = xne;
-        for (unsigned int i=0; i<probs.rows(); i++) {
-            logprobs(i,1) = -log(probs(i,y(i,0)));
-        }
-        */
+
+        //MatrixN logprobs = xne;
+        //for (unsigned int i=0; i<probs.rows(); i++) {
+        //    logprobs(i,1) = -log(probs(i,y(i,0)));
+        //}
+
 
         return probs;
     }
@@ -390,12 +366,13 @@ public:
     }
 
 };
-
+*/
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
-    REGISTER_LAYER("Relu", Relu, 1)
+
+/*    REGISTER_LAYER("Relu", Relu, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
-}
+*/}
 #endif

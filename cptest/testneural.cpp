@@ -81,7 +81,7 @@ bool checkAffineBackward(float eps=1.0e-6) {
     if (!ret) allOk=false;
     return allOk;
 }
-
+/*
 bool checkReluForward(floatN eps=1.e-6) {
     MatrixN x(3,4);
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
@@ -313,7 +313,7 @@ bool checkTwoLayer(float eps=1.0e-6) {
 
     return allOk;
 }
-
+*/
 bool registerTest() {
     bool allOk=true;
     cout << "Registerd Layers:" << endl;
@@ -336,13 +336,14 @@ bool registerTest() {
     return allOk;
 }
 
+/*
 bool trainTest() {
     bool allOk=true;
     TwoLayerNet tln({5,4,2});
 
     return allOk;
 }
-
+*/
 int main() {
     MatrixN yz;
     cout << "=== 0.: Init: registering layers" << endl;
@@ -359,7 +360,7 @@ int main() {
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
-
+/*
     Relu rl({30});
     MatrixN xr(20,30);
     xr.setRandom();
@@ -393,7 +394,7 @@ int main() {
     if (!mx.selfTest(xmx, y)) {
         allOk=false;
     }
-
+*/
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -409,7 +410,7 @@ int main() {
         cout << red << "AffineBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkReluForward()) {
         cout << green << "ReluForward with test data: OK." << def << endl;
     } else {
@@ -444,21 +445,21 @@ int main() {
         cout << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+*/
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
         cout << red << "RegisterTest: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
         cout << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
-
+*/
     if (allOk) {
         cout << green << "All tests ok." << def << endl;
     } else {

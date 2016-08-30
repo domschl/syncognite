@@ -38,6 +38,7 @@ using floatN=float;
 
 template <typename T>
 using cp_t_params = map<string, T>;
+using cppl = cp_t_params<MatrixN *>;
 
 vector<unsigned int> shape(MatrixN& m) {
     vector<unsigned int> s(2);
@@ -90,6 +91,13 @@ Layer* createLayerInstance(t_layer_topo tp) {
     return new T(tp);
 }
 
+void cppl_delete(ccpl p) {
+    for (auto it : p) {
+        delete it.second;
+        it.second=nullptr;
+    }
+}
+
 typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
 
 class LayerFactory {
@@ -115,17 +123,18 @@ class Layer {
 public:
     string layerName;
     LayerType layerType;
-    vector<MatrixN *> params;
-    vector<MatrixN *> grads;
-    vector<MatrixN *> cache;
-    vector<string> names;
+    cppl params;
 
-    virtual MatrixN forward(MatrixN& lL)  { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
-    virtual floatN loss(MatrixN& y) { return 1001.0; }
-    virtual bool update(Optimizer *popti) {
-        for (int i=1; i<params.size(); i++) {
+    virtual MatrixN forward(MatrixN& lL, cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(MatrixN& dtL, cppl* pcache, cppl* pgrads) { MatrixN d(0,0); return d;}
+    virtual floatN loss(MatrixN& y, cppl* pcache) { return 1001.0; }
+    virtual bool update(Optimizer *popti, cppl* pgrads) {
+        /*for (int i=0; i<params.size(); i++) {
             *params[i] = popti->update(*params[i],*grads[i]);
+        }*/
+        for (auto it : params) {
+            key = it.first;
+            *params[key] = popti->update(*params[key],*((*pgrads)[key]));
         }
         return true;
     }
@@ -154,8 +163,8 @@ public:
 
 private:
     bool checkForward(MatrixN& x, floatN eps);
-    bool checkBackward(MatrixN& dchain, floatN eps);
-    bool calcNumGrads(MatrixN& dchain, vector<MatrixN *> numGrads, floatN h, bool lossFkt);
+    bool checkBackward(MatrixN& x, floatN eps);
+    bool calcNumGrads(MatrixN& dchain, cppl* pnumGrads, floatN h, bool lossFkt);
     MatrixN calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h);
     MatrixN calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h);
     bool checkGradients(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);

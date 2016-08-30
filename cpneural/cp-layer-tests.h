@@ -8,65 +8,72 @@
 #include "cp-layer.h"
 #include "cp-math.h"
 
-bool Layer::checkForward(MatrixN& x, floatN eps=1.0e-6) {
+bool Layer::checkForward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
-    MatrixN yt=forward(x);
+    MatrixN yt=forward(x, nullptr);
     MatrixN y(0, yt.cols());
     for (unsigned int i=0; i<x.rows(); i++) {
         MatrixN xi=x.row(i);
-        MatrixN yi = forward(xi);
+        MatrixN yi = forward(xi, nullptr);
         MatrixN yn(yi.rows() + y.rows(),yi.cols());
         yn << y, yi;
         y = yn;
     }
 
-    MatrixN yc = forward(x);
+    //MatrixN yc = forward(x, nullptr);
     IOFormat CleanFmt(3, 0, ", ", "\n", "[", "]");
-    MatrixN d = y - yc;
+    MatrixN d = y - yt;
     floatN dif = d.cwiseProduct(d).sum();
 
     if (dif < eps) {cout << "Forward vectorizer OK, err=" << dif << endl;}
     else {
         cout << "Forward vectorizer Error, err=" << dif << endl;
         cout << "y:" << y.format(CleanFmt) << endl;
-        cout << "yc:" << yc.format(CleanFmt) << endl;
+        cout << "yt:" << yt.format(CleanFmt) << endl;
         allOk=false;
     }
     return allOk;
 }
 
-bool Layer::checkBackward(MatrixN& dchain, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
-    MatrixN x = *(params[0]);
-    MatrixN dyc = forward(x);
+    cppl cache;
+    cppl grads;
+    MatrixN dyc = forward(x, &cache);
     dyc.setRandom();
     MatrixN dx = x;
     dx.setZero();
 
-    MatrixN dxc = backward(dyc);
-    // vector<MatrixN *> dparso = getG(dyc);
-    vector<MatrixN *> dpars(grads.size());
-    for (unsigned int i=1; i<dpars.size(); i++) {
-        MatrixN *pm = grads[i];
-        dpars[i]= new MatrixN((*pm).rows(), (*pm).cols());
-        dpars[i]->setZero();
+    MatrixN dxc = backward(dyc, &cache, &grads);
+    cppl rgrads;
+    for (auto it : grads) {
+        rgrads[it.first]=new MatrixN(*grads[it.first]); // grads[it.first].rows(),grads[it.first].cols());
+        rgrads[it.first]->setZero();
     }
     //cout << shape(x) << shape(dx) << shape(dxc) << shape(yc) << endl;
     for (unsigned int i=0; i<x.rows(); i++) {
+        cppl chi;
+        cppl gdi;
         MatrixN xi=x.row(i);
-        MatrixN dyi2 = forward(xi);
+        MatrixN dyi2 = forward(xi, &chi);
         MatrixN dyi = dyc.row(i);
-        MatrixN dyt = backward(dyi);
+        MatrixN dyt = backward(dyi, &chi, &gdi);
         //cout << "B-SHAPE_INS" << shape(dx) << shape(dyt) << endl;
         dx.row(i) = dyt.row(0);
-        //vector<MatrixN *> dparsi = getG(dyi);
+        for (auto it : grads) {
+            *rgrads[it.first] += *gdi[it.first];
+        }
+        /*
         for (unsigned int j=1; j<grads.size(); j++) {
             MatrixN *pmi = grads[j];
             //cout << i << "-" << j <<"-0:" << (*(dpars[j])).format(CleanFmt) << endl;
             *(dpars[j]) = *(dpars[j]) + *pmi;
             //cout << i << "-" << j << "-1:" << (*(dpars[j])).format(CleanFmt) << endl;
         }
+        */
+        cppl_delete(gdi);
+        cppl_delete(chi);
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
@@ -78,10 +85,9 @@ bool Layer::checkBackward(MatrixN& dchain, floatN eps=CP_DEFAULT_NUM_EPS) {
         allOk=false;
     }
 
-    MatrixN dyc2 = forward(x);
-    dxc = backward(dyc);
-    //vector<MatrixN *> dparsc = getG(dyc);
-    for (unsigned int i=1; i<grads.size(); i++) {
+    //MatrixN dyc2 = forward(x);
+    //dxc = backward(dyc);
+/*    for (unsigned int i=1; i<grads.size(); i++) {
         MatrixN *pmc = grads[i];
         MatrixN *pm = dpars[i];
         MatrixN d = *pm - *pmc;
@@ -99,6 +105,22 @@ bool Layer::checkBackward(MatrixN& dchain, floatN eps=CP_DEFAULT_NUM_EPS) {
         delete dpars[i];
         dpars[i]=nullptr;
     }
+*/
+    for (auto it : grads) {
+        MatrixN d = *grads[it.first] - *rgrads[it.first];
+        floatN dif = d.cwiseProduct(d).sum();
+        if (dif < eps) {
+            cout << "Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
+        } else {
+            cout << "d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
+            cout << "d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
+            cout << "Backward vectorizer " << "d" << it.first << "Error, err=" << dif << endl;
+            allOk=false;
+        }
+    }
+    cppl_delete(cache);
+    cppl_delete(grads);
+    cppl_delete(rgrads);
     return allOk;
 }
 

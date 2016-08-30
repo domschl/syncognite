@@ -12,8 +12,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
 add_subdirectory (cptest)
-add_subdirectory (cpmnist)
+# add_subdirectory (cpmnist)
 
 set_property(TARGET cpneural PROPERTY CXX_STANDARD 11)
 set_property(TARGET testneural PROPERTY CXX_STANDARD 11)
-set_property(TARGET mnisttest PROPERTY CXX_STANDARD 11)
+# set_property(TARGET mnisttest PROPERTY CXX_STANDARD 11)
