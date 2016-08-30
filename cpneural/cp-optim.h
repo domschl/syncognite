@@ -52,15 +52,15 @@ floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string opt
             MatrixN xb=x.block(y0,0,dy,x.cols());
             MatrixN yb=y.block(y0,0,dy,y.cols());
             //cout << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
-            t1.startCpu();
+            //t1.startCpu();
             forward(xb);
-            dfus=t1.stopCpuMicro()/(double)dy;
-            t1.startCpu();
+            //dfus=t1.stopCpuMicro()/(double)dy;
+            //t1.startCpu();
             l=loss(yb);
             backward(yb);
-            dbus=t1.stopCpuMicro()/(double)dy;
+            //dbus=t1.stopCpuMicro()/(double)dy;
             update(popti);
-            if ((b+1)%20==0) cout << dfus << " " << dbus << endl;
+            //if ((b+1)%20==0) cout << dfus << " " << dbus << endl;
         }
         cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {
