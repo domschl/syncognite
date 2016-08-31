@@ -98,17 +98,30 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
 }
 
 MatrixN Layer::calcNumGrad(MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
-    MatrixN *pm = params[var];
+    MatrixN *pm;
+    MatrixN x=*((*pcache)["x"]);
+    if (var=="x") pm=&x;
+    else pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
-        pxold = (*(params[var]))(i);
-        (*(params[var]))(i) = (*(params[var]))(i) - h;
-        MatrixN y0 = forward(*((*pcache)["x"]), nullptr);
-        (*(params[var]))(i) = pxold + h;
-        MatrixN y1 = forward(*((*pcache)["x"]), nullptr);
-        (*(params[var]))(i) = pxold;
+        MatrixN y0,y1;
+        if (var=="x") {
+            pxold = x(i);
+            x(i) = x(i) - h;
+            y0 = forward(x, nullptr);
+            x(i) = pxold + h;
+            y1 = forward(x, nullptr);
+            x(i) = pxold;
+        } else {
+            pxold = (*(params[var]))(i);
+            (*(params[var]))(i) = (*(params[var]))(i) - h;
+            y0 = forward(x, nullptr);
+            (*(params[var]))(i) = pxold + h;
+            y1 = forward(x, nullptr);
+            (*(params[var]))(i) = pxold;
+        }
         MatrixN dy=y1-y0;
         MatrixN dd;
         dd = dy.cwiseProduct(dchain);
@@ -167,11 +180,13 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
 
     t_cppl grads;
     MatrixN x=*(*pcache)["x"];
-    MatrixN yt=forward(x, pcache);
+    // MatrixN yt=forward(x, pcache);
+    MatrixN yt=forward(x, nullptr);
     if (lossFkt) { // XXX probably not needed!
         loss(dchain, pcache);
     }
-    backward(dchain, pcache, &grads);
+    MatrixN dx=backward(dchain, pcache, &grads);
+    grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
     calcNumGrads(dchain, pcache, &grads, &numGrads, h, lossFkt);
