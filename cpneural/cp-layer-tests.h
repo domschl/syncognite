@@ -139,8 +139,9 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
     MatrixN y=*((*pcache)["y"]);
     if (var=="x") pm=&x;
     else pm = params[var];
-    MatrixN grad((*pm).rows(), (*pm).cols());
-
+    MatrixN grad(pm->rows(), pm->cols());
+    cout << var << "/dx-shape:" << shape(grad) << endl;
+    
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
         t_cppl cache;
