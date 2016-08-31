@@ -39,7 +39,7 @@ public:
     }
     virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
         if (params["W"]->rows() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:"<< shape(*params["W"]) << endl;
+            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
             MatrixN y(0,0);
             return y;
         }
@@ -87,7 +87,7 @@ public:
         return dx;
     }
 };
-/*
+
 class AffineRelu : public Layer {
 public:
     Affine *af;
@@ -96,46 +96,76 @@ public:
         assert (topo.size()==2);
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
-        names=vector<string>{"x"};
         af=new Affine({topo[0],topo[1]});
+        for (auto pi : af->params) {
+            params["af-"+pi.first]=pi.second;
+        }
         rl=new Relu({topo[1]});
-        params=vector<MatrixN *>(1);
-        params[0]=new MatrixN(1,topo[0]); // x
-        grads=vector<MatrixN *>(1);
-        grads[0]=new MatrixN(1,topo[0]); // dx
+        for (auto pi : rl->params) {
+            params["re-"+pi.first]=pi.second;
+        }
     }
     ~AffineRelu() {
         delete af;
         af=nullptr;
         delete rl;
         rl=nullptr;
-        for (unsigned int i=0; i<params.size(); i++) {
-            delete params[i];
-            params[i]=nullptr;
-            delete grads[i];
-            grads[i]=nullptr;
-        }
+        // cppl_delete(&params);
     }
-    virtual MatrixN forward(MatrixN& x) override {
-        *(params[0])=x;
-        MatrixN y0=af->forward(x);
-        MatrixN y=rl->forward(y0);
+    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        t_cppl tcacheaf;
+        MatrixN y0=af->forward(x, &tcacheaf);
+        for (auto ci : tcacheaf) {
+            string var = "af-"+ci.first;
+            if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
+        }
+        t_cppl tcachere;
+        MatrixN y=rl->forward(y0, &tcachere);
+        for (auto ci : tcachere) {
+            string var = "re-"+ci.first;
+            if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
+        }
         return y;
     }
-    virtual MatrixN backward(MatrixN& dchain) override {
-        MatrixN dx0=rl->backward(dchain);
-        MatrixN dx=af->backward(dx0);
-        *(grads[0])=dx;
+    virtual MatrixN backward(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+        t_cppl tcachere;
+        t_cppl tgradsre;
+        for (auto ci : *pcache) {
+            if (ci.first.substr(0,3)=="re-") cppl_set(&tcachere, ci.first.substr(3), ci.second);
+        }
+        MatrixN dx0=rl->backward(dchain, &tcachere, &tgradsre);
+        for (auto ci : tgradsre) {
+            cppl_set(pgrads, "re-"+ci.first, ci.second);
+        }
+
+        t_cppl tcacheaf;
+        t_cppl tgradsaf;
+        for (auto ci : *pcache) {
+            if (ci.first.substr(0,3)=="af-") cppl_set(&tcacheaf, ci.first.substr(3), ci.second);
+        }
+        MatrixN dx=af->backward(dx0, &tcacheaf, &tgradsaf);
+        for (auto ci : tgradsaf) {
+            cppl_set(pgrads, "af-"+ci.first, ci.second);
+        }
         return dx;
     }
-    virtual bool update(Optimizer *popti) override {
-        af->update(popti);
-        rl->update(popti);
+    virtual bool update(Optimizer *popti, t_cppl *pgrads) override {
+        t_cppl tgradsaf;
+        for (auto ci : *pgrads) {
+            if (ci.first.substr(0,3)=="af-") cppl_set(&tgradsaf, ci.first.substr(3), ci.second);
+        }
+        af->update(popti, &tgradsaf);
+        t_cppl tgradsre;
+        for (auto ci : *pgrads) {
+            if (ci.first.substr(0,3)=="re-") cppl_set(&tgradsre, ci.first.substr(3), ci.second);
+        }
+        rl->update(popti, &tgradsre);
         return true;
     }
 };
 
-
+/*
 class Softmax : public Layer {
 public:
     Softmax(t_layer_topo topo) {
@@ -346,8 +376,8 @@ public:
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
     REGISTER_LAYER("Relu", Relu, 1)
-/*
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
+    /*
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
 */}

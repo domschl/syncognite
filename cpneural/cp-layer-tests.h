@@ -98,6 +98,7 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
 }
 
 MatrixN Layer::calcNumGrad(MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+    cout << "  checking numerical gradiend for " << var << "..." << endl;
     MatrixN *pm;
     MatrixN x=*((*pcache)["x"]);
     if (var=="x") pm=&x;
@@ -133,22 +134,41 @@ MatrixN Layer::calcNumGrad(MatrixN& dchain, t_cppl* pcache, string var, floatN h
 }
 
 MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
-    MatrixN *pm = params[var];
+    MatrixN *pm;
+    MatrixN x=*((*pcache)["x"]);
+    MatrixN y=*((*pcache)["y"]);
+    if (var=="x") pm=&x;
+    else pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
         t_cppl cache;
-        pxold = (*(params[var]))(i);
-        (*(params[var]))(i) = (*(params[var]))(i) - h;
-        MatrixN y0 = forward(*((*pcache)["x"]), &cache);
-        floatN sy0 = loss(*((*pcache)["y"]), &cache);
-        cppl_delete(&cache);
-        (*(params[var]))(i) = pxold + h;
-        MatrixN y1 = forward(*(params[var]), &cache);
-        floatN sy1 = loss(*((*pcache)["y"]), &cache);
-        cppl_delete(&cache);
-        (*(params[var]))(i) = pxold;
+        MatrixN y0,y1;
+        float sy0, sy1;
+        if (var=="x") {
+            pxold = x(i);
+            x(i) = x(i) - h;
+            y0 = forward(x, &cache);
+            sy0 = loss(y, &cache);
+            cppl_delete(&cache);
+            x(i) = pxold + h;
+            y1 = forward(x, &cache);
+            sy1 = loss(y, &cache);
+            cppl_delete(&cache);
+            x(i) = pxold;
+        } else {
+            pxold = (*(params[var]))(i);
+            (*(params[var]))(i) = (*(params[var]))(i) - h;
+            y0 = forward(x, &cache);
+            sy0 = loss(y, &cache);
+            cppl_delete(&cache);
+            (*(params[var]))(i) = pxold + h;
+            y1 = forward(x, &cache);
+            sy1 = loss(y, &cache);
+            cppl_delete(&cache);
+            (*(params[var]))(i) = pxold;
+        }
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
         grad(i)=drs;
@@ -219,6 +239,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
+    cout << "  check foward vectorizer " << layerName << "..." << endl;
     ret=checkForward(*(*pcache)["x"], eps);
     if (!ret) {
         cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
@@ -227,6 +248,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
         cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
     }
 
+    cout << "  check backward vectorizer " << layerName << "..." << endl;
     ret=checkBackward(*(*pcache)["x"], eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
@@ -235,6 +257,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
         cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
     }
 
+    cout << "  check numerical gradients " << layerName << "..." << endl;
     ret=checkGradients(dchain, pcache, h, eps, lossFkt);
     if (!ret) {
         cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;

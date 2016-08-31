@@ -377,14 +377,14 @@ int main() {
         allOk=false;
     }
 
-/*
+
     AffineRelu rx({2,3});
     MatrixN xarl(30,2);
     xarl.setRandom();
     if (!rx.selfTest(xarl,yz)) {
         allOk=false;
     }
-
+/*
     TwoLayerNet tl({4,5,6});
     MatrixN xtl(30,4);
     xtl.setRandom();
