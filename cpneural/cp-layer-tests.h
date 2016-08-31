@@ -239,8 +239,10 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
+    MatrixN x=*(*pcache)["x"];
+
     cout << "  check foward vectorizer " << layerName << "..." << endl;
-    ret=checkForward(*(*pcache)["x"], eps);
+    ret=checkForward(x, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
         return ret;
@@ -249,7 +251,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     }
 
     cout << "  check backward vectorizer " << layerName << "..." << endl;
-    ret=checkBackward(*(*pcache)["x"], eps);
+    ret=checkBackward(x, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         return ret;
