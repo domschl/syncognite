@@ -187,7 +187,7 @@ public:
 
 private:
     bool checkForward(MatrixN& x, floatN eps);
-    bool checkBackward(MatrixN& x, floatN eps);
+    bool checkBackward(MatrixN& x, t_cppl *pcache, floatN eps);
     bool calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
     MatrixN calcNumGrad(MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
     MatrixN calcNumGradLoss(t_cppl* pcache, string var, floatN h);

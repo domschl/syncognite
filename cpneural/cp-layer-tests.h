@@ -36,24 +36,38 @@ bool Layer::checkForward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(MatrixN& x, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
     t_cppl grads;
     t_cppl rgrads;
 
-    MatrixN dyc = forward(x, &cache);
-    dyc.setRandom();
+    MatrixN dyc;
+    if (layerType==LayerType::LT_NORMAL) {
+        dyc = forward(x, &cache);
+        dyc.setRandom();
+    } else if (layerType==LayerType::LT_LOSS) {
+        forward(x, &cache);
+        dyc=*((*pcache)["y"]);
+    } else {
+        cout << "BAD LAYER TYPE!" << layerType << endl;
+        return false;
+    }
+    if (dyc.rows() != x.rows()) {
+        cout << "internal error: y:" << shape(dyc) << " x:" << shape(x) << " - unequal number of rows!" << endl;
+        return false;
+    }
     MatrixN dx = x;
     dx.setZero();
 
     MatrixN dxc = backward(dyc, &cache, &grads);
+
     for (auto it : grads) {
         cppl_set(&rgrads, it.first, new MatrixN(*grads[it.first])); // grads[it.first].rows(),grads[it.first].cols());
         rgrads[it.first]->setZero();
-        //cout << shape(x) << " " << it.first << " "<< shape(dx) << shape(*rgrads[it.first]) << shape(*grads[it.first]) << endl;
     }
+
     for (unsigned int i=0; i<x.rows(); i++) {
         t_cppl chi;
         t_cppl gdi;
@@ -61,7 +75,6 @@ bool Layer::checkBackward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
         MatrixN dyi2 = forward(xi, &chi);
         MatrixN dyi = dyc.row(i);
         MatrixN dyt = backward(dyi, &chi, &gdi);
-        //cout << "B-SHAPE_INS" << shape(dx) << shape(dyt) << endl;
         dx.row(i) = dyt.row(0);
         for (auto it : grads) {
             *rgrads[it.first] += *gdi[it.first];
@@ -140,8 +153,8 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad(pm->rows(), pm->cols());
-    cout << var << "/dx-shape:" << shape(grad) << endl;
-    
+    //cout << var << "/dx-shape:" << shape(grad) << endl;
+
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
         t_cppl cache;
@@ -257,7 +270,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     }
 
     cout << "  check backward vectorizer " << layerName << "..." << endl;
-    ret=checkBackward(x, eps);
+    ret=checkBackward(x, pcache, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         allOk=false; //return ret;

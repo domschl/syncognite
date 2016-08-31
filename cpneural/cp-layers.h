@@ -201,7 +201,7 @@ public:
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
             floatN pi = probs(i,y(i,0));
-            if (pi==0.0) cout << "Invalid zero probability at " << i << endl;
+            if (pi==0.0) cout << "Invalid zero log-probability at " << i << endl;
             else loss -= log(pi);
         }
         loss /= probs.rows();
