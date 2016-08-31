@@ -130,7 +130,7 @@ bool checkReluBackward(float eps=1.0e-6) {
     cppl_delete(&grads);
     return allOk;
 }
-/*
+
 bool checkAffineRelu(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(2,4);
@@ -148,9 +148,11 @@ bool checkAffineRelu(float eps=1.0e-6) {
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
     AffineRelu arl({4,5});
-    *(arl.af->params[1])=W;
-    *(arl.af->params[2])=b;
-    MatrixN y0=arl.forward(x);
+    t_cppl cache;
+    t_cppl grads;
+    *(arl.params["af-W"])=W;
+    *(arl.params["af-b"])=b;
+    MatrixN y0=arl.forward(x, &cache);
     bool ret=matComp(y,y0,"AffineRelu",eps);
     if (!ret) allOk=false;
 
@@ -168,18 +170,20 @@ bool checkAffineRelu(float eps=1.0e-6) {
     dchain << -1.08201385, -0.34514762,  0.8563332 ,  0.7021515 , -2.02372516,
               -0.26158065, -2.43253431,  0.33677677, -0.17383908,  0.53332595;
 
-    MatrixN dx0=arl.backward(dchain);
+    MatrixN dx0=arl.backward(dchain, &cache, &grads);
 
     ret=matComp(dx,dx0,"AffineRelu dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(arl.af->grads[1]),"AffineRelu dW",eps);
+    ret=matComp(dW,*(grads["af-W"]),"AffineRelu dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(arl.af->grads[2]),"AffineRelu db",eps);
+    ret=matComp(db,*(grads["af-b"]),"AffineRelu db",eps);
     if (!ret) allOk=false;
 
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
-
+/*
 bool checkSoftmax(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(10,5);
@@ -434,14 +438,14 @@ int main() {
         cout << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkAffineRelu()) {
         cout << green << "AffineRelu with test data: OK." << def << endl;
     } else {
         cout << red << "AffineRelu with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkSoftmax()) {
         cout << green << "Softmax with test data: OK." << def << endl;
     } else {
