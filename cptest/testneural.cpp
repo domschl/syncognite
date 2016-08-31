@@ -183,7 +183,7 @@ bool checkAffineRelu(float eps=1.0e-6) {
     cppl_delete(&grads);
     return allOk;
 }
-/*
+
 bool checkSoftmax(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(10,5);
@@ -224,10 +224,12 @@ bool checkSoftmax(float eps=1.0e-6) {
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
     Softmax sm({5});
-    MatrixN probs0=sm.forward(x);
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN probs0=sm.forward(x, &cache);
     bool ret=matComp(probs,probs0,"Softmax probabilities",eps);
     if (!ret) allOk=false;
-    floatN loss0=sm.loss(y);
+    floatN loss0=sm.loss(y, &cache);
     floatN d=loss-loss0;
     floatN err=abs(d);
     if (err > eps) {
@@ -238,13 +240,14 @@ bool checkSoftmax(float eps=1.0e-6) {
     }
     //MatrixN dchain=x;
     //dchain.setOnes();
-    MatrixN dx0=sm.backward(y);
+    MatrixN dx0=sm.backward(y, &cache, &grads);
     ret=matComp(dx,dx0,"Softmax dx",eps);
     if (!ret) allOk=false;
-
+    cppl_delete(&grads);
+    cppl_delete(&cache);
     return allOk;
 }
-
+/*
 bool checkTwoLayer(float eps=1.0e-6) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
     MatrixN x(3,5);
@@ -399,7 +402,7 @@ int main() {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
-
+*/
     int smN=10, smC=4;
     Softmax mx({smC});
     MatrixN xmx(smN,smC);
@@ -409,7 +412,7 @@ int main() {
     if (!mx.selfTest(xmx, y)) {
         allOk=false;
     }
-*/
+
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -447,14 +450,13 @@ int main() {
         allOk=false;
     }
 
-/*
     if (checkSoftmax()) {
         cout << green << "Softmax with test data: OK." << def << endl;
     } else {
         cout << red << "Softmax with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkTwoLayer()) {
         cout << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {

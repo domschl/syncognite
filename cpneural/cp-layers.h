@@ -166,56 +166,19 @@ public:
     }
 };
 
-/*
+
 class Softmax : public Layer {
 public:
     Softmax(t_layer_topo topo) {
         assert (topo.size()==1);
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
-        names=vector<string>{"x"};
-        params=vector<MatrixN *>(1);
-        params[0]=new MatrixN(1,topo[0]); // x
-
-        grads=vector<MatrixN *>(1);
-        grads[0]=new MatrixN(1,topo[0]); // dx
-
-        cache=vector<MatrixN *>(2);
-        cache[0]=new MatrixN(1,topo[0]); // probs
-        cache[1]=new MatrixN(1,1); // y
     }
     ~Softmax() {
-        for (unsigned int i=0; i<params.size(); i++) {
-            delete params[i];
-            params[i]=nullptr;
-            delete grads[i];
-            grads[i]=nullptr;
-        }
-        for (unsigned int i=0; i<cache.size(); i++) {
-            delete cache[i];
-            cache[i]=nullptr;
-        }
+        cppl_delete(&params);
     }
-    virtual MatrixN forward(MatrixN& x) override {
-        MatrixN *px=params[0];
-        if (px->cols() != x.cols()) {
-            cout << layerName << ": " << "Sm forward: dimension mismatch in Softmax(x): Rx:" << shape(*px) << " x:"<< shape(x) << endl;
-            return MatrixN(0,0);
-        }
-        if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
-            params[0]->resize(x.rows(), x.cols());
-            params[0]->setZero();
-            grads[0]->resize(x.rows(), x.cols());
-            grads[0]->setZero();
-            cache[0]->resize(x.rows(), x.cols());
-            cache[0]->setZero();
-        }
-        if (cache[1]->rows() != x.rows()) {
-            cache[1]->resize(x.rows(),1);
-            cache[1]->setZero();
-            for (int i=0; i<(*(cache[1])).size(); i++) (*(cache[1]))(i)= (-1.0); // XXX: for error testing
-        }
-        *params[0]=x;
+    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
         xn.colwise() +=  mxc;
@@ -225,39 +188,16 @@ public:
             xne.row(i) /= xnes(i);
         }
         MatrixN probs = xne;
-        *cache[0]=probs;
-
-        //MatrixN logprobs = xne;
-        //for (unsigned int i=0; i<probs.rows(); i++) {
-        //    logprobs(i,1) = -log(probs(i,y(i,0)));
-        //}
-
-
+        if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
-    virtual floatN loss(MatrixN& y) override {
-        MatrixN probs=*cache[0];
+    virtual floatN loss(MatrixN& y, t_cppl* pcache) override {
+        MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
             cout << layerName << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
-            //cout << "y:" << endl << y << endl;
             return 1000.0;
         }
-        if ((*cache[1]).rows() !=y.rows()) {
-            cout << layerName << ": Internal error, cache[1] wrong size: " << (*cache[1]).rows() << "!=" << y.rows() << endl;
-            return 1000.0;
-        }
-        if ((*cache[1]).cols() !=1) {
-            cout << layerName << ": Internal error, cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
-            return 1000.0;
-        }
-        if (y.cols()!=1) {
-            cout << "Internal Error when setting y-cache: cols=" << y.cols() << " <- should be 1!" << endl;
-        }
-        *cache[1]=y;
-        if ((*cache[1]).cols() !=1) {
-            cout << layerName << ": Internal error (2), cache[1] wrong size: " << (*cache[1]).cols() << "!= 1" << endl;
-            return 1000.0;
-        }
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
             floatN pi = probs(i,y(i,0));
@@ -267,23 +207,19 @@ public:
         loss /= probs.rows();
         return loss;
     }
-    virtual MatrixN backward(MatrixN& y) override {
-        MatrixN probs=*cache[0];
+    virtual MatrixN backward(MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+        MatrixN probs=*((*pcache)["probs"]);
 
         MatrixN dx=probs;
         for (unsigned int i=0; i<probs.rows(); i++) {
             dx(i,y(i,0)) -= 1.0;
         }
         dx /= dx.rows();
-        *grads[0] = dx;
-        // dx = probs.copy()
-        // dx[np.arange(N), y] -= 1
-        // dx /= N
-        return *grads[0];
+        return dx;
     }
 };
 
-
+/*
 class TwoLayerNet : public Layer {
 public:
     Affine *af1;
@@ -378,8 +314,8 @@ void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
     REGISTER_LAYER("Relu", Relu, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
-    /*
     REGISTER_LAYER("Softmax", Softmax, 1)
+    /*
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
 */}
 #endif
