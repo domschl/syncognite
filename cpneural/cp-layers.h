@@ -181,7 +181,7 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
-        xn.colwise() +=  mxc;
+        xn.colwise() -=  mxc;
         MatrixN xne = xn.array().exp().matrix();
         VectorN xnes = xne.rowwise().sum();
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
@@ -194,12 +194,16 @@ public:
     virtual floatN loss(MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
-            cout << layerName << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
+            cout << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: " << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
+            if (y(i,0)>=probs.cols()) {
+                cout << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
+                return -10000.0;
+            }
             floatN pi = probs(i,y(i,0));
             if (pi==0.0) cout << "Invalid zero log-probability at " << i << endl;
             else loss -= log(pi);

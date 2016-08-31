@@ -162,15 +162,19 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
         float sy0, sy1;
         if (var=="x") {
             pxold = x(i);
+            cout << "<" << x(i) << ",";
             x(i) = x(i) - h;
+            cout << x(i) << ",";
             y0 = forward(x, &cache);
             sy0 = loss(y, &cache);
             cppl_delete(&cache);
             x(i) = pxold + h;
+            cout << x(i) << ">";
             y1 = forward(x, &cache);
             sy1 = loss(y, &cache);
             cppl_delete(&cache);
             x(i) = pxold;
+            cout << "[" << sy0 << ", "<< sy1 << " =" << (sy1-sy0)/2.0/h << "]";
         } else {
             pxold = (*(params[var]))(i);
             (*(params[var]))(i) = (*(params[var]))(i) - h;
@@ -299,17 +303,18 @@ bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN e
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
+    cout << "SelfTest for: " << layerName << " -----------------" << endl;
     MatrixN yf = forward(x, &cache);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
-        cppl_set(&cache, "probs", new MatrixN(yf));
+        //cppl_set(&cache, "probs", new MatrixN(yf));
         cppl_set(&cache, "y", new MatrixN(y));
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(dchain, &cache, h, eps, lossFkt);
+    ret=checkLayer(dchain, &cache, 1e-5 /* h */, eps, lossFkt);
     cppl_delete(&cache);
     return ret;
 }
