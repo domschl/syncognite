@@ -110,7 +110,6 @@ public:
         af=nullptr;
         delete rl;
         rl=nullptr;
-        // cppl_delete(&params);
     }
     virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
@@ -119,12 +118,14 @@ public:
         for (auto ci : tcacheaf) {
             string var = "af-"+ci.first;
             if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
+            else delete ci.second;
         }
         t_cppl tcachere;
         MatrixN y=rl->forward(y0, &tcachere);
         for (auto ci : tcachere) {
             string var = "re-"+ci.first;
             if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
+            else delete ci.second;
         }
         return y;
     }

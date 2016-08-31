@@ -388,6 +388,7 @@ int main() {
     if (!rx.selfTest(xarl,yz)) {
         allOk=false;
     }
+
 /*
     TwoLayerNet tl({4,5,6});
     MatrixN xtl(30,4);
@@ -445,6 +446,7 @@ int main() {
         cout << red << "AffineRelu with test data: ERROR." << def << endl;
         allOk=false;
     }
+
 /*
     if (checkSoftmax()) {
         cout << green << "Softmax with test data: OK." << def << endl;

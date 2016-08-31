@@ -99,7 +99,7 @@ void cppl_delete(t_cppl *p) {
         return;
     }
     for (auto it : *p) {
-        delete it.second;
+        if (it.second != nullptr) delete it.second;
         (*p)[it.first]=nullptr;
         ++nr;
     }
