@@ -197,7 +197,7 @@ public:
             cout << layerName << ": " << "Loss: dimension mismatch in Softmax(x): Probs:" << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
             floatN pi = probs(i,y(i,0));

@@ -202,10 +202,15 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
     MatrixN x=*(*pcache)["x"];
     // MatrixN yt=forward(x, pcache);
     MatrixN yt=forward(x, nullptr);
+    MatrixN y;
+    MatrixN dx;
     if (lossFkt) { // XXX probably not needed!
-        loss(dchain, pcache);
+        y=*(*pcache)["y"];
+        loss(y, pcache);
+        dx=backward(y, pcache, &grads);
+    } else {
+        dx=backward(dchain, pcache, &grads);
     }
-    MatrixN dx=backward(dchain, pcache, &grads);
     grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
@@ -241,7 +246,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
 
     MatrixN x=*(*pcache)["x"];
 
-    cout << "  check foward vectorizer " << layerName << "..." << endl;
+    cout << "  check forward vectorizer " << layerName << "..." << endl;
     ret=checkForward(x, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
@@ -254,7 +259,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     ret=checkBackward(x, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
-        return ret;
+        allOk=false; //return ret;
     } else {
         cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
     }
