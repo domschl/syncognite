@@ -41,7 +41,7 @@ using cp_t_params = map<string, T>;
 //using t_cppl = cp_t_params<MatrixN *>;
 typedef cp_t_params<MatrixN *> t_cppl;
 
-vector<unsigned int> shape(MatrixN& m) {
+vector<unsigned int> shape(const MatrixN& m) {
     vector<unsigned int> s(2);
     s[0]=(unsigned int)(m.rows());
     s[1]=(unsigned int)(m.cols());
@@ -149,9 +149,10 @@ public:
     t_cppl params;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
-    virtual MatrixN forward(MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
-    virtual floatN loss(MatrixN& y, t_cppl* pcache) { return 1001.0; }
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads) {
         /*for (int i=0; i<params.size(); i++) {
             *params[i] = popti->update(*params[i],*grads[i]);
@@ -162,8 +163,8 @@ public:
         }
         return true;
     }
-    floatN train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
-    floatN test(MatrixN& x, MatrixN& y)  {
+    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    floatN test(const MatrixN& x, const MatrixN& y)  {
         MatrixN yt=forward(x, nullptr);
         if (yt.rows() != y.rows()) {
             return -1000.0;
@@ -183,16 +184,17 @@ public:
         floatN err=1.0-(floatN)co/(floatN)y.rows();
         return err;
     }
-    bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
+    bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
 
 private:
-    bool checkForward(MatrixN& x, floatN eps);
-    bool checkBackward(MatrixN& x, t_cppl *pcache, floatN eps);
-    bool calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
+    bool checkForward(const MatrixN& x, floatN eps);
+    bool checkForward(const MatrixN& x, const MatrixN &y, floatN eps);
+    bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps);
+    bool calcNumGrads(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
+    MatrixN calcNumGrad(const MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
     MatrixN calcNumGradLoss(t_cppl* pcache, string var, floatN h);
-    bool checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
-    bool checkLayer(MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
+    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
+    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
 };
 
 #endif

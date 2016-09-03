@@ -25,7 +25,7 @@ Optimizer *optimizerFactory(string name, cp_t_params<floatN> params) {
 }
 
 
-floatN Layer::train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
+floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
     Optimizer* popti=optimizerFactory("sdg", fpars);
     popti->fparams=fpars;
     popti->iparams=ipars;

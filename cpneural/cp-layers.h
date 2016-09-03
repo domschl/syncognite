@@ -38,7 +38,7 @@ public:
     ~Affine() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         if (params["W"]->rows() != x.cols()) {
             cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
             MatrixN y(0,0);
@@ -50,7 +50,7 @@ public:
         y.rowwise() += b;
         return y;
     }
-    virtual MatrixN backward(MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx = dchain * (*params["W"]).transpose(); // dx
         cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
         cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
@@ -68,7 +68,7 @@ public:
     ~Relu() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(MatrixN& x, t_cppl *pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl *pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN ych=x;
         for (unsigned int i=0; i<ych.size(); i++) {
@@ -78,7 +78,7 @@ public:
         }
         return ych;
     }
-    virtual MatrixN backward(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
         MatrixN y=*((*pcache)["x"]);
         for (unsigned int i=0; i<y.size(); i++) {
             if (y(i)>0.0) y(i)=1.0;
@@ -112,7 +112,7 @@ public:
         delete rl;
         rl=nullptr;
     }
-    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         t_cppl tcacheaf;
         MatrixN y0=af->forward(x, &tcacheaf);
@@ -130,7 +130,7 @@ public:
         }
         return y;
     }
-    virtual MatrixN backward(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
         t_cppl tcachere;
         t_cppl tgradsre;
         for (auto ci : *pcache) {
@@ -167,6 +167,85 @@ public:
     }
 };
 
+/*
+N = x.shape[0]
+correct_class_scores = x[np.arange(N), y]
+margins = np.maximum(0, x - correct_class_scores[:, np.newaxis] + 1.0)
+margins[np.arange(N), y] = 0
+loss = np.sum(margins) / N
+num_pos = np.sum(margins > 0, axis=1)
+dx = np.zeros_like(x)
+dx[margins > 0] = 1
+dx[np.arange(N), y] -= num_pos
+dx /= N
+return loss, margins, dx
+*/
+// Multiclass support vector machine SVM
+class SVM : public Layer {
+public:
+    SVM(t_layer_topo topo) {
+        assert (topo.size()==1);
+        layerName="SVM";
+        layerType=LayerType::LT_LOSS;
+    }
+    ~SVM() {
+        cppl_delete(&params);
+    }
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        VectorN correctClassScores(x.rows());
+        for (unsigned int i=0; i<x.rows(); i++) {
+            correctClassScores(i)=x(i,(int)y(i));
+        }
+
+        VectorN mxc = x.rowwise().maxCoeff();
+        MatrixN xn = x;
+        xn.colwise() -=  mxc;
+        //cout << "X:" << x << endl;
+        //cout << "XN:" << xn << endl;
+        MatrixN xne = xn.array().exp().matrix();
+        VectorN xnes = xne.rowwise().sum();
+        for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
+            xne.row(i) = xne.row(i) / xnes(i);
+        }
+
+
+        //MatrixN margins = ;
+//        if (pcache!=nullptr) cppl_set(pcache, "margins", new MatrixN(margins));
+//        return margins;
+    }
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+        MatrixN probs=*((*pcache)["probs"]);
+        if (y.rows() != probs.rows() || y.cols() != 1) {
+            cout << layerName << ": "  << "Loss, dimension mismatch in SVM(x), Probs: ";
+            cout << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
+            return 1000.0;
+        }
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        floatN loss=0.0;
+        for (unsigned int i=0; i<probs.rows(); i++) {
+            if (y(i,0)>=probs.cols()) {
+                cout << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
+                return -10000.0;
+            }
+            floatN pi = probs(i,y(i,0));
+            if (pi==0.0) cout << "Invalid zero log-probability at " << i << endl;
+            else loss -= log(pi);
+        }
+        loss /= probs.rows();
+        return loss;
+    }
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+        MatrixN probs=*((*pcache)["probs"]);
+
+        MatrixN dx=probs;
+        for (unsigned int i=0; i<probs.rows(); i++) {
+            dx(i,y(i,0)) -= 1.0;
+        }
+        dx /= dx.rows();
+        return dx;
+    }
+};
 
 class Softmax : public Layer {
 public:
@@ -178,13 +257,12 @@ public:
     ~Softmax() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
         xn.colwise() -=  mxc;
-        //cout << "X:" << x << endl;
-        //cout << "XN:" << xn << endl;
         MatrixN xne = xn.array().exp().matrix();
         VectorN xnes = xne.rowwise().sum();
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
@@ -194,7 +272,7 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
-    virtual floatN loss(MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
             cout << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
@@ -215,7 +293,7 @@ public:
         loss /= probs.rows();
         return loss;
     }
-    virtual MatrixN backward(MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN probs=*((*pcache)["probs"]);
 
         MatrixN dx=probs;

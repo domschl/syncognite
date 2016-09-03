@@ -9,34 +9,45 @@
 #include "cp-math.h"
 #include "cp-util.h"
 
-bool Layer::checkForward(MatrixN& x, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkForward(const MatrixN& x, const MatrixN& y, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
-    MatrixN yt=forward(x, nullptr);
-    MatrixN y(0, yt.cols());
+    MatrixN yt;
+    if (layerType==LayerType::LT_LOSS) {
+        yt=forward(x, y, nullptr);
+    } else {
+        yt=forward(x, nullptr);
+    }
+    MatrixN yic(0, yt.cols());
     for (unsigned int i=0; i<x.rows(); i++) {
         MatrixN xi=x.row(i);
-        MatrixN yi = forward(xi, nullptr);
-        MatrixN yn(yi.rows() + y.rows(),yi.cols());
-        yn << y, yi;
-        y = yn;
+        MatrixN yi;
+        if (layerType==LayerType::LT_LOSS) {
+            MatrixN yii=y.row(i);
+            yi = forward(xi, yii, nullptr);
+        } else {
+            yi = forward(xi, nullptr);
+        }
+        MatrixN yn(yi.rows() + yic.rows(),yi.cols());
+        yn << yic, yi;
+        yic = yn;
     }
 
     //MatrixN yc = forward(x, nullptr);
     IOFormat CleanFmt(3, 0, ", ", "\n", "[", "]");
-    MatrixN d = y - yt;
+    MatrixN d = yic - yt;
     floatN dif = d.cwiseProduct(d).sum();
 
     if (dif < eps) {cout << "Forward vectorizer OK, err=" << dif << endl;}
     else {
         cout << "Forward vectorizer Error, err=" << dif << endl;
-        cout << "y:" << y.format(CleanFmt) << endl;
+        cout << "yic:" << yic.format(CleanFmt) << endl;
         cout << "yt:" << yt.format(CleanFmt) << endl;
         allOk=false;
     }
     return allOk;
 }
 
-bool Layer::checkBackward(MatrixN& x, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
@@ -49,7 +60,7 @@ bool Layer::checkBackward(MatrixN& x, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_
         dyc.setRandom();
     } else if (layerType==LayerType::LT_LOSS) {
         forward(x, &cache);
-        dyc=*((*pcache)["y"]);
+        dyc=y;
     } else {
         cout << "BAD LAYER TYPE!" << layerType << endl;
         return false;
@@ -110,7 +121,7 @@ bool Layer::checkBackward(MatrixN& x, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGrad(const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     cout << "  checking numerical gradiend for " << var << "..." << endl;
     MatrixN *pm;
     MatrixN x=*((*pcache)["x"]);
@@ -194,7 +205,7 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
     return grad;
 }
 
-bool Layer::calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
+bool Layer::calcNumGrads(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
     for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
@@ -207,7 +218,7 @@ bool Layer::calcNumGrads(MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl
     return true;
 }
 
-bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
+bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -217,13 +228,10 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
     Color::Modifier def(Color::FG_DEFAULT);
 
     t_cppl grads;
-    MatrixN x=*(*pcache)["x"];
     // MatrixN yt=forward(x, pcache);
     MatrixN yt=forward(x, nullptr);
-    MatrixN y;
     MatrixN dx;
     if (lossFkt) { // XXX probably not needed!
-        y=*(*pcache)["y"];
         loss(y, pcache);
         dx=backward(y, pcache, &grads);
     } else {
@@ -253,7 +261,7 @@ bool Layer::checkGradients(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_
     return allOk;
 }
 
-bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
+bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -262,10 +270,8 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    MatrixN x=*(*pcache)["x"];
-
     cout << "  check forward vectorizer " << layerName << "..." << endl;
-    ret=checkForward(x, eps);
+    ret=checkForward(x, y, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
         return ret;
@@ -274,7 +280,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     }
 
     cout << "  check backward vectorizer " << layerName << "..." << endl;
-    ret=checkBackward(x, pcache, eps);
+    ret=checkBackward(x, y, pcache, eps);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         allOk=false; //return ret;
@@ -283,7 +289,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     }
 
     cout << "  check numerical gradients " << layerName << "..." << endl;
-    ret=checkGradients(dchain, pcache, h, eps, lossFkt);
+    ret=checkGradients(x, y, dchain, pcache, h, eps, lossFkt);
     if (!ret) {
         cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
@@ -299,7 +305,7 @@ bool Layer::checkLayer(MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_
     return allOk;
 }
 
-bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::selfTest(const MatrixN& x, const MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
@@ -310,11 +316,11 @@ bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN e
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
         //cppl_set(&cache, "probs", new MatrixN(yf));
-        cppl_set(&cache, "y", new MatrixN(y));
+        //cppl_set(&cache, "y", new MatrixN(y));
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(dchain, &cache, h , eps, lossFkt);
+    ret=checkLayer(x, y, dchain, &cache, h , eps, lossFkt);
     cppl_delete(&cache);
     return ret;
 }

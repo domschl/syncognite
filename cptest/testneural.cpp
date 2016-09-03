@@ -226,7 +226,7 @@ bool checkSoftmax(float eps=1.0e-6) {
     Softmax sm({5});
     t_cppl cache;
     t_cppl grads;
-    MatrixN probs0=sm.forward(x, &cache);
+    MatrixN probs0=sm.forward(x, y, &cache);
     bool ret=matComp(probs,probs0,"Softmax probabilities",eps);
     if (!ret) allOk=false;
     floatN loss0=sm.loss(y, &cache);
@@ -361,7 +361,7 @@ bool trainTest() {
 }
 */
 int main() {
-    MatrixN yz;
+    MatrixN yz=MatrixN(0,0);
     cout << "=== 0.: Init: registering layers" << endl;
     registerLayers();
     cout << "=== 1.: Numerical gradient tests" << endl;
@@ -409,7 +409,7 @@ int main() {
     xmx.setRandom();
     MatrixN y(smN,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    if (!mx.selfTest(xmx, y, 1e-5, 1e-10)) {
+    if (!mx.selfTest(xmx, y, 2e-2, 1e-10)) {
         allOk=false;
     }
 
