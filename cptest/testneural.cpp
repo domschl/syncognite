@@ -409,7 +409,7 @@ int main() {
     xmx.setRandom();
     MatrixN y(smN,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    if (!mx.selfTest(xmx, y)) {
+    if (!mx.selfTest(xmx, y, 1e-3, 1e-10)) {
         allOk=false;
     }
 

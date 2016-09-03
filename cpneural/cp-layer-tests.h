@@ -314,7 +314,7 @@ bool Layer::selfTest(MatrixN& x, MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN e
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(dchain, &cache, 1e-5 /* h */, eps, lossFkt);
+    ret=checkLayer(dchain, &cache, h , eps, lossFkt);
     cppl_delete(&cache);
     return ret;
 }
