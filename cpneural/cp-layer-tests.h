@@ -59,7 +59,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         dyc = forward(x, &cache);
         dyc.setRandom();
     } else if (layerType==LayerType::LT_LOSS) {
-        forward(x, &cache);
+        forward(x, y, &cache);
         dyc=y;
     } else {
         cout << "BAD LAYER TYPE!" << layerType << endl;
@@ -83,7 +83,12 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         t_cppl chi;
         t_cppl gdi;
         MatrixN xi=x.row(i);
-        MatrixN dyi2 = forward(xi, &chi);
+        MatrixN dyi2;
+        if (layerType==LayerType::LT_LOSS) {
+            dyi2 = forward(xi, dyc.row(i), &chi);
+        } else {
+            dyi2 = forward(xi, &chi);
+        }
         MatrixN dyi = dyc.row(i);
         MatrixN dyt = backward(dyi, &chi, &gdi);
         dx.row(i) = dyt.row(0);
@@ -92,6 +97,9 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         }
         cppl_delete(&gdi);
         cppl_delete(&chi);
+    }
+    if (layerType==LayerType::LT_LOSS) {
+        dx /= x.rows(); // XXX is this sound for all types of loss-layers?
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
@@ -159,6 +167,7 @@ MatrixN Layer::calcNumGrad(const MatrixN& dchain, t_cppl* pcache, string var, fl
 
 MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
+
     MatrixN x=*((*pcache)["x"]);
     MatrixN y=*((*pcache)["y"]);
     if (var=="x") pm=&x;
@@ -173,19 +182,16 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
         float sy0, sy1;
         if (var=="x") {
             pxold = x(i);
-            cout << "<" << x(i) << ",";
             x(i) = x(i) - h;
-            cout << x(i) << ",";
-            y0 = forward(x, &cache);
+            y0 = forward(x, y, &cache);
             sy0 = loss(y, &cache);
             cppl_delete(&cache);
             x(i) = pxold + h;
-            cout << x(i) << ">";
-            y1 = forward(x, &cache);
+            y1 = forward(x, y, &cache);
             sy1 = loss(y, &cache);
             cppl_delete(&cache);
             x(i) = pxold;
-            cout << "[" << sy0 << ", "<< sy1 << " =" << (sy1-sy0)/2.0/h << "]";
+
         } else {
             pxold = (*(params[var]))(i);
             (*(params[var]))(i) = (*(params[var]))(i) - h;
@@ -229,12 +235,15 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
 
     t_cppl grads;
     // MatrixN yt=forward(x, pcache);
-    MatrixN yt=forward(x, nullptr);
     MatrixN dx;
+    MatrixN yt;
     if (lossFkt) { // XXX probably not needed!
-        loss(y, pcache);
+        yt=forward(x, y, pcache);
+        loss(y,pcache);
         dx=backward(y, pcache, &grads);
     } else {
+        t_cppl cache;
+        yt=forward(x, pcache);
         dx=backward(dchain, pcache, &grads);
     }
     grads["x"]=new MatrixN(dx);
