@@ -1,6 +1,7 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
+#include "cp-math.h"
 #include "cp-layer.h"
 
 class Nonlinearities {
@@ -182,10 +183,12 @@ public:
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
         xn.colwise() -=  mxc;
+        //cout << "X:" << x << endl;
+        //cout << "XN:" << xn << endl;
         MatrixN xne = xn.array().exp().matrix();
         VectorN xnes = xne.rowwise().sum();
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
-            xne.row(i) /= xnes(i);
+            xne.row(i) = xne.row(i) / xnes(i);
         }
         MatrixN probs = xne;
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
@@ -194,7 +197,8 @@ public:
     virtual floatN loss(MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
-            cout << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: " << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
+            cout << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
+            cout << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
