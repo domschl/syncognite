@@ -163,9 +163,11 @@ public:
         }
         return true;
     }
-    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+                        string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
     floatN test(const MatrixN& x, const MatrixN& y)  {
-        MatrixN yt=forward(x, nullptr);
+        MatrixN yt=forward(x, y, nullptr);
         if (yt.rows() != y.rows()) {
             return -1000.0;
         }

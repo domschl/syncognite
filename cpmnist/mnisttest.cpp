@@ -167,10 +167,11 @@ bool  getMnistData(string filepath) {
     cp_t_params<int> pi;
     cp_t_params<floatN> pf;
     pi["verbose"]=1;
-    pi["epochs"]=100;
+    pi["epochs"]=20;
     pi["batch_size"]=100;
-    pf["learning_rate"]=5.0e-1;
+    pf["learning_rate"]=4e-1;
     pf["lr_decay"]=0.95;
+    pi["threads"]=1;
     tl.train(X, y, Xv, yv, "sdg", pi, pf);
     floatN final_err=tl.test(Xt, yt);
     cout << "Final error on test-set:" << final_err << endl;
