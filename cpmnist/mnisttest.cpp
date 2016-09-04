@@ -169,9 +169,9 @@ bool  getMnistData(string filepath) {
     pi["verbose"]=1;
     pi["epochs"]=20;
     pi["batch_size"]=400;
-    pf["learning_rate"]=1e-1;
+    pf["learning_rate"]=8e-1;
     pf["lr_decay"]=0.99;
-    pi["threads"]=1;
+    pi["threads"]=8;
     tl.train(X, y, Xv, yv, "sdg", pi, pf);
     floatN final_err=tl.test(Xt, yt);
     cout << "Final error on test-set:" << final_err << endl;

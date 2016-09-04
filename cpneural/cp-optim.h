@@ -77,12 +77,16 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
 
     floatN l=0.0;
     bs=bs/nt;
+    lr=lr/nt;
+    Timer tw;
+    popti->setPar("learning_rate", lr); // adpated to thread-count XXX here?
     int ebs=bs*nt;
     int chunks=(x.rows()+ebs-1) / ebs;
     cout << "Data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cout << ", threads: " << nt << " (batch_size*chunks*threads): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
         cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
+        tw.startWall();
         for (int b=0; b<chunks*nt; b += nt) {
             std::list<std::future<t_cppl>> grads;
             for (int bi=0; bi<nt; bi++) {
@@ -122,7 +126,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             cppl_delete(&sgrad);
             grads.clear();
         }
-        cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
+        cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {
             lr *= lr_decay;
             popti->setPar("learning_rate", lr);
