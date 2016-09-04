@@ -180,68 +180,63 @@ dx[np.arange(N), y] -= num_pos
 dx /= N
 return loss, margins, dx
 */
-// Multiclass support vector machine SVM
-class SVM : public Layer {
+// Multiclass support vector machine Svm
+class Svm : public Layer {
 public:
-    SVM(t_layer_topo topo) {
+    Svm(t_layer_topo topo) {
         assert (topo.size()==1);
-        layerName="SVM";
+        layerName="Svm";
         layerType=LayerType::LT_LOSS;
     }
-    ~SVM() {
+    ~Svm() {
         cppl_delete(&params);
     }
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN correctClassScores(x.rows());
         for (unsigned int i=0; i<x.rows(); i++) {
             correctClassScores(i)=x(i,(int)y(i));
         }
-
-        VectorN mxc = x.rowwise().maxCoeff();
-        MatrixN xn = x;
-        xn.colwise() -=  mxc;
-        //cout << "X:" << x << endl;
-        //cout << "XN:" << xn << endl;
-        MatrixN xne = xn.array().exp().matrix();
-        VectorN xnes = xne.rowwise().sum();
-        for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
-            xne.row(i) = xne.row(i) / xnes(i);
+        MatrixN margins=x;
+        margins.colwise() -= correctClassScores;
+        margins = (margins.array() + 1.0).matrix();
+        for (unsigned int i=0; i < margins.size(); i++) {
+            if (margins(i)<0.0) margins(i)=0.0;
+        }
+        for (unsigned int i=0; i<margins.rows(); i++) {
+            margins(i,y(i,0)) = 0.0;
         }
 
-
-        //MatrixN margins = ;
-//        if (pcache!=nullptr) cppl_set(pcache, "margins", new MatrixN(margins));
-//        return margins;
+        if (pcache!=nullptr) cppl_set(pcache, "margins", new MatrixN(margins));
+        return margins;
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
-        MatrixN probs=*((*pcache)["probs"]);
-        if (y.rows() != probs.rows() || y.cols() != 1) {
-            cout << layerName << ": "  << "Loss, dimension mismatch in SVM(x), Probs: ";
-            cout << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
-            return 1000.0;
-        }
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-        floatN loss=0.0;
-        for (unsigned int i=0; i<probs.rows(); i++) {
-            if (y(i,0)>=probs.cols()) {
-                cout << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
-                return -10000.0;
-            }
-            floatN pi = probs(i,y(i,0));
-            if (pi==0.0) cout << "Invalid zero log-probability at " << i << endl;
-            else loss -= log(pi);
-        }
-        loss /= probs.rows();
+        MatrixN margins=*((*pcache)["margins"]);
+        floatN loss = margins.sum() / margins.rows();
         return loss;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
-        MatrixN probs=*((*pcache)["probs"]);
-
-        MatrixN dx=probs;
-        for (unsigned int i=0; i<probs.rows(); i++) {
-            dx(i,y(i,0)) -= 1.0;
+        MatrixN margins=*((*pcache)["margins"]);
+        MatrixN x=*((*pcache)["x"]);
+        VectorN numPos(x.rows());
+        MatrixN dx=x;
+        dx.setZero();
+        for (unsigned int i=0; i<margins.rows(); i++) {
+            int num=0;
+            for (unsigned int j=0; j<margins.cols(); j++) {
+                if (margins(i,j)>0.0) ++num;
+            }
+            numPos(i) = (floatN)num;
         }
+        for (unsigned int i=0; i<dx.size(); i++) {
+            if (margins(i) > 0.0) dx(i)=1.0;
+        }
+        for (unsigned int i=0; i<dx.rows(); i++) {
+            dx(i,y(i,0)) -= numPos(i);
+        }
+//        dx.colwise() -= numPos;
+
         dx /= dx.rows();
         return dx;
     }
@@ -401,6 +396,7 @@ void registerLayers() {
     REGISTER_LAYER("Relu", Relu, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("Softmax", Softmax, 1)
+    REGISTER_LAYER("Svm", Svm, 1)
     /*
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
 */}

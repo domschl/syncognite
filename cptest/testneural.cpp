@@ -247,6 +247,79 @@ bool checkSoftmax(float eps=1.0e-6) {
     cppl_delete(&cache);
     return allOk;
 }
+
+
+bool checkSvm(float eps=1.0e-6) {
+    bool allOk=true;
+    MatrixN x(10,5);
+    x << 2.48040968e-04,   5.60446668e-04,  -3.52994957e-04,
+         1.01572982e-03,   4.14494264e-04,
+        -6.31693635e-04,  -8.15563788e-04,  -1.20636602e-03,
+         -2.10174557e-03,   5.53294928e-04,
+          1.14679595e-03,   1.24827753e-03,  -6.61989763e-04,
+          9.55559461e-04,  -4.28180029e-04,
+          4.46347111e-04,   6.23103141e-04,  -8.31752231e-04,
+         -8.16901550e-04,  -3.51481858e-04,
+          5.99420847e-04,   7.99136992e-04,   7.48694922e-04,
+         -1.31792142e-03,  -1.41278790e-03,
+          7.83720049e-04,  -1.87400705e-03,   6.83413931e-04,
+         -3.33278182e-05,  -8.23791353e-04,
+          4.48433013e-04,  -1.90826829e-04,  -1.18725164e-03,
+          8.57369270e-04,  -2.03127259e-04,
+         -8.12742999e-04,  -8.77664600e-04,   9.59702869e-04,
+         -4.21470554e-05,  -1.26450252e-04,
+          7.75822790e-04,  -9.17338786e-04,   6.60689034e-04,
+          2.50740181e-04,   1.58892909e-03,
+         -1.07719599e-03,  -1.12323192e-04,   7.62566128e-06,
+         -2.26193130e-04,   9.21699517e-04;
+    MatrixN y(10,1);
+    y << 2, 3, 0, 2, 4, 3, 1, 0, 1, 4;
+    MatrixN margins(10,5);
+    margins << 1.00060104,  1.00091344,  0.        ,  1.00136872,  1.00076749,
+               1.00147005,  1.00128618,  1.00089538,  0.        ,  1.00265504,
+               0.        ,  1.00010148,  0.99819121,  0.99980876,  0.99842502,
+               1.0012781 ,  1.00145486,  0.        ,  1.00001485,  1.00048027,
+               1.00201221,  1.00221192,  1.00216148,  1.00009487,  0.        ,
+               1.00081705,  0.99815932,  1.00071674,  0.        ,  0.99920954,
+               1.00063926,  0.        ,  0.99900358,  1.0010482 ,  0.9999877 ,
+               0.        ,  0.99993508,  1.00177245,  1.0007706 ,  1.00068629,
+               1.00169316,  0.        ,  1.00157803,  1.00116808,  1.00250627,
+               0.9980011 ,  0.99896598,  0.99908593,  0.99885211,  0.;
+    floatN loss=4.00207888295;
+    MatrixN dx(10,5);
+    dx << 0.1,  0.1, -0.4,  0.1,  0.1,
+          0.1,  0.1,  0.1, -0.4,  0.1,
+         -0.4,  0.1,  0.1,  0.1,  0.1,
+          0.1,  0.1, -0.4,  0.1,  0.1,
+          0.1,  0.1,  0.1,  0.1, -0.4,
+          0.1,  0.1,  0.1, -0.4,  0.1,
+          0.1, -0.4,  0.1,  0.1,  0.1,
+         -0.4,  0.1,  0.1,  0.1,  0.1,
+          0.1, -0.4,  0.1,  0.1,  0.1,
+          0.1,  0.1,  0.1,  0.1, -0.4;
+
+    Svm sv({5});
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN margins0=sv.forward(x, y, &cache);
+    bool ret=matComp(margins,margins0,"Svm probabilities",eps);
+    if (!ret) allOk=false;
+    floatN loss0=sv.loss(y, &cache);
+    floatN d=loss-loss0;
+    floatN err=abs(d);
+    if (err > eps) {
+        cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        allOk=false;
+    } else {
+        cout << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+    }
+    MatrixN dx0=sv.backward(y, &cache, &grads);
+    ret=matComp(dx,dx0,"Softmax dx",eps);
+    if (!ret) allOk=false;
+    cppl_delete(&grads);
+    cppl_delete(&cache);
+    return allOk;
+}
 /*
 bool checkTwoLayer(float eps=1.0e-6) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
@@ -413,6 +486,16 @@ int main() {
         allOk=false;
     }
 
+    int svN=10, svC=5;
+    Svm sv({svC});
+    MatrixN xsv(svN,svC);
+    xsv.setRandom();
+    MatrixN yv(svN,1);
+    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=(rand()%svC);
+    if (!sv.selfTest(xsv, yv, 1e-3, 1e-6)) {
+        allOk=false;
+    }
+
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -454,6 +537,12 @@ int main() {
         cout << green << "Softmax with test data: OK." << def << endl;
     } else {
         cout << red << "Softmax with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+    if (checkSvm()) {
+        cout << green << "Svm with test data: OK." << def << endl;
+    } else {
+        cout << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
 /*
