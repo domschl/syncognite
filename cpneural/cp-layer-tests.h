@@ -196,18 +196,17 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
             sy1 = loss(y, &cache);
             cppl_delete(&cache);
             x(i) = pxold;
-
         } else {
-            pxold = (*(params[var]))(i);
-            (*(params[var]))(i) = (*(params[var]))(i) - h;
+            pxold = (*pm)(i);
+            (*pm)(i) = (*pm)(i) - h;
             y0 = forward(x, y, &cache);
             sy0 = loss(y, &cache);
             cppl_delete(&cache);
-            (*(params[var]))(i) = pxold + h;
+            (*pm)(i) = pxold + h;
             y1 = forward(x, y, &cache);
             sy1 = loss(y, &cache);
             cppl_delete(&cache);
-            (*(params[var]))(i) = pxold;
+            (*pm)(i) = pxold;
         }
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);

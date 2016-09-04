@@ -479,7 +479,7 @@ int main() {
     xtl.setRandom();
     MatrixN y2(ntlN,1);
     for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
-    if (!tl.selfTest(xtl,y2)) {
+    if (!tl.selfTest(xtl,y2, 3e-3, 1e-6)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
