@@ -237,7 +237,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     // MatrixN yt=forward(x, pcache);
     MatrixN dx;
     MatrixN yt;
-    if (lossFkt) { // XXX probably not needed!
+    if (lossFkt) {
         yt=forward(x, y, pcache);
         loss(y,pcache);
         dx=backward(y, pcache, &grads);
@@ -289,7 +289,9 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     }
 
     cout << "  check backward vectorizer " << layerName << "..." << endl;
-    ret=checkBackward(x, y, pcache, eps);
+    t_cppl cache;
+    ret=checkBackward(x, y, &cache, eps);
+    cppl_delete(&cache);
     if (!ret) {
         cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
         allOk=false; //return ret;
@@ -298,7 +300,9 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     }
 
     cout << "  check numerical gradients " << layerName << "..." << endl;
-    ret=checkGradients(x, y, dchain, pcache, h, eps, lossFkt);
+    t_cppl cache2;
+    ret=checkGradients(x, y, dchain, &cache2, h, eps, lossFkt);
+    cppl_delete(&cache2);
     if (!ret) {
         cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
