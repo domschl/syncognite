@@ -331,7 +331,9 @@ public:
         return yo;
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
-        return sm->loss(y, pcache);
+        t_cppl c4;
+        mlPop("sm",pcache,&c4);
+        return sm->loss(y, &c4);
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         t_cppl c4;

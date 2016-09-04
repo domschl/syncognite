@@ -102,6 +102,9 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     }
     if (layerType==LayerType::LT_LOSS) {
         dx /= x.rows(); // XXX is this sound for all types of loss-layers?
+        for (auto it : grads) { // XXX this is beyound soundness...
+             *(grads[it.first]) *= x.rows();
+        }
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
@@ -197,11 +200,11 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
         } else {
             pxold = (*(params[var]))(i);
             (*(params[var]))(i) = (*(params[var]))(i) - h;
-            y0 = forward(x, &cache);
+            y0 = forward(x, y, &cache);
             sy0 = loss(y, &cache);
             cppl_delete(&cache);
             (*(params[var]))(i) = pxold + h;
-            y1 = forward(x, &cache);
+            y1 = forward(x, y, &cache);
             sy1 = loss(y, &cache);
             cppl_delete(&cache);
             (*(params[var]))(i) = pxold;
@@ -244,16 +247,13 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         loss(y,pcache);
         dx=backward(y, pcache, &grads);
     } else {
-        t_cppl cache;
         yt=forward(x, pcache);
         dx=backward(dchain, pcache, &grads);
     }
     grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
-    cout << "cNG1" << endl;
     calcNumGrads(dchain, pcache, &grads, &numGrads, h, lossFkt);
-    cout << "cNG2" << endl;
 
     for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
