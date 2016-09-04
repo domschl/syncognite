@@ -168,9 +168,9 @@ bool  getMnistData(string filepath) {
     cp_t_params<floatN> pf;
     pi["verbose"]=1;
     pi["epochs"]=20;
-    pi["batch_size"]=100;
-    pf["learning_rate"]=4e-1;
-    pf["lr_decay"]=0.95;
+    pi["batch_size"]=400;
+    pf["learning_rate"]=1e-1;
+    pf["lr_decay"]=0.99;
     pi["threads"]=1;
     tl.train(X, y, Xv, yv, "sdg", pi, pf);
     floatN final_err=tl.test(Xt, yt);

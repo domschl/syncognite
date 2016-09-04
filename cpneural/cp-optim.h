@@ -10,9 +10,11 @@
 
 class sdg : public Optimizer {
     floatN lr;
+    int bs;
 public:
     sdg(cp_t_params<floatN>& ps) {
         fparams=ps;
+        bs=getPar("batch_size",100);
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx) override {
         lr=getPar("learning_rate", 1e-2);
@@ -77,25 +79,26 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     bs=bs/nt;
     int ebs=bs*nt;
     int chunks=(x.rows()+ebs-1) / ebs;
-    cout << "Data-size" << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs << ", threads: " << nt << endl;
+    cout << "Data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+    cout << ", threads: " << nt << " (batch_size*chunks*threads): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
         cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
-        for (int b=0; b<chunks; b += nt) {
+        for (int b=0; b<chunks*nt; b += nt) {
             std::list<std::future<t_cppl>> grads;
             for (int bi=0; bi<nt; bi++) {
                 int y0,dy;
-                y0=(b*nt+bi)*bs;
+                y0=b*bs+bi*bs;
                 if (y0+bs > x.rows()) dy=x.rows()-y0-1;
                 else dy=bs;
-                if (y0+dy>=x.rows() || dy<=0) {
+                if (y0+dy>x.rows() || dy<=0) {
                     cout << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
-                    continue;
                 }
-                //cout << "Processing: [" << y0 << "," << y0+dy-1 << "] ";
+                //cout << "[" << y0 << "," << y0+dy-1 << "] ";
                 MatrixN xb=x.block(y0,0,dy,x.cols());
                 MatrixN yb=y.block(y0,0,dy,y.cols());
                 grads.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
             }
+            //cout << endl;
 
             t_cppl sgrad;
             bool first=true;
@@ -114,8 +117,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 }
                 cppl_delete(&grd);
             }
+            // cout << "db2:" << *(sgrad["af2-b"]) << endl;
             update(popti, &sgrad);
             cppl_delete(&sgrad);
+            grads.clear();
         }
         cout << "Loss:" << l << " err(validation):" << test(xv,yv) << endl;
         if (lr_decay!=1.0) {
