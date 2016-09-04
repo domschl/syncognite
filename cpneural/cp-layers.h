@@ -89,6 +89,22 @@ public:
     }
 };
 
+void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
+    if (dst!=nullptr) {
+        for (auto pi : *src) {
+            cppl_set(dst, prefix+"-"+pi.first, pi.second);
+        }
+    } else {
+        cppl_delete(src);
+    }
+}
+
+void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci : *src) {
+        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
+    }
+}
+
 class AffineRelu : public Layer {
 public:
     Affine *af;
@@ -98,13 +114,9 @@ public:
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         af=new Affine({topo[0],topo[1]});
-        for (auto pi : af->params) {
-            params["af-"+pi.first]=pi.second;
-        }
+        mlPush("af", &(af->params), &params);
         rl=new Relu({topo[1]});
-        for (auto pi : rl->params) {
-            params["re-"+pi.first]=pi.second;
-        }
+        mlPush("re", &(rl->params), &params);
     }
     ~AffineRelu() {
         delete af;
@@ -116,70 +128,43 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         t_cppl tcacheaf;
         MatrixN y0=af->forward(x, &tcacheaf);
-        for (auto ci : tcacheaf) {
-            string var = "af-"+ci.first;
-            if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
-            else delete ci.second;
-        }
+        mlPush("af", &tcacheaf, pcache);
         t_cppl tcachere;
         MatrixN y=rl->forward(y0, &tcachere);
-        for (auto ci : tcachere) {
-            string var = "re-"+ci.first;
-            if (pcache!=nullptr) cppl_set(pcache,var,ci.second);
-            else delete ci.second;
-        }
+        mlPush("re", &tcachere, pcache);
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
         t_cppl tcachere;
         t_cppl tgradsre;
-        for (auto ci : *pcache) {
-            if (ci.first.substr(0,3)=="re-") cppl_set(&tcachere, ci.first.substr(3), ci.second);
-        }
+        mlPop("re",pcache,&tcachere);
         MatrixN dx0=rl->backward(dchain, &tcachere, &tgradsre);
-        for (auto ci : tgradsre) {
-            cppl_set(pgrads, "re-"+ci.first, ci.second);
-        }
-
+        mlPush("re",&tgradsre,pgrads);
         t_cppl tcacheaf;
         t_cppl tgradsaf;
-        for (auto ci : *pcache) {
-            if (ci.first.substr(0,3)=="af-") cppl_set(&tcacheaf, ci.first.substr(3), ci.second);
-        }
+        mlPop("af",pcache,&tcacheaf);
         MatrixN dx=af->backward(dx0, &tcacheaf, &tgradsaf);
-        for (auto ci : tgradsaf) {
-            cppl_set(pgrads, "af-"+ci.first, ci.second);
-        }
+        mlPush("af",&tgradsaf,pgrads);
         return dx;
     }
     virtual bool update(Optimizer *popti, t_cppl *pgrads) override {
         t_cppl tgradsaf;
-        for (auto ci : *pgrads) {
-            if (ci.first.substr(0,3)=="af-") cppl_set(&tgradsaf, ci.first.substr(3), ci.second);
-        }
+        mlPop("af",pgrads,&tgradsaf);
+        // for (auto ci : *pgrads) {
+        //     if (ci.first.substr(0,3)=="af-") cppl_set(&tgradsaf, ci.first.substr(3), ci.second);
+        // }
         af->update(popti, &tgradsaf);
         t_cppl tgradsre;
-        for (auto ci : *pgrads) {
-            if (ci.first.substr(0,3)=="re-") cppl_set(&tgradsre, ci.first.substr(3), ci.second);
-        }
+        mlPop("re",pgrads,&tgradsre);
+        // for (auto ci : *pgrads) {
+        //     if (ci.first.substr(0,3)=="re-") cppl_set(&tgradsre, ci.first.substr(3), ci.second);
+        // }
         rl->update(popti, &tgradsre);
         return true;
     }
 };
 
-/*
-N = x.shape[0]
-correct_class_scores = x[np.arange(N), y]
-margins = np.maximum(0, x - correct_class_scores[:, np.newaxis] + 1.0)
-margins[np.arange(N), y] = 0
-loss = np.sum(margins) / N
-num_pos = np.sum(margins > 0, axis=1)
-dx = np.zeros_like(x)
-dx[margins > 0] = 1
-dx[np.arange(N), y] -= num_pos
-dx /= N
-return loss, margins, dx
-*/
+
 // Multiclass support vector machine Svm
 class Svm : public Layer {
 public:
@@ -235,8 +220,6 @@ public:
         for (unsigned int i=0; i<dx.rows(); i++) {
             dx(i,y(i,0)) -= numPos(i);
         }
-//        dx.colwise() -= numPos;
-
         dx /= dx.rows();
         return dx;
     }
@@ -300,7 +283,7 @@ public:
     }
 };
 
-/*
+
 class TwoLayerNet : public Layer {
 public:
     Affine *af1;
@@ -311,20 +294,14 @@ public:
         assert (topo.size()==3);
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
-        names=vector<string>{"x"};
-        af1=new Affine({topo[0],topo[1]}); // XXX pointers to sub-objects?!
+        af1=new Affine({topo[0],topo[1]});
+        mlPush("af1", &(af1->params), &params);
         rl=new Relu({topo[1]});
+        mlPush("rl", &(rl->params), &params);
         af2=new Affine({topo[1],topo[2]});
+        mlPush("af2", &(af2->params), &params);
         sm=new Softmax({topo[2]});
-
-        params=vector<MatrixN *>(1);
-        params[0]=new MatrixN(1,topo[0]); // x
-        grads=vector<MatrixN *>(1);
-        grads[0]=new MatrixN(1,topo[0]); // dx
-
-        cache=vector<MatrixN *>(2);   // XXX redundant with softwmax-layer?!
-        cache[0]=new MatrixN(1,topo[1]); // probs
-        cache[1]=new MatrixN(1,1); // y
+        mlPush("sm", &(sm->params), &params);
     }
     ~TwoLayerNet() {
         delete af1;
@@ -335,69 +312,79 @@ public:
         af2=nullptr;
         delete sm;
         sm=nullptr;
-        for (unsigned int i=0; i<params.size(); i++) {
-            delete params[i];
-            params[i]=nullptr;
-            delete grads[i];
-            grads[i]=nullptr;
-        }
-        for (unsigned int i=0; i<cache.size(); i++) {
-            delete cache[i];
-            cache[i]=nullptr;
-        }
     }
-    virtual MatrixN forward(MatrixN& x) override {
-        if (params[0]->rows() != x.rows() || params[0]->cols() != x.cols()) {
-            params[0]->resize(x.rows(), x.cols());
-            params[0]->setZero();
-            grads[0]->resize(x.rows(), x.cols());
-            grads[0]->setZero();
-            cache[0]->resize(x.rows(), x.cols());
-            cache[0]->setZero();
-        }
-        if (cache[1]->rows() != x.rows()) {
-            cache[1]->resize(x.rows(),1);
-            cache[1]->setZero();
-            for (int i=0; i<(*(cache[1])).size(); i++) (*(cache[1]))(i)= (-1.0); // XXX: for error testing
-        }
-        //cout << "reshape-2LN:" << shape(*(params[0])) << shape(x) << endl;
-        *(params[0])=x;
-        MatrixN y0=af1->forward(x);
-        MatrixN y1=rl->forward(y0);
-        MatrixN y=af2->forward(y1);
-        MatrixN yu=sm->forward(y);
-        *cache[0]=yu;
-        return y;
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        t_cppl c1;
+        MatrixN y0=af1->forward(x,&c1);
+        mlPush("af1",&c1,pcache);
+        t_cppl c2;
+        MatrixN y1=rl->forward(y0,&c2);
+        mlPush("rl",&c2,pcache);
+        t_cppl c3;
+        MatrixN yo=af2->forward(y1,&c3);
+        mlPush("af2",&c3,pcache);
+        t_cppl c4;
+        MatrixN yu=sm->forward(yo,y,&c4);
+        mlPush("sm",&c4,pcache);
+        return yo;
     }
-    virtual floatN loss(MatrixN& y) override {
-        *cache[1]=y;
-        return sm->loss(y);
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+        return sm->loss(y, pcache);
     }
-    virtual MatrixN backward(MatrixN& dchain) override {
-        MatrixN dx3=sm->backward(dchain);
-        MatrixN dx2=af2->backward(dx3);
-        MatrixN dx1=rl->backward(dx2);
-        MatrixN dx=af1->backward(dx1);
-        *(grads[0])=dx;
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+        t_cppl c4;
+        t_cppl g4;
+        mlPop("sm",pcache,&c4);
+        MatrixN dx3=sm->backward(y, &c4, &g4);
+        mlPush("sm",&g4,pgrads);
+
+        t_cppl c3;
+        t_cppl g3;
+        mlPop("af2",pcache,&c3);
+        MatrixN dx2=af2->backward(dx3,&c3,&g3);
+        mlPush("af2", &g3, pgrads);
+
+        t_cppl c2;
+        t_cppl g2;
+        mlPop("rl",pcache,&c2);
+        MatrixN dx1=rl->backward(dx2, &c2, &g2);
+        mlPush("rl", &g2, pgrads);
+
+        t_cppl c1;
+        t_cppl g1;
+        mlPop("af1",pcache,&c1);
+        MatrixN dx=af1->backward(dx1, &c1, &g1);
+        mlPush("af1", &g1, pgrads);
+
         return dx;
     }
-    virtual bool update(Optimizer *popti) override {
-        af1->update(popti);
-        rl->update(popti);
-        af2->update(popti);
-        sm->update(popti);
+    virtual bool update(Optimizer *popti, t_cppl *pgrads) override {
+        t_cppl g1;
+        mlPop("af1",pgrads,&g1);
+        af1->update(popti,&g1);
+        t_cppl g2;
+        mlPop("rl",pgrads,&g2);
+        rl->update(popti,&g2);
+        t_cppl g3;
+        mlPop("af2",pgrads,&g3);
+        af2->update(popti,&g3);
+        t_cppl g4;
+        mlPop("sm",pgrads,&g4);
+        sm->update(popti,&g4);
         return true;
     }
 
 };
-*/
+
+
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
     REGISTER_LAYER("Relu", Relu, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
-    /*
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
-*/}
+}
 #endif

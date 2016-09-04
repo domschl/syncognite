@@ -320,7 +320,7 @@ bool checkSvm(float eps=1.0e-6) {
     cppl_delete(&cache);
     return allOk;
 }
-/*
+
 bool checkTwoLayer(float eps=1.0e-6) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
     MatrixN x(3,5);
@@ -351,11 +351,16 @@ bool checkTwoLayer(float eps=1.0e-6) {
          -0.51027569,  2.3685213;
 
     TwoLayerNet tln({5,4,2});
-    *(tln.af1->params[1])=W1;
-    *(tln.af1->params[2])=b1;
-    *(tln.af2->params[1])=W2;
-    *(tln.af2->params[2])=b2;
-    MatrixN sc0=tln.forward(x);
+    cout << "tln-w1" << *(tln.params["af1-W"]) << endl;
+    *(tln.params["af1-W"])=W1;
+    cout << "tln-w2" << *(tln.params["af1-W"]) << endl;
+    *(tln.params["af1-b"])=b1;
+    *(tln.params["af2-W"])=W2;
+    *(tln.params["af2-b"])=b2;
+
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN sc0=tln.forward(x,yc,&cache);
     bool ret=matComp(sc,sc0,"TwoLayerNetScores",eps);
     if (!ret) allOk=false;
 
@@ -377,7 +382,7 @@ bool checkTwoLayer(float eps=1.0e-6) {
 
     // XXX reg parameter
     floatN reg=0.0;
-    floatN ls = tln.loss(yc);
+    floatN ls = tln.loss(yc,&cache);
     floatN lsc = 1.1925059294331903;
     floatN lse=abs(ls-lsc);
     if (lse < eps) {
@@ -386,22 +391,22 @@ bool checkTwoLayer(float eps=1.0e-6) {
         cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
-    MatrixN dx0=tln.backward(yc);
+    MatrixN dx0=tln.backward(yc,&cache,&grads);
 
-    //ret=matComp(dx,dx0,"AffineRelu dx",eps);
-    //if (!ret) allOk=false;
-    ret=matComp(dW1,*(tln.af1->grads[1]),"TwoLayerNet dW1",eps);
+    ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
     if (!ret) allOk=false;
-    ret=matComp(db1,*(tln.af1->grads[2]),"TwoLayerNet db1",eps);
+    ret=matComp(db1,*(grads["b1-W"]),"TwoLayerNet db1",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW2,*(tln.af2->grads[1]),"TwoLayerNet dW2",eps);
+    ret=matComp(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps);
     if (!ret) allOk=false;
-    ret=matComp(db2,*(tln.af2->grads[2]),"TwoLayerNet db2",eps);
+    ret=matComp(db2,*(grads["b2-W"]),"TwoLayerNet db2",eps);
     if (!ret) allOk=false;
 
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
-*/
+
 bool registerTest() {
     bool allOk=true;
     cout << "Registered Layers:" << endl;
@@ -425,14 +430,14 @@ bool registerTest() {
     return allOk;
 }
 
-/*
+
 bool trainTest() {
     bool allOk=true;
     TwoLayerNet tln({5,4,2});
-
+    cout << "NOT IMPLEMENTED!" << endl;
     return allOk;
 }
-*/
+
 int main() {
     MatrixN yz=MatrixN(0,0);
     cout << "=== 0.: Init: registering layers" << endl;
@@ -457,7 +462,6 @@ int main() {
         allOk=false;
     }
 
-
     AffineRelu rx({2,3});
     MatrixN xarl(30,2);
     xarl.setRandom();
@@ -465,17 +469,17 @@ int main() {
         allOk=false;
     }
 
-/*
-    TwoLayerNet tl({4,5,6});
-    MatrixN xtl(30,4);
+    int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
+    TwoLayerNet tl({ntl1,ntl2,ntl3});
+    MatrixN xtl(ntlN,ntl1);
     xtl.setRandom();
-    MatrixN y2(30,1);
-    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%6);
+    MatrixN y2(ntlN,1);
+    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
     if (!tl.selfTest(xtl,y2)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
-*/
+
     int smN=10, smC=4;
     Softmax mx({smC});
     MatrixN xmx(smN,smC);
@@ -545,14 +549,14 @@ int main() {
         cout << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkTwoLayer()) {
         cout << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {
         cout << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
-*/
+
 
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
@@ -561,8 +565,8 @@ int main() {
         allOk=false;
     }
 
-/*
-    if (trainTest()) {
+
+/*    if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
         cout << red << "TrainTest: ERROR." << def << endl;
