@@ -38,8 +38,10 @@ using floatN=float;
 
 template <typename T>
 using cp_t_params = map<string, T>;
+//using t_cppl = cp_t_params<MatrixN *>;
+typedef cp_t_params<MatrixN *> t_cppl;
 
-vector<unsigned int> shape(MatrixN& m) {
+vector<unsigned int> shape(const MatrixN& m) {
     vector<unsigned int> s(2);
     s[0]=(unsigned int)(m.rows());
     s[1]=(unsigned int)(m.cols());
@@ -90,6 +92,30 @@ Layer* createLayerInstance(t_layer_topo tp) {
     return new T(tp);
 }
 
+//void cppl_delete(t_cppl p);
+void cppl_delete(t_cppl *p) {
+    int nr=0;
+    if (p->size()==0) {
+        return;
+    }
+    for (auto it : *p) {
+        if (it.second != nullptr) delete it.second;
+        (*p)[it.first]=nullptr;
+        ++nr;
+    }
+    p->erase(p->begin(),p->end());
+}
+
+
+void cppl_set(t_cppl *p, string key, MatrixN *val) {
+    auto it=p->find(key);
+    if (it != p->end()) {
+        cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
+        delete it->second;
+    }
+    (*p)[key]=val;
+}
+
 typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
 
 class LayerFactory {
@@ -97,8 +123,13 @@ public:
     t_layer_creator_map mapl;
     t_layer_props mapprops;
     void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo), t_layer_props_entry lprops ) {
-        mapl[name] = sub;
-        mapprops[name] = lprops;
+        auto it=mapl.find(name);
+        if (it!=mapl.end()) {
+            cout << "Layer " << name << " is already registered, prevent additional registration." << endl;
+        } else {
+            mapl[name] = sub;
+            mapprops[name] = lprops;
+        }
     }
     Layer* createLayerInstance(std::string name, t_layer_topo tp) {
         return mapl[name](tp);
@@ -115,23 +146,28 @@ class Layer {
 public:
     string layerName;
     LayerType layerType;
-    vector<MatrixN *> params;
-    vector<MatrixN *> grads;
-    vector<MatrixN *> cache;
-    vector<string> names;
+    t_cppl params;
 
-    virtual MatrixN forward(MatrixN& lL)  { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(MatrixN& dtL) { MatrixN d(0,0); return d;}
-    virtual floatN loss(MatrixN& y) { return 1001.0; }
-    virtual bool update(Optimizer *popti) {
-        for (int i=1; i<params.size(); i++) {
+    virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
+    virtual bool update(Optimizer *popti, t_cppl* pgrads) {
+        /*for (int i=0; i<params.size(); i++) {
             *params[i] = popti->update(*params[i],*grads[i]);
+        }*/
+        for (auto it : params) {
+            string key = it.first;
+            *params[key] = popti->update(*params[key],*((*pgrads)[key]));
         }
         return true;
     }
-    floatN train(MatrixN& x, MatrixN& y, MatrixN &xv, MatrixN &yv, string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
-    floatN test(MatrixN& x, MatrixN& y)  {
-        MatrixN yt=forward(x);
+    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+                        string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+    t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
+    floatN test(const MatrixN& x, const MatrixN& y)  {
+        MatrixN yt=forward(x, y, nullptr);
         if (yt.rows() != y.rows()) {
             return -1000.0;
         }
@@ -150,16 +186,17 @@ public:
         floatN err=1.0-(floatN)co/(floatN)y.rows();
         return err;
     }
-    bool selfTest(MatrixN& x, MatrixN& y, floatN h, floatN eps);
+    bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
 
 private:
-    bool checkForward(MatrixN& x, floatN eps);
-    bool checkBackward(MatrixN& dchain, floatN eps);
-    bool calcNumGrads(MatrixN& dchain, vector<MatrixN *> numGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(MatrixN& dchain, unsigned int ind, floatN h);
-    MatrixN calcNumGradLoss(MatrixN& dchain, unsigned int ind, floatN h);
-    bool checkGradients(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
-    bool checkLayer(MatrixN& x, MatrixN& dchain, floatN h, floatN eps, bool lossFkt);
+    bool checkForward(const MatrixN& x, floatN eps);
+    bool checkForward(const MatrixN& x, const MatrixN &y, floatN eps);
+    bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps);
+    bool calcNumGrads(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
+    MatrixN calcNumGrad(const MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
+    MatrixN calcNumGradLoss(t_cppl* pcache, string var, floatN h);
+    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
+    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
 };
 
 #endif

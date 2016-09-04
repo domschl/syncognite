@@ -37,9 +37,9 @@ bool checkAffineForward(floatN eps=1.e-6) {
          -0.23480519,  0.03272727,  0.30025974;
 
     Affine pe({4,3});
-    *(pe.params[1])=W;
-    *(pe.params[2])=b;
-    MatrixN y0=pe.forward(x);
+    *(pe.params["W"])= W;
+    *(pe.params["b"])=b;
+    MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }
 
@@ -68,17 +68,21 @@ bool checkAffineBackward(float eps=1.0e-6) {
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
     Affine pe({4,5});
-    *(pe.params[1])=W;
-    *(pe.params[2])=b;
-    MatrixN y=pe.forward(x);
-    MatrixN dx0=pe.backward(dchain);
+    *(pe.params["W"])=W;
+    *(pe.params["b"])=b;
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=pe.forward(x, &cache);
+    MatrixN dx0=pe.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(pe.grads[1]),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(pe.grads[2]),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
     if (!ret) allOk=false;
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 
@@ -94,7 +98,7 @@ bool checkReluForward(floatN eps=1.e-6) {
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
     Relu rl({4});
-    MatrixN y0=rl.forward(x);
+    MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
 
@@ -115,11 +119,15 @@ bool checkReluBackward(float eps=1.0e-6) {
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
     Relu rl({4});
-    MatrixN y=rl.forward(x);
-    MatrixN dx0=rl.backward(dchain);
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=rl.forward(x, &cache);
+    MatrixN dx0=rl.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"ReluBackward dx",eps);
     if (!ret) allOk=false;
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 
@@ -140,9 +148,11 @@ bool checkAffineRelu(float eps=1.0e-6) {
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
     AffineRelu arl({4,5});
-    *(arl.af->params[1])=W;
-    *(arl.af->params[2])=b;
-    MatrixN y0=arl.forward(x);
+    t_cppl cache;
+    t_cppl grads;
+    *(arl.params["af-W"])=W;
+    *(arl.params["af-b"])=b;
+    MatrixN y0=arl.forward(x, &cache);
     bool ret=matComp(y,y0,"AffineRelu",eps);
     if (!ret) allOk=false;
 
@@ -160,15 +170,17 @@ bool checkAffineRelu(float eps=1.0e-6) {
     dchain << -1.08201385, -0.34514762,  0.8563332 ,  0.7021515 , -2.02372516,
               -0.26158065, -2.43253431,  0.33677677, -0.17383908,  0.53332595;
 
-    MatrixN dx0=arl.backward(dchain);
+    MatrixN dx0=arl.backward(dchain, &cache, &grads);
 
     ret=matComp(dx,dx0,"AffineRelu dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(arl.af->grads[1]),"AffineRelu dW",eps);
+    ret=matComp(dW,*(grads["af-W"]),"AffineRelu dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(arl.af->grads[2]),"AffineRelu db",eps);
+    ret=matComp(db,*(grads["af-b"]),"AffineRelu db",eps);
     if (!ret) allOk=false;
 
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 
@@ -212,10 +224,12 @@ bool checkSoftmax(float eps=1.0e-6) {
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
     Softmax sm({5});
-    MatrixN probs0=sm.forward(x);
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN probs0=sm.forward(x, y, &cache);
     bool ret=matComp(probs,probs0,"Softmax probabilities",eps);
     if (!ret) allOk=false;
-    floatN loss0=sm.loss(y);
+    floatN loss0=sm.loss(y, &cache);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -226,70 +240,148 @@ bool checkSoftmax(float eps=1.0e-6) {
     }
     //MatrixN dchain=x;
     //dchain.setOnes();
-    MatrixN dx0=sm.backward(y);
+    MatrixN dx0=sm.backward(y, &cache, &grads);
     ret=matComp(dx,dx0,"Softmax dx",eps);
     if (!ret) allOk=false;
+    cppl_delete(&grads);
+    cppl_delete(&cache);
+    return allOk;
+}
 
+
+bool checkSvm(float eps=1.0e-6) {
+    bool allOk=true;
+    MatrixN x(10,5);
+    x << 2.48040968e-04,   5.60446668e-04,  -3.52994957e-04,
+         1.01572982e-03,   4.14494264e-04,
+        -6.31693635e-04,  -8.15563788e-04,  -1.20636602e-03,
+         -2.10174557e-03,   5.53294928e-04,
+          1.14679595e-03,   1.24827753e-03,  -6.61989763e-04,
+          9.55559461e-04,  -4.28180029e-04,
+          4.46347111e-04,   6.23103141e-04,  -8.31752231e-04,
+         -8.16901550e-04,  -3.51481858e-04,
+          5.99420847e-04,   7.99136992e-04,   7.48694922e-04,
+         -1.31792142e-03,  -1.41278790e-03,
+          7.83720049e-04,  -1.87400705e-03,   6.83413931e-04,
+         -3.33278182e-05,  -8.23791353e-04,
+          4.48433013e-04,  -1.90826829e-04,  -1.18725164e-03,
+          8.57369270e-04,  -2.03127259e-04,
+         -8.12742999e-04,  -8.77664600e-04,   9.59702869e-04,
+         -4.21470554e-05,  -1.26450252e-04,
+          7.75822790e-04,  -9.17338786e-04,   6.60689034e-04,
+          2.50740181e-04,   1.58892909e-03,
+         -1.07719599e-03,  -1.12323192e-04,   7.62566128e-06,
+         -2.26193130e-04,   9.21699517e-04;
+    MatrixN y(10,1);
+    y << 2, 3, 0, 2, 4, 3, 1, 0, 1, 4;
+    MatrixN margins(10,5);
+    margins << 1.00060104,  1.00091344,  0.        ,  1.00136872,  1.00076749,
+               1.00147005,  1.00128618,  1.00089538,  0.        ,  1.00265504,
+               0.        ,  1.00010148,  0.99819121,  0.99980876,  0.99842502,
+               1.0012781 ,  1.00145486,  0.        ,  1.00001485,  1.00048027,
+               1.00201221,  1.00221192,  1.00216148,  1.00009487,  0.        ,
+               1.00081705,  0.99815932,  1.00071674,  0.        ,  0.99920954,
+               1.00063926,  0.        ,  0.99900358,  1.0010482 ,  0.9999877 ,
+               0.        ,  0.99993508,  1.00177245,  1.0007706 ,  1.00068629,
+               1.00169316,  0.        ,  1.00157803,  1.00116808,  1.00250627,
+               0.9980011 ,  0.99896598,  0.99908593,  0.99885211,  0.;
+    floatN loss=4.00207888295;
+    MatrixN dx(10,5);
+    dx << 0.1,  0.1, -0.4,  0.1,  0.1,
+          0.1,  0.1,  0.1, -0.4,  0.1,
+         -0.4,  0.1,  0.1,  0.1,  0.1,
+          0.1,  0.1, -0.4,  0.1,  0.1,
+          0.1,  0.1,  0.1,  0.1, -0.4,
+          0.1,  0.1,  0.1, -0.4,  0.1,
+          0.1, -0.4,  0.1,  0.1,  0.1,
+         -0.4,  0.1,  0.1,  0.1,  0.1,
+          0.1, -0.4,  0.1,  0.1,  0.1,
+          0.1,  0.1,  0.1,  0.1, -0.4;
+
+    Svm sv({5});
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN margins0=sv.forward(x, y, &cache);
+    bool ret=matComp(margins,margins0,"Svm probabilities",eps);
+    if (!ret) allOk=false;
+    floatN loss0=sv.loss(y, &cache);
+    floatN d=loss-loss0;
+    floatN err=abs(d);
+    if (err > eps) {
+        cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        allOk=false;
+    } else {
+        cout << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+    }
+    MatrixN dx0=sv.backward(y, &cache, &grads);
+    ret=matComp(dx,dx0,"Softmax dx",eps);
+    if (!ret) allOk=false;
+    cppl_delete(&grads);
+    cppl_delete(&cache);
     return allOk;
 }
 
 bool checkTwoLayer(float eps=1.0e-6) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
-    MatrixN x(3,5);
+    int N=3, D=5, H=4, C=2;
+    MatrixN x(N,D);
     x << -5.5       , -3.35714286, -1.21428571,  0.92857143,  3.07142857,
          -4.78571429, -2.64285714, -0.5       ,  1.64285714,  3.78571429,
          -4.07142857, -1.92857143,  0.21428571,  2.35714286,  4.5;
-    MatrixN yc(3,1);
+    MatrixN yc(N,1);
     yc << 0, 1, 1;
-    MatrixN W1(5,4);
+    MatrixN W1(D,H);
     W1 << -0.7       , -0.64736842, -0.59473684, -0.54210526,
           -0.48947368, -0.43684211, -0.38421053, -0.33157895,
           -0.27894737, -0.22631579, -0.17368421, -0.12105263,
           -0.06842105, -0.01578947,  0.03684211,  0.08947368,
            0.14210526,  0.19473684,  0.24736842,  0.3;
-    MatrixN b1(1,4);
+    MatrixN b1(1,H);
     b1 << -0.1       ,  0.23333333,  0.56666667,  0.9;
-    MatrixN W2(4,2);
+    MatrixN W2(H,C);
     W2 << -0.3, -0.2,
           -0.1,  0.,
            0.1,  0.2,
            0.3,  0.4;
-    MatrixN b2(1,2);
+    MatrixN b2(1,C);
     b2 << -0.9,  0.1;
 
-    MatrixN sc(3,2); // Scores
+    MatrixN sc(N,C); // Scores
     sc << -0.88621554,  2.56401003,
          -0.69824561,  2.46626566,
          -0.51027569,  2.3685213;
 
-    TwoLayerNet tln({5,4,2});
-    *(tln.af1->params[1])=W1;
-    *(tln.af1->params[2])=b1;
-    *(tln.af2->params[1])=W2;
-    *(tln.af2->params[2])=b2;
-    MatrixN sc0=tln.forward(x);
+    TwoLayerNet tln({D,H,C});
+    *(tln.params["af1-W"])=W1;
+    *(tln.params["af1-b"])=b1;
+    *(tln.params["af2-W"])=W2;
+    *(tln.params["af2-b"])=b2;
+
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN sc0=tln.forward(x,yc,&cache);
     bool ret=matComp(sc,sc0,"TwoLayerNetScores",eps);
     if (!ret) allOk=false;
 
-    MatrixN dW1(5,4);
+    MatrixN dW1(D,H);
     dW1 << -0.16400759, -0.16400759, -0.16400759, -0.16400759,
            -0.10147167, -0.10147167, -0.10147167, -0.10147167,
            -0.03893575, -0.03893575, -0.03893575, -0.03893575,
             0.02360017,  0.02360017,  0.02360017,  0.02360017,
             0.08613609,  0.08613609,  0.08613609,  0.08613609;
-    MatrixN db1(1,4);
+    MatrixN db1(1,H);
     db1 << 0.02918343,  0.02918343,  0.02918343,  0.02918343;
-    MatrixN dW2(4,2);
+    MatrixN dW2(H,C);
     dW2 << -1.83041352,  1.83041352,
            -1.82522911,  1.82522911,
            -1.8200447 ,  1.8200447 ,
            -1.81486029,  1.81486029;
-    MatrixN db2(1,2);
+    MatrixN db2(1,C);
     db2 << -0.29183429,  0.29183429;
 
     // XXX reg parameter
     floatN reg=0.0;
-    floatN ls = tln.loss(yc);
+    floatN ls = tln.loss(yc,&cache);
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
@@ -298,25 +390,30 @@ bool checkTwoLayer(float eps=1.0e-6) {
         cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
-    MatrixN dx0=tln.backward(yc);
+    MatrixN dx0=tln.backward(yc,&cache,&grads);
 
-    //ret=matComp(dx,dx0,"AffineRelu dx",eps);
-    //if (!ret) allOk=false;
-    ret=matComp(dW1,*(tln.af1->grads[1]),"TwoLayerNet dW1",eps);
+    cout << "Got grads: ";
+    for (auto gi : grads) {
+        cout << gi.first << " ";
+    }
+    cout << endl;
+    ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
     if (!ret) allOk=false;
-    ret=matComp(db1,*(tln.af1->grads[2]),"TwoLayerNet db1",eps);
+    ret=matComp(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW2,*(tln.af2->grads[1]),"TwoLayerNet dW2",eps);
+    ret=matComp(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps);
     if (!ret) allOk=false;
-    ret=matComp(db2,*(tln.af2->grads[2]),"TwoLayerNet db2",eps);
+    ret=matComp(db2,*(grads["af2-b"]),"TwoLayerNet db2",eps);
     if (!ret) allOk=false;
 
+    cppl_delete(&cache);
+    cppl_delete(&grads);
     return allOk;
 }
 
 bool registerTest() {
     bool allOk=true;
-    cout << "Registerd Layers:" << endl;
+    cout << "Registered Layers:" << endl;
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
         cout << nr << ".: " << it.first << " ";
@@ -331,20 +428,22 @@ bool registerTest() {
             cout << "unspecified layer -- ERROR!" << endl;
             allOk=false;
         }
+        delete l;
         ++nr;
     }
     return allOk;
 }
 
+
 bool trainTest() {
     bool allOk=true;
     TwoLayerNet tln({5,4,2});
-
+    cout << "NOT IMPLEMENTED!" << endl;
     return allOk;
 }
 
 int main() {
-    MatrixN yz;
+    MatrixN yz=MatrixN(0,0);
     cout << "=== 0.: Init: registering layers" << endl;
     registerLayers();
     cout << "=== 1.: Numerical gradient tests" << endl;
@@ -374,12 +473,13 @@ int main() {
         allOk=false;
     }
 
-    TwoLayerNet tl({4,5,6});
-    MatrixN xtl(30,4);
+    int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
+    TwoLayerNet tl({ntl1,ntl2,ntl3});
+    MatrixN xtl(ntlN,ntl1);
     xtl.setRandom();
-    MatrixN y2(30,1);
-    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%6);
-    if (!tl.selfTest(xtl,y2)) {
+    MatrixN y2(ntlN,1);
+    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
+    if (!tl.selfTest(xtl,y2, 3e-3, 1e-6)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
@@ -390,7 +490,17 @@ int main() {
     xmx.setRandom();
     MatrixN y(smN,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    if (!mx.selfTest(xmx, y)) {
+    if (!mx.selfTest(xmx, y, 1e-3, 1e-6)) {
+        allOk=false;
+    }
+
+    int svN=10, svC=5;
+    Svm sv({svC});
+    MatrixN xsv(svN,svC);
+    xsv.setRandom();
+    MatrixN yv(svN,1);
+    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=(rand()%svC);
+    if (!sv.selfTest(xsv, yv, 1e-3, 1e-6)) {
         allOk=false;
     }
 
@@ -437,6 +547,12 @@ int main() {
         cout << red << "Softmax with test data: ERROR." << def << endl;
         allOk=false;
     }
+    if (checkSvm()) {
+        cout << green << "Svm with test data: OK." << def << endl;
+    } else {
+        cout << red << "Svm with test data: ERROR." << def << endl;
+        allOk=false;
+    }
 
     if (checkTwoLayer()) {
         cout << green << "TwoLayerNet with test data: OK." << def << endl;
@@ -445,6 +561,7 @@ int main() {
         allOk=false;
     }
 
+
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
@@ -452,13 +569,14 @@ int main() {
         allOk=false;
     }
 
-    if (trainTest()) {
+
+/*    if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
         cout << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
-
+*/
     if (allOk) {
         cout << green << "All tests ok." << def << endl;
     } else {

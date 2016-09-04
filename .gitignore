@@ -1,4 +1,6 @@
 Build/
 *.gch
 *.o
+*.pch
+*.h5
 
