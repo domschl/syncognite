@@ -73,7 +73,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     dx.setZero();
 
     if (cache.find("x")==cache.end()) cout << "WARNING: x is not in cache!" << endl;
-    
+
     MatrixN dxc = backward(dyc, &cache, &grads);
 
     for (auto it : grads) {
@@ -121,7 +121,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         } else {
             cout << "d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
             cout << "d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
-            cout << "Backward vectorizer " << "d" << it.first << "Error, err=" << dif << endl;
+            cout << "Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
             allOk=false;
         }
     }
@@ -251,7 +251,9 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
+    cout << "cNG1" << endl;
     calcNumGrads(dchain, pcache, &grads, &numGrads, h, lossFkt);
+    cout << "cNG2" << endl;
 
     for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
