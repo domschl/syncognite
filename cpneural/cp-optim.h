@@ -28,29 +28,11 @@ public:
 };
 
 /*
-def sgd_momentum(w, dw, config=None):
-  """
   Performs stochastic gradient descent with momentum.
-
-  config format:
+  Params:
   - learning_rate: Scalar learning rate.
   - momentum: Scalar between 0 and 1 giving the momentum value.
     Setting momentum = 0 reduces to sgd.
-  - velocity: A numpy array of the same shape as w and dw used to store a moving
-    average of the gradients.
-  """
-  if config is None: config = {}
-  config.setdefault('learning_rate', 1e-2)
-  config.setdefault('momentum', 0.9)
-  v = config.get('velocity', np.zeros_like(w))
-  mom = config.get('momentum')
-
-  next_w = None
-  dxw = config['learning_rate'] * dw - v * mom
-  next_w = w - dxw
-  v = -dxw
-  config['velocity'] = v
-  return next_w, config
 */
 class SdgMomentum : public Optimizer {
     floatN lr;
@@ -79,23 +61,13 @@ public:
     }
 };
 
-/*
-def rmsprop(x, dx, config=None):
-  if config is None: config = {}
-  config.setdefault('learning_rate', 1e-2)
-  config.setdefault('decay_rate', 0.99)
-  config.setdefault('epsilon', 1e-8)
-  config.setdefault('cache', np.zeros_like(x))
-
-  next_x = None
-  config['cache'] = config['decay_rate'] * config['cache'] + (1.0 - config['decay_rate']) * dx**2
-  next_x = x - config['learning_rate'] * dx / (np.sqrt(config['cache']) + config['epsilon'])
-  return next_x, config
-*/
-
 
 //  Uses the RMSProp update rule, which uses a moving average of squared gradient
 //  values to set adaptive per-parameter learning rates.
+// Params:
+// learning_rate 1e-2
+// decay_rate 0.99
+// epsilon: 1e-8
 class RmsProp : public Optimizer {
     floatN lr;
     floatN dc,ep;
@@ -114,8 +86,6 @@ public:
             (*pocache)[cname]=z;
             cout << cname << " initialized." << endl;
         }
-//config['cache'] = config['decay_rate'] * config['cache'] + (1.0 - config['decay_rate']) * dx**2
-//next_x = x - config['learning_rate'] * dx / (np.sqrt(config['cache']) + config['epsilon'])
         *(*pocache)[cname]=dc * (*(*pocache)[cname]) + ((1.0 - dc) * (dx.array() * dx.array())).matrix();
         MatrixN dv=((*(*pocache)[cname]).array().sqrt() + ep).matrix();
         for (int i=0; i<dv.size(); i++) {
@@ -126,49 +96,14 @@ public:
         return x;
     }
 };
-/*
-def adam(x, dx, config=None):
-  """
 
-  config format:
-  - learning_rate: Scalar learning rate.
-  - beta1: Decay rate for moving average of first moment of gradient.
-  - beta2: Decay rate for moving average of second moment of gradient.
-  - epsilon: Small scalar used for smoothing to avoid dividing by zero.
-  - m: Moving average of gradient.
-  - v: Moving average of squared gradient.
-  - t: Iteration number.
-  """
-  if config is None: config = {}
-  config.setdefault('learning_rate', 1e-3)
-  config.setdefault('beta1', 0.9)
-  config.setdefault('beta2', 0.999)
-  config.setdefault('epsilon', 1e-8)
-  config.setdefault('m', np.zeros_like(x))
-  config.setdefault('v', np.zeros_like(x))
-  config.setdefault('t', 0)
-
-  next_x = None
-  #############################################################################
-  # TODO: Implement the Adam update formula, storing the next value of x in   #
-  # the next_x variable. Don't forget to update the m, v, and t variables     #
-  # stored in config.                                                         #
-  #############################################################################
-  config['t'] = config['t'] + 1
-  config['m'] = config['beta1']*config['m'] + (1.0-config['beta1'])*dx
-  config['v'] = config['beta2']*config['v'] + (1.0-config['beta2'])*(dx**2)
-  mc = config['m']/(1-config['beta1'] ** config['t'])
-  vc = config['v']/(1-config['beta2'] ** config['t'])
-  next_x = x - config['learning_rate'] * mc / (np.sqrt(vc) + config['epsilon'])
-  #############################################################################
-  #                             END OF YOUR CODE                              #
-  #############################################################################
-
-  return next_x, config
-*/
 
 // Uses the Adam update rule, which incorporates moving averages of both the
 // gradient and its square and a bias correction term.
+// - learning_rate: Scalar learning rate.
+// - beta1: Decay rate for moving average of first moment of gradient.
+// - beta2: Decay rate for moving average of second moment of gradient.
+// - epsilon: Small scalar used for smoothing to avoid dividing by zero.
 class Adam : public Optimizer {
     floatN lr;
     floatN b1,b2,ep;
@@ -177,7 +112,7 @@ public:
         fparams=ps;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=getPar("learning_rate", 1e-3);
+        lr=getPar("learning_rate", 1e-2);
         b1=getPar("beta1", 0.9);
         b2=getPar("beta2", 0.999);
         ep=getPar("epsilon", 1e-8);

@@ -167,9 +167,9 @@ bool  getMnistData(string filepath) {
     cp_t_params<int> pi;
     cp_t_params<floatN> pf;
     pi["verbose"]=1;
-    pi["epochs"]=2;
+    pi["epochs"]=200;
     pi["batch_size"]=400;
-    pf["learning_rate"]=1e-3;
+    pf["learning_rate"]=1e-2;
     pf["lr_decay"]=1.0;
 
     pf["momentum"]=0.9;
@@ -183,6 +183,7 @@ bool  getMnistData(string filepath) {
     cout << "Final error on test-set:" << final_err << endl;
     for (auto it : cpMnistData) {
          free(it.second);
+         it.second=nullptr;
      }
      return 0;
  }
