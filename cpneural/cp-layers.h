@@ -147,19 +147,13 @@ public:
         mlPush("af",&tgradsaf,pgrads);
         return dx;
     }
-    virtual bool update(Optimizer *popti, t_cppl *pgrads) override {
+    virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
         t_cppl tgradsaf;
         mlPop("af",pgrads,&tgradsaf);
-        // for (auto ci : *pgrads) {
-        //     if (ci.first.substr(0,3)=="af-") cppl_set(&tgradsaf, ci.first.substr(3), ci.second);
-        // }
-        af->update(popti, &tgradsaf);
+        af->update(popti, &tgradsaf, var+"afre1-", pocache); // XXX push/pop for pocache?
         t_cppl tgradsre;
         mlPop("re",pgrads,&tgradsre);
-        // for (auto ci : *pgrads) {
-        //     if (ci.first.substr(0,3)=="re-") cppl_set(&tgradsre, ci.first.substr(3), ci.second);
-        // }
-        rl->update(popti, &tgradsre);
+        rl->update(popti, &tgradsre, var+"afre2-", pocache);
         return true;
     }
 };
@@ -362,19 +356,19 @@ public:
 
         return dx;
     }
-    virtual bool update(Optimizer *popti, t_cppl *pgrads) override {
+    virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
         t_cppl g1;
         mlPop("af1",pgrads,&g1);
-        af1->update(popti,&g1);
+        af1->update(popti,&g1, var+"2l1", pocache); // XXX push/pop pocache?
         t_cppl g2;
         mlPop("rl",pgrads,&g2);
-        rl->update(popti,&g2);
+        rl->update(popti,&g2, var+"2l2", pocache);
         t_cppl g3;
         mlPop("af2",pgrads,&g3);
-        af2->update(popti,&g3);
+        af2->update(popti,&g3, var+"2l3", pocache);
         t_cppl g4;
         mlPop("sm",pgrads,&g4);
-        sm->update(popti,&g4);
+        sm->update(popti,&g4, var+"2l4", pocache);
         return true;
     }
 

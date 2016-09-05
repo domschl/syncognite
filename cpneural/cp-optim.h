@@ -16,7 +16,7 @@ public:
         fparams=ps;
         bs=getPar("batch_size",100);
     }
-    virtual MatrixN update(MatrixN& x, MatrixN& dx) override {
+    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
         lr=getPar("learning_rate", 1e-2);
         x=x-lr*dx;
         return x;
@@ -65,6 +65,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     Optimizer* popti=optimizerFactory("sdg", fpars);
     popti->fparams=fpars;
     popti->iparams=ipars;
+    t_cppl optiCache;
     int ep=popti->getPar("epochs", 1); //Default only!
     int bs=popti->getPar("batch_size", 100); // Defaults only! are overwritten!
     int nt=popti->getPar("threads",1); // Default only!
@@ -122,7 +123,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 cppl_delete(&grd);
             }
             // cout << "db2:" << *(sgrad["af2-b"]) << endl;
-            update(popti, &sgrad);
+            update(popti, &sgrad, "", &optiCache);
             cppl_delete(&sgrad);
             grads.clear();
         }
@@ -132,6 +133,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             popti->setPar("learning_rate", lr);
         }
     }
+    cppl_delete(&optiCache);
     return 0.0;
 }
 #endif
