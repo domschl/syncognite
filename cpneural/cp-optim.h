@@ -139,15 +139,10 @@ public:
         }
         floatN t=(*(*pocache)[cname_t])(0,0) + 1.0;
         (*(*pocache)[cname_t])(0,0)=t;
-//config['m'] = config['beta1']*config['m'] + (1.0-config['beta1'])*dx
         *(*pocache)[cname_m]=b1 * (*(*pocache)[cname_m]) + (1.0 -b1) * dx;
-//config['v'] = config['beta2']*config['v'] + (1.0-config['beta2'])*(dx**2)
         *(*pocache)[cname_v]=b2 * (*(*pocache)[cname_v]).array() + (1.0 -b2) * (dx.array() * dx.array());
-//mc = config['m']/(1-config['beta1'] ** config['t'])
         MatrixN mc = 1.0/(1.0-pow(b1,t)) * (*(*pocache)[cname_m]);
-//vc = config['v']/(1-config['beta2'] ** config['t'])
         MatrixN vc = 1.0/(1.0-pow(b2,t)) * (*(*pocache)[cname_v]);
-//next_x = x - config['learning_rate'] * mc / (np.sqrt(vc) + config['epsilon'])
         x = x.array() - lr * mc.array() / (vc.array().sqrt() + ep);
         return x;
     }
@@ -226,6 +221,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             for (int bi=0; bi<nt; bi++) {
                 int y0,dy;
                 y0=b*bs+bi*bs;
+                if (y0>=x.rows()) continue;
                 if (y0+bs > x.rows()) dy=x.rows()-y0-1;
                 else dy=bs;
                 if (y0+dy>x.rows() || dy<=0) {

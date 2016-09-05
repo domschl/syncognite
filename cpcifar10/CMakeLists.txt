@@ -1,0 +1,7 @@
+add_executable(cifar10test cifar10test.cpp)
+find_package(HDF5 COMPONENTS CXX C HL REQUIRED)
+if (HDF5_FOUND)
+  include_directories(${HDF5_INCLUDE_DIRS})
+  link_directories(${HDF5_LIB_DIRS})
+endif (HDF5_FOUND)
+target_link_libraries(cifar10test LINK_PUBLIC cpneural ${HDF5_LIBRARIES} Threads::Threads)
