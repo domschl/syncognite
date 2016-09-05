@@ -167,7 +167,7 @@ bool  getMnistData(string filepath) {
     cp_t_params<int> pi;
     cp_t_params<floatN> pf;
     pi["verbose"]=1;
-    pi["epochs"]=20;
+    pi["epochs"]=2;
     pi["batch_size"]=400;
     pf["learning_rate"]=8e-1;
     pf["lr_decay"]=0.99;
