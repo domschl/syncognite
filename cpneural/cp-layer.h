@@ -72,7 +72,7 @@ public:
     void setPar(string par, floatN val) {
         fparams[par]=val;
     }
-    virtual MatrixN update(MatrixN& x, MatrixN& dx) {return x;};
+    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
 
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
@@ -153,13 +153,13 @@ public:
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
-    virtual bool update(Optimizer *popti, t_cppl* pgrads) {
+    virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         /*for (int i=0; i<params.size(); i++) {
             *params[i] = popti->update(*params[i],*grads[i]);
         }*/
         for (auto it : params) {
             string key = it.first;
-            *params[key] = popti->update(*params[key],*((*pgrads)[key]));
+            *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
         }
         return true;
     }
