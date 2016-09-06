@@ -79,7 +79,7 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
                 }
                 break;
             case 4:
-                cpcifar10Data4[name] = new Tensor<floatN, 4>(dims[0],dims[1],dims[2],dims[3]);
+                cpcifar10Data4[name] = new Tensor<floatN, 4>((long int)dims[0],(long int)dims[1],(long int)dims[2],(long int)dims[3]);
                 cpcifar10Data[name] = new MatrixN(dims[0],dims[1]*dims[2]*dims[3]);
                 pi4 = (int *)malloc(sizeof(int) * dims[0] * dims[1] * dims[2] * dims[3]);
                 if (pi4) {

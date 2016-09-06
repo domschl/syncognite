@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <map>
 #include <Eigen/Dense>
@@ -50,8 +51,70 @@ vector<unsigned int> shape(const MatrixN& m) {
 
 class CpParams {
     cp_t_params<int> iparams;
+    cp_t_params<vector<int>> viparams;
     cp_t_params<floatN> fparams;
+    cp_t_params<bool> bparams;
+    cp_t_params<string> sparams;
 public:
+/*    CpParams(string init) {
+
+    }
+*/
+    void split(const string &s, char delim, vector<string> &elems) {
+        std::stringstream ss;
+        ss.str(s);
+        string item;
+        while (getline(ss, item, delim)) {
+            elems.push_back(item);
+        }
+    }
+    void setString(string jsonpars) {
+
+    }
+    string getString(bool pretty=true) {
+        string str="{";
+        string ind,sep,asep, ter;
+        if (pretty) {
+            ind="  "; sep=": "; asep=", "; ter=";\n";
+        } else {
+            ind=""; sep=":"; asep=","; ter=";";
+        }
+        for (auto it : fparams) str += ind + "\""+it.first + "\""+sep + std::to_string(it.second) + ter;
+        for (auto it : iparams) str += ind + "\""+it.first + "\""+sep + std::to_string(it.second) + ter;
+        for (auto it : viparams) {
+            str += ind + "\""+it.first + "\""+sep + "[";
+            bool is=false;
+            for (auto i : it.second) {
+                if (is) str+=asep;
+                is=true;
+                str+=std::to_string(i);
+            }
+            str+="]"+ter;
+        }
+        for (auto it : bparams) {
+            str += ind + "\""+it.first + "\""+sep;
+            if (it.second) str+="true";
+            else str+="false";
+            str+=ter;
+        }
+        for (auto it : sparams) str += ind + "\""+it.first + "\""+sep +"\""+it.second +"\""+ ter;
+        return str;
+    }
+    bool isDefined(string par) {
+        if (iparams.find(par)!=iparams.end()) return true;
+        if (viparams.find(par)!=viparams.end()) return true;
+        if (fparams.find(par)!=fparams.end()) return true;
+        if (bparams.find(par)!=bparams.end()) return true;
+        if (sparams.find(par)!=sparams.end()) return true;
+        return false;
+    }
+    void erase(string par) {
+        if (fparams.find(par)!=fparams.end()) fparams.erase(par);
+        if (iparams.find(par)!=iparams.end()) iparams.erase(par);
+        if (viparams.find(par)!=viparams.end()) viparams.erase(par);
+        if (bparams.find(par)!=bparams.end()) bparams.erase(par);
+        if (sparams.find(par)!=sparams.end()) sparams.erase(par);
+    }
     floatN getPar(string par, floatN def) {
         auto it=fparams.find(par);
         if (it==fparams.end()) {
@@ -66,11 +129,46 @@ public:
         }
         return iparams[par];
     }
+    vector<int> getPar(string par, vector<int> def) {
+        auto it=viparams.find(par);
+        if (it==viparams.end()) {
+            viparams[par]=def;
+        }
+        return viparams[par];
+    }
+    bool getPar(string par, bool def) {
+        auto it=bparams.find(par);
+        if (it==bparams.end()) {
+            bparams[par]=def;
+        }
+        return bparams[par];
+    }
+    string getPar(string par, string def) {
+        auto it=sparams.find(par);
+        if (it==sparams.end()) {
+            sparams[par]=def;
+        }
+        return sparams[par];
+    }
     void setPar(string par, int val) {
+        erase(par);
         iparams[par]=val;
     }
+    void setPar(string par, vector<int> val) {
+        erase(par);
+        viparams[par]=val;
+    }
     void setPar(string par, floatN val) {
+        erase(par);
         fparams[par]=val;
+    }
+    void setPar(string par, bool val) {
+        erase(par);
+        bparams[par]=val;
+    }
+    void setPar(string par, string val) {
+        erase(par);
+        sparams[par]=val;
     }
 };
 
@@ -89,6 +187,7 @@ typedef struct LayerParams {
 typedef std::vector<int> t_layer_topo;
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
+
 class Layer;
 
 template<typename T>
