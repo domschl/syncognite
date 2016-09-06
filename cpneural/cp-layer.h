@@ -48,10 +48,10 @@ vector<unsigned int> shape(const MatrixN& m) {
     return s;
 }
 
-class Optimizer {
-public:
+class CpParams {
     cp_t_params<int> iparams;
     cp_t_params<floatN> fparams;
+public:
     floatN getPar(string par, floatN def) {
         auto it=fparams.find(par);
         if (it==fparams.end()) {
@@ -72,6 +72,10 @@ public:
     void setPar(string par, floatN val) {
         fparams[par]=val;
     }
+};
+
+class Optimizer : public CpParams {
+public:
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
 

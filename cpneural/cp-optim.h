@@ -14,7 +14,9 @@ class Sdg : public Optimizer {
     std::set<string> debugnames;
 public:
     Sdg(cp_t_params<floatN>& ps) {
-        fparams=ps;
+        for (auto pi : ps) {
+            setPar(pi.first, pi.second);
+        }
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
         lr=getPar("learning_rate", 1e-2);
@@ -39,7 +41,9 @@ class SdgMomentum : public Optimizer {
     floatN mm;
 public:
     SdgMomentum(cp_t_params<floatN>& ps) {
-        fparams=ps;
+        for (auto pi : ps) {
+            setPar(pi.first, pi.second);
+        }
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
         lr=getPar("learning_rate", 1e-2);
@@ -73,7 +77,9 @@ class RmsProp : public Optimizer {
     floatN dc,ep;
 public:
     RmsProp(cp_t_params<floatN>& ps) {
-        fparams=ps;
+        for (auto pi : ps) {
+            setPar(pi.first, pi.second);
+        }
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
         lr=getPar("learning_rate", 1e-2);
@@ -109,7 +115,9 @@ class Adam : public Optimizer {
     floatN b1,b2,ep;
 public:
     Adam(cp_t_params<floatN>& ps) {
-        fparams=ps;
+        for (auto pi : ps) {
+            setPar(pi.first, pi.second);
+        }
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
         lr=getPar("learning_rate", 1e-2);
@@ -191,8 +199,12 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss) 
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
                 string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
     Optimizer* popti=optimizerFactory(optimizer, fpars);
-    popti->fparams=fpars;
-    popti->iparams=ipars;
+    for (auto pi : fpars) {
+        popti->setPar(pi.first, pi.second);
+    }
+    for (auto pi : ipars) {
+        popti->setPar(pi.first, pi.second);
+    }
     t_cppl optiCache;
     int ep=popti->getPar("epochs", 1); //Default only!
     int bs=popti->getPar("batch_size", 100); // Defaults only! are overwritten!
