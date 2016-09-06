@@ -140,7 +140,8 @@ int main(int argc, char *argv[]) {
          cout << it.first << " tensor-4" <<  endl;
      }
 
-    TwoLayerNet tl({3072,1000,10});
+    TwoLayerNet tl(CpParams("{topo=[3072,1000,10]}"));
+
     MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
     MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);
     MatrixN Xv=(*(cpcifar10Data["train-data"])).block(49000,0,1000,3072);

@@ -58,10 +58,10 @@ class CpParams {
     cp_t_params<bool> bparams;
     cp_t_params<string> sparams;
 public:
-/*    CpParams(string init) {
-
+    CpParams() {}
+    CpParams(string init) {
+        setString(init);
     }
-*/
     string trim(const string &s) {
         auto wsfront=std::find_if_not(s.begin(),s.end(),[](int c){return std::isspace(c);});
         //auto wsfront=std::find_if_not(s.begin(),s.end(),std::isspace);
@@ -249,15 +249,15 @@ typedef struct LayerParams {
     map<string, floatN> fParams;
 } t_layer_params;
 
-typedef std::vector<int> t_layer_topo;
+//typedef std::vector<int> t_layer_topo;
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
 
 class Layer;
 
 template<typename T>
-Layer* createLayerInstance(t_layer_topo tp) {
-    return new T(tp);
+Layer* createLayerInstance(const CpParams& cp) {
+    return new T(cp);
 }
 
 //void cppl_delete(t_cppl p);
@@ -284,13 +284,13 @@ void cppl_set(t_cppl *p, string key, MatrixN *val) {
     (*p)[key]=val;
 }
 
-typedef std::map<std::string, Layer*(*)(t_layer_topo)> t_layer_creator_map;
+typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
 
 class LayerFactory {
 public:
     t_layer_creator_map mapl;
     t_layer_props mapprops;
-    void registerInstanceCreator(std::string name, Layer*(sub)(t_layer_topo), t_layer_props_entry lprops ) {
+    void registerInstanceCreator(std::string name, Layer*(sub)(const CpParams&), t_layer_props_entry lprops ) {
         auto it=mapl.find(name);
         if (it!=mapl.end()) {
             cout << "Layer " << name << " is already registered, prevent additional registration." << endl;
@@ -299,21 +299,23 @@ public:
             mapprops[name] = lprops;
         }
     }
-    Layer* createLayerInstance(std::string name, t_layer_topo tp) {
-        return mapl[name](tp);
+    Layer* createLayerInstance(std::string name, const CpParams& cp) {
+        return mapl[name](cp);
     }
 };
 
 LayerFactory _syncogniteLayerFactory;
 
 #define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
-#define CREATE_LAYER(LayerName, topo) _syncogniteLayerFactory.createLayerInstance(LayerName, topo);
+#define CREATE_LAYER(LayerName, cp) _syncogniteLayerFactory.createLayerInstance(LayerName, cp);
 
 
 class Layer {
 public:
     string layerName;
     LayerType layerType;
+    int topoParams;
+    CpParams cp;
     t_cppl params;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!

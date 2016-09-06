@@ -36,7 +36,7 @@ bool checkAffineForward(floatN eps=1.e-6) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-    Affine pe({4,3});
+    Affine pe(CpParams("{topo=[4,3]}"));
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr);
@@ -67,7 +67,7 @@ bool checkAffineBackward(float eps=1.0e-6) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe({4,5});
+    Affine pe(CpParams("{topo=[4,5]}"));
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -97,7 +97,7 @@ bool checkReluForward(floatN eps=1.e-6) {
          0.        ,  0.        ,  0.04545455,  0.13636364,
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
-    Relu rl({4});
+    Relu rl(CpParams("{topo=[4]}"));
     MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
@@ -118,7 +118,7 @@ bool checkReluBackward(float eps=1.0e-6) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Relu rl({4});
+    Relu rl(CpParams("{topo=[4]}"));
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rl.forward(x, &cache);
@@ -147,7 +147,7 @@ bool checkAffineRelu(float eps=1.0e-6) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl({4,5});
+    AffineRelu arl(CpParams("{topo=[4,5]}"));
     t_cppl cache;
     t_cppl grads;
     *(arl.params["af-W"])=W;
@@ -223,7 +223,7 @@ bool checkSoftmax(float eps=1.0e-6) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm({5});
+    Softmax sm(CpParams("{topo=[5]}"));
     t_cppl cache;
     t_cppl grads;
     MatrixN probs0=sm.forward(x, y, &cache);
@@ -298,7 +298,7 @@ bool checkSvm(float eps=1.0e-6) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv({5});
+    Svm sv(CpParams("{topo=[5]}"));
     t_cppl cache;
     t_cppl grads;
     MatrixN margins0=sv.forward(x, y, &cache);
@@ -351,7 +351,10 @@ bool checkTwoLayer(float eps=1.0e-6) {
          -0.69824561,  2.46626566,
          -0.51027569,  2.3685213;
 
-    TwoLayerNet tln({D,H,C});
+    CpParams cp;
+    cp.setPar("topo",vector<int>{D,H,C});
+    TwoLayerNet tln(cp);
+
     *(tln.params["af1-W"])=W1;
     *(tln.params["af1-b"])=b1;
     *(tln.params["af2-W"])=W2;
@@ -418,8 +421,9 @@ bool registerTest() {
     for (auto it : _syncogniteLayerFactory.mapl) {
         cout << nr << ".: " << it.first << " ";
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
-        t_layer_topo tp=std::vector<int>(te);
-        Layer *l = CREATE_LAYER(it.first, tp)
+        CpParams cp;
+        cp.setPar("topo",std::vector<int>(te));
+        Layer *l = CREATE_LAYER(it.first, cp)
         if (l->layerType == LT_NORMAL) {
             cout << "normal layer" << endl;
         } else if (l->layerType==LT_LOSS) {
@@ -437,7 +441,9 @@ bool registerTest() {
 
 bool trainTest() {
     bool allOk=true;
-    TwoLayerNet tln({5,4,2});
+    CpParams cp;
+    cp.setPar("topo",vector<int>{5,4,2});
+    TwoLayerNet tln(cp);
     cout << "NOT IMPLEMENTED!" << endl;
     return allOk;
 }
@@ -452,21 +458,21 @@ int main() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    Affine pc({30,20});
+    Affine pc(CpParams("{topo=[30,20]}"));
     MatrixN x(10,30);
     x.setRandom();
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
 
-    Relu rl({30});
+    Relu rl(CpParams("{topo=[30]}"));
     MatrixN xr(20,30);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
         allOk=false;
     }
 
-    AffineRelu rx({2,3});
+    AffineRelu rx(CpParams("{topo=[2,3]}"));
     MatrixN xarl(30,2);
     xarl.setRandom();
     if (!rx.selfTest(xarl,yz)) {
@@ -474,7 +480,9 @@ int main() {
     }
 
     int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
-    TwoLayerNet tl({ntl1,ntl2,ntl3});
+    CpParams tcp;
+    tcp.setPar("topo", vector<int>{ntl1,ntl2,ntl3});
+    TwoLayerNet tl(tcp);
     MatrixN xtl(ntlN,ntl1);
     xtl.setRandom();
     MatrixN y2(ntlN,1);
@@ -485,7 +493,9 @@ int main() {
     }
 
     int smN=10, smC=4;
-    Softmax mx({smC});
+    CpParams c1;
+    c1.setPar("topo",vector<int>{smC});
+    Softmax mx(c1);
     MatrixN xmx(smN,smC);
     xmx.setRandom();
     MatrixN y(smN,1);
@@ -495,7 +505,9 @@ int main() {
     }
 
     int svN=10, svC=5;
-    Svm sv({svC});
+    CpParams c2;
+    c2.setPar("topo",vector<int>{svC});
+    Svm sv(c2);
     MatrixN xsv(svN,svC);
     xsv.setRandom();
     MatrixN yv(svN,1);

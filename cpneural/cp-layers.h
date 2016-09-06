@@ -22,10 +22,14 @@ public:
 
 class Affine : public Layer {
 public:
-    Affine(t_layer_topo topo) {
-        assert (topo.size()==2);
+    Affine(const CpParams& cx) {
         layerName="Affine";
+        topoParams=2;
         layerType=LayerType::LT_NORMAL;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo",vector<int>{0});
+        assert (topo.size()==2);
+        cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
         cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
         cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
 
@@ -60,10 +64,11 @@ public:
 
 class Relu : public Layer {
 public:
-    Relu(t_layer_topo topo) {
-        assert (topo.size()==1);
+    Relu(const CpParams& cx) {
         layerName="Relu";
         layerType=LayerType::LT_NORMAL;
+        topoParams=1;
+        cp=cx;
     }
     ~Relu() {
         cppl_delete(&params);
@@ -109,13 +114,21 @@ class AffineRelu : public Layer {
 public:
     Affine *af;
     Relu *rl;
-    AffineRelu(t_layer_topo topo) {
-        assert (topo.size()==2);
+    AffineRelu(const CpParams& cx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
-        af=new Affine({topo[0],topo[1]});
+        topoParams=2;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        assert (topo.size()==3);
+        cout << "CrAffRelu:" << topo[0] <<"/" << topo[1] << "/" << topo[2]<< endl;
+        CpParams ca;
+        ca.setPar("topo", vector<int>{topo[0],topo[1]});
+        af=new Affine(ca);
         mlPush("af", &(af->params), &params);
-        rl=new Relu({topo[1]});
+        CpParams cl;
+        cl.setPar("topo", vector<int>{topo[1]});
+        rl=new Relu(cl);
         mlPush("re", &(rl->params), &params);
     }
     ~AffineRelu() {
@@ -162,10 +175,11 @@ public:
 // Multiclass support vector machine Svm
 class Svm : public Layer {
 public:
-    Svm(t_layer_topo topo) {
-        assert (topo.size()==1);
+    Svm(const CpParams& cx) {
         layerName="Svm";
         layerType=LayerType::LT_LOSS;
+        topoParams=1;
+        cp=cx;
     }
     ~Svm() {
         cppl_delete(&params);
@@ -221,10 +235,11 @@ public:
 
 class Softmax : public Layer {
 public:
-    Softmax(t_layer_topo topo) {
-        assert (topo.size()==1);
+    Softmax(const CpParams& cx) {
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
+        topoParams=1;
+        cp=cx;
     }
     ~Softmax() {
         cppl_delete(&params);
@@ -284,17 +299,24 @@ public:
     Relu *rl;
     Affine *af2;
     Softmax *sm;
-    TwoLayerNet(t_layer_topo topo) {
-        assert (topo.size()==3);
+    TwoLayerNet(CpParams cx) {
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
-        af1=new Affine({topo[0],topo[1]});
+        topoParams=3;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo",vector<int>{0});
+        CpParams c1,c2,c3,c4;
+        c1.setPar("topo",vector<int>{topo[0],topo[1]});
+        c2.setPar("topo",vector<int>{topo[1]});
+        c3.setPar("topo",vector<int>{topo[1],topo[2]});
+        c4.setPar("topo",vector<int>{topo[2]});
+        af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);
-        rl=new Relu({topo[1]});
+        rl=new Relu(c2);
         mlPush("rl", &(rl->params), &params);
-        af2=new Affine({topo[1],topo[2]});
+        af2=new Affine(c3);
         mlPush("af2", &(af2->params), &params);
-        sm=new Softmax({topo[2]});
+        sm=new Softmax(c4);
         mlPush("sm", &(sm->params), &params);
     }
     ~TwoLayerNet() {

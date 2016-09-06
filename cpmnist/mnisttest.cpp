@@ -157,7 +157,7 @@ bool  getMnistData(string filepath) {
          cout << (*cpMnistData["t_test"])(in,0) << endl;
      }
      */
-    TwoLayerNet tl({784,1024,10});
+    TwoLayerNet tl(CpParams("{topo=[784,1024,10]}"));
     MatrixN X=*(cpMnistData["x_train"]);
     MatrixN y=*(cpMnistData["t_train"]);
     MatrixN Xv=*(cpMnistData["x_valid"]);
