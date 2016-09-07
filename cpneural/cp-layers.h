@@ -254,49 +254,45 @@ public:
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
         cp=cx;
-
         eps = cp.getPar("eps", 1e-5);
         momentum = cp.getPar("momentum", 0.9);
         trainMode = cp.getPar("train", false);
-
-/*        N, D = x.shape
-        running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
-        running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
-
-*/    }
+    }
     ~BatchNorm() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
-        MatrixN *prm;
-        MatrixN *prv;
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
+        MatrixN *prm, *prv;
+        MatrixN *beta, *gamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
-        MatrixN *gamma=(*pcache)["gamma"];
-        MatrixN *beta=(*pcache)["beta"];
+        if (trainMode) cout << "batch-norm: train" << endl;
+        else cout << "batch-norm: test" << endl;
         if (pcache->find("gamma")==pcache->end()) {
-            prm=new MatrixN(1,shape(x)[1]);
-            prm->setOnes();
-            cppl_set(pcache,"gamma",prm);
+            gamma=new MatrixN(1,shape(x)[1]);
+            gamma->setOnes();
+            cppl_set(pcache,"gamma",gamma);
         } else {
-            prm=(*pcache)["gamma"];
+            gamma=(*pcache)["gamma"];
         }
         if (pcache->find("beta")==pcache->end()) {
-            prm=new MatrixN(1,shape(x)[1]);
-            prm->setZero();
-            cppl_set(pcache,"beta",prm);
+            beta=new MatrixN(1,shape(x)[1]);
+            beta->setZero();
+            cppl_set(pcache,"beta",beta);
         } else {
-            prm=(*pcache)["beta"];
+            beta=(*pcache)["beta"];
         }
         if (pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
+            cppl_set(pcache,"running_mean",prm);
         } else {
             prm=(*pcache)["running_mean"];
         }
         if (pcache->find("running_var")==pcache->end()) {
             prv=new MatrixN(1,shape(x)[1]);
             prv->setZero();
+            cppl_set(pcache,"running_var",prv);
         } else {
             prv=(*pcache)["running_var"];
         }
@@ -318,12 +314,13 @@ running_mean = momentum * running_mean + (1 - momentum) * mn
 running_var = momentum * running_var + (1 - momentum) * st
 */
             int N=shape(x)[0];
-            MatrixN x1=x.rowwise() - x.colwise().sum()/(floatN)N;
+            RowVectorN xm=x.colwise().sum()/(floatN)N;
+            MatrixN x1=x.rowwise() - xm;
             floatN v= 1.0/sqrt((x1.array()*x1.array()).matrix().sum()/(floatN)N + eps);
             xout = x1.array().rowwise() * (RowVectorN(*gamma).row(0)).array() * v;
             xout.rowwise() += (*beta).row(0);
 
-            *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + x1 * (1.0-momentum);
+            *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
             *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).array() + (1.0-momentum)/v;
         } else {
 

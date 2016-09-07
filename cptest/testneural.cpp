@@ -131,6 +131,31 @@ bool checkReluBackward(float eps=1.0e-6) {
     return allOk;
 }
 
+bool checkBatchNormForward(floatN eps=1.e-6) {
+    t_cppl cache;
+    MatrixN x(6,3);
+    x << -0.45629956,  -0.45849124,  -0.25095998,
+         -0.45473334,  -0.47106255,   0.28928427,
+        -12.45389218,  -5.63013653,  -6.88725421,
+         -3.86544901,   0.59909639,  -0.32869848,
+         -0.02788929,  -0.38297986,  -2.77693351,
+         -2.97435144,  -2.01205847,  -1.55539778;
+
+    MatrixN xn(6,3);
+    xn << 0.67767457,  0.45717751,  0.68317297,
+          0.67803858,  0.45102481,  0.90452817,
+         -2.11073866, -2.07394779, -2.03592717,
+         -0.11466084,  0.97478587,  0.65132104,
+          0.77724328,  0.49413456, -0.35179846,
+          0.09244306, -0.30317497,  0.14870345;
+
+    BatchNorm bn(CpParams("{topo=[3];train=true}"));
+    //bn.setPar("trainMode", true);
+    MatrixN xn0=bn.forward(x, &cache);
+    cppl_delete(&cache);
+    return matComp(xn,xn0,"BatchNormForward",eps);
+}
+
 bool checkAffineRelu(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(2,4);
@@ -543,6 +568,13 @@ int main() {
         cout << green << "ReluBackward (Affine) with test data: OK." << def << endl;
     } else {
         cout << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkBatchNormForward()) {
+        cout << green << "BatchNormForward with test data: OK." << def << endl;
+    } else {
+        cout << red << "BatchNormForward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
