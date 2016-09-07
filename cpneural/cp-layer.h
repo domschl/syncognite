@@ -37,7 +37,7 @@ using floatN=float;
 #endif
 #endif
 
-#define NULL_MAT (MatrixN(0,0))
+//#define NULL_MAT (MatrixN(0,0))
 
 template <typename T>
 using cp_t_params = map<string, T>;
@@ -54,6 +54,7 @@ vector<unsigned int> shape(const MatrixN& m) {
 class CpParams {
     cp_t_params<int> iparams;
     cp_t_params<vector<int>> viparams;
+    cp_t_params<vector<floatN>> vfparams;
     cp_t_params<floatN> fparams;
     cp_t_params<bool> bparams;
     cp_t_params<string> sparams;
@@ -94,17 +95,27 @@ public:
             string p1=getBlock(t,"","=");
             string p2=getBlock(t,"=","");
             if (p1.size()>0) {
-                if (p2[0]=='[') { // int array
+                if (p2[0]=='[') { // array
                     string tm=getBlock(p2,"[","]");
                     vector<string> ar;
                     split(tm,',',ar);
-                    vector<int> vi;
-                    for (auto ai : ar) {
-                        try {
-                            vi.push_back(stoi(ai));
-                        } catch (...) {}
+                    if (tm.find(".")!=tm.npos || tm.find("e")!=tm.npos) { //float array
+                        vector<floatN> vf;
+                        for (auto af : ar) {
+                            try {
+                                vf.push_back((floatN)stod(af));
+                            } catch (...) {}
+                        }
+                        setPar(p1,vf);
+                    } else { // int array
+                        vector<int> vi;
+                        for (auto ai : ar) {
+                            try {
+                                vi.push_back(stoi(ai));
+                            } catch (...) {}
+                        }
+                        setPar(p1,vi);
                     }
-                    setPar(p1,vi);
                 } else if (p2=="true") { // boolean
                     setPar(p1,true);
                 } else if(p2=="false") { // boolean
@@ -147,6 +158,16 @@ public:
             }
             str+="]"+ter;
         }
+        for (auto it : vfparams) {
+            str += ind + qt+it.first + qt+sep + "[";
+            bool is=false;
+            for (auto f : it.second) {
+                if (is) str+=asep;
+                is=true;
+                str+=std::to_string(f);
+            }
+            str+="]"+ter;
+        }
         for (auto it : bparams) {
             str += ind + qt+it.first + qt+sep;
             if (it.second) str+="true";
@@ -163,6 +184,7 @@ public:
     bool isDefined(string par) {
         if (iparams.find(par)!=iparams.end()) return true;
         if (viparams.find(par)!=viparams.end()) return true;
+        if (vfparams.find(par)!=vfparams.end()) return true;
         if (fparams.find(par)!=fparams.end()) return true;
         if (bparams.find(par)!=bparams.end()) return true;
         // XXX Warning: Strings lake even rudimentary escape sequence handling!
@@ -173,6 +195,7 @@ public:
         if (fparams.find(par)!=fparams.end()) fparams.erase(par);
         if (iparams.find(par)!=iparams.end()) iparams.erase(par);
         if (viparams.find(par)!=viparams.end()) viparams.erase(par);
+        if (vfparams.find(par)!=vfparams.end()) vfparams.erase(par);
         if (bparams.find(par)!=bparams.end()) bparams.erase(par);
         // XXX Warning: Strings lake even rudimentary escape sequence handling!
         if (sparams.find(par)!=sparams.end()) sparams.erase(par);
@@ -198,6 +221,13 @@ public:
         }
         return viparams[par];
     }
+    vector<floatN> getPar(string par, vector<floatN> def={}) {
+        auto it=vfparams.find(par);
+        if (it==vfparams.end()) {
+            vfparams[par]=def;
+        }
+        return vfparams[par];
+    }
     bool getPar(string par, bool def=false) {
         auto it=bparams.find(par);
         if (it==bparams.end()) {
@@ -220,6 +250,10 @@ public:
     void setPar(string par, vector<int> val) {
         erase(par);
         viparams[par]=val;
+    }
+    void setPar(string par, vector<floatN> val) {
+        erase(par);
+        vfparams[par]=val;
     }
     void setPar(string par, floatN val) {
         erase(par);

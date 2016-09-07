@@ -172,6 +172,169 @@ public:
 };
 
 
+/*
+mode = bn_param['mode']
+eps = bn_param.get('eps', 1e-5)
+momentum = bn_param.get('momentum', 0.9)
+
+N, D = x.shape
+running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+
+out, cache = None, None
+if mode == 'train':
+    # print("train")
+    #######################################################################
+    # TODO: Implement the training-time forward pass for batch
+    # normalization. Use minibatch statistics to compute the mean and
+    # variance, use these statistics to normalize the incoming data, and
+    # scale and shift the normalized data using gamma and beta.
+    #
+    # You should store the output in the variable out. Any intermediates
+    # that you need for the backward pass should be stored in the cache
+    # variable.
+    #
+    # You should also use your computed sample mean and variance together
+    # with the momentum variable to update the running mean and running
+    # variance, storing your result in the running_mean and running_var
+    # variables.
+    #######################################################################
+    N, D = x.shape
+    mn = np.sum(x, axis=0) / N
+    xso = x - mn
+    xosq = xso * xso
+    sqs = np.sum(xosq, axis=0) / N
+    sqse = sqs + eps
+    st = np.sqrt(sqse)
+    ist = 1.0 / st
+    xst = xso * ist
+    xgm = xst * gamma
+    out = xgm + beta
+    cache = (mn, xso, xosq, sqs, sqse, st, ist,
+             xst, xgm, out, beta, gamma, eps)
+
+    running_mean = momentum * running_mean + (1 - momentum) * mn
+    running_var = momentum * running_var + (1 - momentum) * st
+
+    #######################################################################
+    #                             END OF YOUR CODE
+    #######################################################################
+elif mode == 'test':
+    # print("test")
+    #######################################################################
+    # TODO: Implement the test-time forward pass for batch normalization.
+    # Use the running mean and variance to normalize the incoming data,
+    # then scale and shift the normalized data using gamma and beta.
+    # Store the result in the out variable.
+    #######################################################################
+    xo = x - running_mean
+    xo /= running_var
+
+    out = xo * gamma + beta
+    #######################################################################
+    #                             END OF YOUR CODE                        #
+    #######################################################################
+else:
+    raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
+
+# Store the updated running means back into bn_param
+bn_param['running_mean'] = running_mean
+bn_param['running_var'] = running_var
+*/
+
+// Batch normalization
+class BatchNorm : public Layer {
+    floatN eps;
+    floatN momentum;
+    bool trainMode;
+
+    BatchNorm(const CpParams& cx) {
+        layerName="BatchNorm";
+        layerType=LayerType::LT_NORMAL;
+        topoParams=1;
+        cp=cx;
+
+        eps = cp.getPar("eps", 1e-5);
+        momentum = cp.getPar("momentum", 0.9);
+        trainMode = cp.getPar("train", false);
+
+/*        N, D = x.shape
+        running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
+        running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
+
+*/    }
+    ~BatchNorm() {
+        cppl_delete(&params);
+    }
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+        MatrixN *prm;
+        MatrixN *prv;
+        MatrixN xout;
+        trainMode = cp.getPar("train", false);
+        MatrixN *gamma=(*pcache)["gamma"];
+        MatrixN *beta=(*pcache)["beta"];
+        if (pcache->find("gamma")==pcache->end()) {
+            prm=new MatrixN(1,shape(x)[1]);
+            prm->setOnes();
+            cppl_set(pcache,"gamma",prm);
+        } else {
+            prm=(*pcache)["gamma"];
+        }
+        if (pcache->find("beta")==pcache->end()) {
+            prm=new MatrixN(1,shape(x)[1]);
+            prm->setZero();
+            cppl_set(pcache,"beta",prm);
+        } else {
+            prm=(*pcache)["beta"];
+        }
+        if (pcache->find("running_mean")==pcache->end()) {
+            prm=new MatrixN(1,shape(x)[1]);
+            prm->setZero();
+        } else {
+            prm=(*pcache)["running_mean"];
+        }
+        if (pcache->find("running_var")==pcache->end()) {
+            prv=new MatrixN(1,shape(x)[1]);
+            prv->setZero();
+        } else {
+            prv=(*pcache)["running_var"];
+        }
+        if (trainMode) {
+/*
+mn = np.sum(x, axis=0) / N
+xso = x - mn
+xosq = xso * xso
+sqs = np.sum(xosq, axis=0) / N
+sqse = sqs + eps
+st = np.sqrt(sqse)
+ist = 1.0 / st
+xst = xso * ist
+xgm = xst * gamma
+out = xgm + beta
+cache = (mn, xso, xosq, sqs, sqse, st, ist,
+         xst, xgm, out, beta, gamma, eps)
+running_mean = momentum * running_mean + (1 - momentum) * mn
+running_var = momentum * running_var + (1 - momentum) * st
+*/
+            int N=shape(x)[0];
+            MatrixN x1=x.rowwise() - x.colwise().sum()/(floatN)N;
+            floatN v= 1.0/sqrt((x1.array()*x1.array()).matrix().sum()/(floatN)N + eps);
+            x1 = x1 * v;
+            xout = (x1.rowwise()).cwiseProduct(*gamma)
+            xout = xout +(*beta).row(0);
+        } else {
+            xout = x; //(x - running_mean)/running_var*gamma+beta;
+        }
+        return xout;
+    }
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+        MatrixN dx;
+        return dx;
+    }
+
+};
+
+
 // Multiclass support vector machine Svm
 class Svm : public Layer {
 public:
