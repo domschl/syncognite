@@ -244,6 +244,7 @@ bn_param['running_var'] = running_var
 
 // Batch normalization
 class BatchNorm : public Layer {
+public:
     floatN eps;
     floatN momentum;
     bool trainMode;
@@ -319,16 +320,24 @@ running_var = momentum * running_var + (1 - momentum) * st
             int N=shape(x)[0];
             MatrixN x1=x.rowwise() - x.colwise().sum()/(floatN)N;
             floatN v= 1.0/sqrt((x1.array()*x1.array()).matrix().sum()/(floatN)N + eps);
-            x1 = x1 * v;
-            xout = (x1.rowwise()).cwiseProduct(*gamma)
-            xout = xout +(*beta).row(0);
+            xout = x1.array().rowwise() * (RowVectorN(*gamma).row(0)).array() * v;
+            xout.rowwise() += (*beta).row(0);
+
+            *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + x1 * (1.0-momentum);
+            *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).array() + (1.0-momentum)/v;
         } else {
-            xout = x; //(x - running_mean)/running_var*gamma+beta;
+
+            MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
+            MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
+            MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*gamma).row(0)).array());
+            xout = xot3.rowwise()+RowVectorN((*beta).row(0));
+            //(x - running_mean)/running_var*gamma+beta;
         }
         return xout;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
-        MatrixN dx;
+        MatrixN x=*((*pcache)["x"]);
+        MatrixN dx(x);
         return dx;
     }
 
@@ -564,6 +573,7 @@ void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 2)
     REGISTER_LAYER("Relu", Relu, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
+    REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
