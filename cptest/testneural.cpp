@@ -244,6 +244,36 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     }
     cppl_delete(&cache2);
 
+    t_cppl cache3;
+    int nnr=200;
+    cppl_set(&cache3,"gamma", new MatrixN(1,3));
+    *(cache3["gamma"]) << 1.0, 2.0, 3.0;
+    cppl_set(&cache3,"beta", new MatrixN(1,3));
+    *(cache3["beta"]) << 0.0, -1.0, 4.0;
+    MatrixN xt(nnr,3);
+    BatchNorm bn3(CpParams("{topo=[3];train=true}"));
+    for (int i=0; i<nnr; i++) {
+        xt.setRandom();
+        bn3.forward(xt,&cache3);
+    }
+    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
+    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
+    cout << "switching test" << endl;
+    bn3.cp.setPar("train", false);
+    if (bn3.cp.getPar("train", true)) cout << "INTERNAL ERROR: parSet boolean failed!" << endl;
+    xt.setRandom();
+    MatrixN xn30=bn3.forward(xt, &cache3);
+    MatrixN mean3=xn30.colwise().mean();
+    cout << "  Mean:" << mean3 << endl;
+    if (!matComp(*(cache3["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
+        allOk=0;
+    }
+    MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
+    MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
+    cout << "  StdDev:" << xmsq3 << endl;
+    if (!matComp(*(cache3["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
+        allOk=0;
+    }
 
     return allOk;
 }

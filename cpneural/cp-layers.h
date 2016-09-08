@@ -266,25 +266,21 @@ public:
         MatrixN *beta, *gamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
-        if (trainMode) cout << "batch-norm: train" << endl;
-        else cout << "batch-norm: test" << endl;
+        //if (trainMode) cout << "batch-norm: train" << endl;
+        //else cout << "batch-norm: test" << endl;
         if (pcache->find("gamma")==pcache->end()) {
             gamma=new MatrixN(1,shape(x)[1]);
             gamma->setOnes();
             cppl_set(pcache,"gamma",gamma);
-            cout << "Default values for gamma created" << endl;
         } else {
             gamma=(*pcache)["gamma"];
-            cout << "Existing values for gamma used" << endl;
         }
         if (pcache->find("beta")==pcache->end()) {
             beta=new MatrixN(1,shape(x)[1]);
             beta->setZero();
             cppl_set(pcache,"beta",beta);
-            cout << "Default values for beta created" << endl;
         } else {
             beta=(*pcache)["beta"];
-            cout << "Existing values for beta used" << endl;
         }
         if (pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
@@ -329,7 +325,8 @@ running_var = momentum * running_var + (1 - momentum) * st
             xout.rowwise() += (*beta).row(0);
 
             *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-            *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
+            // *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
+            *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
         } else {
 
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
