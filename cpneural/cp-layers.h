@@ -257,31 +257,23 @@ public:
         eps = cp.getPar("eps", 1e-5);
         momentum = cp.getPar("momentum", 0.9);
         trainMode = cp.getPar("train", false);
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+
+        MatrixN *pgamma=new MatrixN(1,topo[0]);
+        pgamma->setOnes();
+        cppl_set(&params,"gamma",pgamma);
+        MatrixN *pbeta=new MatrixN(1,topo[0]);
+        pbeta->setZero();
+        cppl_set(&params,"beta",pbeta);
     }
     ~BatchNorm() {
         cppl_delete(&params);
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         MatrixN *prm, *prv;
-        MatrixN *beta, *gamma;
+        MatrixN *pbeta, *pgamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
-        //if (trainMode) cout << "batch-norm: train" << endl;
-        //else cout << "batch-norm: test" << endl;
-        if (pcache->find("gamma")==pcache->end()) {
-            gamma=new MatrixN(1,shape(x)[1]);
-            gamma->setOnes();
-            cppl_set(pcache,"gamma",gamma);
-        } else {
-            gamma=(*pcache)["gamma"];
-        }
-        if (pcache->find("beta")==pcache->end()) {
-            beta=new MatrixN(1,shape(x)[1]);
-            beta->setZero();
-            cppl_set(pcache,"beta",beta);
-        } else {
-            beta=(*pcache)["beta"];
-        }
         if (pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
@@ -296,6 +288,8 @@ public:
         } else {
             prv=(*pcache)["running_var"];
         }
+        pgamma=params["gamma"];
+        pbeta=params["beta"];
         if (trainMode) {
 /*
 mn = np.sum(x, axis=0) / N
@@ -316,13 +310,12 @@ running_var = momentum * running_var + (1 - momentum) * st
             int N=shape(x)[0];
             RowVectorN xm=x.colwise().sum()/(floatN)N;
             MatrixN x1=x.rowwise() - xm;
-            // floatN v= sqrt((x1.array()*x1.array()).sum()/(floatN)N + eps);
             RowVectorN v= ((x1.array()*x1.array()).colwise().sum()/(floatN)N + eps).sqrt();
             RowVectorN v2=v;
             for (int i=0; i< v.size(); i++) v2(i) = 1.0/v2(i);
             MatrixN x2 = x1.array().rowwise() * v2.array();
-            xout = x2.array().rowwise() * (RowVectorN(*gamma).row(0)).array();
-            xout.rowwise() += (*beta).row(0);
+            xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
+            xout.rowwise() += (*pbeta).row(0);
 
             *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
             // *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
@@ -331,8 +324,8 @@ running_var = momentum * running_var + (1 - momentum) * st
 
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
             MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
-            MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*gamma).row(0)).array());
-            xout = xot3.rowwise()+RowVectorN((*beta).row(0));
+            MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*pgamma).row(0)).array());
+            xout = xot3.rowwise()+RowVectorN((*pbeta).row(0));
             //(x - running_mean)/running_var*gamma+beta;
         }
         return xout;

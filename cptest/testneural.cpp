@@ -192,6 +192,7 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     }
     cppl_delete(&cache);
 
+    t_cppl cache2;
     MatrixN xn2(10,3);
     xn2 << 10.3630844 ,  11.75554375,   8.03512946,
            10.46380722,  12.15214304,  15.11142543,
@@ -204,13 +205,10 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
            11.62625677,   9.5091419 ,  15.03412288,
            12.02169486,  12.3244036 ,  10.75554084;
 
-    t_cppl cache2;
-    cppl_set(&cache2,"gamma", new MatrixN(1,3));
-    *(cache2["gamma"]) << 1.0, 2.0, 3.0;
-    cppl_set(&cache2,"beta", new MatrixN(1,3));
-    *(cache2["beta"]) << 11.0, 12.0, 13.0;
 
     BatchNorm bn2(CpParams("{topo=[3];train=true}"));
+    *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
+    *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2);
     MatrixN mean2=xn20.colwise().mean();
@@ -246,12 +244,10 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
 
     t_cppl cache3;
     int nnr=200;
-    cppl_set(&cache3,"gamma", new MatrixN(1,3));
-    *(cache3["gamma"]) << 1.0, 2.0, 3.0;
-    cppl_set(&cache3,"beta", new MatrixN(1,3));
-    *(cache3["beta"]) << 0.0, -1.0, 4.0;
     MatrixN xt(nnr,3);
     BatchNorm bn3(CpParams("{topo=[3];train=true}"));
+    *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
+    *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
         xt.setRandom();
         bn3.forward(xt,&cache3);
@@ -265,15 +261,16 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     MatrixN xn30=bn3.forward(xt, &cache3);
     MatrixN mean3=xn30.colwise().mean();
     cout << "  Mean:" << mean3 << endl;
-    if (!matComp(*(cache3["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
+    if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
     cout << "  StdDev:" << xmsq3 << endl;
-    if (!matComp(*(cache3["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
+    if (!matComp(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
         allOk=0;
     }
+    cppl_delete(&cache3);
 
     return allOk;
 }
