@@ -365,7 +365,7 @@ bool checkSvm(float eps=1.0e-6) {
     if (!ret) allOk=false;
     floatN loss0=sv.loss(y, &cache);
     floatN d=loss-loss0;
-    floatN err=abs(d);
+    floatN err=std::abs(d);
     if (err > eps) {
         cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
