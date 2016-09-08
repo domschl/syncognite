@@ -133,27 +133,61 @@ bool checkReluBackward(float eps=1.0e-6) {
 
 bool checkBatchNormForward(floatN eps=1.e-6) {
     t_cppl cache;
-    MatrixN x(6,3);
-    x << -0.45629956,  -0.45849124,  -0.25095998,
-         -0.45473334,  -0.47106255,   0.28928427,
-        -12.45389218,  -5.63013653,  -6.88725421,
-         -3.86544901,   0.59909639,  -0.32869848,
-         -0.02788929,  -0.38297986,  -2.77693351,
-         -2.97435144,  -2.01205847,  -1.55539778;
+    bool allOk=true;
+    MatrixN x(10,3);
+    x << -1.76682167,  0.76232051, -1.31336665,
+         -1.5949946 ,  0.96014   ,  0.71301837,
+          1.64497495,  2.10628039, -0.79136981,
+         -0.06795316, -0.47106827,  1.18868314,
+          0.92155587, -0.08303236,  0.52682692,
+         -3.12821021,  2.16827829, -0.93670303,
+         -0.6552201 ,  0.35542666,  0.52397302,
+         -3.60689284,  2.35628056,  1.01625476,
+          0.38807454, -0.35816073,  0.69088183,
+          1.06266819,  1.04606173, -0.53434315;
 
-    MatrixN xn(6,3);
-    xn << 0.67767457,  0.45717751,  0.68317297,
-          0.67803858,  0.45102481,  0.90452817,
-         -2.11073866, -2.07394779, -2.03592717,
-         -0.11466084,  0.97478587,  0.65132104,
-          0.77724328,  0.49413456, -0.35179846,
-          0.09244306, -0.30317497,  0.14870345;
+    MatrixN xn(10,3);
+    xn << -0.6369156 , -0.12222813, -1.65495685,
+         -0.53619278,  0.07607152,  0.70380848,
+          1.36303558,  1.22499387, -1.04733883,
+          0.35893921, -1.35861064,  1.25749474,
+          0.93897664, -0.96963287,  0.48707675,
+         -1.434944  ,  1.28714225, -1.21651051,
+          0.01469091, -0.53010961,  0.48375473,
+         -1.71554159,  1.47560085,  1.05678359,
+          0.62625677, -1.24542905,  0.67804096,
+          1.02169486,  0.1622018 , -0.74815305;
 
     BatchNorm bn(CpParams("{topo=[3];train=true}"));
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
+    if (!matComp(xn,xn0,"BatchNormForward",eps)) {
+        cout << "BatchNorm forward failed" << endl;
+        allOk=false;
+    }  else {
+        cout << "  BatchNorm forward ok." << endl;
+    }
+
+    MatrixN runmean(1,3);
+    runmean << -0.06802819,  0.08842527,  0.01083855;
+    MatrixN runvar(1,3);
+    runvar << 0.170594  ,  0.09975786,  0.08590872;
+    if (!matComp(*(cache["running_mean"]),runmean)) {
+        cout << "BatchNorm running-mean failed" << endl;
+        allOk=false;
+    } else {
+        cout << "  BatchNorm running mean ok." << endl;
+    }
+    if (!matComp(*(cache["running_var"]),runvar)) {
+        cout << "BatchNorm running-var failed" << endl;
+        allOk=false;
+    } else {
+        cout << "  BatchNorm running var ok." << endl;
+    }
+
+
     cppl_delete(&cache);
-    return matComp(xn,xn0,"BatchNormForward",eps);
+    return allOk;
 }
 
 bool checkAffineRelu(float eps=1.0e-6) {

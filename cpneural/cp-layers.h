@@ -316,12 +316,16 @@ running_var = momentum * running_var + (1 - momentum) * st
             int N=shape(x)[0];
             RowVectorN xm=x.colwise().sum()/(floatN)N;
             MatrixN x1=x.rowwise() - xm;
-            floatN v= 1.0/sqrt((x1.array()*x1.array()).matrix().sum()/(floatN)N + eps);
-            xout = x1.array().rowwise() * (RowVectorN(*gamma).row(0)).array() * v;
+            // floatN v= sqrt((x1.array()*x1.array()).sum()/(floatN)N + eps);
+            RowVectorN v= ((x1.array()*x1.array()).colwise().sum()/(floatN)N + eps).sqrt();
+            RowVectorN v2=v;
+            for (int i=0; i< v.size(); i++) v2(i) = 1.0/v2(i);
+            MatrixN x2 = x1.array().rowwise() * v2.array();
+            xout = x2.array().rowwise() * (RowVectorN(*gamma).row(0)).array();
             xout.rowwise() += (*beta).row(0);
 
             *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-            *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).array() + (1.0-momentum)/v;
+            *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
         } else {
 
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
