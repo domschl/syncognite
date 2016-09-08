@@ -55,8 +55,13 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
                 } else if (dataset.getFloatType().getSize()==8) {
                     cout << " double" << endl;
                 }
+                break;
             case H5T_INTEGER:
                 cout << " int" << endl;
+                break;
+            default:
+                cout << "dataClass not implemented: " << dataClass << endl;
+                break;
         }
 
         int *pi, *pi4;
