@@ -161,6 +161,12 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     BatchNorm bn(CpParams("{topo=[3];train=true}"));
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
+    MatrixN mean=xn0.colwise().mean();
+    cout << "Mean:" << mean << endl;
+    MatrixN xme = xn0.rowwise() - RowVectorN(mean.row(0));
+    MatrixN xmsq = ((xme.array() * xme.array()).colwise().sum()/xn0.rows()).array().sqrt();
+    cout << "StdDev:" << xmsq << endl;
+
     if (!matComp(xn,xn0,"BatchNormForward",eps)) {
         cout << "BatchNorm forward failed" << endl;
         allOk=false;
@@ -184,9 +190,61 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     } else {
         cout << "  BatchNorm running var ok." << endl;
     }
-
-
     cppl_delete(&cache);
+
+    MatrixN xn2(10,3);
+    xn2 << 10.3630844 ,  11.75554375,   8.03512946,
+           10.46380722,  12.15214304,  15.11142543,
+           12.36303558,  14.44998773,   9.8579835 ,
+           11.35893921,   9.28277872,  16.77248423,
+           11.93897664,  10.06073426,  14.46123025,
+            9.565056  ,  14.5742845 ,   9.35046847,
+           11.01469091,  10.93978079,  14.45126418,
+            9.28445841,  14.95120171,  16.17035077,
+           11.62625677,   9.5091419 ,  15.03412288,
+           12.02169486,  12.3244036 ,  10.75554084;
+
+    t_cppl cache2;
+    cppl_set(&cache2,"gamma", new MatrixN(1,3));
+    *(cache2["gamma"]) << 1.0, 2.0, 3.0;
+    cppl_set(&cache2,"beta", new MatrixN(1,3));
+    *(cache2["beta"]) << 11.0, 12.0, 13.0;
+
+    BatchNorm bn2(CpParams("{topo=[3];train=true}"));
+    //bn.setPar("trainMode", true);
+    MatrixN xn20=bn2.forward(x, &cache2);
+    MatrixN mean2=xn20.colwise().mean();
+    cout << "Mean:" << mean2 << endl;
+    MatrixN xme2 = xn20.rowwise() - RowVectorN(mean2.row(0));
+    MatrixN xmsq2 = ((xme2.array() * xme2.array()).colwise().sum()/xn20.rows()).array().sqrt();
+    cout << "StdDev:" << xmsq2 << endl;
+
+    if (!matComp(xn2,xn20,"BatchNormForward",eps)) {
+        cout << "BatchNorm with beta/gamma forward failed" << endl;
+        allOk=false;
+    }  else {
+        cout << "  BatchNorm beta/gamma forward ok." << endl;
+    }
+
+    MatrixN runmean2(1,3);
+    runmean2 << -0.06802819,  0.08842527,  0.01083855;
+    MatrixN runvar2(1,3);
+    runvar2 << 0.170594  ,  0.09975786,  0.08590872;
+    if (!matComp(*(cache2["running_mean"]),runmean2)) {
+        cout << "BatchNorm running-mean2 failed" << endl;
+        allOk=false;
+    } else {
+        cout << "  BatchNorm running mean2 ok." << endl;
+    }
+    if (!matComp(*(cache2["running_var"]),runvar2)) {
+        cout << "BatchNorm running-var2 failed" << endl;
+        allOk=false;
+    } else {
+        cout << "  BatchNorm running var2 ok." << endl;
+    }
+    cppl_delete(&cache2);
+
+
     return allOk;
 }
 

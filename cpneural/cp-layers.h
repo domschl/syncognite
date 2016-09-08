@@ -29,7 +29,7 @@ public:
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
         assert (topo.size()==2);
-        cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
+        //cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
         cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
         cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
 
@@ -121,7 +121,7 @@ public:
         cp=cx;
         vector<int> topo=cp.getPar("topo", vector<int>{0});
         assert (topo.size()==3);
-        cout << "CrAffRelu:" << topo[0] <<"/" << topo[1] << "/" << topo[2]<< endl;
+        //cout << "CrAffRelu:" << topo[0] <<"/" << topo[1] << endl;
         CpParams ca;
         ca.setPar("topo", vector<int>{topo[0],topo[1]});
         af=new Affine(ca);
@@ -272,15 +272,19 @@ public:
             gamma=new MatrixN(1,shape(x)[1]);
             gamma->setOnes();
             cppl_set(pcache,"gamma",gamma);
+            cout << "Default values for gamma created" << endl;
         } else {
             gamma=(*pcache)["gamma"];
+            cout << "Existing values for gamma used" << endl;
         }
         if (pcache->find("beta")==pcache->end()) {
             beta=new MatrixN(1,shape(x)[1]);
             beta->setZero();
             cppl_set(pcache,"beta",beta);
+            cout << "Default values for beta created" << endl;
         } else {
             beta=(*pcache)["beta"];
+            cout << "Existing values for beta used" << endl;
         }
         if (pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
