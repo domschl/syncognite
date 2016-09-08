@@ -30,7 +30,7 @@ public:
 };
 
 /*
-  Performs stochastic gradient descent with momentum.
+  Performs stochastic gradient descent with momentum. [CS231]
   Params:
   - learning_rate: Scalar learning rate.
   - momentum: Scalar between 0 and 1 giving the momentum value.
@@ -67,7 +67,7 @@ public:
 
 
 //  Uses the RMSProp update rule, which uses a moving average of squared gradient
-//  values to set adaptive per-parameter learning rates.
+//  values to set adaptive per-parameter learning rates. [CS231]
 // Params:
 // learning_rate 1e-2
 // decay_rate 0.99
@@ -105,7 +105,7 @@ public:
 
 
 // Uses the Adam update rule, which incorporates moving averages of both the
-// gradient and its square and a bias correction term.
+// gradient and its square and a bias correction term. [CS231]
 // - learning_rate: Scalar learning rate.
 // - beta1: Decay rate for moving average of first moment of gradient.
 // - beta2: Decay rate for moving average of second moment of gradient.

@@ -275,6 +275,55 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     return allOk;
 }
 
+bool checkBatchNormBackward(float eps=1.0e-6) {
+    bool allOk=true;
+    MatrixN x(4,5);
+    x << 6.66187304,  10.07535493,  11.86740297,   8.28595741, 7.19724824,
+         13.5813712 ,  16.86474744,  16.88399459,  16.3033383, 5.03261394,
+         12.31351596,   3.64075985,  10.59016321,  11.79590389, 7.86594865,
+         13.94531044,  12.70705834,  10.04522025,   9.80584113, 16.07436381;
+    MatrixN gamma(1,5);
+    gamma << 0.17809792, -2.16934049,  1.94393135,  0.32118162,  0.70122579;
+    MatrixN beta(1,5);
+    beta << -1.43515329,  0.95193784,  2.07801532,  0.99083566,  1.07333187;
+
+    MatrixN dx(4,5);
+    dx << 0.0039867 , -0.23513618,  0.35139228, -0.15011631,  0.2492233 ,
+          0.08300136, -0.07717175, -0.08454351, -0.00279128, -0.02742774,
+         -0.03630618,  0.03286363, -0.1140052 , -0.10553537, -0.23263113,
+         -0.05068188,  0.2794443 , -0.15284358,  0.25844296,  0.01083556;
+    MatrixN dgamma(1,5);
+    dgamma << -0.59126428, -1.16957253,  0.23991056,  2.73871665, -2.38248918;
+    MatrixN dbeta(1,5);
+    dbeta << -2.77731109, -3.7715766 ,  0.74153169,  0.56266253, -3.56603234;
+
+    MatrixN dchain(4,5);
+    dchain << -0.37826999, -0.37704564,  0.66313173, -2.0091408 ,  0.86077465,
+               0.57204656, -1.14013123,  0.16860256,  1.19456592, -0.48584696,
+              -1.32615501, -0.57826379, -0.01206259, -0.79352029, -2.11529097,
+              -1.64493265, -1.67613594, -0.07814002,  2.1707577 , -1.82566906;
+
+    BatchNorm bn(CpParams("{topo=[5];train=true}"));
+    *(bn.params["gamma"])=gamma;
+    *(bn.params["beta"])=beta;
+
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=bn.forward(x, &cache);
+    MatrixN dx0=bn.backward(dchain, &cache, &grads);
+
+    bool ret=matComp(dx,dx0,"BatchNormBackward dx",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dgamma,*grads["gamma"],"BatchNormBackward dgamma",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dbeta,*grads["beta"],"BatchNormBackward dbeta",eps);
+    if (!ret) allOk=false;
+
+    cppl_delete(&cache);
+    cppl_delete(&grads);
+    return allOk;
+}
+
 bool checkAffineRelu(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(2,4);
@@ -616,6 +665,13 @@ int main() {
         allOk=false;
     }
 
+/*    BatchNorm bn(CpParams("{topo=[30];train=true}"));
+    MatrixN xbr(20,30);
+    xbr.setRandom();
+    if (!bn.selfTest(xbr,yz)) {
+        allOk=false;
+    }
+*/
     AffineRelu rx(CpParams("{topo=[2,3]}"));
     MatrixN xarl(30,2);
     xarl.setRandom();
@@ -694,6 +750,13 @@ int main() {
         cout << green << "BatchNormForward with test data: OK." << def << endl;
     } else {
         cout << red << "BatchNormForward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkBatchNormBackward()) {
+        cout << green << "BatchNormBackward with test data: OK." << def << endl;
+    } else {
+        cout << red << "BatchNormBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 

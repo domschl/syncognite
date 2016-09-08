@@ -172,76 +172,6 @@ public:
 };
 
 
-/*
-mode = bn_param['mode']
-eps = bn_param.get('eps', 1e-5)
-momentum = bn_param.get('momentum', 0.9)
-
-N, D = x.shape
-running_mean = bn_param.get('running_mean', np.zeros(D, dtype=x.dtype))
-running_var = bn_param.get('running_var', np.zeros(D, dtype=x.dtype))
-
-out, cache = None, None
-if mode == 'train':
-    # print("train")
-    #######################################################################
-    # TODO: Implement the training-time forward pass for batch
-    # normalization. Use minibatch statistics to compute the mean and
-    # variance, use these statistics to normalize the incoming data, and
-    # scale and shift the normalized data using gamma and beta.
-    #
-    # You should store the output in the variable out. Any intermediates
-    # that you need for the backward pass should be stored in the cache
-    # variable.
-    #
-    # You should also use your computed sample mean and variance together
-    # with the momentum variable to update the running mean and running
-    # variance, storing your result in the running_mean and running_var
-    # variables.
-    #######################################################################
-    N, D = x.shape
-    mn = np.sum(x, axis=0) / N
-    xso = x - mn
-    xosq = xso * xso
-    sqs = np.sum(xosq, axis=0) / N
-    sqse = sqs + eps
-    st = np.sqrt(sqse)
-    ist = 1.0 / st
-    xst = xso * ist
-    xgm = xst * gamma
-    out = xgm + beta
-    cache = (mn, xso, xosq, sqs, sqse, st, ist,
-             xst, xgm, out, beta, gamma, eps)
-
-    running_mean = momentum * running_mean + (1 - momentum) * mn
-    running_var = momentum * running_var + (1 - momentum) * st
-
-    #######################################################################
-    #                             END OF YOUR CODE
-    #######################################################################
-elif mode == 'test':
-    # print("test")
-    #######################################################################
-    # TODO: Implement the test-time forward pass for batch normalization.
-    # Use the running mean and variance to normalize the incoming data,
-    # then scale and shift the normalized data using gamma and beta.
-    # Store the result in the out variable.
-    #######################################################################
-    xo = x - running_mean
-    xo /= running_var
-
-    out = xo * gamma + beta
-    #######################################################################
-    #                             END OF YOUR CODE                        #
-    #######################################################################
-else:
-    raise ValueError('Invalid forward batchnorm mode "%s"' % mode)
-
-# Store the updated running means back into bn_param
-bn_param['running_mean'] = running_mean
-bn_param['running_var'] = running_var
-*/
-
 // Batch normalization
 class BatchNorm : public Layer {
 public:
@@ -291,31 +221,34 @@ public:
         pgamma=params["gamma"];
         pbeta=params["beta"];
         if (trainMode) {
-/*
-mn = np.sum(x, axis=0) / N
-xso = x - mn
-xosq = xso * xso
-sqs = np.sum(xosq, axis=0) / N
-sqse = sqs + eps
-st = np.sqrt(sqse)
-ist = 1.0 / st
-xst = xso * ist
-xgm = xst * gamma
-out = xgm + beta
-cache = (mn, xso, xosq, sqs, sqse, st, ist,
-         xst, xgm, out, beta, gamma, eps)
-running_mean = momentum * running_mean + (1 - momentum) * mn
-running_var = momentum * running_var + (1 - momentum) * st
-*/
             int N=shape(x)[0];
             RowVectorN xm=x.colwise().sum()/(floatN)N;
-            MatrixN x1=x.rowwise() - xm;
-            RowVectorN v= ((x1.array()*x1.array()).colwise().sum()/(floatN)N + eps).sqrt();
-            RowVectorN v2=v;
-            for (int i=0; i< v.size(); i++) v2(i) = 1.0/v2(i);
-            MatrixN x2 = x1.array().rowwise() * v2.array();
+            MatrixN xme=x.rowwise() - xm;
+            MatrixN sqse=(xme.array()*xme.array()).colwise().sum()/(floatN)N + eps;
+            RowVectorN v=sqse.array().sqrt();
+            RowVectorN v2=v.array().pow(-1);
+            MatrixN x2 = xme.array().rowwise() * v2.array();
             xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
             xout.rowwise() += (*pbeta).row(0);
+
+            if (pcache->find("sqse")==pcache->end()) {
+                MatrixN *psqse=new MatrixN(sqse);
+                cppl_set(pcache, "sqse",psqse);
+            } else {
+                *((*pcache)["sqse"])=sqse;
+            }
+            if (pcache->find("xme")==pcache->end()) {
+                MatrixN *pxme=new MatrixN(xme);
+                cppl_set(pcache, "xme",pxme);
+            } else {
+                *((*pcache)["xme"])=xme;
+            }
+            if (pcache->find("x2")==pcache->end()) {
+                MatrixN *px2=new MatrixN(x2);
+                cppl_set(pcache, "x2",px2);
+            } else {
+                *((*pcache)["x2"])=x2;
+            }
 
             *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
             // *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
@@ -331,8 +264,42 @@ running_var = momentum * running_var + (1 - momentum) * st
         return xout;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
-        MatrixN x=*((*pcache)["x"]);
-        MatrixN dx(x);
+        MatrixN sqse=*((*pcache)["sqse"]);
+        MatrixN xme=*((*pcache)["xme"]);
+        MatrixN x2=*((*pcache)["x2"]);
+        MatrixN gamma=*(params["gamma"]);
+        MatrixN dbeta=y.colwise().sum();
+        //if (shape(beta) != shape(dbeta)) cout << "bad: dbeta has wrong shape: " << shape(beta) << shape(dbeta) << endl;
+        MatrixN dgamma=(x2.array() * y.array()).colwise().sum();
+        if (shape(gamma) != shape(dgamma)) cout << "bad: dgamma has wrong shape: " << shape(gamma) << shape(dgamma) << endl;
+
+        floatN N=y.rows();
+        MatrixN d1=MatrixN(y).setOnes();
+
+        MatrixN dx0 = gamma.array() * (sqse.array().pow(-0.5)) / N;
+        cout << "dx0" << shape(dx0) << dx0 << endl;
+        //* y.array();
+        MatrixN iv = sqse.array().pow(-1.0);
+        cout << "iv" << shape(iv) << endl;
+        MatrixN dx1 = (y*N).rowwise() - RowVectorN(y.colwise().sum());
+        cout << "dx1" << shape(dx1) << dx1 << endl;
+        MatrixN dx21 = (xme * iv);
+        cout << "dx21" << shape(dx21) << endl;
+        MatrixN dx22 = ((y*xme).colwise().sum());
+        cout << "dx22" << shape(dx22) << endl;
+        MatrixN dx2 = dx21 * dx22;
+        cout << "dx2" << shape(dx2) << dx2 << endl;
+        MatrixN dx=(d1*dx0).array() * (dx1 - dx2).array();
+        cout << "dx: " << shape(dx) << dx << endl;
+        cppl_set(pgrads,"gamma",new MatrixN(dgamma));
+        cppl_set(pgrads,"beta",new MatrixN(dbeta));
+
+/*
+dx = (1. / N) * gamma * (sqse)**(-1. / 2.) * \
+     (N * dout - np.sum(dout, axis=0) - (xso) * (sqse)**(-1.0) * np.sum(dout * (xso), axis=0))
+dbeta = np.sum(dout, axis=0)
+dgamma = np.sum(xst * dout, axis=0)
+*/
         return dx;
     }
 
