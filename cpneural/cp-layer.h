@@ -318,6 +318,15 @@ void cppl_set(t_cppl *p, string key, MatrixN *val) {
     (*p)[key]=val;
 }
 
+void cppl_update(t_cppl *p, string key, MatrixN *val) {
+    if (p->find(key)==p->end()) {
+        MatrixN *pm=new MatrixN(*val);
+        cppl_set(p, key, pm);
+    } else {
+        *((*p)[key])=*val;
+    }
+}
+
 typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
 
 class LayerFactory {

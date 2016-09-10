@@ -231,27 +231,11 @@ public:
             xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
             xout.rowwise() += (*pbeta).row(0);
 
-            if (pcache->find("sqse")==pcache->end()) {
-                MatrixN *psqse=new MatrixN(sqse);
-                cppl_set(pcache, "sqse",psqse);
-            } else {
-                *((*pcache)["sqse"])=sqse;
-            }
-            if (pcache->find("xme")==pcache->end()) {
-                MatrixN *pxme=new MatrixN(xme);
-                cppl_set(pcache, "xme",pxme);
-            } else {
-                *((*pcache)["xme"])=xme;
-            }
-            if (pcache->find("x2")==pcache->end()) {
-                MatrixN *px2=new MatrixN(x2);
-                cppl_set(pcache, "x2",px2);
-            } else {
-                *((*pcache)["x2"])=x2;
-            }
+            cppl_update(pcache,"sqse",&sqse);
+            cppl_update(pcache,"xme",&xme);
+            cppl_update(pcache, "x2", &x2);
 
             *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-            // *(*pcache)["running_var"]  = ((*((*pcache)["running_var"]) * momentum).array()).rowwise() + v.array() * (1.0-momentum);
             *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
         } else {
 
@@ -283,13 +267,13 @@ public:
         cout << "iv" << shape(iv) << endl;
         MatrixN dx1 = (y*N).rowwise() - RowVectorN(y.colwise().sum());
         cout << "dx1" << shape(dx1) << dx1 << endl;
-        MatrixN dx21 = (xme * iv);
+        MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
         cout << "dx21" << shape(dx21) << endl;
-        MatrixN dx22 = ((y*xme).colwise().sum());
+        MatrixN dx22 = ((y.array().rowwise()*RowVectorN(xme).array()).colwise().sum());
         cout << "dx22" << shape(dx22) << endl;
-        MatrixN dx2 = dx21 * dx22;
+        MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
         cout << "dx2" << shape(dx2) << dx2 << endl;
-        MatrixN dx=(d1*dx0).array() * (dx1 - dx2).array();
+        MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
         cout << "dx: " << shape(dx) << dx << endl;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
         cppl_set(pgrads,"beta",new MatrixN(dbeta));
