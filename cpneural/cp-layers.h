@@ -208,6 +208,7 @@ public:
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
             if (pcache!=nullptr) cppl_set(pcache,"running_mean",prm);
+            else delete prm;
         } else {
             prm=(*pcache)["running_mean"];
         }
@@ -215,6 +216,7 @@ public:
             prv=new MatrixN(1,shape(x)[1]);
             prv->setZero();
             if (pcache != nullptr) cppl_set(pcache,"running_var",prv);
+            else delete prv;
         } else {
             prv=(*pcache)["running_var"];
         }
@@ -279,81 +281,13 @@ public:
 
 };
 
-/*
-"""
-Performs the forward pass for (inverted) dropout.
 
-Inputs:
-- x: Input data, of any shape
-- dropout_param: A dictionary with the following keys:
-  - p: Dropout parameter. We drop each neuron output with probability p.
-  - mode: 'test' or 'train'. If the mode is train, then perform dropout;
-    if the mode is test, then just return the input.
-  - seed: Seed for the random number generator. Passing seed makes this
-    function deterministic, which is needed for gradient checking but not
-    in real networks.
-
-Outputs:
-- out: Array of the same shape as x.
-- cache: A tuple (dropout_param, mask).
-  In training mode, mask is the dropout mask that was used
-  to multiply the input.
-  In test mode, mask is None.
-"""
-p, mode = dropout_param['p'], dropout_param['mode']
-if 'seed' in dropout_param:
-    np.random.seed(dropout_param['seed'])
-
-mask = None
-out = None
-
-if mode == 'train':
-    #######################################################################
-    # TODO: Implement the training phase forward pass for inverted dropout.
-    # Store the dropout mask in the mask variable.                        #
-    #######################################################################
-    mask = np.random.rand(*x.shape)
-    p = dropout_param['p']
-    mask[mask < p] = 1.0
-    mask[mask != 1.0] = 0.0
-    out = x * mask
-    #######################################################################
-    #                            END OF YOUR CODE                         #
-    #######################################################################
-elif mode == 'test':
-    #######################################################################
-    # TODO: Implement the test phase forward pass for inverted dropout.   #
-    #######################################################################
-    out = x * p
-    #######################################################################
-    #                            END OF YOUR CODE                         #
-    #######################################################################
-
-cache = (dropout_param, mask)
-out = out.astype(x.dtype, copy=False)
-
-return out, cache
-
-
-if mode == 'train':
-    #######################################################################
-    # TODO: Implement the training phase backward pass for inverted dropout
-    #######################################################################
-    # p = dropout_param['p']
-    dx = dout * mask
-    #######################################################################
-    #                            END OF YOUR CODE                         #
-    #######################################################################
-elif mode == 'test':
-    dx = dout
-*/
-
-
-// Dropout: with probability neuronDropProb, a neuron's value is ignored.
+// Dropout: with probability neuronDropProb, a neuron's value is dropped. (1-p)?
 class Dropout : public Layer {
 public:
     floatN neuronDropProb;
     bool trainMode;
+    bool freeze;
 
     Dropout(const CpParams& cx) {
         layerName="Dropout";
@@ -362,6 +296,7 @@ public:
         cp=cx;
         neuronDropProb = cp.getPar("neuronDropProb", 0.5);
         trainMode = cp.getPar("train", false);
+        freeze = cp.getPar("freeze", false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
     }
     ~Dropout() {
@@ -369,16 +304,29 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         trainMode = cp.getPar("train", false);
+        neuronDropProb = cp.getPar("neuronDropProb", 0.5);
+        freeze = cp.getPar("freeze", false);
         MatrixN xout;
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (trainMode) {
-            MatrixN* pmask=new MatrixN(x);
-            pmask->setRandom();
-            for (int i=0; i<x.size(); i++) {
-                if (((*pmask)(i)+1.0)/2.0 < neuronDropProb) (*pmask)(i)=1.0;
-                else (*pmask)(i)=0.0;
+            MatrixN* pmask;
+            freeze = cp.getPar("freeze", false);
+            if (freeze && pcache!=nullptr && pcache->find("dropmask")!=pcache->end()) {
+                pmask=(*pcache)["dropmask"];
+                xout = x.array() * (*pmask).array();
+            } else {
+                pmask=new MatrixN(x);
+                if (freeze) srand(123);
+                pmask->setRandom();
+                for (int i=0; i<x.size(); i++) {
+                    if (((*pmask)(i)+1.0)/2.0 < neuronDropProb) (*pmask)(i)=1.0;
+                    else (*pmask)(i)=0.0;
+                }
+                xout = x.array() * (*pmask).array();
+                if (pcache!=nullptr) cppl_set(pcache, "dropmask", pmask);
+                else delete pmask;
             }
-            if (pcache!=nullptr) cppl_update(pcache, "dropmask", pmask);
-            xout = x.array() * (*pmask).array();
+            //cout << "drop:" << neuronDropProb << endl << xout << endl;
         } else {
             xout = x * neuronDropProb;
         }

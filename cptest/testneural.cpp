@@ -324,6 +324,49 @@ bool checkBatchNormBackward(float eps=1.0e-6) {
     return allOk;
 }
 
+bool checkDropout(float eps=3.0e-2) {
+    bool allOk=true;
+    MatrixN x(500,500);
+    x.setRandom();
+    floatN dl=10.0;
+    floatN dop=0.8;
+    x.array() += dl;
+
+    Dropout dp(CpParams("{topo=[500];train=true}"));
+    dp.cp.setPar("neuronDropProb",dop);
+    MatrixN y=dp.forward(x, nullptr);
+    dp.cp.setPar("train",false);
+    MatrixN yt=dp.forward(x, nullptr);
+
+    floatN xm=x.mean();
+    floatN ym=y.mean();
+    floatN ytm=yt.mean();
+
+    cout << "Dropout: x-mean:" << xm << endl;
+    cout << "  y-mean:" << ym << endl;
+    cout << "  yt-mean:" << ytm << endl;
+    cout << "  drop:" << dop << endl;
+    cout << "  offs:" << dl << endl;
+
+    floatN err1=std::abs(ytm-ym);
+    if (err1 > eps) {
+        allOk=false;
+        cout << "Dropout: difference between test-mean:" << ytm << " and train-mean:" << ym << " too high:" << err1 << endl;
+    }
+    floatN err2=std::abs(xm-dl);
+    if (err2 > eps) {
+        allOk=false;
+        cout << "Dropout: difference between x-mean and random-offset too high:"  << err2 << endl;
+    }
+    floatN err3=std::abs(dl*dop-ym);
+    if (err3 > eps) {
+        allOk=false;
+        cout << "Dropout: difference between y-mean*offset and droprate too high"  << err3 << endl;
+    }
+    if (allOk) cout << "Dropout: statistics tests ok, err1:" << err1 << " err2:" << err2 << " err3:" << err3 << endl;
+    return allOk;
+}
+
 bool checkAffineRelu(float eps=1.0e-6) {
     bool allOk=true;
     MatrixN x(2,4);
@@ -665,11 +708,19 @@ int main() {
         allOk=false;
     }
 
-    // Too many strangities:
+    // Batchnorm - still some strangities:
     BatchNorm bn(CpParams("{topo=[10];train=true;noVectorizationTests=true}"));
     MatrixN xbr(20,10);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
+        allOk=false;
+    }
+
+    // Dropout
+    Dropout dp(CpParams("{topo=[5];train=true;noVectorizationTests=true;freeze=true;neuronDropProb=0.8}"));
+    MatrixN xdp(3,5);
+    xdp.setRandom();
+    if (!dp.selfTest(xdp,yz, 1e-6, 1e-8)) {
         allOk=false;
     }
 
@@ -761,6 +812,13 @@ int main() {
         cout << green << "BatchNormBackward with test data: OK." << def << endl;
     } else {
         cout << red << "BatchNormBackward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkDropout()) {
+        cout << green << "Dropout with test data: OK." << def << endl;
+    } else {
+        cout << red << "Dropout with test data: ERROR." << def << endl;
         allOk=false;
     }
 
