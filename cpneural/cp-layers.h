@@ -261,18 +261,22 @@ public:
         MatrixN d1=MatrixN(y).setOnes();
 
         MatrixN dx0 = gamma.array() * (sqse.array().pow(-0.5)) / N;
-        cout << "dx0" << shape(dx0) << dx0 << endl;
-        //* y.array();
+        cout << "dx1" << shape(dx0) << dx0 << endl;
+
+        MatrixN dx1 = (y*N).rowwise() - RowVectorN(y.colwise().sum());
+        cout << "dx2" << shape(dx1) << dx1 << endl;
+
         MatrixN iv = sqse.array().pow(-1.0);
         cout << "iv" << shape(iv) << endl;
-        MatrixN dx1 = (y*N).rowwise() - RowVectorN(y.colwise().sum());
-        cout << "dx1" << shape(dx1) << dx1 << endl;
         MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
-        cout << "dx21" << shape(dx21) << endl;
-        MatrixN dx22 = ((y.array().rowwise()*RowVectorN(xme).array()).colwise().sum());
-        cout << "dx22" << shape(dx22) << endl;
+        cout << "dx31" << shape(dx21) << dx21 << endl;
+
+        // MatrixN dx22 = (y.array().rowwise()*RowVectorN(xme).array()).colwise().sum();
+        MatrixN dx22 = (y.array() * xme.array()).colwise().sum();
+        cout << "dx32" << shape(dx22) << dx22 << endl;
+
         MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
-        cout << "dx2" << shape(dx2) << dx2 << endl;
+        cout << "dx3" << shape(dx2) << dx2 << endl;
         MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
         cout << "dx: " << shape(dx) << dx << endl;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
