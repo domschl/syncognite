@@ -665,13 +665,13 @@ int main() {
         allOk=false;
     }
 
-    /* Too many strangities:
-    BatchNorm bn(CpParams("{topo=[30];train=true;noVectorizationTests=true}"));
-    MatrixN xbr(20,30);
+    // Too many strangities:
+    BatchNorm bn(CpParams("{topo=[10];train=true;noVectorizationTests=true}"));
+    MatrixN xbr(20,10);
     xbr.setRandom();
-    if (!bn.selfTest(xbr,yz)) {
+    if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
         allOk=false;
-    }*/
+    }
 
     AffineRelu rx(CpParams("{topo=[2,3]}"));
     MatrixN xarl(30,2);
@@ -680,6 +680,7 @@ int main() {
         allOk=false;
     }
 
+    // TwoLayerNet
     int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
     CpParams tcp;
     tcp.setPar("topo", vector<int>{ntl1,ntl2,ntl3});
@@ -688,11 +689,12 @@ int main() {
     xtl.setRandom();
     MatrixN y2(ntlN,1);
     for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
-    if (!tl.selfTest(xtl,y2, 1e-4, 1e-5)) {
+    if (!tl.selfTest(xtl,y2, 1e-3, 1e-5)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
 
+    // Softmax
     int smN=10, smC=4;
     CpParams c1;
     c1.setPar("topo",vector<int>{smC});
@@ -705,6 +707,7 @@ int main() {
         allOk=false;
     }
 
+    // SVM
     int svN=10, svC=5;
     CpParams c2;
     c2.setPar("topo",vector<int>{svC});

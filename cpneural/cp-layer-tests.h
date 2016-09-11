@@ -137,8 +137,12 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
 MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     cout << "  checking numerical gradiend for " << var << "..." << endl;
     MatrixN *pm;
-    MatrixN x=xorg;
-    // MatrixN x=*((*pcache)["x"]);
+    MatrixN x;
+    if (pcache->find("x")==pcache->end()) { // XXX that is quite a mess!
+        x=xorg;
+    } else {
+        x=*((*pcache)["x"]);
+    }
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
@@ -174,8 +178,8 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
 MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
 
-    // MatrixN x=*((*pcache)["x"]);
-    MatrixN x=xorg;
+    MatrixN x=*((*pcache)["x"]);
+    //MatrixN x=xorg;
     MatrixN y=*((*pcache)["y"]);
     if (var=="x") pm=&x;
     else pm = params[var];
