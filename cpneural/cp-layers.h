@@ -204,17 +204,17 @@ public:
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
-        if (pcache->find("running_mean")==pcache->end()) {
+        if (pcache==nullptr || pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
-            cppl_set(pcache,"running_mean",prm);
+            if (pcache!=nullptr) cppl_set(pcache,"running_mean",prm);
         } else {
             prm=(*pcache)["running_mean"];
         }
-        if (pcache->find("running_var")==pcache->end()) {
+        if (pcache==nullptr || pcache->find("running_var")==pcache->end()) {
             prv=new MatrixN(1,shape(x)[1]);
             prv->setZero();
-            cppl_set(pcache,"running_var",prv);
+            if (pcache != nullptr) cppl_set(pcache,"running_var",prv);
         } else {
             prv=(*pcache)["running_var"];
         }
@@ -231,14 +231,15 @@ public:
             xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
             xout.rowwise() += (*pbeta).row(0);
 
-            cppl_update(pcache,"sqse",&sqse);
-            cppl_update(pcache,"xme",&xme);
-            cppl_update(pcache, "x2", &x2);
+            if (pcache != nullptr) {
+                cppl_update(pcache,"sqse",&sqse);
+                cppl_update(pcache,"xme",&xme);
+                cppl_update(pcache, "x2", &x2);
 
-            *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-            *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
+                *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
+                *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
+            }
         } else {
-
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
             MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
             MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*pgamma).row(0)).array());
@@ -248,46 +249,31 @@ public:
         return xout;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+        if (pcache->find("sqse")==pcache->end()) cout << "Bad: no cache entry for sqse!" << endl;
         MatrixN sqse=*((*pcache)["sqse"]);
+        if (pcache->find("xme")==pcache->end()) cout << "Bad: no cache entry for xme!" << endl;
         MatrixN xme=*((*pcache)["xme"]);
+        if (pcache->find("x2")==pcache->end()) cout << "Bad: no cache entry for x2!" << endl;
         MatrixN x2=*((*pcache)["x2"]);
+        if (params.find("gamma")==params.end()) cout << "Bad: no params entry for gamma!" << endl;
         MatrixN gamma=*(params["gamma"]);
         MatrixN dbeta=y.colwise().sum();
-        //if (shape(beta) != shape(dbeta)) cout << "bad: dbeta has wrong shape: " << shape(beta) << shape(dbeta) << endl;
+
         MatrixN dgamma=(x2.array() * y.array()).colwise().sum();
         if (shape(gamma) != shape(dgamma)) cout << "bad: dgamma has wrong shape: " << shape(gamma) << shape(dgamma) << endl;
 
         floatN N=y.rows();
         MatrixN d1=MatrixN(y).setOnes();
-
         MatrixN dx0 = gamma.array() * (sqse.array().pow(-0.5)) / N;
-        cout << "dx1" << shape(dx0) << dx0 << endl;
-
         MatrixN dx1 = (y*N).rowwise() - RowVectorN(y.colwise().sum());
-        cout << "dx2" << shape(dx1) << dx1 << endl;
-
         MatrixN iv = sqse.array().pow(-1.0);
-        cout << "iv" << shape(iv) << endl;
         MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
-        cout << "dx31" << shape(dx21) << dx21 << endl;
-
-        // MatrixN dx22 = (y.array().rowwise()*RowVectorN(xme).array()).colwise().sum();
         MatrixN dx22 = (y.array() * xme.array()).colwise().sum();
-        cout << "dx32" << shape(dx22) << dx22 << endl;
-
         MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
-        cout << "dx3" << shape(dx2) << dx2 << endl;
         MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
-        cout << "dx: " << shape(dx) << dx << endl;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
         cppl_set(pgrads,"beta",new MatrixN(dbeta));
 
-/*
-dx = (1. / N) * gamma * (sqse)**(-1. / 2.) * \
-     (N * dout - np.sum(dout, axis=0) - (xso) * (sqse)**(-1.0) * np.sum(dout * (xso), axis=0))
-dbeta = np.sum(dout, axis=0)
-dgamma = np.sum(xst * dout, axis=0)
-*/
         return dx;
     }
 

@@ -134,10 +134,11 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     cout << "  checking numerical gradiend for " << var << "..." << endl;
     MatrixN *pm;
-    MatrixN x=*((*pcache)["x"]);
+    MatrixN x=xorg;
+    // MatrixN x=*((*pcache)["x"]);
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad((*pm).rows(), (*pm).cols());
@@ -170,10 +171,11 @@ MatrixN Layer::calcNumGrad(const MatrixN& dchain, t_cppl* pcache, string var, fl
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
 
-    MatrixN x=*((*pcache)["x"]);
+    // MatrixN x=*((*pcache)["x"]);
+    MatrixN x=xorg;
     MatrixN y=*((*pcache)["y"]);
     if (var=="x") pm=&x;
     else pm = params[var];
@@ -215,13 +217,13 @@ MatrixN Layer::calcNumGradLoss(t_cppl *pcache, string var, floatN h=CP_DEFAULT_N
     return grad;
 }
 
-bool Layer::calcNumGrads(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
+bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
     for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
-            g = calcNumGrad(dchain, pcache, it.first, h);
+            g = calcNumGrad(x, dchain, pcache, it.first, h);
         } else {
-            g = calcNumGradLoss(pcache, it.first, h);
+            g = calcNumGradLoss(x, pcache, it.first, h);
         }
         cppl_set(pnumGrads, it.first, new MatrixN(g));
     }
@@ -252,7 +254,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
-    calcNumGrads(dchain, pcache, &grads, &numGrads, h, lossFkt);
+    calcNumGrads(x, dchain, pcache, &grads, &numGrads, h, lossFkt);
 
     for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -282,24 +284,26 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    cout << "  check forward vectorizer " << layerName << "..." << endl;
-    ret=checkForward(x, y, eps);
-    if (!ret) {
-        cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
-        return ret;
-    } else {
-        cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
-    }
+    if (!cp.getPar("noVectorizationTests", false)) {
+        cout << "  check forward vectorizer " << layerName << "..." << endl;
+        ret=checkForward(x, y, eps);
+        if (!ret) {
+            cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
+            return ret;
+        } else {
+            cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
+        }
 
-    cout << "  check backward vectorizer " << layerName << "..." << endl;
-    t_cppl cache;
-    ret=checkBackward(x, y, &cache, eps);
-    cppl_delete(&cache);
-    if (!ret) {
-        cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
-        allOk=false; //return ret;
-    } else {
-        cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
+        cout << "  check backward vectorizer " << layerName << "..." << endl;
+        t_cppl cache;
+        ret=checkBackward(x, y, &cache, eps);
+        cppl_delete(&cache);
+        if (!ret) {
+            cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
+            allOk=false; //return ret;
+        } else {
+            cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
+        }
     }
 
     cout << "  check numerical gradients " << layerName << "..." << endl;

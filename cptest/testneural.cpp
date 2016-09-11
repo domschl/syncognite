@@ -665,17 +665,18 @@ int main() {
         allOk=false;
     }
 
-/*    BatchNorm bn(CpParams("{topo=[30];train=true}"));
+    /* Too many strangities:
+    BatchNorm bn(CpParams("{topo=[30];train=true;noVectorizationTests=true}"));
     MatrixN xbr(20,30);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz)) {
         allOk=false;
-    }
-*/
+    }*/
+
     AffineRelu rx(CpParams("{topo=[2,3]}"));
     MatrixN xarl(30,2);
     xarl.setRandom();
-    if (!rx.selfTest(xarl,yz)) {
+    if (!rx.selfTest(xarl,yz, 1e-6, 1e-6)) {
         allOk=false;
     }
 
@@ -687,7 +688,7 @@ int main() {
     xtl.setRandom();
     MatrixN y2(ntlN,1);
     for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
-    if (!tl.selfTest(xtl,y2, 3e-3, 1e-6)) {
+    if (!tl.selfTest(xtl,y2, 1e-4, 1e-5)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }

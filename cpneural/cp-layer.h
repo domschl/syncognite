@@ -405,9 +405,9 @@ private:
     bool checkForward(const MatrixN& x, floatN eps);
     bool checkForward(const MatrixN& x, const MatrixN &y, floatN eps);
     bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps);
-    bool calcNumGrads(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(const MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
-    MatrixN calcNumGradLoss(t_cppl* pcache, string var, floatN h);
+    bool calcNumGrads(const MatrixN& xorg, const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
+    MatrixN calcNumGrad(const MatrixN& x, const MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
+    MatrixN calcNumGradLoss(const MatrixN& x, t_cppl* pcache, string var, floatN h);
     bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
     bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
 };
