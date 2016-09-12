@@ -36,9 +36,14 @@ bool checkAffineForward(floatN eps=1.e-6) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-    Affine pe(CpParams("{topo=[4,3]}"));
+     //Affine pe(CpParams("{topo=[4,3]}"));
+     Affine pe("{topo=[4,3]}");
+    cout << "setting W" << shape(W) << endl;
+    cout << *(pe.params["W"]) << endl;
     *(pe.params["W"])= W;
+    cout << "setting b" << shape(b) << endl;
     *(pe.params["b"])=b;
+    cout << "setting done" << endl;
     MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }
@@ -67,7 +72,7 @@ bool checkAffineBackward(float eps=1.0e-6) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe(CpParams("{topo=[4,5]}"));
+    Affine pe("{topo=[4,5]}");
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -118,7 +123,7 @@ bool checkReluBackward(float eps=1.0e-6) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Relu rl(CpParams("{topo=[4]}"));
+    Relu rl("{topo=[4]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rl.forward(x, &cache);
@@ -158,7 +163,7 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
           0.62625677, -1.24542905,  0.67804096,
           1.02169486,  0.1622018 , -0.74815305;
 
-    BatchNorm bn(CpParams("{topo=[3];train=true}"));
+    BatchNorm bn("{topo=[3];train=true}");
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
@@ -206,7 +211,7 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
            12.02169486,  12.3244036 ,  10.75554084;
 
 
-    BatchNorm bn2(CpParams("{topo=[3];train=true}"));
+    BatchNorm bn2("{topo=[3];train=true}");
     *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
@@ -245,7 +250,7 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     t_cppl cache3;
     int nnr=200;
     MatrixN xt(nnr,3);
-    BatchNorm bn3(CpParams("{topo=[3];train=true}"));
+    BatchNorm bn3("{topo=[3];train=true}");
     *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
@@ -303,7 +308,7 @@ bool checkBatchNormBackward(float eps=1.0e-6) {
               -0.26565248,  0.26942709,  0.09496168, -0.00460701,  1.22847938,
               -0.54081537, -0.35927023, -0.23993959,  1.0851781 ,  0.51968779;
 
-    BatchNorm bn(CpParams("{topo=[5];train=true}"));
+    BatchNorm bn("{topo=[5];train=true}");
     *(bn.params["gamma"])=gamma;
     *(bn.params["beta"])=beta;
 
@@ -332,7 +337,7 @@ bool checkDropout(float eps=3.0e-2) {
     floatN dop=0.8;
     x.array() += dl;
 
-    Dropout dp(CpParams("{topo=[500];train=true}"));
+    Dropout dp("{topo=[500];train=true}");
     dp.cp.setPar("neuronDropProb",dop);
     MatrixN y=dp.forward(x, nullptr);
     dp.cp.setPar("train",false);
@@ -383,7 +388,7 @@ bool checkAffineRelu(float eps=1.0e-6) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl(CpParams("{topo=[4,5]}"));
+    AffineRelu arl("{topo=[4,5]}");
     t_cppl cache;
     t_cppl grads;
     *(arl.params["af-W"])=W;
@@ -459,7 +464,7 @@ bool checkSoftmax(float eps=1.0e-6) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm(CpParams("{topo=[5]}"));
+    Softmax sm("{topo=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN probs0=sm.forward(x, y, &cache);
@@ -534,7 +539,7 @@ bool checkSvm(float eps=1.0e-6) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv(CpParams("{topo=[5]}"));
+    Svm sv("{topo=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN margins0=sv.forward(x, y, &cache);
@@ -709,7 +714,7 @@ int main() {
     }
 
     // Batchnorm - still some strangities:
-    BatchNorm bn(CpParams("{topo=[10];train=true;noVectorizationTests=true}"));
+    BatchNorm bn("{topo=[10];train=true;noVectorizationTests=true}");
     MatrixN xbr(20,10);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
@@ -717,14 +722,14 @@ int main() {
     }
 
     // Dropout
-    Dropout dp(CpParams("{topo=[5];train=true;noVectorizationTests=true;freeze=true;neuronDropProb=0.8}"));
+    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;neuronDropProb=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
     if (!dp.selfTest(xdp,yz, 1e-6, 1e-8)) {
         allOk=false;
     }
 
-    AffineRelu rx(CpParams("{topo=[2,3]}"));
+    AffineRelu rx("{topo=[2,3]}");
     MatrixN xarl(30,2);
     xarl.setRandom();
     if (!rx.selfTest(xarl,yz, 1e-6, 1e-6)) {

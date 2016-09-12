@@ -21,8 +21,8 @@ public:
 };
 
 class Affine : public Layer {
-public:
-    Affine(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="Affine";
         topoParams=2;
         layerType=LayerType::LT_NORMAL;
@@ -38,6 +38,13 @@ public:
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
+    }
+public:
+    Affine(const CpParams& cx) {
+        setup(cx);
+    }
+    Affine(const string conf) {
+        setup(CpParams(conf));
     }
     ~Affine() {
         cppl_delete(&params);
@@ -63,12 +70,19 @@ public:
 };
 
 class Relu : public Layer {
-public:
-    Relu(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="Relu";
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
         cp=cx;
+    }
+public:
+    Relu(const CpParams& cx) {
+        setup(cx);
+    }
+    Relu(string conf) {
+        setup(CpParams(conf));
     }
     ~Relu() {
         cppl_delete(&params);
@@ -111,10 +125,8 @@ void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
 }
 
 class AffineRelu : public Layer {
-public:
-    Affine *af;
-    Relu *rl;
-    AffineRelu(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         topoParams=2;
@@ -130,6 +142,15 @@ public:
         cl.setPar("topo", vector<int>{topo[1]});
         rl=new Relu(cl);
         mlPush("re", &(rl->params), &params);
+    }
+public:
+    Affine *af;
+    Relu *rl;
+    AffineRelu(const CpParams& cx) {
+        setup(cx);
+    }
+    AffineRelu(string conf) {
+        setup(CpParams(conf));
     }
     ~AffineRelu() {
         delete af;
@@ -174,12 +195,8 @@ public:
 
 // Batch normalization
 class BatchNorm : public Layer {
-public:
-    floatN eps;
-    floatN momentum;
-    bool trainMode;
-
-    BatchNorm(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
@@ -195,6 +212,17 @@ public:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
+    }
+public:
+    floatN eps;
+    floatN momentum;
+    bool trainMode;
+
+    BatchNorm(const CpParams& cx) {
+        setup(cx);
+    }
+    BatchNorm(string conf) {
+        setup(CpParams(conf));
     }
     ~BatchNorm() {
         cppl_delete(&params);
@@ -284,12 +312,8 @@ public:
 
 // Dropout: with probability neuronDropProb, a neuron's value is dropped. (1-p)?
 class Dropout : public Layer {
-public:
-    floatN neuronDropProb;
-    bool trainMode;
-    bool freeze;
-
-    Dropout(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
@@ -298,6 +322,17 @@ public:
         trainMode = cp.getPar("train", false);
         freeze = cp.getPar("freeze", false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
+    }
+public:
+    floatN neuronDropProb;
+    bool trainMode;
+    bool freeze;
+
+    Dropout(const CpParams& cx) {
+        setup(cx);
+    }
+    Dropout(string conf) {
+        setup(CpParams(conf));
     }
     ~Dropout() {
         cppl_delete(&params);
@@ -348,12 +383,19 @@ public:
 
 // Multiclass support vector machine Svm
 class Svm : public Layer {
-public:
-    Svm(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="Svm";
         layerType=LayerType::LT_LOSS;
         topoParams=1;
         cp=cx;
+    }
+public:
+    Svm(const CpParams& cx) {
+        setup(cx);
+    }
+    Svm(string conf) {
+        setup(CpParams(conf));
     }
     ~Svm() {
         cppl_delete(&params);
@@ -408,12 +450,19 @@ public:
 };
 
 class Softmax : public Layer {
-public:
-    Softmax(const CpParams& cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
         topoParams=1;
         cp=cx;
+    }
+public:
+    Softmax(const CpParams& cx) {
+        setup(cx);
+    }
+    Softmax(string conf) {
+        setup(CpParams(conf));
     }
     ~Softmax() {
         cppl_delete(&params);
@@ -468,12 +517,8 @@ public:
 
 
 class TwoLayerNet : public Layer {
-public:
-    Affine *af1;
-    Relu *rl;
-    Affine *af2;
-    Softmax *sm;
-    TwoLayerNet(CpParams cx) {
+private:
+    void setup(const CpParams& cx) {
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
         topoParams=3;
@@ -492,6 +537,17 @@ public:
         mlPush("af2", &(af2->params), &params);
         sm=new Softmax(c4);
         mlPush("sm", &(sm->params), &params);
+    }
+public:
+    Affine *af1;
+    Relu *rl;
+    Affine *af2;
+    Softmax *sm;
+    TwoLayerNet(CpParams cx) {
+        setup(cx);
+    }
+    TwoLayerNet(string conf) {
+        setup(CpParams(conf));
     }
     ~TwoLayerNet() {
         delete af1;
@@ -582,19 +638,16 @@ void registerLayers() {
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
 }
 
-class MultiLayer : public Layer() {
+class MultiLayer : public Layer {
 public:
-    Affine *af1;
-    Relu *rl;
-    Affine *af2;
-    Softmax *sm;
-    MultiLayer(string conf) {
+    map<string, Layer*> layerMap;
+    map<string, vector<string>> layerInputs;
+
+    MultiLayer(const CpParams& cp) {
         layerName="MultiLayer";
-        CpParams c;
-        vector<string> cl=c.split(conf,"|");
 
 
-
+/*
         vector<int> topo=cp.getPar("topo",vector<int>{0});
         CpParams c1,c2,c3,c4;
         c1.setPar("topo",vector<int>{topo[0],topo[1]});
@@ -608,20 +661,27 @@ public:
         af2=new Affine(c3);
         mlPush("af2", &(af2->params), &params);
         sm=new Softmax(c4);
-        mlPush("sm", &(sm->params), &params);
+        mlPush("sm", &(sm->params), &params);*/
+    }
+    MultiLayer(string conf) {
+        MultiLayer(CpParams(conf));
     }
     ~MultiLayer() {
-        delete af1;
+/*        delete af1;
         af1=nullptr;
         delete rl;
         rl=nullptr;
         delete af2;
         af2=nullptr;
         delete sm;
-        sm=nullptr;
+        sm=nullptr;*/
+    }
+    void addLayer(string name, Layer* layer, vector<string> inputLayers) {
+        layerMap[name]=layer;
+        layerInputs[name]=inputLayers;
     }
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+/*        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         t_cppl c1;
         MatrixN y0=af1->forward(x,&c1);
@@ -635,15 +695,15 @@ public:
         t_cppl c4;
         MatrixN yu=sm->forward(yo,y,&c4);
         mlPush("sm",&c4,pcache);
-        return yo;
+        return yo;*/
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
-        t_cppl c4;
+/*        t_cppl c4;
         mlPop("sm",pcache,&c4);
-        return sm->loss(y, &c4);
+        return sm->loss(y, &c4);*/
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
-        t_cppl c4;
+/*        t_cppl c4;
         t_cppl g4;
         mlPop("sm",pcache,&c4);
         MatrixN dx3=sm->backward(y, &c4, &g4);
@@ -667,10 +727,10 @@ public:
         MatrixN dx=af1->backward(dx1, &c1, &g1);
         mlPush("af1", &g1, pgrads);
 
-        return dx;
+        return dx;*/
     }
     virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
-        t_cppl g1;
+/*        t_cppl g1;
         mlPop("af1",pgrads,&g1);
         af1->update(popti,&g1, var+"2l1", pocache); // XXX push/pop pocache?
         t_cppl g2;
@@ -682,7 +742,7 @@ public:
         t_cppl g4;
         mlPop("sm",pgrads,&g4);
         sm->update(popti,&g4, var+"2l4", pocache);
-        return true;
+        return true;*/
     }
 };
 
