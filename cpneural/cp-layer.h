@@ -122,7 +122,8 @@ public:
                     setPar(p1,false);
                 } else if (p2[0]=='\'') { //string
                     // XXX: (de/)encode escape stuff:   ;{}
-                    setPar(p1,p2);
+                    string st=getBlock(p2,"'", "'");
+                    setPar(p1,st);
                 } else if (p2.find(".")!=p2.npos || p2.find("e")!=p2.npos) { //float
                     try {
                         setPar(p1,stof(p2));

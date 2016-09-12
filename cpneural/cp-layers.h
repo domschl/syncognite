@@ -639,110 +639,168 @@ void registerLayers() {
 }
 
 class MultiLayer : public Layer {
+private:
+    void setup(const CpParams& cx) {
+        cp=cx;
+        layerName="multi"; //cp.getPar("name","multi");
+        lossLayer="";
+        layerType=LayerType::LT_NORMAL;
+        checked=false;
+        cout << "Setup for " << layerName << " was done." << endl;
+    }
 public:
     map<string, Layer*> layerMap;
     map<string, vector<string>> layerInputs;
+    string lossLayer;
+    bool checked;
 
-    MultiLayer(const CpParams& cp) {
-        layerName="MultiLayer";
-
-
-/*
-        vector<int> topo=cp.getPar("topo",vector<int>{0});
-        CpParams c1,c2,c3,c4;
-        c1.setPar("topo",vector<int>{topo[0],topo[1]});
-        c2.setPar("topo",vector<int>{topo[1]});
-        c3.setPar("topo",vector<int>{topo[1],topo[2]});
-        c4.setPar("topo",vector<int>{topo[2]});
-        af1=new Affine(c1);
-        mlPush("af1", &(af1->params), &params);
-        rl=new Relu(c2);
-        mlPush("rl", &(rl->params), &params);
-        af2=new Affine(c3);
-        mlPush("af2", &(af2->params), &params);
-        sm=new Softmax(c4);
-        mlPush("sm", &(sm->params), &params);*/
+    MultiLayer(const CpParams& cx) {
+        setup(cx);
     }
     MultiLayer(string conf) {
-        MultiLayer(CpParams(conf));
+        setup(CpParams(conf));
     }
     ~MultiLayer() {
-/*        delete af1;
-        af1=nullptr;
-        delete rl;
-        rl=nullptr;
-        delete af2;
-        af2=nullptr;
-        delete sm;
-        sm=nullptr;*/
     }
-    void addLayer(string name, Layer* layer, vector<string> inputLayers) {
-        layerMap[name]=layer;
+    void addLayer(string name, Layer* player, vector<string> inputLayers) {
+        layerMap[name]=player;
+        if (player->layerType==LayerType::LT_LOSS) {
+            if (lossLayer!="") {
+                cout << "ERROR: a loss layer with name: " << lossLayer << "has already been defined, and is now overwritten by: " << name << endl;
+            }
+            layerType=LayerType::LT_LOSS;
+            lossLayer=name;
+        }
         layerInputs[name]=inputLayers;
+        checked=false;
+    }
+    bool checkTopology() {
+        if (lossLayer=="") {
+            cout << "No loss layer defined!" << endl;
+            return false;
+        }
+        vector<string> lyr;
+        lyr=getLayerFromInput("input");
+        if (lyr.size()!=1) {
+            cout << "One (1) layer with name >input< needed, got: " << lyr.size() << endl;
+        }
+        bool done=false;
+        vector<string> lst;
+        while (!done) {
+            string cl=lyr[0];
+            for (auto li : lst) if (li==cl) {
+                cout << "recursion with layer: " << cl << endl;
+                return false;
+            }
+            lst.push_back(cl);
+            if (cl==lossLayer) done=true;
+            else {
+                lyr=getLayerFromInput(cl);
+                if (lyr.size()!=1) {
+                    cout << "One (1) layer that uses " << cl << " as input needed, got: " << lyr.size() << endl;
+                    return false;
+                }
+            }
+        }
+        checked=true;
+        return true;
+    }
+    vector<string> getLayerFromInput(string input) {
+        vector<string> lys;
+        for (auto li : layerInputs) {
+            for (auto lii : li.second) {
+                if (lii==input) lys.push_back(li.first);
+            }
+        }
+        return lys;
     }
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
-/*        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        string cLay="input";
+        vector<string> nLay;
+        bool done=false;
+        MatrixN x0=x;
+        MatrixN xn;
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-        t_cppl c1;
-        MatrixN y0=af1->forward(x,&c1);
-        mlPush("af1",&c1,pcache);
-        t_cppl c2;
-        MatrixN y1=rl->forward(y0,&c2);
-        mlPush("rl",&c2,pcache);
-        t_cppl c3;
-        MatrixN yo=af2->forward(y1,&c3);
-        mlPush("af2",&c3,pcache);
-        t_cppl c4;
-        MatrixN yu=sm->forward(yo,y,&c4);
-        mlPush("sm",&c4,pcache);
-        return yo;*/
+        while (!done) {
+            nLay=getLayerFromInput(cLay);
+            if (nLay.size()!=1) {
+                cout << "Unexpected topology: "<< nLay.size() << " layer follow layer " << cLay << " 1 expected.";
+                return x;
+            }
+            string name=nLay[0];
+            Layer *p = layerMap[name];
+            t_cppl cache;
+            cache.clear();
+            xn=p->forward(x0,&cache);
+            mlPush(name, &cache, pcache);
+            if (p->layerType==LayerType::LT_LOSS) done=true;
+            cLay=name;
+            x0=xn;
+        }
+
+        cout << "fw-cache: ";
+        for (auto ci : *pcache) cout << ci.first << " ";
+        cout << endl;
+
+        return xn;
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
-/*        t_cppl c4;
-        mlPop("sm",pcache,&c4);
-        return sm->loss(y, &c4);*/
+        t_cppl cache;
+        if (lossLayer=="") {
+            cout << "Invalid configuration, no loss layer defined!" << endl;
+            return 1000.0;
+        }
+        Layer* pl=layerMap[lossLayer];
+        mlPop(lossLayer, pcache, &cache);
+        return pl->loss(y, &cache);
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
-/*        t_cppl c4;
-        t_cppl g4;
-        mlPop("sm",pcache,&c4);
-        MatrixN dx3=sm->backward(y, &c4, &g4);
-        mlPush("sm",&g4,pgrads);
+        if (lossLayer=="") {
+            cout << "Invalid configuration, no loss layer defined!" << endl;
+            return y;
+        }
 
-        t_cppl c3;
-        t_cppl g3;
-        mlPop("af2",pcache,&c3);
-        MatrixN dx2=af2->backward(dx3,&c3,&g3);
-        mlPush("af2", &g3, pgrads);
+        cout << "bw-cache: ";
+        for (auto ci : *pcache) cout << ci.first << " ";
+        cout << endl;
 
-        t_cppl c2;
-        t_cppl g2;
-        mlPop("rl",pcache,&c2);
-        MatrixN dx1=rl->backward(dx2, &c2, &g2);
-        mlPush("rl", &g2, pgrads);
-
-        t_cppl c1;
-        t_cppl g1;
-        mlPop("af1",pcache,&c1);
-        MatrixN dx=af1->backward(dx1, &c1, &g1);
-        mlPush("af1", &g1, pgrads);
-
-        return dx;*/
+        bool done=false;
+        MatrixN dxn;
+        string cl=lossLayer;
+        MatrixN dx0=y;
+        while (!done) {
+            t_cppl cache;
+            t_cppl grads;
+            cache.clear();
+            grads.clear();
+            cout << "bwLayer:" << cl << endl;
+            Layer *pl=layerMap[cl];
+            mlPop(cl,pcache,&cache);
+            cout << "bwLayer1:" << cl << endl;
+            for (auto ci : cache) cout << ci.first << " ";
+            cout << endl;
+            dxn=pl->backward(dx0, &cache, &grads);
+            cout << "bwLayer2:" << cl << endl;
+            mlPush(cl,&grads,pgrads);
+            vector<string> lyr=layerInputs[cl];
+            if (lyr[0]=="input") done=1;
+            else {
+                cl=lyr[0];
+                dx0=dxn;
+            }
+        }
+        return dxn;
     }
     virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
-/*        t_cppl g1;
-        mlPop("af1",pgrads,&g1);
-        af1->update(popti,&g1, var+"2l1", pocache); // XXX push/pop pocache?
-        t_cppl g2;
-        mlPop("rl",pgrads,&g2);
-        rl->update(popti,&g2, var+"2l2", pocache);
-        t_cppl g3;
-        mlPop("af2",pgrads,&g3);
-        af2->update(popti,&g3, var+"2l3", pocache);
-        t_cppl g4;
-        mlPop("sm",pgrads,&g4);
-        sm->update(popti,&g4, var+"2l4", pocache);
-        return true;*/
+        t_cppl grads;
+        for (auto ly : layerMap) {
+            string cl=ly.first;
+            Layer *pl=ly.second;
+            mlPop(cl, &grads, pocache);
+            pl->update(popti,&grads, var+layerName, pocache);  // XXX push/pop pocache?
+        }
+        return true;
     }
 };
 

@@ -776,6 +776,33 @@ int main() {
         allOk=false;
     }
 
+    //Multilayer1
+    MultiLayer ml("{topo=[10];name='multi1'}");
+    cout << "LayerName for ml: " << ml.layerName << endl;
+    Affine maf1("{topo=[10,10]}");
+    ml.addLayer("af1",&maf1,vector<string>{"input"});
+    Relu mrl1("{topo=[10]}");
+    ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
+    Affine maf2("{topo=[10,10]}");
+    ml.addLayer("af2",&maf2,vector<string>{"rl1"});
+    Softmax msm1("{topo=[10]}");
+    ml.addLayer("sm1",&msm1,vector<string>{"af2"});
+    if (!ml.checkTopology()) {
+        allOk=false;
+        cout << red << "Topology-check for MultiLayer: ERROR." << def << endl;
+    } else {
+        cout << green << "Topology-check for MultiLayer: ok." << def << endl;
+    }
+    MatrixN xml(30,10);
+    xml.setRandom();
+    MatrixN yml(30,1);
+    for (unsigned i=0; i<yml.rows(); i++) yml(i,0)=(rand()%10);
+    if (!ml.selfTest(xml,yml, 1e-3, 1e-5)) {
+        allOk=false;
+        cout << red << "Numerical gradient for MultiLayer: ERROR." << def << endl;
+    }
+
+
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
