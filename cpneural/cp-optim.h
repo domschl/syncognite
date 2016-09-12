@@ -251,7 +251,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             t_cppl sgrad;
             bool first=true;
             for (std::list<std::future<t_cppl>>::iterator it=grads.begin(); it != grads.end(); ++it) {
-                t_cppl grd = (*it).get();
+                t_cppl grd = it->get(); //(*it).get();
                 if (first) {
                     for (auto g : grd) {
                         MatrixN gx=*(g.second);

@@ -1,5 +1,8 @@
 #include "cp-neural.h"
 
+// Manual build:
+// g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
+
 using std::cout; using std::endl;
 
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
@@ -334,7 +337,7 @@ bool checkDropout(float eps=3.0e-2) {
     x.array() += dl;
 
     Dropout dp("{topo=[500];train=true}");
-    dp.cp.setPar("neuronDropProb",dop);
+    dp.cp.setPar("drop",dop);
     MatrixN y=dp.forward(x, nullptr);
     dp.cp.setPar("train",false);
     MatrixN yt=dp.forward(x, nullptr);
@@ -685,7 +688,7 @@ bool trainTest() {
     return allOk;
 }
 
-int main() {
+int doTests() {
     MatrixN yz=MatrixN(0,0);
     cout << "=== 0.: Init: registering layers" << endl;
     registerLayers();
@@ -718,7 +721,7 @@ int main() {
     }
 
     // Dropout
-    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;neuronDropProb=0.8}");
+    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
     if (!dp.selfTest(xdp,yz, 1e-6, 1e-8)) {
@@ -793,6 +796,7 @@ int main() {
     xml.setRandom();
     MatrixN yml(30,1);
     for (unsigned i=0; i<yml.rows(); i++) yml(i,0)=(rand()%10);
+
     if (!ml.selfTest(xml,yml, 1e-3, 1e-5)) {
         allOk=false;
         cout << red << "Numerical gradient for MultiLayer: ERROR." << def << endl;
@@ -900,4 +904,11 @@ int main() {
     }
 
     return 0;
+}
+
+int main() {
+    Eigen::initParallel();
+    int ret=0;
+    ret=doTests();
+    return ret;
 }

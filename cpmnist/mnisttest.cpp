@@ -198,7 +198,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
         cp8.setPar("topo", vector<int>{N2});
-        cp8.setPar("drop", 0.7);
+        cp8.setPar("drop", 0.55);
         Dropout dr2(cp8);
         ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
 
@@ -215,7 +215,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
         cp12.setPar("topo", vector<int>{N3});
-        cp12.setPar("drop", 0.7);
+        cp12.setPar("drop", 0.4);
         Dropout dr3(cp12);
         ml.addLayer("dr3",&dr2,vector<string>{"rl3"});
 

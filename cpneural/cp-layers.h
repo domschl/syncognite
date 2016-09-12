@@ -132,7 +132,7 @@ private:
         topoParams=2;
         cp=cx;
         vector<int> topo=cp.getPar("topo", vector<int>{0});
-        assert (topo.size()==3);
+        assert (topo.size()==2);
         //cout << "CrAffRelu:" << topo[0] <<"/" << topo[1] << endl;
         CpParams ca;
         ca.setPar("topo", vector<int>{topo[0],topo[1]});
@@ -314,7 +314,9 @@ public:
         MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
         MatrixN dx22 = (y.array() * xme.array()).colwise().sum();
         MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
-        MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
+        cout << "d1:" << shape(d1) << ", dx0:" << shape(dx0) << endl;
+        //MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
+        MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(dx0).array() ;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
         cppl_set(pgrads,"beta",new MatrixN(dbeta));
 
@@ -774,7 +776,7 @@ public:
             string name=nLay[0];
             Layer *p = layerMap[name];
             t_cppl cache;
-            cache.clear();
+            //cache.clear();
             if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache);
             else xn=p->forward(x0,y,&cache);
             if (pcache!=nullptr) {
@@ -810,8 +812,8 @@ public:
         while (!done) {
             t_cppl cache;
             t_cppl grads;
-            cache.clear();
-            grads.clear();
+            //cache.clear();
+            //grads.clear();
             Layer *pl=layerMap[cl];
             mlPop(cl,pcache,&cache);
             dxn=pl->backward(dx0, &cache, &grads);
@@ -827,13 +829,12 @@ public:
         return dxn;
     }
     virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
-        t_cppl grads;
         for (auto ly : layerMap) {
+            t_cppl grads;
             string cl=ly.first;
             Layer *pl=ly.second;
             mlPop(cl, pgrads, &grads);
             pl->update(popti,&grads, var+layerName+cl, pocache);  // XXX push/pop pocache?
-            grads.clear();
         }
         return true;
     }
