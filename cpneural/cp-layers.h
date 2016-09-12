@@ -196,6 +196,7 @@ public:
 // Batch normalization
 class BatchNorm : public Layer {
 private:
+    int oldmode, foldmode;
     void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
@@ -212,6 +213,8 @@ private:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
+        foldmode=0;
+        oldmode=0;
     }
 public:
     floatN eps;
@@ -232,6 +235,17 @@ public:
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
+        if (trainMode) {
+            if (foldmode!=2) {
+                foldmode=2;
+                cout << "BatchNorm-fw switched to train-mode" << endl;
+            }
+        } else {
+            if (foldmode!=1) {
+                foldmode=1;
+                cout << "BatchNorm-fw switched to test-mode" << endl;
+            }
+        }
         if (pcache==nullptr || pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
@@ -310,21 +324,24 @@ public:
 };
 
 
-// Dropout: with probability neuronDropProb, a neuron's value is dropped. (1-p)?
+// Dropout: with probability drop, a neuron's value is dropped. (1-p)?
 class Dropout : public Layer {
 private:
+    int oldmode, foldmode;
     void setup(const CpParams& cx) {
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
         cp=cx;
-        neuronDropProb = cp.getPar("neuronDropProb", 0.5);
+        drop = cp.getPar("drop", 0.5);
         trainMode = cp.getPar("train", false);
         freeze = cp.getPar("freeze", false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
+        oldmode=0;
+        foldmode=0;
     }
 public:
-    floatN neuronDropProb;
+    floatN drop;
     bool trainMode;
     bool freeze;
 
@@ -339,7 +356,18 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         trainMode = cp.getPar("train", false);
-        neuronDropProb = cp.getPar("neuronDropProb", 0.5);
+        if (trainMode) {
+            if (foldmode!=2) {
+                foldmode=2;
+                cout << "Dropout-fw switched to train-mode" << endl;
+            }
+        } else {
+            if (foldmode!=1) {
+                foldmode=1;
+                cout << "Dropout-fw switched to test-mode" << endl;
+            }
+        }
+        drop = cp.getPar("drop", 0.5);
         freeze = cp.getPar("freeze", false);
         MatrixN xout;
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
@@ -354,22 +382,33 @@ public:
                 if (freeze) srand(123);
                 pmask->setRandom();
                 for (int i=0; i<x.size(); i++) {
-                    if (((*pmask)(i)+1.0)/2.0 < neuronDropProb) (*pmask)(i)=1.0;
+                    if (((*pmask)(i)+1.0)/2.0 < drop) (*pmask)(i)=1.0;
                     else (*pmask)(i)=0.0;
                 }
                 xout = x.array() * (*pmask).array();
                 if (pcache!=nullptr) cppl_set(pcache, "dropmask", pmask);
                 else delete pmask;
             }
-            //cout << "drop:" << neuronDropProb << endl << xout << endl;
+            //cout << "drop:" << drop << endl << xout << endl;
         } else {
-            xout = x * neuronDropProb;
+            xout = x * drop;
         }
         return xout;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx;
         trainMode = cp.getPar("train", false);
+        if (trainMode) {
+            if (oldmode!=2) {
+                oldmode=2;
+                cout << "Dropout-bw switched to train-mode" << endl;
+            }
+        } else {
+            if (oldmode!=1) {
+                oldmode=1;
+                cout << "Dropout-bw switched to test-mode" << endl;
+            }
+        }
         if (trainMode) {
             MatrixN* pmask=(*pcache)["dropmask"];
             dx=y.array() * (*pmask).array();
@@ -645,6 +684,7 @@ private:
         layerName="multi"; //cp.getPar("name","multi");
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
+        trainMode = cp.getPar("train", false);
         checked=false;
         cout << "Setup for " << layerName << " was done." << endl;
     }
@@ -653,6 +693,7 @@ public:
     map<string, vector<string>> layerInputs;
     string lossLayer;
     bool checked;
+    bool trainMode;
 
     MultiLayer(const CpParams& cx) {
         setup(cx);
@@ -721,6 +762,7 @@ public:
         bool done=false;
         MatrixN x0=x;
         MatrixN xn;
+        trainMode = cp.getPar("train", false);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         while (!done) {
@@ -764,6 +806,7 @@ public:
         MatrixN dxn;
         string cl=lossLayer;
         MatrixN dx0=y;
+        trainMode = cp.getPar("train", false);
         while (!done) {
             t_cppl cache;
             t_cppl grads;
@@ -788,11 +831,19 @@ public:
         for (auto ly : layerMap) {
             string cl=ly.first;
             Layer *pl=ly.second;
-            mlPop(cl, &grads, pocache);
-            pl->update(popti,&grads, var+layerName, pocache);  // XXX push/pop pocache?
+            mlPop(cl, pgrads, &grads);
+            pl->update(popti,&grads, var+layerName+cl, pocache);  // XXX push/pop pocache?
+            grads.clear();
         }
         return true;
     }
+    virtual void setFlag(string name, bool val) override {
+        cp.setPar(name,val);
+        for (auto ly : layerMap) {
+            ly.second->setFlag(name, val);
+        }
+    }
+
 };
 
 #endif

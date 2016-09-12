@@ -8,6 +8,7 @@
 #include <sstream>
 #include <vector>
 #include <map>
+//#include <mutex>
 #include <Eigen/Dense>
 
 using Eigen::IOFormat;
@@ -58,6 +59,7 @@ class CpParams {
     cp_t_params<floatN> fparams;
     cp_t_params<bool> bparams;
     cp_t_params<string> sparams;
+//    std::mutex parMutex;
 public:
     CpParams() {}
     CpParams(string init) {
@@ -245,29 +247,41 @@ public:
         return sparams[par];
     }
     void setPar(string par, int val) {
+//        parMutex.lock();
         erase(par);
         iparams[par]=val;
+//        parMutex.unlock();
     }
     void setPar(string par, vector<int> val) {
+//        parMutex.lock();
         erase(par);
         viparams[par]=val;
+//        parMutex.unlock();
     }
     void setPar(string par, vector<floatN> val) {
+//        parMutex.lock();
         erase(par);
         vfparams[par]=val;
+//        parMutex.unlock();
     }
     void setPar(string par, floatN val) {
+//        parMutex.lock();
         erase(par);
         fparams[par]=val;
+//        parMutex.unlock();
     }
     void setPar(string par, bool val) {
+//        parMutex.lock();
         erase(par);
         bparams[par]=val;
+//        parMutex.unlock();
     }
     void setPar(string par, string val) {
+//        parMutex.lock();
         erase(par);
         // XXX: encode escape stuff:   ;{}
         sparams[par]=val;
+//        parMutex.unlock();
     }
 };
 
@@ -382,6 +396,7 @@ public:
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
     floatN test(const MatrixN& x, const MatrixN& y)  {
         MatrixN yt=forward(x, y, nullptr);
+        setFlag("train",false);
         if (yt.rows() != y.rows()) {
             return -1000.0;
         }
@@ -401,6 +416,9 @@ public:
         return err;
     }
     bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
+    virtual void setFlag(string name, bool val) {
+        cp.setPar(name,val);
+    }
 
 private:
     bool checkForward(const MatrixN& x, floatN eps);

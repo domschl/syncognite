@@ -129,21 +129,21 @@ public:
             MatrixN *z=new MatrixN(x);
             z->setZero();
             (*pocache)[cname_m]=z;
-            cout << cname_m << " initialized." << endl;
+            //cout << cname_m << " initialized." << endl;
         }
         string cname_v=var+"-v";
         if (pocache->find(cname_v)==pocache->end()) {
             MatrixN *z=new MatrixN(x);
             z->setZero();
             (*pocache)[cname_v]=z;
-            cout << cname_v << " initialized." << endl;
+            //cout << cname_v << " initialized." << endl;
         }
         string cname_t=var+"-t";
         if (pocache->find(cname_t)==pocache->end()) {
             MatrixN *z=new MatrixN(1,1);
             z->setZero();
             (*pocache)[cname_t]=z;
-            cout << cname_t << " initialized." << endl;
+            //cout << cname_t << " initialized." << endl;
         }
         floatN t=(*(*pocache)[cname_t])(0,0) + 1.0;
         (*(*pocache)[cname_t])(0,0)=t;
@@ -206,6 +206,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         popti->setPar(pi.first, pi.second);
     }
     t_cppl optiCache;
+    setFlag("train",true);
+
     int ep=popti->getPar("epochs", 1); //Default only!
     int bs=popti->getPar("batch_size", 100); // Defaults only! are overwritten!
     int nt=popti->getPar("threads",1); // Default only!
@@ -269,6 +271,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             grads.clear();
         }
         cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
+        setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;
             popti->setPar("learning_rate", lr);
