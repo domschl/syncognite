@@ -38,12 +38,8 @@ bool checkAffineForward(floatN eps=1.e-6) {
 
      //Affine pe(CpParams("{topo=[4,3]}"));
      Affine pe("{topo=[4,3]}");
-    cout << "setting W" << shape(W) << endl;
-    cout << *(pe.params["W"]) << endl;
     *(pe.params["W"])= W;
-    cout << "setting b" << shape(b) << endl;
     *(pe.params["b"])=b;
-    cout << "setting done" << endl;
     MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }

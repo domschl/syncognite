@@ -672,6 +672,7 @@ public:
             lossLayer=name;
         }
         layerInputs[name]=inputLayers;
+        mlPush(name, &(player->params), &params);
         checked=false;
     }
     bool checkTopology() {
@@ -732,17 +733,15 @@ public:
             Layer *p = layerMap[name];
             t_cppl cache;
             cache.clear();
-            xn=p->forward(x0,&cache);
-            mlPush(name, &cache, pcache);
+            if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache);
+            else xn=p->forward(x0,y,&cache);
+            if (pcache!=nullptr) {
+                mlPush(name, &cache, pcache);
+            }
             if (p->layerType==LayerType::LT_LOSS) done=true;
             cLay=name;
             x0=xn;
         }
-
-        cout << "fw-cache: ";
-        for (auto ci : *pcache) cout << ci.first << " ";
-        cout << endl;
-
         return xn;
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
@@ -753,18 +752,14 @@ public:
         }
         Layer* pl=layerMap[lossLayer];
         mlPop(lossLayer, pcache, &cache);
-        return pl->loss(y, &cache);
+        floatN ls=pl->loss(y, &cache);
+        return ls;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         if (lossLayer=="") {
             cout << "Invalid configuration, no loss layer defined!" << endl;
             return y;
         }
-
-        cout << "bw-cache: ";
-        for (auto ci : *pcache) cout << ci.first << " ";
-        cout << endl;
-
         bool done=false;
         MatrixN dxn;
         string cl=lossLayer;
@@ -774,18 +769,14 @@ public:
             t_cppl grads;
             cache.clear();
             grads.clear();
-            cout << "bwLayer:" << cl << endl;
             Layer *pl=layerMap[cl];
             mlPop(cl,pcache,&cache);
-            cout << "bwLayer1:" << cl << endl;
-            for (auto ci : cache) cout << ci.first << " ";
-            cout << endl;
             dxn=pl->backward(dx0, &cache, &grads);
-            cout << "bwLayer2:" << cl << endl;
             mlPush(cl,&grads,pgrads);
             vector<string> lyr=layerInputs[cl];
-            if (lyr[0]=="input") done=1;
-            else {
+            if (lyr[0]=="input") {
+                done=true;
+            } else {
                 cl=lyr[0];
                 dx0=dxn;
             }
