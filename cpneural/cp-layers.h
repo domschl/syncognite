@@ -781,6 +781,8 @@ public:
             else xn=p->forward(x0,y,&cache);
             if (pcache!=nullptr) {
                 mlPush(name, &cache, pcache);
+            } else {
+                cppl_delete(&cache);
             }
             if (p->layerType==LayerType::LT_LOSS) done=true;
             cLay=name;
