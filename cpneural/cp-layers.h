@@ -213,8 +213,6 @@ private:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
-        foldmode=0;
-        oldmode=0;
     }
 public:
     floatN eps;
@@ -235,17 +233,6 @@ public:
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
         trainMode = cp.getPar("train", false);
-        if (trainMode) {
-            if (foldmode!=2) {
-                foldmode=2;
-                cout << "BatchNorm-fw switched to train-mode" << endl;
-            }
-        } else {
-            if (foldmode!=1) {
-                foldmode=1;
-                cout << "BatchNorm-fw switched to test-mode" << endl;
-            }
-        }
         if (pcache==nullptr || pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
@@ -314,7 +301,7 @@ public:
         MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
         MatrixN dx22 = (y.array() * xme.array()).colwise().sum();
         MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
-        cout << "d1:" << shape(d1) << ", dx0:" << shape(dx0) << endl;
+        // cout << "d1:" << shape(d1) << ", dx0:" << shape(dx0) << endl;
         //MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
         MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(dx0).array() ;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
@@ -329,7 +316,6 @@ public:
 // Dropout: with probability drop, a neuron's value is dropped. (1-p)?
 class Dropout : public Layer {
 private:
-    int oldmode, foldmode;
     void setup(const CpParams& cx) {
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
@@ -339,8 +325,6 @@ private:
         trainMode = cp.getPar("train", false);
         freeze = cp.getPar("freeze", false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
-        oldmode=0;
-        foldmode=0;
     }
 public:
     floatN drop;
@@ -358,17 +342,6 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         trainMode = cp.getPar("train", false);
-        if (trainMode) {
-            if (foldmode!=2) {
-                foldmode=2;
-                cout << "Dropout-fw switched to train-mode" << endl;
-            }
-        } else {
-            if (foldmode!=1) {
-                foldmode=1;
-                cout << "Dropout-fw switched to test-mode" << endl;
-            }
-        }
         drop = cp.getPar("drop", 0.5);
         freeze = cp.getPar("freeze", false);
         MatrixN xout;
@@ -400,17 +373,6 @@ public:
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx;
         trainMode = cp.getPar("train", false);
-        if (trainMode) {
-            if (oldmode!=2) {
-                oldmode=2;
-                cout << "Dropout-bw switched to train-mode" << endl;
-            }
-        } else {
-            if (oldmode!=1) {
-                oldmode=1;
-                cout << "Dropout-bw switched to test-mode" << endl;
-            }
-        }
         if (trainMode) {
             MatrixN* pmask=(*pcache)["dropmask"];
             dx=y.array() * (*pmask).array();
