@@ -237,26 +237,17 @@ bool  getMnistData(string filepath) {
     MatrixN yv=*(cpMnistData["t_valid"]);
     MatrixN Xt=*(cpMnistData["x_test"]);
     MatrixN yt=*(cpMnistData["t_test"]);
-    cp_t_params<int> pi;
-    cp_t_params<floatN> pf;
-    pi["verbose"]=1;
-    pi["epochs"]=20;
-    pi["batch_size"]=400;
-    pf["learning_rate"]=1e-2;
-    pf["lr_decay"]=1.0;
 
-    pf["momentum"]=0.9;
-
-    pf["decay_rate"]=0.98;
-    pf["epsilon"]=1e-8;
-
-    pi["threads"]=8;
+    CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
+    cpo.setPar("epochs",20);
+    cpo.setPar("batch_size",400);
+    cpo.setPar("threads",8);
     floatN final_err;
 #ifdef USE_2LN
-        tl.train(X, y, Xv, yv, "Adam", pi, pf);
+        tl.train(X, y, Xv, yv, "Adam", cpo);
         final_err=tl.test(Xt, yt);
 #else
-        ml.train(X, y, Xv, yv, "Adam", pi, pf);
+        ml.train(X, y, Xv, yv, "Adam", cpo);
         final_err=ml.test(Xt, yt);
 #endif
     cout << "Final error on test-set:" << final_err << endl;

@@ -11,19 +11,12 @@
 
 class Sdg : public Optimizer {
     floatN lr;
-    std::set<string> debugnames;
 public:
-    Sdg(cp_t_params<floatN>& ps) {
-        for (auto pi : ps) {
-            setPar(pi.first, pi.second);
-        }
+    Sdg(const CpParams& cx) {
+        cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
-        lr=getPar("learning_rate", 1e-2);
-        if (debugnames.find(var)==debugnames.end()) {
-            debugnames.insert(var);
-            cout << "Optimizer knows states of var: " << var << endl;
-        }
+        lr=cp.getPar("learning_rate", 1e-2);
         x=x-lr*dx;
         return x;
     }
@@ -40,14 +33,12 @@ class SdgMomentum : public Optimizer {
     floatN lr;
     floatN mm;
 public:
-    SdgMomentum(cp_t_params<floatN>& ps) {
-        for (auto pi : ps) {
-            setPar(pi.first, pi.second);
-        }
+    SdgMomentum(const CpParams& cx) {
+        cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=getPar("learning_rate", 1e-2);
-        mm=getPar("momentum",0.9);
+        lr=cp.getPar("learning_rate", 1e-2);
+        mm=cp.getPar("momentum",0.9);
         string cname=var+"-velocity";
         if (pocache->find(cname)==pocache->end()) {
             MatrixN *z=new MatrixN(x);
@@ -76,15 +67,13 @@ class RmsProp : public Optimizer {
     floatN lr;
     floatN dc,ep;
 public:
-    RmsProp(cp_t_params<floatN>& ps) {
-        for (auto pi : ps) {
-            setPar(pi.first, pi.second);
-        }
+    RmsProp(const CpParams& cx) {
+        cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=getPar("learning_rate", 1e-2);
-        dc=getPar("decay_rate", 0.99);
-        ep=getPar("epsilon", 1e-8);
+        lr=cp.getPar("learning_rate", 1e-2);
+        dc=cp.getPar("decay_rate", 0.99);
+        ep=cp.getPar("epsilon", 1e-8);
         string cname=var+"-movavr";
         if (pocache->find(cname)==pocache->end()) {
             MatrixN *z=new MatrixN(x);
@@ -114,16 +103,14 @@ class Adam : public Optimizer {
     floatN lr;
     floatN b1,b2,ep;
 public:
-    Adam(cp_t_params<floatN>& ps) {
-        for (auto pi : ps) {
-            setPar(pi.first, pi.second);
-        }
+    Adam(const CpParams& cx) {
+        cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=getPar("learning_rate", 1e-2);
-        b1=getPar("beta1", 0.9);
-        b2=getPar("beta2", 0.999);
-        ep=getPar("epsilon", 1e-8);
+        lr=cp.getPar("learning_rate", 1e-2);
+        b1=cp.getPar("beta1", 0.9);
+        b2=cp.getPar("beta2", 0.999);
+        ep=cp.getPar("epsilon", 1e-8);
         string cname_m=var+"-m";
         if (pocache->find(cname_m)==pocache->end()) {
             MatrixN *z=new MatrixN(x);
@@ -156,11 +143,11 @@ public:
     }
 };
 
-Optimizer *optimizerFactory(string name, cp_t_params<floatN> params) {
-    if (name=="Sdg") return (Optimizer *)new Sdg(params);
-    if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(params);
-    if (name=="RmsProp") return (Optimizer *)new RmsProp(params);
-    if (name=="Adam") return (Optimizer *)new Adam(params);
+Optimizer *optimizerFactory(string name, const CpParams& cp) {
+    if (name=="Sdg") return (Optimizer *)new Sdg(cp);
+    if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(cp);
+    if (name=="RmsProp") return (Optimizer *)new RmsProp(cp);
+    if (name=="Adam") return (Optimizer *)new Adam(cp);
     cout << "optimizerFactory called for unknown optimizer " << name << "." << endl;
     return nullptr;
 }
@@ -197,35 +184,27 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss) 
 }
 
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
-                string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars) {
-    Optimizer* popti=optimizerFactory(optimizer, fpars);
-    for (auto pi : fpars) {
-        popti->setPar(pi.first, pi.second);
-    }
-    for (auto pi : ipars) {
-        popti->setPar(pi.first, pi.second);
-    }
+                string optimizer, const CpParams& cp) {
+    Optimizer* popti=optimizerFactory(optimizer, cp);
     t_cppl optiCache;
     setFlag("train",true);
 
-    int ep=popti->getPar("epochs", 1); //Default only!
-    int bs=popti->getPar("batch_size", 100); // Defaults only! are overwritten!
-    int nt=popti->getPar("threads",1); // Default only!
-    floatN lr_decay=popti->getPar("lr_decay", 1.0); //Default only!
-    bool verbose;
-    if (popti->getPar("verbose", 0) == 0) verbose=false;
-    else verbose=true;
-    floatN lr = popti->getPar("learning_rate", 1.0e-2); // Default only!
+    int ep=popti->cp.getPar("epochs", 1); //Default only!
+    int bs=popti->cp.getPar("batch_size", 100); // Defaults only! are overwritten!
+    int nt=popti->cp.getPar("threads",1); // Default only!
+    floatN lr_decay=popti->cp.getPar("lr_decay", 1.0); //Default only!
+    bool verbose=popti->cp.getPar("verbose", false);
+    floatN lr = popti->cp.getPar("learning_rate", 1.0e-2); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
     floatN l=0.0;
     bs=bs/nt;
     lr=lr/nt;
     Timer tw;
-    popti->setPar("learning_rate", lr); // adpated to thread-count XXX here?
+    popti->cp.setPar("learning_rate", lr); // adpated to thread-count XXX here?
     int ebs=bs*nt;
     int chunks=(x.rows()+ebs-1) / ebs;
-    cout << "Data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cout << ", threads: " << nt << " (batch_size*chunks*threads): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
@@ -274,7 +253,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;
-            popti->setPar("learning_rate", lr);
+            popti->cp.setPar("learning_rate", lr);
         }
     }
     cppl_delete(&optiCache);

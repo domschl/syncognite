@@ -706,23 +706,11 @@ bool trainTest() {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
 
-    cp_t_params<int> pi;
-    cp_t_params<floatN> pf;
-    pi["verbose"]=0;
-    pi["epochs"]=200;
-    pi["batch_size"]=20;
-    pf["learning_rate"]=1e-2;
-    pf["lr_decay"]=1.0;
-
-    pf["momentum"]=0.9;
-
-    pf["decay_rate"]=0.98;
-    pf["epsilon"]=1e-8;
-
-    pi["threads"]=2;
+    CpParams cpo("{verbose=0;epochs=200;batch_size=20;learning_rate=1e-2;"\
+                "lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsilon=1e-8;threads=2}");
     floatN final_err;
 
-    tln.train(X, y, Xv, yv, "Adam", pi, pf);
+    tln.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tln.test(Xt, yt);
 
     cout << "Train-test, err=" << final_err << endl;
@@ -816,7 +804,7 @@ int doTests() {
     if (!sv.selfTest(xsv, yv, 1e-3, 1e-6)) {
         allOk=false;
     }
-
+/*
     //Multilayer1
     MultiLayer ml("{topo=[10];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
@@ -844,7 +832,7 @@ int doTests() {
         cout << red << "Numerical gradient for MultiLayer: ERROR." << def << endl;
     }
 
-
+*/
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -923,18 +911,18 @@ int doTests() {
         allOk=false;
     }
 
+    if (trainTest()) {
+        cout << green << "TrainTest: OK." << def << endl;
+    } else {
+        cout << red << "TrainTest: ERROR." << def << endl;
+        allOk=false;
+    }
+
 
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
         cout << red << "RegisterTest: ERROR." << def << endl;
-        allOk=false;
-    }
-
-    if (trainTest()) {
-        cout << green << "TrainTest: OK." << def << endl;
-    } else {
-        cout << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
 

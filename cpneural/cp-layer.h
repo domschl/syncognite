@@ -286,19 +286,20 @@ public:
 };
 
 
-class Optimizer : public CpParams {
+class Optimizer {
 public:
+    CpParams cp;
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
 
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
-
+/*
 typedef struct LayerParams {
     map<string, int> iParams;
     map<string, floatN> fParams;
 } t_layer_params;
 
-//typedef std::vector<int> t_layer_topo;
+*///typedef std::vector<int> t_layer_topo;
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
 
@@ -392,7 +393,7 @@ public:
         return true;
     }
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
-                        string optimizer, cp_t_params<int> ipars, cp_t_params<floatN> fpars);
+                        string optimizer, const CpParams& cp);
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
     floatN test(const MatrixN& x, const MatrixN& y)  {
         MatrixN yt=forward(x, y, nullptr);
