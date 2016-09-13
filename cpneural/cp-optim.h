@@ -40,12 +40,9 @@ public:
         lr=cp.getPar("learning_rate", 1e-2);
         mm=cp.getPar("momentum",0.9);
         string cname=var+"-velocity";
-        if (pocache->find(cname)==pocache->end()) {
-            MatrixN *z=new MatrixN(x);
-            z->setZero();
-            (*pocache)[cname]=z;
-            cout << cname << " initialized." << endl;
-        }
+        MatrixN z=MatrixN(x);
+        z.setZero();
+        cppl_update(pocache, cname, &z);
         MatrixN dxw;
         MatrixN v;
         v=*(*pocache)[cname];
@@ -75,12 +72,9 @@ public:
         dc=cp.getPar("decay_rate", 0.99);
         ep=cp.getPar("epsilon", 1e-8);
         string cname=var+"-movavr";
-        if (pocache->find(cname)==pocache->end()) {
-            MatrixN *z=new MatrixN(x);
-            z->setZero();
-            (*pocache)[cname]=z;
-            cout << cname << " initialized." << endl;
-        }
+        MatrixN z=MatrixN(x);
+        z.setZero();
+        cppl_update(pocache, cname, &z);
         *(*pocache)[cname]=dc * (*(*pocache)[cname]) + ((1.0 - dc) * (dx.array() * dx.array())).matrix();
         MatrixN dv=((*(*pocache)[cname]).array().sqrt() + ep).matrix();
         for (int i=0; i<dv.size(); i++) {
@@ -112,26 +106,15 @@ public:
         b2=cp.getPar("beta2", 0.999);
         ep=cp.getPar("epsilon", 1e-8);
         string cname_m=var+"-m";
-        if (pocache->find(cname_m)==pocache->end()) {
-            MatrixN *z=new MatrixN(x);
-            z->setZero();
-            (*pocache)[cname_m]=z;
-            //cout << cname_m << " initialized." << endl;
-        }
+        MatrixN z=MatrixN(x);
+        z.setZero();
+        cppl_update(pocache, cname_m, &z);
         string cname_v=var+"-v";
-        if (pocache->find(cname_v)==pocache->end()) {
-            MatrixN *z=new MatrixN(x);
-            z->setZero();
-            (*pocache)[cname_v]=z;
-            //cout << cname_v << " initialized." << endl;
-        }
+        cppl_update(pocache, cname_v, &z);
+        MatrixN z1(1,1);
+        z1.setZero();
         string cname_t=var+"-t";
-        if (pocache->find(cname_t)==pocache->end()) {
-            MatrixN *z=new MatrixN(1,1);
-            z->setZero();
-            (*pocache)[cname_t]=z;
-            //cout << cname_t << " initialized." << endl;
-        }
+        cppl_update(pocache, cname_t, &z1);
         floatN t=(*(*pocache)[cname_t])(0,0) + 1.0;
         (*(*pocache)[cname_t])(0,0)=t;
         *(*pocache)[cname_m]=b1 * (*(*pocache)[cname_m]) + (1.0 -b1) * dx;
@@ -204,13 +187,13 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     popti->cp.setPar("learning_rate", lr); // adpated to thread-count XXX here?
     int ebs=bs*nt;
     int chunks=(x.rows()+ebs-1) / ebs;
-    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
-    cout << ", threads: " << nt << " (batch_size*chunks*threads): " << chunks*bs*nt << endl;
+    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size/threads: " << bs;
+    cout << ", threads: " << nt << " (bz*ch*thr): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
         for (int b=0; b<chunks*nt; b += nt) {
-            std::list<std::future<t_cppl>> grads;
+            std::list<std::future<t_cppl>> gradsFut;
             for (int bi=0; bi<nt; bi++) {
                 int y0,dy;
                 y0=b*bs+bi*bs;
@@ -223,18 +206,17 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 //cout << "[" << y0 << "," << y0+dy-1 << "] ";
                 MatrixN xb=x.block(y0,0,dy,x.cols());
                 MatrixN yb=y.block(y0,0,dy,y.cols());
-                grads.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
+                gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
             }
             //cout << endl;
 
             t_cppl sgrad;
             bool first=true;
-            for (std::list<std::future<t_cppl>>::iterator it=grads.begin(); it != grads.end(); ++it) {
-                t_cppl grd = it->get(); //(*it).get();
+            for (std::list<std::future<t_cppl>>::iterator it=gradsFut.begin(); it != gradsFut.end(); ++it) {
+                t_cppl grd = it->get();
                 if (first) {
                     for (auto g : grd) {
-                        MatrixN gx=*(g.second);
-                        sgrad[g.first] = new MatrixN(gx);
+                        sgrad[g.first] = new MatrixN(*(g.second));
                         first=false;
                     }
                 } else {
@@ -245,9 +227,9 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 cppl_delete(&grd);
             }
             // cout << "db2:" << *(sgrad["af2-b"]) << endl;
-            update(popti, &sgrad, "", &optiCache);
+            update(popti, &sgrad, "train", &optiCache);
             cppl_delete(&sgrad);
-            grads.clear();
+            gradsFut.clear();
         }
         if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
         setFlag("train",true);
@@ -257,6 +239,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         }
     }
     cppl_delete(&optiCache);
+    delete popti;
     return 0.0;
 }
 #endif

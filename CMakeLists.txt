@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 # None Debug Release RelWithDebInfo MinSizeRel
 # CXX=/usr/bin/clang++ CXXFLAGS="-O2" cmake ..
 set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS_DEBUG  "-g -ggdb")
+set(CMAKE_CXX_FLAGS_DEBUG  "-g")
+set(CMAKE_CXX_FLAGS_DEBUG  "-ggdb")
 
 project(cpneural)
 

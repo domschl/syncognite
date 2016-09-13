@@ -106,7 +106,9 @@ public:
                         for (auto af : ar) {
                             try {
                                 vf.push_back((floatN)stod(af));
-                            } catch (...) {}
+                            } catch (...) {
+                                cout << "EXCEPTION in CpParams 3" << endl;
+                            }
                         }
                         setPar(p1,vf);
                     } else { // int array
@@ -114,7 +116,9 @@ public:
                         for (auto ai : ar) {
                             try {
                                 vi.push_back(stoi(ai));
-                            } catch (...) {}
+                            } catch (...) {
+                                cout << "EXCEPTION in CpParams 4" << endl;
+                            }
                         }
                         setPar(p1,vi);
                     }
@@ -129,11 +133,15 @@ public:
                 } else if (p2.find(".")!=p2.npos || p2.find("e")!=p2.npos) { //float
                     try {
                         setPar(p1,stof(p2));
-                    } catch (...) {}
+                    } catch (...) {
+                        cout << "EXCEPTION in CpParams 1" << endl;
+                    }
                 } else { //assume int
                     try {
                         setPar(p1,stoi(p2));
-                    } catch (...) {}
+                    } catch (...) {
+                        cout << "EXCEPTION in CpParams 2" << endl;
+                    }
                 }
             }
         }
@@ -289,6 +297,7 @@ public:
 class Optimizer {
 public:
     CpParams cp;
+    virtual ~Optimizer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
 

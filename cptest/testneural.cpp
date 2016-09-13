@@ -687,7 +687,7 @@ int tFunc(floatN x, int c) {
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
-    int N=200,NV=10,NT=10,I=5,H=20,C=4;
+    int N=200,NV=10,NT=10,I=5,H=22,C=4;
     cp.setPar("topo",vector<int>{I,H,C});
     TwoLayerNet tln(cp);
 
@@ -711,6 +711,7 @@ bool trainTest() {
     floatN final_err;
 
     tln.train(X, y, Xv, yv, "Adam", cpo);
+    //tln.train(X, y, Xv, yv, "Sdg", cpo);
     final_err=tln.test(Xt, yt);
 
     cout << "Train-test, err=" << final_err << endl;
