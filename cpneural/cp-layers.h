@@ -196,7 +196,7 @@ public:
 // Batch normalization
 class BatchNorm : public Layer {
 private:
-    bool iswarned, istrained;
+    bool iswarned, istrained, iszerovar;
     void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
@@ -214,6 +214,8 @@ private:
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
         istrained=false;
+        iswarned=false;
+        iszerovar=false;
     }
 public:
     floatN eps;
@@ -244,7 +246,7 @@ public:
         }
         if (pcache==nullptr || pcache->find("running_var")==pcache->end()) {
             prv=new MatrixN(1,shape(x)[1]);
-            prv->setOnes();
+            prv->setZero(); //setOnes();
             if (pcache != nullptr) cppl_set(pcache,"running_var",prv);
             else delete prv;
         } else {
@@ -258,6 +260,11 @@ public:
             MatrixN xme=x.rowwise() - xm;
             MatrixN sqse=(xme.array()*xme.array()).colwise().sum()/(floatN)N + eps;
             RowVectorN v=sqse.array().sqrt();
+            for (int i=0; i<v.size(); i++) {
+                if (v(i)==0) {
+                    cout << "Impossible! v at " << i << " is zero! (eps=" << eps << ")" << endl;
+                }
+            }
             RowVectorN v2=v.array().pow(-1);
             MatrixN x2 = xme.array().rowwise() * v2.array();
             xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
@@ -268,14 +275,43 @@ public:
                 cppl_update(pcache,"xme",&xme);
                 cppl_update(pcache, "x2", &x2);
 
+                if (momentum==1.0) {
+                    cout << "ERROR: momentum should never be 1" << endl;
+                }
                 *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-                *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
+                //*(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
+                *(*pcache)["running_var"]  = *((*pcache)["running_var"]) * momentum + v * (1.0-momentum);
                 istrained=true;
+                for (int i=0; i<(*(*pcache)["running_var"]).size(); i++) {
+                    if (!iszerovar && (*(*pcache)["running_var"])(i)==0) {
+                        cout << "Warning: running_var is zero at index " << i << endl;
+                        peekMat("r-var:", *(*pcache)["running_var"]);
+                        peekMat("v:", v);
+                        istrained=false;
+                        iszerovar=true;
+                    }
+                }
             }
         } else {
             if (!istrained && !iswarned) {
                 cout << "BatchNorm INTERNAL ERROR: test-mode eval without training." << endl;
                 iswarned=true;
+            }
+            for (int i=0; i<(*params["gamma"]).size(); i++) {
+                if (!iszerovar && (*params["gamma"])(i)==0) {
+                    cout << "Warning: gamma is zero at index " << i << endl;
+                    istrained=false;
+                    iszerovar=true;
+                    cout << "THIS WILL CRASH!" << endl;
+                }
+            }
+            for (int i=0; i<(*(*pcache)["running_var"]).size(); i++) {
+                if (!iszerovar && (*(*pcache)["running_var"])(i)==0) {
+                    cout << "Warning: testMode running_var is zero at index " << i << endl;
+                    peekMat("r-var:", *(*pcache)["running_var"]);
+                    istrained=false;
+                    iszerovar=true;
+                }
             }
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
             MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
@@ -759,18 +795,9 @@ public:
                 cout << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
                 //cout << "x:" << x0 << endl;
                 cout << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
-                cout << "x:";
-                for (int j=0; j<x0.size(); j++) {
-                    if (j<4 || x0.size()-j < 4) cout << x0(j) << " ";
-                    else if (j==4) cout << " ... ";
-                }
-                cout << endl;
+                peekMat("x:", x0);
                 cout << "y=" << name << "(x):";
-                for (int j=0; j<xn.size(); j++) {
-                    if (j<4 || xn.size()-j < 4) cout << xn(j) << " ";
-                    else if (j==4) cout << " ... ";
-                }
-                cout << endl;
+                peekMat("", xn);
                 exit(-1);
                 return x0;
             }

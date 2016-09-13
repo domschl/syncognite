@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    #define USE_2LN 1
+    //#define USE_2LN 1
     #ifdef USE_2LN
     TwoLayerNet tl(CpParams("{topo=[3072,1000,10]}"));
     #else
@@ -167,13 +167,13 @@ int main(int argc, char *argv[]) {
     Affine maf1(cp1);
     ml.addLayer("af1",&maf1,vector<string>{"input"});
 
-    //cp2.setPar("topo", vector<int>{N1});
-    //BatchNorm bn1(cp2);
-    //ml.addLayer("bn1",&bn1,vector<string>{"af1"});
+    cp2.setPar("topo", vector<int>{N1});
+    BatchNorm bn1(cp2);
+    ml.addLayer("bn1",&bn1,vector<string>{"af1"});
 
     cp3.setPar("topo", vector<int>{N1});
     Relu mrl1(cp3);
-    ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
+    ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
 
     cp4.setPar("topo", vector<int>{N1});
     cp4.setPar("drop", 1.0);
@@ -184,13 +184,13 @@ int main(int argc, char *argv[]) {
     Affine maf2(cp5);
     ml.addLayer("af2",&maf2,vector<string>{"dr1"});
 
-    //cp6.setPar("topo", vector<int>{N2});
-    //BatchNorm bn2(cp6);
-    //ml.addLayer("bn2",&bn2,vector<string>{"af2"});
+    cp6.setPar("topo", vector<int>{N2});
+    BatchNorm bn2(cp6);
+    ml.addLayer("bn2",&bn2,vector<string>{"af2"});
 
     cp7.setPar("topo", vector<int>{N2});
     Relu mrl2(cp7);
-    ml.addLayer("rl2",&mrl2,vector<string>{"af2"});
+    ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
     cp8.setPar("topo", vector<int>{N2});
     cp8.setPar("drop", 1.0);
@@ -201,13 +201,13 @@ int main(int argc, char *argv[]) {
     Affine maf3(cp9);
     ml.addLayer("af3",&maf3,vector<string>{"dr2"});
 
-    //cp10.setPar("topo", vector<int>{N3});
-    //BatchNorm bn3(cp10);
-    //ml.addLayer("bn3",&bn3,vector<string>{"af3"});
+    cp10.setPar("topo", vector<int>{N3});
+    BatchNorm bn3(cp10);
+    ml.addLayer("bn3",&bn3,vector<string>{"af3"});
 
     cp11.setPar("topo", vector<int>{N3});
     Relu mrl3(cp11);
-    ml.addLayer("rl3",&mrl3,vector<string>{"af3"});
+    ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
     cp12.setPar("topo", vector<int>{N3});
     cp12.setPar("drop", 0.5);
@@ -218,13 +218,13 @@ int main(int argc, char *argv[]) {
     Affine maf4(cp13);
     ml.addLayer("af4",&maf4,vector<string>{"dr3"});
 
-    //cp14.setPar("topo", vector<int>{N4});
-    //BatchNorm bn4(cp14);
-    //ml.addLayer("bn4",&bn4,vector<string>{"af4"});
+    cp14.setPar("topo", vector<int>{N4});
+    BatchNorm bn4(cp14);
+    ml.addLayer("bn4",&bn4,vector<string>{"af4"});
 
     cp15.setPar("topo", vector<int>{N4});
     Relu mrl4(cp15);
-    ml.addLayer("rl4",&mrl4,vector<string>{"af4"});
+    ml.addLayer("rl4",&mrl4,vector<string>{"bn4"});
 
     cp16.setPar("topo", vector<int>{N4});
     cp16.setPar("drop", 0.5);
@@ -235,13 +235,13 @@ int main(int argc, char *argv[]) {
     Affine maf5(cp17);
     ml.addLayer("af5",&maf5,vector<string>{"dr4"});
 
-    //cp18.setPar("topo", vector<int>{N5});
-    //BatchNorm bn5(cp18);
-    //ml.addLayer("bn5",&bn5,vector<string>{"af5"});
+    cp18.setPar("topo", vector<int>{N5});
+    BatchNorm bn5(cp18);
+    ml.addLayer("bn5",&bn5,vector<string>{"af5"});
 
     cp19.setPar("topo", vector<int>{N5});
     Relu mrl5(cp19);
-    ml.addLayer("rl5",&mrl5,vector<string>{"af5"});
+    ml.addLayer("rl5",&mrl5,vector<string>{"bn5"});
 
     cp20.setPar("topo", vector<int>{N5});
     cp20.setPar("drop", 0.5);
@@ -269,9 +269,12 @@ int main(int argc, char *argv[]) {
     floatN final_err;
 
     #ifdef USE_2LN
+    cpo.setPar("learning_rate", 1e-2);
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
+    cpo.setPar("learning_rate", 1e-4);
+    cpo.setPar("regularization", 0.0000001);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif

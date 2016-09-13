@@ -6,8 +6,8 @@ cmake_minimum_required(VERSION 3.1.0 FATAL_ERROR)
 # Build type needs to be set as parameter to CMAKE: -DCMAKE_BUILD_TYPE=xxxx
 # set(CMAKE_BUILD_TYPE Release)
 
-# set(CMAKE_CXX_FLAGS_DEBUG  "-g")
-# set(CMAKE_CXX_FLAGS_DEBUG  "-ggdb")
+set(CMAKE_CXX_FLAGS_DEBUG  "-g")
+set(CMAKE_CXX_FLAGS_DEBUG  "-ggdb")
 
 project(cpneural)
 

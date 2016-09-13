@@ -52,6 +52,18 @@ vector<unsigned int> shape(const MatrixN& m) {
     return s;
 }
 
+void peekMat(const string label, const MatrixN& m) {
+    cout << label << " ";
+    if (m.size()<10) cout << m << endl;
+    else {
+        for (int j=0; j<m.size(); j++) {
+            if (j<4 || m.size()-j < 4) cout << m(j) << " ";
+            else if (j==4) cout << " ... ";
+        }
+        cout << endl;
+    }
+}
+
 class CpParams {
     cp_t_params<int> iparams;
     cp_t_params<vector<int>> viparams;
@@ -397,7 +409,19 @@ public:
         }*/
         for (auto it : params) {
             string key = it.first;
-            *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
+            if (pgrads->find(key)==pgrads->end()) {
+                cout << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
+                cout << "Grads-vars: ";
+                for (auto gi : *pgrads) cout << gi.first << " ";
+                cout << endl;
+                cout << "Params-vars: ";
+                for (auto pi : params) cout << pi.first << " ";
+                cout << endl;
+                cout << "Irrecoverable internal error, ABORT";
+                exit(-1);
+            } else {
+                *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
+            }
         }
         return true;
     }
@@ -422,12 +446,11 @@ public:
                 }
             }
             if (ji==(-1)) {
-                cout << "Internal: could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                cout << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
                 return -1000.0;
             }
             if (ji==y(i,0)) ++co;
         }
-        cout << endl;
         floatN err=1.0-(floatN)co/(floatN)y.rows();
         return err;
     }
