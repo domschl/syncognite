@@ -145,7 +145,6 @@ int main(int argc, char *argv[]) {
          cout << it.first << " tensor-4" <<  endl;
      }
 
-    TwoLayerNet tl(CpParams("{topo=[3072,1000,10]}"));
 
     MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
     MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);
@@ -154,60 +153,176 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-/*    int id=15;
-    cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
-    for (int i=0; i<3072; i++) {
-        if (i%32==0) cout<<endl;
-        if (i%(32*32)==0) cout<< "-------------" << endl;
-        floatN p=X(id,i);
-        if (p<0.25) cout << " ";
-        else if (p<0.5) cout << ".";
-        else if (p<0.75) cout << "o";
-        else cout << "#";
-    }
-    cout << endl << "=====================================================" << endl;
+    #define USE_2LN 1
+    #ifdef USE_2LN
+    TwoLayerNet tl(CpParams("{topo=[3072,1000,10]}"));
+    #else
+    //Multilayer1
+    int N0=3072,N1=1200,N2=1000,N3=700, N4=500, N5=200;
+    MultiLayer ml("{topo=[3072];name='multi1'}");
+    cout << "LayerName for ml: " << ml.layerName << endl;
+    CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
+// l1
+    cp1.setPar("topo",vector<int>{N0,N1});
+    Affine maf1(cp1);
+    ml.addLayer("af1",&maf1,vector<string>{"input"});
 
-    id=20;
-    cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
-    for (int i=0; i<3072; i++) {
-        if (i%32==0) cout<<endl;
-        if (i%(32*32)==0) cout<< "-------------" << endl;
-        floatN p=X(id,i);
-        if (p<0.25) cout << " ";
-        else if (p<0.5) cout << ".";
-        else if (p<0.75) cout << "o";
-        else cout << "#";
-    }
-    cout << endl << "=====================================================" << endl;
+    //cp2.setPar("topo", vector<int>{N1});
+    //BatchNorm bn1(cp2);
+    //ml.addLayer("bn1",&bn1,vector<string>{"af1"});
 
-    id=25;
-    cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
-    for (int i=0; i<3072; i++) {
-        if (i%32==0) cout<<endl;
-        if (i%(32*32)==0) cout<< "-------------" << endl;
-        floatN p=X(id,i);
-        if (p<0.25) cout << " ";
-        else if (p<0.5) cout << ".";
-        else if (p<0.75) cout << "o";
-        else cout << "#";
+    cp3.setPar("topo", vector<int>{N1});
+    Relu mrl1(cp3);
+    ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
+
+    cp4.setPar("topo", vector<int>{N1});
+    cp4.setPar("drop", 1.0);
+    Dropout dr1(cp4);
+    ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
+// l2
+    cp5.setPar("topo",vector<int>{N1,N2});
+    Affine maf2(cp5);
+    ml.addLayer("af2",&maf2,vector<string>{"dr1"});
+
+    //cp6.setPar("topo", vector<int>{N2});
+    //BatchNorm bn2(cp6);
+    //ml.addLayer("bn2",&bn2,vector<string>{"af2"});
+
+    cp7.setPar("topo", vector<int>{N2});
+    Relu mrl2(cp7);
+    ml.addLayer("rl2",&mrl2,vector<string>{"af2"});
+
+    cp8.setPar("topo", vector<int>{N2});
+    cp8.setPar("drop", 1.0);
+    Dropout dr2(cp8);
+    ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
+// l3
+    cp9.setPar("topo",vector<int>{N2,N3});
+    Affine maf3(cp9);
+    ml.addLayer("af3",&maf3,vector<string>{"dr2"});
+
+    //cp10.setPar("topo", vector<int>{N3});
+    //BatchNorm bn3(cp10);
+    //ml.addLayer("bn3",&bn3,vector<string>{"af3"});
+
+    cp11.setPar("topo", vector<int>{N3});
+    Relu mrl3(cp11);
+    ml.addLayer("rl3",&mrl3,vector<string>{"af3"});
+
+    cp12.setPar("topo", vector<int>{N3});
+    cp12.setPar("drop", 0.5);
+    Dropout dr3(cp12);
+    ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
+// l4
+    cp13.setPar("topo",vector<int>{N3,N4});
+    Affine maf4(cp13);
+    ml.addLayer("af4",&maf4,vector<string>{"dr3"});
+
+    //cp14.setPar("topo", vector<int>{N4});
+    //BatchNorm bn4(cp14);
+    //ml.addLayer("bn4",&bn4,vector<string>{"af4"});
+
+    cp15.setPar("topo", vector<int>{N4});
+    Relu mrl4(cp15);
+    ml.addLayer("rl4",&mrl4,vector<string>{"af4"});
+
+    cp16.setPar("topo", vector<int>{N4});
+    cp16.setPar("drop", 0.5);
+    Dropout dr4(cp16);
+    ml.addLayer("dr4",&dr4,vector<string>{"rl4"});
+// l5
+    cp17.setPar("topo",vector<int>{N4,N5});
+    Affine maf5(cp17);
+    ml.addLayer("af5",&maf5,vector<string>{"dr4"});
+
+    //cp18.setPar("topo", vector<int>{N5});
+    //BatchNorm bn5(cp18);
+    //ml.addLayer("bn5",&bn5,vector<string>{"af5"});
+
+    cp19.setPar("topo", vector<int>{N5});
+    Relu mrl5(cp19);
+    ml.addLayer("rl5",&mrl5,vector<string>{"af5"});
+
+    cp20.setPar("topo", vector<int>{N5});
+    cp20.setPar("drop", 0.5);
+    Dropout dr5(cp20);
+    ml.addLayer("dr5",&dr5,vector<string>{"rl5"});
+// l6
+    cp21.setPar("topo",vector<int>{N5,10});
+    Affine maf6(cp21);
+    ml.addLayer("af6",&maf6,vector<string>{"dr5"});
+
+    Softmax msm1("{topo=[10]}");
+    ml.addLayer("sm1",&msm1,vector<string>{"af6"});
+    if (!ml.checkTopology()) {
+        cout << "Topology-check for MultiLayer: ERROR." << endl;
+    } else {
+        cout << "Topology-check for MultiLayer: ok." << endl;
     }
-    cout << endl << "=====================================================" << endl;
-    for (int i=0; i<3072; i++) {
-     cout << X(id,i) << ", ";
-    }
-    cout << endl;
-*/
+    #endif
+
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",40);
     cpo.setPar("batch_size",400);
     cpo.setPar("threads",8);
+    cpo.setPar("regularization", 0.0); //0.0000001);
+    floatN final_err;
 
+    #ifdef USE_2LN
     tl.train(X, y, Xv, yv, "Adam", cpo);
-    floatN final_err=tl.test(Xt, yt);
-    cout << "Final error on test-set:" << final_err << endl;
+    final_err=tl.test(Xt, yt);
+    #else
+    ml.train(X, y, Xv, yv, "Adam", cpo);
+    final_err=ml.test(Xt, yt);
+    #endif
+    cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
     for (auto it : cpcifar10Data) {
          free(it.second);
          it.second=nullptr;
      }
      return 0;
  }
+
+ /*    int id=15;
+     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     for (int i=0; i<3072; i++) {
+         if (i%32==0) cout<<endl;
+         if (i%(32*32)==0) cout<< "-------------" << endl;
+         floatN p=X(id,i);
+         if (p<0.25) cout << " ";
+         else if (p<0.5) cout << ".";
+         else if (p<0.75) cout << "o";
+         else cout << "#";
+     }
+     cout << endl << "=====================================================" << endl;
+
+     id=20;
+     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     for (int i=0; i<3072; i++) {
+         if (i%32==0) cout<<endl;
+         if (i%(32*32)==0) cout<< "-------------" << endl;
+         floatN p=X(id,i);
+         if (p<0.25) cout << " ";
+         else if (p<0.5) cout << ".";
+         else if (p<0.75) cout << "o";
+         else cout << "#";
+     }
+     cout << endl << "=====================================================" << endl;
+
+     id=25;
+     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     for (int i=0; i<3072; i++) {
+         if (i%32==0) cout<<endl;
+         if (i%(32*32)==0) cout<< "-------------" << endl;
+         floatN p=X(id,i);
+         if (p<0.25) cout << " ";
+         else if (p<0.5) cout << ".";
+         else if (p<0.75) cout << "o";
+         else cout << "#";
+     }
+     cout << endl << "=====================================================" << endl;
+     for (int i=0; i<3072; i++) {
+      cout << X(id,i) << ", ";
+     }
+     cout << endl;
+ */

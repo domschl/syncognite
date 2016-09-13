@@ -178,6 +178,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     floatN lr_decay=popti->cp.getPar("lr_decay", 1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", false);
     floatN lr = popti->cp.getPar("learning_rate", 1.0e-2); // Default only!
+    floatN regularization = popti->cp.getPar("regularization", 0.0); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
     floatN l=0.0;
@@ -227,11 +228,19 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 cppl_delete(&grd);
             }
             // cout << "db2:" << *(sgrad["af2-b"]) << endl;
-            update(popti, &sgrad, "train", &optiCache);
+            if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
+                for (auto gi : sgrad) {
+                    *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
+                }
+            }
+            update(popti, &sgrad, "", &optiCache);
             cppl_delete(&sgrad);
             gradsFut.clear();
         }
-        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
+        //floatN errtra=test(x,y);
+        floatN errval=test(xv,yv);
+        floatN accval=1.0-errval;
+        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(val):" << errval << " acc(val):" << accval << endl;
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;

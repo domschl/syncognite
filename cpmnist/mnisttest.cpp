@@ -163,7 +163,7 @@ bool  getMnistData(string filepath) {
         TwoLayerNet tl(CpParams("{topo=[784,1024,10]}"));
 #else
         //Multilayer1
-        int N0=784,N1=1024,N2=1024,N3=512;
+        int N0=784,N1=1024,N2=512,N3=128;
         MultiLayer ml("{topo=[784];name='multi1'}");
         cout << "LayerName for ml: " << ml.layerName << endl;
         CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13;
@@ -181,7 +181,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
 
         cp4.setPar("topo", vector<int>{N1});
-        cp4.setPar("drop", 0.9);
+        cp4.setPar("drop", 1.0);
         Dropout dr1(cp4);
         ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
 
@@ -198,7 +198,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
         cp8.setPar("topo", vector<int>{N2});
-        cp8.setPar("drop", 0.8);
+        cp8.setPar("drop", 1.0);
         Dropout dr2(cp8);
         ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
 
@@ -215,9 +215,9 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
         cp12.setPar("topo", vector<int>{N3});
-        cp12.setPar("drop", 0.7);
+        cp12.setPar("drop", 0.9);
         Dropout dr3(cp12);
-        ml.addLayer("dr3",&dr2,vector<string>{"rl3"});
+        ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
 
         cp13.setPar("topo",vector<int>{N3,10});
         Affine maf4(cp13);
@@ -239,16 +239,19 @@ bool  getMnistData(string filepath) {
     MatrixN yt=*(cpMnistData["t_test"]);
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
-    cpo.setPar("epochs",20);
-    cpo.setPar("batch_size",400);
+    cpo.setPar("epochs",200);
+    cpo.setPar("batch_size",200);
     cpo.setPar("threads",8);
+    cpo.setPar("regularization", 0.0); //0.00001);
     floatN final_err;
 #ifdef USE_2LN
-        tl.train(X, y, Xv, yv, "Adam", cpo);
-        final_err=tl.test(Xt, yt);
+    cpo.setPar("learning_rate", 1e-3);
+    cpo.setPar("regularization", 0.0);
+    tl.train(X, y, Xv, yv, "Adam", cpo);
+    final_err=tl.test(Xt, yt);
 #else
-        ml.train(X, y, Xv, yv, "Adam", cpo);
-        final_err=ml.test(Xt, yt);
+    ml.train(X, y, Xv, yv, "Adam", cpo);
+    final_err=ml.test(Xt, yt);
 #endif
     cout << "Final error on test-set:" << final_err << endl;
     for (auto it : cpMnistData) {

@@ -405,23 +405,29 @@ public:
                         string optimizer, const CpParams& cp);
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
     floatN test(const MatrixN& x, const MatrixN& y)  {
-        MatrixN yt=forward(x, y, nullptr);
         setFlag("train",false);
+        MatrixN yt=forward(x, y, nullptr);
         if (yt.rows() != y.rows()) {
+            cout << "test: incompatible row count!" << endl;
             return -1000.0;
         }
         int co=0;
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
-            floatN pr=-100;
+            floatN pr=-10000;
             for (int j=0; j<yt.cols(); j++) {
                 if (yt(i,j)>pr) {
                     pr=yt(i,j);
                     ji=j;
                 }
             }
+            if (ji==(-1)) {
+                cout << "Internal: could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                return -1000.0;
+            }
             if (ji==y(i,0)) ++co;
         }
+        cout << endl;
         floatN err=1.0-(floatN)co/(floatN)y.rows();
         return err;
     }

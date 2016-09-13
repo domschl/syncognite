@@ -196,7 +196,7 @@ public:
 // Batch normalization
 class BatchNorm : public Layer {
 private:
-    int oldmode, foldmode;
+    bool iswarned, istrained;
     void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
@@ -213,6 +213,7 @@ private:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
+        istrained=false;
     }
 public:
     floatN eps;
@@ -243,7 +244,7 @@ public:
         }
         if (pcache==nullptr || pcache->find("running_var")==pcache->end()) {
             prv=new MatrixN(1,shape(x)[1]);
-            prv->setZero();
+            prv->setOnes();
             if (pcache != nullptr) cppl_set(pcache,"running_var",prv);
             else delete prv;
         } else {
@@ -269,8 +270,13 @@ public:
 
                 *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
                 *(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
+                istrained=true;
             }
         } else {
+            if (!istrained && !iswarned) {
+                cout << "BatchNorm INTERNAL ERROR: test-mode eval without training." << endl;
+                iswarned=true;
+            }
             MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
             MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
             MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*pgamma).row(0)).array());
@@ -341,11 +347,12 @@ public:
         cppl_delete(&params);
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
-        trainMode = cp.getPar("train", false);
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         drop = cp.getPar("drop", 0.5);
+        if (drop==1.0) return x;
+        trainMode = cp.getPar("train", false);
         freeze = cp.getPar("freeze", false);
         MatrixN xout;
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (trainMode) {
             MatrixN* pmask;
             freeze = cp.getPar("freeze", false);
@@ -373,7 +380,7 @@ public:
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx;
         trainMode = cp.getPar("train", false);
-        if (trainMode) {
+        if (trainMode && drop!=1.0) {
             MatrixN* pmask=(*pcache)["dropmask"];
             dx=y.array() * (*pmask).array();
         } else {
@@ -748,6 +755,25 @@ public:
             }
             if (p->layerType==LayerType::LT_LOSS) done=true;
             cLay=name;
+            for (int i=0; i<xn.size(); i++) if (std::isnan(xn(i)) || std::isinf(xn(i))) {
+                cout << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
+                //cout << "x:" << x0 << endl;
+                cout << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
+                cout << "x:";
+                for (int j=0; j<x0.size(); j++) {
+                    if (j<4 || x0.size()-j < 4) cout << x0(j) << " ";
+                    else if (j==4) cout << " ... ";
+                }
+                cout << endl;
+                cout << "y=" << name << "(x):";
+                for (int j=0; j<xn.size(); j++) {
+                    if (j<4 || xn.size()-j < 4) cout << xn(j) << " ";
+                    else if (j==4) cout << " ... ";
+                }
+                cout << endl;
+                exit(-1);
+                return x0;
+            }
             x0=xn;
         }
         return xn;
@@ -810,5 +836,6 @@ public:
     }
 
 };
+
 
 #endif
