@@ -678,13 +678,55 @@ bool registerTest() {
     return allOk;
 }
 
+int tFunc(floatN x, int c) {
+    int y=(int)(((sin(x)+1.0)/2.0)*(floatN)c);
+    //cout << x << ":" << y << " " << endl;
+    return y;
+}
 
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
-    cp.setPar("topo",vector<int>{5,4,2});
+    int N=200,NV=10,NT=10,I=5,H=20,C=4;
+    cp.setPar("topo",vector<int>{I,H,C});
     TwoLayerNet tln(cp);
-    cout << "NOT IMPLEMENTED!" << endl;
+
+    MatrixN X(N,I);
+    X.setRandom();
+    MatrixN y(N,1);
+    for (unsigned i=0; i<y.rows(); i++) y(i,0)=tFunc(X(i,0),C);
+
+    MatrixN Xv(NV,I);
+    Xv.setRandom();
+    MatrixN yv(NV,1);
+    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=tFunc(Xv(i,0),C);
+
+    MatrixN Xt(NT,I);
+    Xt.setRandom();
+    MatrixN yt(NT,1);
+    for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
+
+    cp_t_params<int> pi;
+    cp_t_params<floatN> pf;
+    pi["verbose"]=0;
+    pi["epochs"]=200;
+    pi["batch_size"]=20;
+    pf["learning_rate"]=1e-2;
+    pf["lr_decay"]=1.0;
+
+    pf["momentum"]=0.9;
+
+    pf["decay_rate"]=0.98;
+    pf["epsilon"]=1e-8;
+
+    pi["threads"]=2;
+    floatN final_err;
+
+    tln.train(X, y, Xv, yv, "Adam", pi, pf);
+    final_err=tln.test(Xt, yt);
+
+    cout << "Train-test, err=" << final_err << endl;
+    if (final_err>0.02) allOk=false;
     return allOk;
 }
 
@@ -889,14 +931,13 @@ int doTests() {
         allOk=false;
     }
 
-
-/*    if (trainTest()) {
+    if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
         cout << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
-*/
+
     if (allOk) {
         cout << green << "All tests ok." << def << endl;
     } else {

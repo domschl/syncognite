@@ -216,7 +216,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     if (popti->getPar("verbose", 0) == 0) verbose=false;
     else verbose=true;
     floatN lr = popti->getPar("learning_rate", 1.0e-2); // Default only!
-    cout << ep << " " << bs << " " << lr << endl;
+    //cout << ep << " " << bs << " " << lr << endl;
 
     floatN l=0.0;
     bs=bs/nt;
@@ -228,7 +228,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     cout << "Data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cout << ", threads: " << nt << " (batch_size*chunks*threads): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
-        cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
+        if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
         for (int b=0; b<chunks*nt; b += nt) {
             std::list<std::future<t_cppl>> grads;
@@ -270,7 +270,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             cppl_delete(&sgrad);
             grads.clear();
         }
-        cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
+        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(validation):" << test(xv,yv) << endl;
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;
