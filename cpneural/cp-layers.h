@@ -3,6 +3,7 @@
 
 #include "cp-math.h"
 #include "cp-layer.h"
+//#include <unsupported/Eigen/CXX11/Tensor>
 
 class Nonlinearities {
 public:

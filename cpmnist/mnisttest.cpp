@@ -198,7 +198,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
         cp8.setPar("topo", vector<int>{N2});
-        cp8.setPar("drop", 0.7);
+        cp8.setPar("drop", 0.8);
         Dropout dr2(cp8);
         ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
 //l3
@@ -215,7 +215,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
         cp12.setPar("topo", vector<int>{N3});
-        cp12.setPar("drop", 0.7);
+        cp12.setPar("drop", 0.9);
         Dropout dr3(cp12);
         ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
 //l4
@@ -250,8 +250,8 @@ bool  getMnistData(string filepath) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
 #else
-    cpo.setPar("learning_rate", 1e-2);
-    cpo.setPar("regularization", 0.00001);
+    cpo.setPar("learning_rate", 5e-2);
+    cpo.setPar("regularization", 1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
 #endif
