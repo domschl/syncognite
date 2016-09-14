@@ -196,7 +196,6 @@ public:
 // Batch normalization
 class BatchNorm : public Layer {
 private:
-    bool iswarned, istrained, iszerovar;
     void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
@@ -213,9 +212,6 @@ private:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
-        istrained=false;
-        iswarned=false;
-        iszerovar=false;
     }
 public:
     floatN eps;
@@ -240,7 +236,6 @@ public:
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();
             if (pcache!=nullptr) cppl_set(pcache,"running_mean",prm);
-            else delete prm;
         } else {
             prm=(*pcache)["running_mean"];
         }
@@ -248,27 +243,34 @@ public:
             prv=new MatrixN(1,shape(x)[1]);
             prv->setZero(); //setOnes();
             if (pcache != nullptr) cppl_set(pcache,"running_var",prv);
-            else delete prv;
         } else {
             prv=(*pcache)["running_var"];
         }
         pgamma=params["gamma"];
         pbeta=params["beta"];
+
+        floatN N=shape(x)[0];
+        MatrixN mean=(x.colwise().sum()/N); //.row(0);
+        RowVectorN meanv=mean.row(0);
+        MatrixN xme=x.rowwise()-meanv;
+        MatrixN sqse=(xme.array() * xme.array()).colwise().sum()/N+eps;
+        MatrixN stdv=sqse.array().sqrt(); //.row(0);
+        RowVectorN stdvv=stdv.row(0);
+
+        if (pcache!=nullptr) {
+            *(*pcache)["running_mean"] = *prm * momentum + mean * (1.0-momentum);
+            *(*pcache)["running_var"]  = *prv * momentum + stdv * (1.0-momentum);
+        } else {
+            delete prm;
+            prm=nullptr;
+            delete prv;
+            prv=nullptr;
+        }
+
         if (trainMode) {
-            int N=shape(x)[0];
-            RowVectorN xm=x.colwise().sum()/(floatN)N;
-            MatrixN xme=x.rowwise() - xm;
-            MatrixN sqse=(xme.array()*xme.array()).colwise().sum()/(floatN)N + eps;
-            RowVectorN v=sqse.array().sqrt();
-            for (int i=0; i<v.size(); i++) {
-                if (v(i)==0) {
-                    cout << "Impossible! v at " << i << " is zero! (eps=" << eps << ")" << endl;
-                }
-            }
-            RowVectorN v2=v.array().pow(-1);
-            MatrixN x2 = xme.array().rowwise() * v2.array();
-            xout = x2.array().rowwise() * (RowVectorN(*pgamma).row(0)).array();
-            xout.rowwise() += (*pbeta).row(0);
+            MatrixN x2 = xme.array().rowwise() / RowVectorN(stdv.row(0)).array();
+            xout = x2.array().rowwise() * RowVectorN((*pgamma).row(0)).array();
+            xout.rowwise() += RowVectorN((*pbeta).row(0));
 
             if (pcache != nullptr) {
                 cppl_update(pcache,"sqse",&sqse);
@@ -278,46 +280,12 @@ public:
                 if (momentum==1.0) {
                     cout << "ERROR: momentum should never be 1" << endl;
                 }
-                *(*pcache)["running_mean"] = *((*pcache)["running_mean"]) * momentum + xm * (1.0-momentum);
-                //*(*pcache)["running_var"]  = (*((*pcache)["running_var"]) * momentum).rowwise() + v * (1.0-momentum);
-                *(*pcache)["running_var"]  = *((*pcache)["running_var"]) * momentum + v * (1.0-momentum);
-                istrained=true;
-                for (int i=0; i<(*(*pcache)["running_var"]).size(); i++) {
-                    if (!iszerovar && (*(*pcache)["running_var"])(i)==0) {
-                        cout << "Warning: running_var is zero at index " << i << endl;
-                        peekMat("r-var:", *(*pcache)["running_var"]);
-                        peekMat("v:", v);
-                        istrained=false;
-                        iszerovar=true;
-                    }
-                }
             }
-        } else {
-            if (!istrained && !iswarned) {
-                cout << "BatchNorm INTERNAL ERROR: test-mode eval without training." << endl;
-                iswarned=true;
-            }
-            for (int i=0; i<(*params["gamma"]).size(); i++) {
-                if (!iszerovar && (*params["gamma"])(i)==0) {
-                    cout << "Warning: gamma is zero at index " << i << endl;
-                    istrained=false;
-                    iszerovar=true;
-                    cout << "THIS WILL CRASH!" << endl;
-                }
-            }
-            for (int i=0; i<(*(*pcache)["running_var"]).size(); i++) {
-                if (!iszerovar && (*(*pcache)["running_var"])(i)==0) {
-                    cout << "Warning: testMode running_var is zero at index " << i << endl;
-                    peekMat("r-var:", *(*pcache)["running_var"]);
-                    istrained=false;
-                    iszerovar=true;
-                }
-            }
-            MatrixN xot = x.rowwise() - (*(*pcache)["running_mean"]).row(0);
-            MatrixN xot2 = xot.array().rowwise() / (RowVectorN(*(*pcache)["running_var"])).array();
-            MatrixN xot3 = xot2.array().rowwise() * (RowVectorN((*pgamma).row(0)).array());
-            xout = xot3.rowwise()+RowVectorN((*pbeta).row(0));
-            //(x - running_mean)/running_var*gamma+beta;
+        } else { // testmode
+            MatrixN xot = x.rowwise() - meanv;
+            MatrixN xot2 = xot.array().rowwise() / stdvv.array();
+            MatrixN xot3 = xot2.array().rowwise() * RowVectorN((*pgamma).row(0)).array();
+            xout = xot3.rowwise() + RowVectorN((*pbeta).row(0));
         }
         return xout;
     }
