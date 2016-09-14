@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
     MultiLayer ml("{topo=[3072];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
     CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.4;
+    floatN dropR=0.9;
 // l1
     cp1.setPar("topo",vector<int>{N0,N1});
     Affine maf1(cp1);
@@ -274,7 +274,7 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", 5e-3); //2.2e-2);
+    cpo.setPar("learning_rate", 1e-2); //2.2e-2);
     cpo.setPar("regularization", 1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);

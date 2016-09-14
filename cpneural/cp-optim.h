@@ -171,6 +171,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     Optimizer* popti=optimizerFactory(optimizer, cp);
     t_cppl optiCache;
     setFlag("train",true);
+    bool bShuffle=true;
 
     int ep=popti->cp.getPar("epochs", 1); //Default only!
     int bs=popti->cp.getPar("batch_size", 100); // Defaults only! are overwritten!
@@ -182,6 +183,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     //cout << ep << " " << bs << " " << lr << endl;
 
     vector<int> ack(x.rows());
+    vector<int> shfl(x.rows());
+    for (int i=0; i<shfl.size(); i++) shfl[i]=i;
 
     floatN l=0.0;
     bs=bs/nt;
@@ -193,6 +196,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size/threads: " << bs;
     cout << ", threads: " << nt << " (bz*ch*thr): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
+        std::random_shuffle(shfl.begin(), shfl.end());
         for (int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
@@ -209,15 +213,33 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 }
                 //cout << "[" << y0 << "," << y0+dy-1 << "] ";
 
-                for (int i=y0; i<y0+dy; i++) {
-                    if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-oint no: " << i << endl;
-                    else {
-                        ack[i]++;
+                MatrixN xb(dy,x.cols());
+                MatrixN yb(dy,y.cols());
+                if (bShuffle) {
+                    for (int i=y0; i<y0+dy; i++) {
+                        int in=i-y0;
+                        for (int j=0; j<x.cols(); j++) {
+                            xb(in,j) = x(shfl[i],j);
+                        }
+                        for (int j=0; j<y.cols(); j++) {
+                            yb(in,j) = y(shfl[i],j);
+                        }
+                        if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
+                        else {
+                            ack[shfl[i]]++;
+                        }
+                    }
+
+                } else {
+                    xb=x.block(y0,0,dy,x.cols());
+                    yb=y.block(y0,0,dy,y.cols());
+                    for (int i=y0; i<y0+dy; i++) {
+                        if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
+                        else {
+                            ack[i]++;
+                        }
                     }
                 }
-
-                MatrixN xb=x.block(y0,0,dy,x.cols());
-                MatrixN yb=y.block(y0,0,dy,y.cols());
                 gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
             }
             //cout << endl;
