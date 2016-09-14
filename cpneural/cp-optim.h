@@ -181,6 +181,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     floatN regularization = popti->cp.getPar("regularization", 0.0); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
+    vector<int> ack(x.rows());
+
     floatN l=0.0;
     bs=bs/nt;
     lr=lr/nt;
@@ -191,6 +193,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size/threads: " << bs;
     cout << ", threads: " << nt << " (bz*ch*thr): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
+        for (int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
         for (int b=0; b<chunks*nt; b += nt) {
@@ -205,6 +208,14 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     cout << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
                 }
                 //cout << "[" << y0 << "," << y0+dy-1 << "] ";
+
+                for (int i=y0; i<y0+dy; i++) {
+                    if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-oint no: " << i << endl;
+                    else {
+                        ack[i]++;
+                    }
+                }
+
                 MatrixN xb=x.block(y0,0,dy,x.cols());
                 MatrixN yb=y.block(y0,0,dy,y.cols());
                 gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
@@ -236,7 +247,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             update(popti, &sgrad, "", &optiCache);
             cppl_delete(&sgrad);
             gradsFut.clear();
+            if (verbose && b%50==0) cout << "At: " << (floatN)b/(floatN)(chunks*nt)*100.0 << "\% of epoch, loss: " << l << endl;
         }
+
+
         //floatN errtra=test(x,y);
         floatN errval=test(xv,yv);
         floatN accval=1.0-errval;
@@ -245,6 +259,11 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         if (lr_decay!=1.0) {
             lr *= lr_decay;
             popti->cp.setPar("learning_rate", lr);
+        }
+        for (int i=0; i<ack.size(); i++) {
+            if (ack[i]!=1) {
+                cout << "Datapoint: " << i << " should be active once, was active: " << ack[i] << endl;
+            }
         }
     }
     cppl_delete(&optiCache);

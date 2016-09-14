@@ -162,6 +162,7 @@ int main(int argc, char *argv[]) {
     MultiLayer ml("{topo=[3072];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
     CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
+    floatN dropR=0.4;
 // l1
     cp1.setPar("topo",vector<int>{N0,N1});
     Affine maf1(cp1);
@@ -176,7 +177,7 @@ int main(int argc, char *argv[]) {
     ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
 
     cp4.setPar("topo", vector<int>{N1});
-    cp4.setPar("drop", 1.0);
+    cp4.setPar("drop", dropR);
     Dropout dr1(cp4);
     ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
 // l2
@@ -193,7 +194,7 @@ int main(int argc, char *argv[]) {
     ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
     cp8.setPar("topo", vector<int>{N2});
-    cp8.setPar("drop", 1.0);
+    cp8.setPar("drop", dropR);
     Dropout dr2(cp8);
     ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
 // l3
@@ -210,7 +211,7 @@ int main(int argc, char *argv[]) {
     ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
     cp12.setPar("topo", vector<int>{N3});
-    cp12.setPar("drop", 0.5);
+    cp12.setPar("drop", dropR);
     Dropout dr3(cp12);
     ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
 // l4
@@ -227,7 +228,7 @@ int main(int argc, char *argv[]) {
     ml.addLayer("rl4",&mrl4,vector<string>{"bn4"});
 
     cp16.setPar("topo", vector<int>{N4});
-    cp16.setPar("drop", 0.5);
+    cp16.setPar("drop", dropR);
     Dropout dr4(cp16);
     ml.addLayer("dr4",&dr4,vector<string>{"rl4"});
 // l5
@@ -244,7 +245,7 @@ int main(int argc, char *argv[]) {
     ml.addLayer("rl5",&mrl5,vector<string>{"bn5"});
 
     cp20.setPar("topo", vector<int>{N5});
-    cp20.setPar("drop", 0.5);
+    cp20.setPar("drop", dropR);
     Dropout dr5(cp20);
     ml.addLayer("dr5",&dr5,vector<string>{"rl5"});
 // l6
@@ -273,8 +274,8 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", 1e-4);
-    cpo.setPar("regularization", 0.0000001);
+    cpo.setPar("learning_rate", 5e-3); //2.2e-2);
+    cpo.setPar("regularization", 1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif
