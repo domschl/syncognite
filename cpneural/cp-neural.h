@@ -9,7 +9,7 @@
 #include <map>
 
 #include <Eigen/Dense>
-//#include <unsupported/Eigen/CXX11/Tensor>
+#include <unsupported/Eigen/CXX11/Tensor>
 
 using std::cout; using std::endl;
 using std::vector; using std::string;

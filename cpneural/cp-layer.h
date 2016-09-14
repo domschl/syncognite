@@ -10,7 +10,7 @@
 #include <map>
 //#include <mutex>
 #include <Eigen/Dense>
-//#include <unsupported/Eigen/CXX11/Tensor>
+#include <unsupported/Eigen/CXX11/Tensor>
 
 using Eigen::IOFormat;
 using std::cout; using std::endl;
@@ -39,12 +39,15 @@ using floatN=float;
 #endif
 #endif
 
+using Tensor4=Eigen::Tensor<floatN, 4>;
+
 //#define NULL_MAT (MatrixN(0,0))
 
 template <typename T>
 using cp_t_params = map<string, T>;
 //using t_cppl = cp_t_params<MatrixN *>;
 typedef cp_t_params<MatrixN *> t_cppl;
+typedef cp_t_params<Tensor4 *> t_cppl4;
 
 vector<unsigned int> shape(const MatrixN& m) {
     vector<unsigned int> s(2);
@@ -401,8 +404,10 @@ public:
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
+    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache)  { Tensor4 d(0,0,0,0); return d;}
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
+    virtual Tensor4 backward(const Tensor4& dtL, t_cppl4* pcache, t_cppl4* pgrads) { Tensor4 d(0,0,0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         /*for (int i=0; i<params.size(); i++) {
