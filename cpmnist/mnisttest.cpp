@@ -167,7 +167,7 @@ bool  getMnistData(string filepath) {
         MultiLayer ml("{topo=[784];name='multi1'}");
         cout << "LayerName for ml: " << ml.layerName << endl;
         CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13;
-
+//l1
         cp1.setPar("topo",vector<int>{N0,N1});
         Affine maf1(cp1);
         ml.addLayer("af1",&maf1,vector<string>{"input"});
@@ -181,10 +181,10 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
 
         cp4.setPar("topo", vector<int>{N1});
-        cp4.setPar("drop", 1.0);
+        cp4.setPar("drop", 0.7);
         Dropout dr1(cp4);
         ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
-
+//l2
         cp5.setPar("topo",vector<int>{N1,N2});
         Affine maf2(cp5);
         ml.addLayer("af2",&maf2,vector<string>{"dr1"});
@@ -198,10 +198,10 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
         cp8.setPar("topo", vector<int>{N2});
-        cp8.setPar("drop", 1.0);
+        cp8.setPar("drop", 0.7);
         Dropout dr2(cp8);
         ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
-
+//l3
         cp9.setPar("topo",vector<int>{N2,N3});
         Affine maf3(cp9);
         ml.addLayer("af3",&maf3,vector<string>{"dr2"});
@@ -215,10 +215,10 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
         cp12.setPar("topo", vector<int>{N3});
-        cp12.setPar("drop", 0.9);
+        cp12.setPar("drop", 0.7);
         Dropout dr3(cp12);
         ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
-
+//l4
         cp13.setPar("topo",vector<int>{N3,10});
         Affine maf4(cp13);
         ml.addLayer("af4",&maf4,vector<string>{"dr3"});
@@ -250,6 +250,8 @@ bool  getMnistData(string filepath) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
 #else
+    cpo.setPar("learning_rate", 1e-2);
+    cpo.setPar("regularization", 0.00001);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
 #endif
