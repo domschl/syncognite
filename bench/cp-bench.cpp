@@ -26,16 +26,16 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-bool benchLayer(string name, Layer* player) {
-    MatrixN x(100,1000);
-    MatrixN y(500,1);
+bool benchLayer(string name, Layer* player, int N, int M) {
+    MatrixN x(N,M);
+    MatrixN y(N,1);
     x.setRandom();
     y.setRandom();
     for (int i=0; i<y.size(); i++) {
         y(i)=(floatN)(int)((y(i)+1)*5);
     }
     Timer tcpu;
-    double tcus;
+    double tcus, tcusn;
     t_cppl cache;
     t_cppl grads;
     string sname;
@@ -50,7 +50,7 @@ bool benchLayer(string name, Layer* player) {
     tcpu.startCpu();
     player->forward(x,nullptr);
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
+    cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
     */
     tcpu.startCpu();
     if (player->layerType==LayerType::LT_NORMAL) {
@@ -59,7 +59,8 @@ bool benchLayer(string name, Layer* player) {
         player->forward(x,y,&cache);
     }
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << sname << " forward (with cache):  " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
+    tcusn= tcus / (double)N;
+    cout << sname << " forward (with cache):  " << fixed << setw(8) << tcus << "ms (cpu), " << tcusn << "ms (/sample)." << endl;
 
     if (name=="BatchNorm") {
         return false;
@@ -72,7 +73,8 @@ bool benchLayer(string name, Layer* player) {
         player->backward(y,&cache, &grads);
     }
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << sname << " backward (with cache): " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
+    tcusn= tcus / (double)N;
+    cout << sname << " backward (with cache): " << fixed << setw(8) << tcus << "ms (cpu), " << tcusn << "ms (/sample)." << endl;
     cppl_delete(&cache);
     cppl_delete(&grads);
 
@@ -84,19 +86,23 @@ int doBench() {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
-    cout << "bench start" << endl;
     int nr=0;
+    int N=200;
+    int M=1000;
     for (auto it : _syncogniteLayerFactory.mapl) {
         ++nr;
-        cout << nr << ".: " << it.first << endl;
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
+
+        if (te>1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
+        else cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+
         std::vector<int> tp(te);
-        for (auto i=0; i< tp.size(); i++) tp[i]=1000;
+        for (auto i=0; i< tp.size(); i++) tp[i]=M;
         cp.setPar("topo",tp);
         Layer *l = CREATE_LAYER(it.first, cp)
         for (int rep=0; rep<4; rep++) {
-            if (!benchLayer(it.first, l)) {
+            if (!benchLayer(it.first, l, N, M)) {
                 cout << "Error" << endl;
                 allOk=false;
             }
