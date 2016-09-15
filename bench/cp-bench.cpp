@@ -27,8 +27,8 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
 }
 
 bool benchLayer(string name, Layer* player) {
-    MatrixN x(500,1000);
-    MatrixN y(500,1);
+    MatrixN x(100,1000);
+    MatrixN y(100,1);
     x.setRandom();
     y.setRandom();
     for (int i=0; i<y.size(); i++) {
@@ -99,7 +99,7 @@ int doBench() {
             if (!benchLayer(it.first, l)) {
                 cout << "Error" << endl;
                 allOk=false;
-            }            
+            }
         }
         delete l;
     }
