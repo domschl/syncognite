@@ -266,16 +266,16 @@ int main(int argc, char *argv[]) {
     cpo.setPar("epochs",40);
     cpo.setPar("batch_size",400);
     cpo.setPar("threads",8);
-    cpo.setPar("regularization", 0.0); //0.0000001);
+    cpo.setPar("regularization", (floatN)0.0); //0.0000001);
     floatN final_err;
 
     #ifdef USE_2LN
-    cpo.setPar("learning_rate", 1e-2);
+    cpo.setPar("learning_rate", (floatN)1e-2);
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", 1e-2); //2.2e-2);
-    cpo.setPar("regularization", 1e-6);
+    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
+    cpo.setPar("regularization", (floatN)1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif

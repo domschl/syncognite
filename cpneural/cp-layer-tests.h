@@ -267,6 +267,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         if (df < eps) {
             cout << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
         } else {
+            cout << "eps:" << eps << " h:" << h << endl;
             cout << "∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
             cout << "∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
             cout << "  ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;

@@ -24,7 +24,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-bool checkAffineForward(floatN eps=1.e-6) {
+bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(2,4);
     x << -0.1       , -0.01428571,  0.07142857,  0.15714286,
           0.24285714,  0.32857143,  0.41428571,  0.5;
@@ -47,7 +47,7 @@ bool checkAffineForward(floatN eps=1.e-6) {
     return matComp(y,y0,"AffineForward",eps);
 }
 
-bool checkAffineBackward(float eps=1.0e-6) {
+bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(2,4);
     x << 1.31745392, -0.61371249,  0.45447287, -0.27054087,
          0.10106874,  1.00650622,  0.47243961, -0.42940807;
@@ -90,7 +90,7 @@ bool checkAffineBackward(float eps=1.0e-6) {
     return allOk;
 }
 
-bool checkReluForward(floatN eps=1.e-6) {
+bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(3,4);
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
          -0.13636364, -0.04545455,  0.04545455,  0.13636364,
@@ -106,7 +106,7 @@ bool checkReluForward(floatN eps=1.e-6) {
     return matComp(y,y0,"ReluForward",eps);
 }
 
-bool checkReluBackward(float eps=1.0e-6) {
+bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(4,4);
     x << -0.56204781, -0.30204112,  0.7685022 , -0.74405281,
          -1.46482614, -0.3824993 ,  0.23478267,  0.81716411,
@@ -135,7 +135,7 @@ bool checkReluBackward(float eps=1.0e-6) {
     return allOk;
 }
 
-bool checkBatchNormForward(floatN eps=1.e-6) {
+bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     bool allOk=true;
     MatrixN x(10,3);
@@ -279,7 +279,7 @@ bool checkBatchNormForward(floatN eps=1.e-6) {
     return allOk;
 }
 
-bool checkBatchNormBackward(float eps=1.0e-6) {
+bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     MatrixN x(4,5);
     x << 15.70035538,  10.9836183 ,  12.60007796,   8.40461897, 6.73940903,
@@ -371,7 +371,7 @@ bool checkDropout(float eps=3.0e-2) {
     return allOk;
 }
 
-bool checkAffineRelu(float eps=1.0e-6) {
+bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     MatrixN x(2,4);
     x << -2.44826954,  0.81707546,  1.31506197, -0.0965869,
@@ -424,7 +424,7 @@ bool checkAffineRelu(float eps=1.0e-6) {
     return allOk;
 }
 
-bool checkSoftmax(float eps=1.0e-6) {
+bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     MatrixN x(10,5);
     x << -5.53887846e-04,  -1.66357895e-05,   9.78587865e-04, -1.32038284e-03,   4.77159634e-04,
@@ -489,7 +489,7 @@ bool checkSoftmax(float eps=1.0e-6) {
 }
 
 
-bool checkSvm(float eps=1.0e-6) {
+bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     MatrixN x(10,5);
     x << 2.48040968e-04,   5.60446668e-04,  -3.52994957e-04,
@@ -561,7 +561,7 @@ bool checkSvm(float eps=1.0e-6) {
     return allOk;
 }
 
-bool checkTwoLayer(float eps=1.0e-6) {
+bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
     int N=3, D=5, H=4, C=2;
     MatrixN x(N,D);
@@ -687,7 +687,7 @@ int tFunc(floatN x, int c) {
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
-    int N=200,NV=10,NT=10,I=5,H=20,C=4;
+    int N=300,NV=10,NT=10,I=5,H=20,C=4;
     cp.setPar("topo",vector<int>{I,H,C});
     TwoLayerNet tln(cp);
 
@@ -715,7 +715,7 @@ bool trainTest() {
     final_err=tln.test(Xt, yt);
 
     cout << "Train-test, err=" << final_err << endl;
-    if (final_err>0.1) allOk=false;
+    if (final_err>0.2) allOk=false;
     return allOk;
 }
 
@@ -736,8 +736,8 @@ int doTests() {
         allOk=false;
     }
 
-    Relu rl(CpParams("{topo=[30]}"));
-    MatrixN xr(20,30);
+    Relu rl(CpParams("{topo=[20]}"));
+    MatrixN xr(10,20);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
         allOk=false;
@@ -755,14 +755,18 @@ int doTests() {
     Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
-    if (!dp.selfTest(xdp,yz, 1e-6, 1e-8)) {
+    floatN h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    floatN eps=1e-8; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!dp.selfTest(xdp,yz, h, eps)) {
         allOk=false;
     }
 
     AffineRelu rx("{topo=[2,3]}");
     MatrixN xarl(30,2);
     xarl.setRandom();
-    if (!rx.selfTest(xarl,yz, 1e-6, 1e-6)) {
+    h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!rx.selfTest(xarl,yz, h, eps)) {
         allOk=false;
     }
 
@@ -775,7 +779,9 @@ int doTests() {
     xtl.setRandom();
     MatrixN y2(ntlN,1);
     for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
-    if (!tl.selfTest(xtl,y2, 1e-3, 1e-5)) {
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!tl.selfTest(xtl,y2, h, eps)) {
         allOk=false;
         cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
@@ -789,7 +795,9 @@ int doTests() {
     xmx.setRandom();
     MatrixN y(smN,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    if (!mx.selfTest(xmx, y, 1e-3, 1e-6)) {
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!mx.selfTest(xmx, y, h, eps)) {
         allOk=false;
     }
 
@@ -802,7 +810,9 @@ int doTests() {
     xsv.setRandom();
     MatrixN yv(svN,1);
     for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=(rand()%svC);
-    if (!sv.selfTest(xsv, yv, 1e-3, 1e-6)) {
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!sv.selfTest(xsv, yv, h, eps)) {
         allOk=false;
     }
 
@@ -828,7 +838,9 @@ int doTests() {
     MatrixN yml(30,1);
     for (unsigned i=0; i<yml.rows(); i++) yml(i,0)=(rand()%10);
 
-    if (!ml.selfTest(xml,yml, 1e-3, 1e-5)) {
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!ml.selfTest(xml,yml, h, eps)) {
         allOk=false;
         cout << red << "Numerical gradient for MultiLayer: ERROR." << def << endl;
     }

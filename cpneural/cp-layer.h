@@ -16,8 +16,8 @@ using Eigen::IOFormat;
 using std::cout; using std::endl;
 using std::vector; using std::string; using std::map;
 
-#define USE_DOUBLE
-//#define USE_FLOAT
+//#define USE_DOUBLE
+#define USE_FLOAT
 
 #ifdef USE_DOUBLE
 using MatrixN=Eigen::MatrixXd;
@@ -26,17 +26,16 @@ using RowVectorN=Eigen::RowVectorXd;
 using ArrayN=Eigen::ArrayXd;
 using floatN=double;
 #define CP_DEFAULT_NUM_H (1.e-6)
-#define CP_DEFAULT_NUM_EPS (1.e-10)
-#else
+#define CP_DEFAULT_NUM_EPS (1.e-9)
+#endif
 #ifdef USE_FLOAT
 using MatrixN=Eigen::MatrixXf;
 using VectorN=Eigen::VectorXf;
 using RowVectorN=Eigen::RowVectorXf;
 using ArrayN=Eigen::ArrayXf;
 using floatN=float;
-#define CP_DEFAULT_NUM_H (1.e-3)
-#define CP_DEFAULT_NUM_EPS (1.e-6)
-#endif
+#define CP_DEFAULT_NUM_H ((float)1.e-4)
+#define CP_DEFAULT_NUM_EPS ((float)1.e-3)
 #endif
 
 using Tensor4=Eigen::Tensor<floatN, 4>;

@@ -16,7 +16,7 @@ public:
         cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
-        lr=cp.getPar("learning_rate", 1e-2);
+        lr=cp.getPar("learning_rate", (floatN)1e-2);
         x=x-lr*dx;
         return x;
     }
@@ -37,8 +37,8 @@ public:
         cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", 1e-2);
-        mm=cp.getPar("momentum",0.9);
+        lr=cp.getPar("learning_rate", (floatN)1e-2);
+        mm=cp.getPar("momentum",(floatN)0.9);
         string cname=var+"-velocity";
         MatrixN z=MatrixN(x);
         z.setZero();
@@ -68,9 +68,9 @@ public:
         cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", 1e-2);
-        dc=cp.getPar("decay_rate", 0.99);
-        ep=cp.getPar("epsilon", 1e-8);
+        lr=cp.getPar("learning_rate", (floatN)1e-2);
+        dc=cp.getPar("decay_rate", (floatN)0.99);
+        ep=cp.getPar("epsilon", (floatN)1e-8);
         string cname=var+"-movavr";
         MatrixN z=MatrixN(x);
         z.setZero();
@@ -101,10 +101,10 @@ public:
         cp=cx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", 1e-2);
-        b1=cp.getPar("beta1", 0.9);
-        b2=cp.getPar("beta2", 0.999);
-        ep=cp.getPar("epsilon", 1e-8);
+        lr=cp.getPar("learning_rate", (floatN)1e-2);
+        b1=cp.getPar("beta1", (floatN)0.9);
+        b2=cp.getPar("beta2", (floatN)0.999);
+        ep=cp.getPar("epsilon", (floatN)1e-8);
         string cname_m=var+"-m";
         MatrixN z=MatrixN(x);
         z.setZero();
@@ -173,13 +173,13 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     setFlag("train",true);
     bool bShuffle=true;
 
-    int ep=popti->cp.getPar("epochs", 1); //Default only!
-    int bs=popti->cp.getPar("batch_size", 100); // Defaults only! are overwritten!
-    int nt=popti->cp.getPar("threads",1); // Default only!
-    floatN lr_decay=popti->cp.getPar("lr_decay", 1.0); //Default only!
-    bool verbose=popti->cp.getPar("verbose", false);
-    floatN lr = popti->cp.getPar("learning_rate", 1.0e-2); // Default only!
-    floatN regularization = popti->cp.getPar("regularization", 0.0); // Default only!
+    int ep=popti->cp.getPar("epochs", (int)1); //Default only!
+    int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
+    int nt=popti->cp.getPar("threads",(int)1); // Default only!
+    floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
+    bool verbose=popti->cp.getPar("verbose", (bool)false);
+    floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
+    floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
     vector<int> ack(x.rows());

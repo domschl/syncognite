@@ -4,6 +4,8 @@
 #include "cp-math.h"
 #include "cp-layer.h"
 
+#include <viennacl/matrix.hpp>
+
 class Nonlinearities {
 public:
     MatrixN sigmoid(MatrixN& m) {
@@ -203,9 +205,9 @@ private:
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
         cp=cx;
-        eps = cp.getPar("eps", 1e-5);
-        momentum = cp.getPar("momentum", 0.9);
-        trainMode = cp.getPar("train", false);
+        eps = cp.getPar("eps", (floatN)1e-5);
+        momentum = cp.getPar("momentum", (floatN)0.9);
+        trainMode = cp.getPar("train", (bool)false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
 
         MatrixN *pgamma=new MatrixN(1,topo[0]);
@@ -333,9 +335,9 @@ private:
         layerType=LayerType::LT_NORMAL;
         topoParams=1;
         cp=cx;
-        drop = cp.getPar("drop", 0.5);
-        trainMode = cp.getPar("train", false);
-        freeze = cp.getPar("freeze", false);
+        drop = cp.getPar("drop", (floatN)0.5);
+        trainMode = cp.getPar("train", (bool)false);
+        freeze = cp.getPar("freeze", (bool)false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
     }
 public:
@@ -354,7 +356,7 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        drop = cp.getPar("drop", 0.5);
+        drop = cp.getPar("drop", (floatN)0.5);
         if (drop==1.0) return x;
         trainMode = cp.getPar("train", false);
         freeze = cp.getPar("freeze", false);

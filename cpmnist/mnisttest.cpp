@@ -181,7 +181,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
 
         cp4.setPar("topo", vector<int>{N1});
-        cp4.setPar("drop", 0.7);
+        cp4.setPar("drop", (floatN)0.7);
         Dropout dr1(cp4);
         ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
 //l2
@@ -198,7 +198,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
 
         cp8.setPar("topo", vector<int>{N2});
-        cp8.setPar("drop", 0.8);
+        cp8.setPar("drop", (floatN)0.8);
         Dropout dr2(cp8);
         ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
 //l3
@@ -215,7 +215,7 @@ bool  getMnistData(string filepath) {
         ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
 
         cp12.setPar("topo", vector<int>{N3});
-        cp12.setPar("drop", 0.9);
+        cp12.setPar("drop", (floatN)0.9);
         Dropout dr3(cp12);
         ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
 //l4
@@ -242,16 +242,16 @@ bool  getMnistData(string filepath) {
     cpo.setPar("epochs",200);
     cpo.setPar("batch_size",200);
     cpo.setPar("threads",8);
-    cpo.setPar("regularization", 0.0); //0.00001);
+    cpo.setPar("regularization", (floatN)0.0); //0.00001);
     floatN final_err;
 #ifdef USE_2LN
-    cpo.setPar("learning_rate", 1e-3);
+    cpo.setPar("learning_rate", (floatN)1e-3);
     cpo.setPar("regularization", 0.0);
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
 #else
-    cpo.setPar("learning_rate", 5e-2);
-    cpo.setPar("regularization", 1e-6);
+    cpo.setPar("learning_rate", (floatN)5e-2);
+    cpo.setPar("regularization", (floatN)1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
 #endif
