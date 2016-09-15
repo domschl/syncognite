@@ -4,7 +4,9 @@
 #include "cp-math.h"
 #include "cp-layer.h"
 
+#ifdef USE_VIENNACL
 #include <viennacl/matrix.hpp>
+#endif
 
 class Nonlinearities {
 public:

@@ -20,6 +20,9 @@ using std::vector; using std::string; using std::map;
 #define USE_FLOAT
 
 #ifdef USE_DOUBLE
+#ifdef USE_FLOAT
+#error CONFIGURATION MESS: either USE_DOUBLE or USE_FLOAT, not both!
+#endif
 using MatrixN=Eigen::MatrixXd;
 using VectorN=Eigen::VectorXd;
 using RowVectorN=Eigen::RowVectorXd;
