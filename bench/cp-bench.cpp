@@ -35,7 +35,7 @@ bool benchLayer(string name, Layer* player, int N, int M) {
         y(i)=(floatN)(int)((y(i)+1)*5);
     }
     Timer tcpu;
-    double tcus, tcusn;
+    double tcus, tcusn, tfn, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
     string sname;
@@ -46,37 +46,47 @@ bool benchLayer(string name, Layer* player, int N, int M) {
 
     cout.precision(3);
     cout << fixed;
-    /*
-    tcpu.startCpu();
-    player->forward(x,nullptr);
-    tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
-    */
-    tcpu.startCpu();
-    if (player->layerType==LayerType::LT_NORMAL) {
-        player->forward(x,&cache);
-    } else {
-        player->forward(x,y,&cache);
-    }
-    tcus=tcpu.stopCpuMicro()/1000.0;
-    tcusn= tcus / (double)N;
-    cout << sname << " forward (with cache):  " << fixed << setw(8) << tcus << "ms (cpu), " << tcusn << "ms (/sample)." << endl;
 
-    if (name=="BatchNorm") {
-        return false;
+    tfn=1e8; tf=1e8; tb=1e8;
+    for (int rep=0; rep<5; rep++) {
+
+        /*
+        tcpu.startCpu();
+        player->forward(x,nullptr);
+        tcus=tcpu.stopCpuMicro()/1000.0;
+        if (tcus<tfn) tfn=tcus;
+        */
+        tcpu.startCpu();
+        if (player->layerType==LayerType::LT_NORMAL) {
+            player->forward(x,&cache);
+        } else {
+            player->forward(x,y,&cache);
+        }
+        tcus=tcpu.stopCpuMicro()/1000.0;
+        if (tcus<tf) tf=tcus;
+
+        if (name=="BatchNorm") {
+            return false;
+        }
+
+        tcpu.startCpu();
+        if (player->layerType==LayerType::LT_NORMAL) {
+            player->backward(x,&cache, &grads);
+        } else {
+            player->backward(y,&cache, &grads);
+        }
+        tcus=tcpu.stopCpuMicro()/1000.0;
+        if (tcus<tb) tb=tcus;
+
+        cppl_delete(&cache);
+        cppl_delete(&grads);
     }
 
-    tcpu.startCpu();
-    if (player->layerType==LayerType::LT_NORMAL) {
-        player->backward(x,&cache, &grads);
-    } else {
-        player->backward(y,&cache, &grads);
-    }
-    tcus=tcpu.stopCpuMicro()/1000.0;
-    tcusn= tcus / (double)N;
-    cout << sname << " backward (with cache): " << fixed << setw(8) << tcus << "ms (cpu), " << tcusn << "ms (/sample)." << endl;
-    cppl_delete(&cache);
-    cppl_delete(&grads);
+    tfx= tf / (double)N;
+    tfx= tb / (double)N;
+    //cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
+    cout << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
+    cout << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
 
     return true;
 }
@@ -101,11 +111,9 @@ int doBench() {
         for (auto i=0; i< tp.size(); i++) tp[i]=M;
         cp.setPar("topo",tp);
         Layer *l = CREATE_LAYER(it.first, cp)
-        for (int rep=0; rep<4; rep++) {
-            if (!benchLayer(it.first, l, N, M)) {
-                cout << "Error" << endl;
-                allOk=false;
-            }
+        if (!benchLayer(it.first, l, N, M)) {
+            cout << "Error" << endl;
+            allOk=false;
         }
         delete l;
     }
