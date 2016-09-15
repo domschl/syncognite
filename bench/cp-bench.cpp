@@ -1,9 +1,11 @@
 #include "cp-neural.h"
+#include <iomanip>
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
 
 using std::cout; using std::endl;
+using std::setprecision; using std::setw; using std::fixed;
 
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
@@ -25,8 +27,8 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
 }
 
 bool benchLayer(string name, Layer* player) {
-    MatrixN x(100,1000);
-    MatrixN y(100,1);
+    MatrixN x(500,1000);
+    MatrixN y(500,1);
     x.setRandom();
     y.setRandom();
     for (int i=0; i<y.size(); i++) {
@@ -36,12 +38,20 @@ bool benchLayer(string name, Layer* player) {
     double tcus;
     t_cppl cache;
     t_cppl grads;
+    string sname;
 
+    sname=name;
+
+    while (sname.size() < 12) sname += " ";
+
+    cout.precision(3);
+    cout << fixed;
+    /*
     tcpu.startCpu();
     player->forward(x,nullptr);
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << name << " forward (no cache): " << tcus << "ms (cpu)." << endl;
-
+    cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
+    */
     tcpu.startCpu();
     if (player->layerType==LayerType::LT_NORMAL) {
         player->forward(x,&cache);
@@ -49,7 +59,7 @@ bool benchLayer(string name, Layer* player) {
         player->forward(x,y,&cache);
     }
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << name << " forward (with cache): " << tcus << "ms (cpu)." << endl;
+    cout << sname << " forward (with cache):  " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
 
     if (name=="BatchNorm") {
         return false;
@@ -62,7 +72,7 @@ bool benchLayer(string name, Layer* player) {
         player->backward(y,&cache, &grads);
     }
     tcus=tcpu.stopCpuMicro()/1000.0;
-    cout << name << " backward (with cache): " << tcus << "ms (cpu)." << endl;
+    cout << sname << " backward (with cache): " << fixed << setw(8) << tcus << "ms (cpu)." << endl;
     cppl_delete(&cache);
     cppl_delete(&grads);
 
@@ -78,16 +88,18 @@ int doBench() {
     int nr=0;
     for (auto it : _syncogniteLayerFactory.mapl) {
         ++nr;
-        cout << nr << ".: " << it.first << " ";
+        cout << nr << ".: " << it.first << endl;
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
         std::vector<int> tp(te);
         for (auto i=0; i< tp.size(); i++) tp[i]=1000;
         cp.setPar("topo",tp);
         Layer *l = CREATE_LAYER(it.first, cp)
-        if (!benchLayer(it.first, l)) {
-            cout << "Error" << endl;
-            allOk=false;
+        for (int rep=0; rep<4; rep++) {
+            if (!benchLayer(it.first, l)) {
+                cout << "Error" << endl;
+                allOk=false;
+            }            
         }
         delete l;
     }
