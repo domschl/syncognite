@@ -55,11 +55,13 @@ public:
             MatrixN y(0,0);
             return y;
         }
+
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN y = x * (*params["W"]);
         RowVectorN b = *params["b"];
         y.rowwise() += b;
         return y;
+    //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
         MatrixN dx = dchain * (*params["W"]).transpose(); // dx
