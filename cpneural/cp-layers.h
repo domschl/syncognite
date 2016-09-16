@@ -4,6 +4,8 @@
 #include "cp-math.h"
 #include "cp-layer.h"
 
+#define USE_VIENNACL
+
 #ifdef USE_VIENNACL
 #include <viennacl/matrix.hpp>
 #endif

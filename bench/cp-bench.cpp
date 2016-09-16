@@ -26,7 +26,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-bool benchLayer(string name, Layer* player, int N, int M) {
+bool benchLayer(string name, Layer* player, int N, int M, int reps) {
     MatrixN x(N,M);
     MatrixN y(N,1);
     x.setRandom();
@@ -48,8 +48,9 @@ bool benchLayer(string name, Layer* player, int N, int M) {
     cout << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
-    for (int rep=0; rep<5; rep++) {
-
+    for (int rep=0; rep<reps; rep++) {
+        t_cppl cache;
+        t_cppl grads;
         /*
         tcpu.startCpu();
         player->forward(x,nullptr);
@@ -65,10 +66,10 @@ bool benchLayer(string name, Layer* player, int N, int M) {
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tf) tf=tcus;
 
-        if (name=="BatchNorm") {
+/*        if (name=="BatchNorm") {
             return false;
         }
-
+*/
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
             player->backward(x,&cache, &grads);
@@ -82,8 +83,9 @@ bool benchLayer(string name, Layer* player, int N, int M) {
         cppl_delete(&grads);
     }
 
+
     tfx= tf / (double)N;
-    tfx= tb / (double)N;
+    tbx= tb / (double)N;
     //cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
     cout << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
     cout << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
@@ -99,25 +101,35 @@ int doBench() {
     int nr=0;
     int N=200;
     int M=1000;
-    for (auto it : _syncogniteLayerFactory.mapl) {
-        ++nr;
-        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
-        CpParams cp;
+    int reps=0;
 
-        if (te>1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
-        else cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+    for (int mrep=0; mrep<2; mrep++) {
+        for (auto it : _syncogniteLayerFactory.mapl) {
+            ++nr;
+            t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
+            CpParams cp;
 
-        std::vector<int> tp(te);
-        for (auto i=0; i< tp.size(); i++) tp[i]=M;
-        cp.setPar("topo",tp);
-        Layer *l = CREATE_LAYER(it.first, cp)
-        if (!benchLayer(it.first, l, N, M)) {
-            cout << "Error" << endl;
-            allOk=false;
+            if (te>1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
+            else cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+
+            std::vector<int> tp(te);
+            for (auto i=0; i< tp.size(); i++) tp[i]=M;
+            cp.setPar("topo",tp);
+            cp.setPar("train", true);
+            Layer *l = CREATE_LAYER(it.first, cp)
+            if (reps==0) {
+                reps=10; // warm-up for first measurement
+                cout << "Warmup..." << endl;
+            }
+            else reps=5;
+            if (!benchLayer(it.first, l, N, M, reps)) {
+                cout << "Error" << endl;
+                allOk=false;
+            }
+            delete l;
         }
-        delete l;
+        cout << endl;
     }
-    cout << "bench end, nr=" << nr << endl;
     return allOk;
 }
 
