@@ -19,6 +19,8 @@ using std::vector; using std::string; using std::map;
 //#define USE_DOUBLE
 #define USE_FLOAT
 
+#define USE_VIENNACL
+
 #ifdef USE_DOUBLE
 #ifdef USE_FLOAT
 #error CONFIGURATION MESS: either USE_DOUBLE or USE_FLOAT, not both!
