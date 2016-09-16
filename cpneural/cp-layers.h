@@ -1,10 +1,13 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
+#define USE_VIENNACL
+#define VIENNACL_HAVE_EIGEN
+#define VIENNACL_WITH_OPENCL
+
 #include "cp-math.h"
 #include "cp-layer.h"
 
-#define USE_VIENNACL
 
 #ifdef USE_VIENNACL
 #include <viennacl/matrix.hpp>
@@ -61,18 +64,75 @@ public:
             MatrixN y(0,0);
             return y;
         }
-
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        MatrixN y = x * (*params["W"]);
-        RowVectorN b = *params["b"];
-        y.rowwise() += b;
+
+        int algo=1;
+        MatrixN y(x.rows(), (*params["W"]).cols());
+        if (algo==0) {
+            /*
+            y = x * (*params["W"]);
+            RowVectorN b = *params["b"];
+            y.rowwise() += b;
+            */
+            y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
+        } else {
+            MatrixN x1(x.rows(),x.cols()+1);
+            MatrixN xp1(x.rows(),1);
+            xp1.setOnes();
+            x1 << x, xp1;
+            MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
+            Wb<<*params["W"], *params["b"];
+            MatrixN y2;
+            viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols());
+            viennacl::matrix<float>vi_x1(x1.rows(), x1.cols());
+            viennacl::matrix<float>vi_y(x1.rows(), Wb.cols());
+            viennacl::copy(Wb, vi_Wb);
+            viennacl::copy(x1, vi_x1);
+            vi_y = viennacl::linalg::prod(vi_x1, vi_Wb);
+            viennacl::copy(vi_y, y);
+            //MatrixN yc = x1 * Wb;
+            //matCompare(y,yc,"consistency");
+        }
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
-        MatrixN dx = dchain * (*params["W"]).transpose(); // dx
-        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+        int algo=1;
+        MatrixN x(*(*pcache)["x"]);
+        MatrixN dx(x.rows(),x.cols());
+        MatrixN W(*params["W"]);
+        MatrixN dW(W.rows(),W.cols());
+        if (algo==0) {
+            dx = dchain * (*params["W"]).transpose(); // dx
+            cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
+            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+        } else {
+            viennacl::matrix<float>vi_Wt(W.cols(), W.rows());
+            viennacl::matrix<float>vi_dW(W.rows(), W.cols());
+            viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols());
+            viennacl::matrix<float>vi_xt(x.cols(), x.rows());
+            viennacl::matrix<float>vi_dx(x.rows(), x.cols());
+            MatrixN Wt;
+            Wt=W.transpose();
+            viennacl::copy(Wt, vi_Wt);
+            viennacl::copy(dchain, vi_dchain);
+            MatrixN xt;
+            xt=x.transpose();
+            viennacl::copy(xt, vi_xt);
+            vi_dx=viennacl::linalg::prod(vi_dchain,vi_Wt);
+            vi_dW=viennacl::linalg::prod(vi_xt, vi_dchain);
+            viennacl::copy(vi_dx, dx);
+            viennacl::copy(vi_dW, dW);
+            cppl_set(pgrads, "W", new MatrixN(dW));
+
+            //MatrixN dx2 = dchain * (*params["W"]).transpose(); // dx
+            //MatrixN dW2 = (*(*pcache)["x"]).transpose() * dchain; //dW
+            //matCompare(dx,dx2,"dx");
+            //matCompare(dW,dW2,"dW");
+
+            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+
+        }
         return dx;
     }
 };

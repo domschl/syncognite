@@ -18,6 +18,8 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
+find_package(OpenCL REQUIRED)
+
 add_subdirectory (cpneural)
 add_subdirectory (cptest)
 add_subdirectory (cpmnist)

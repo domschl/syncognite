@@ -12,6 +12,8 @@
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
+#include "cp-math.h"
+
 using Eigen::IOFormat;
 using std::cout; using std::endl;
 using std::vector; using std::string; using std::map;
@@ -58,6 +60,27 @@ vector<unsigned int> shape(const MatrixN& m) {
     s[0]=(unsigned int)(m.rows());
     s[1]=(unsigned int)(m.cols());
     return s;
+}
+
+bool matCompare(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
+    if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
+        cout << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
+        return false;
+    }
+    MatrixN d = m0 - m1;
+    floatN dif = d.cwiseProduct(d).sum();
+    if (dif < eps) {
+        if (msg!="") cout << msg << " err=" << dif << endl;
+        return true;
+    } else {
+        if (msg!="") {
+            //IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+            //cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
+            //cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
+            cout << "err=" << dif << endl;
+        }
+        return false;
+    }
 }
 
 void peekMat(const string label, const MatrixN& m) {
