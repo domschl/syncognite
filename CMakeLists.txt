@@ -19,6 +19,8 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
 find_package(OpenCL REQUIRED)
+#find_package(CUDA REQUIRED)
+#include_directories(${CUDA_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
 add_subdirectory (cptest)

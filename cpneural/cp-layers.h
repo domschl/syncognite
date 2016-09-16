@@ -4,6 +4,7 @@
 #define USE_VIENNACL
 #define VIENNACL_HAVE_EIGEN
 #define VIENNACL_WITH_OPENCL
+//#define VIENNACL_WITH_CUDA
 
 #include "cp-math.h"
 #include "cp-layer.h"

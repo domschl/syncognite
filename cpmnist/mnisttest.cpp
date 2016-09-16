@@ -141,6 +141,7 @@ bool  getMnistData(string filepath) {
          cout << it.first << " " << shape(*(it.second)) << endl;
      }
 
+
      /*
      vector<int> ins{0,4,16,25,108, 256,777};
      for (auto in : ins) {
@@ -240,10 +241,13 @@ bool  getMnistData(string filepath) {
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",200);
-    cpo.setPar("batch_size",200);
-    cpo.setPar("threads",8);
+    cpo.setPar("batch_size",100);
+    int numThreads=2;
+    cpo.setPar("threads",numThreads);
     cpo.setPar("regularization", (floatN)0.0); //0.00001);
     floatN final_err;
+
+    threadViennaClContextinit(numThreads);
 #ifdef USE_2LN
     cpo.setPar("learning_rate", (floatN)1e-3);
     cpo.setPar("regularization", 0.0);

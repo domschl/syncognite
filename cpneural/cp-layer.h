@@ -460,7 +460,7 @@ public:
     }
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
                         string optimizer, const CpParams& cp);
-    t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl);
+    t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
     floatN test(const MatrixN& x, const MatrixN& y)  {
         setFlag("train",false);
         MatrixN yt=forward(x, y, nullptr);

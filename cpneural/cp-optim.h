@@ -8,6 +8,9 @@
 #include "cp-timer.h"
 #include "cp-layers.h"
 
+#include "viennacl/ocl/device.hpp"
+#include "viennacl/ocl/platform.hpp"
+#include "viennacl/ocl/backend.hpp"
 
 class Sdg : public Optimizer {
     floatN lr;
@@ -156,13 +159,37 @@ if (timeit) {
 
 */
 
-t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss) {
+bool threadViennaClContextinit(unsigned int numThreads) {
+    if (viennacl::ocl::get_platforms().size() == 0) {
+        std::cerr << "Error: No ViennaClplatform found!" << std::endl;
+        return false;
+    }
+    viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
+    std::vector<viennacl::ocl::device> const & devices = pf.devices();
+    cout << pf.devices().size() << " devices found." << endl;
+    for (unsigned int i=0; i<numThreads+1; i++) {
+        viennacl::ocl::setup_context(i, devices[0]); // XXX support for multiple devices could easily be added here!
+        cout << "Context " << i << " on: " << viennacl::ocl::get_context(static_cast<long>(i)).devices()[0].name() << endl;
+    }
+    // Set context to 0 for main program, 1-numThreads for threads
+    viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
+    cout << "Contexts created, got context 0 for main program." << endl;
+    return true;
+}
+
+t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
     t_cppl cache;
     t_cppl grads;
+
+    viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id+1)));
+    cout << "Context start: " << id+1 << endl;
     forward(xb, yb, &cache);
+    cout << "fw" << id+1 << endl;
     *ploss=loss(yb, &cache);
     backward(yb, &cache, &grads);
+    cout << "bw" << id+1 << endl;
     cppl_delete(&cache);
+    cout << "Context end: " << id+1 << endl;
     return grads;
 }
 
@@ -182,9 +209,9 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
-    vector<int> ack(x.rows());
-    vector<int> shfl(x.rows());
-    for (int i=0; i<shfl.size(); i++) shfl[i]=i;
+    vector<unsigned int> ack(x.rows());
+    vector<unsigned int> shfl(x.rows());
+    for (unsigned int i=0; i<shfl.size(); i++) shfl[i]=i;
 
     floatN l=0.0;
     bs=bs/nt;
@@ -197,7 +224,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     cout << ", threads: " << nt << " (bz*ch*thr): " << chunks*bs*nt << endl;
     for (int e=0; e<ep; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
-        for (int i=0; i<ack.size(); i++) ack[i]=0;
+        for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
         for (int b=0; b<chunks*nt; b += nt) {
@@ -233,14 +260,14 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 } else {
                     xb=x.block(y0,0,dy,x.cols());
                     yb=y.block(y0,0,dy,y.cols());
-                    for (int i=y0; i<y0+dy; i++) {
+                    for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
                         if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
                         else {
                             ack[i]++;
                         }
                     }
                 }
-                gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l]{ return this->workerThread(xb, yb, &l); }));
+                gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
             }
             //cout << endl;
 
@@ -282,7 +309,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             lr *= lr_decay;
             popti->cp.setPar("learning_rate", lr);
         }
-        for (int i=0; i<ack.size(); i++) {
+        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {
                 cout << "Datapoint: " << i << " should be active once, was active: " << ack[i] << endl;
             }
