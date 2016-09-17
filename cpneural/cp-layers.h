@@ -1,9 +1,13 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
+
 #define USE_VIENNACL
+#ifdef USE_VIENNACL
+#pragma message("USE_VIENNACL is defined!")
 #define VIENNACL_HAVE_EIGEN
 #define VIENNACL_WITH_OPENCL
+#endif
 //#define VIENNACL_WITH_CUDA
 
 #include "cp-math.h"
@@ -67,7 +71,11 @@ public:
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
 
+        #ifdef USE_VIENNACL
         int algo=1;
+        #else
+        int algo=0;
+        #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
         if (algo==0) {
             /*
@@ -77,6 +85,7 @@ public:
             */
             y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         } else {
+            #ifdef USE_VIENNACL
             MatrixN x1(x.rows(),x.cols()+1);
             MatrixN xp1(x.rows(),1);
             xp1.setOnes();
@@ -93,12 +102,17 @@ public:
             viennacl::copy(vi_y, y);
             //MatrixN yc = x1 * Wb;
             //matCompare(y,yc,"consistency");
+            #endif
         }
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
+        #ifdef VIENNACL
         int algo=1;
+        #else
+        int algo=0;
+        #endif
         MatrixN x(*(*pcache)["x"]);
         MatrixN dx(x.rows(),x.cols());
         MatrixN W(*params["W"]);
@@ -108,6 +122,7 @@ public:
             cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
+            #ifdef VIENNACL
             viennacl::matrix<float>vi_Wt(W.cols(), W.rows());
             viennacl::matrix<float>vi_dW(W.rows(), W.cols());
             viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols());
@@ -132,7 +147,7 @@ public:
             //matCompare(dW,dW2,"dW");
 
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-
+            #endif
         }
         return dx;
     }

@@ -8,9 +8,11 @@
 #include "cp-timer.h"
 #include "cp-layers.h"
 
+#ifdef USE_VIENNACL
 #include "viennacl/ocl/device.hpp"
 #include "viennacl/ocl/platform.hpp"
 #include "viennacl/ocl/backend.hpp"
+#endif
 
 class Sdg : public Optimizer {
     floatN lr;
@@ -160,6 +162,7 @@ if (timeit) {
 */
 
 bool threadViennaClContextinit(unsigned int numThreads) {
+    #ifdef USE_VIENNACL
     if (viennacl::ocl::get_platforms().size() == 0) {
         std::cerr << "Error: No ViennaClplatform found!" << std::endl;
         return false;
@@ -174,6 +177,7 @@ bool threadViennaClContextinit(unsigned int numThreads) {
     // Set context to 0 for main program, 1-numThreads for threads
     viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
     cout << "Contexts created, got context 0 for main program." << endl;
+    #endif
     return true;
 }
 
@@ -181,15 +185,17 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     t_cppl cache;
     t_cppl grads;
 
+    #ifdef USE_VIENNACL
     viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id+1)));
-    cout << "Context start: " << id+1 << endl;
+    #endif
+    //cout << "Context start: " << id+1 << endl;
     forward(xb, yb, &cache);
-    cout << "fw" << id+1 << endl;
+    //cout << "fw" << id+1 << endl;
     *ploss=loss(yb, &cache);
     backward(yb, &cache, &grads);
-    cout << "bw" << id+1 << endl;
+    //cout << "bw" << id+1 << endl;
     cppl_delete(&cache);
-    cout << "Context end: " << id+1 << endl;
+    //cout << "Context end: " << id+1 << endl;
     return grads;
 }
 

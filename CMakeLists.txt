@@ -18,8 +18,9 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-find_package(OpenCL REQUIRED)
-#find_package(CUDA REQUIRED)
+find_package(ViennaCL)
+find_package(OpenCL)
+#find_package(CUDA)
 #include_directories(${CUDA_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
