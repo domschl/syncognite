@@ -108,7 +108,7 @@ public:
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
-        #ifdef VIENNACL
+        #ifdef USE_VIENNACL
         int algo=1;
         #else
         int algo=0;
@@ -122,7 +122,7 @@ public:
             cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
-            #ifdef VIENNACL
+            #ifdef USE_VIENNACL
             viennacl::matrix<float>vi_Wt(W.cols(), W.rows());
             viennacl::matrix<float>vi_dW(W.rows(), W.cols());
             viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols());
