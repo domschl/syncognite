@@ -4,7 +4,7 @@
 
 #define USE_VIENNACL
 #ifdef USE_VIENNACL
-#pragma message("USE_VIENNACL is defined!")
+//#pragma message("USE_VIENNACL is defined!")
 #define VIENNACL_HAVE_EIGEN
 #define VIENNACL_WITH_OPENCL
 #endif
@@ -93,9 +93,19 @@ public:
             MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
             Wb<<*params["W"], *params["b"];
             MatrixN y2;
-            viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols());
-            viennacl::matrix<float>vi_x1(x1.rows(), x1.cols());
-            viennacl::matrix<float>vi_y(x1.rows(), Wb.cols());
+            int thread_id;
+            if (pcache->find("thread_id")==pcache->end()) {
+                thread_id=0;
+                cout << "defThread fw" << endl;
+            } else {
+                MatrixN t=*((*pcache)["thread_id"]);
+                thread_id=t(0,0);
+                cout << "CacheTreadId fw:" << thread_id << endl;
+            }
+            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(thread_id)));
+            viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols(), ctx);
+            viennacl::matrix<float>vi_x1(x1.rows(), x1.cols(), ctx);
+            viennacl::matrix<float>vi_y(x1.rows(), Wb.cols(), ctx);
             viennacl::copy(Wb, vi_Wb);
             viennacl::copy(x1, vi_x1);
             vi_y = viennacl::linalg::prod(vi_x1, vi_Wb);
@@ -123,11 +133,21 @@ public:
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
             #ifdef USE_VIENNACL
-            viennacl::matrix<float>vi_Wt(W.cols(), W.rows());
-            viennacl::matrix<float>vi_dW(W.rows(), W.cols());
-            viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols());
-            viennacl::matrix<float>vi_xt(x.cols(), x.rows());
-            viennacl::matrix<float>vi_dx(x.rows(), x.cols());
+            int thread_id;
+            if (pcache->find("thread_id")==pcache->end()) {
+                thread_id=0;
+                cout << "defThread bw" << endl;
+            } else {
+                MatrixN t=*((*pcache)["thread_id"]);
+                thread_id=t(0,0);
+                cout << "CacheTreadId bw:" << thread_id << endl;
+            }
+            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(thread_id)));
+            viennacl::matrix<float>vi_Wt(W.cols(), W.rows(),ctx);
+            viennacl::matrix<float>vi_dW(W.rows(), W.cols(),ctx);
+            viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols(), ctx);
+            viennacl::matrix<float>vi_xt(x.cols(), x.rows(), ctx);
+            viennacl::matrix<float>vi_dx(x.rows(), x.cols(), ctx);
             MatrixN Wt;
             Wt=W.transpose();
             viennacl::copy(Wt, vi_Wt);

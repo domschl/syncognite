@@ -113,8 +113,8 @@ public:
         string cname_m=var+"-m";
         MatrixN z=MatrixN(x);
         z.setZero();
-        cppl_update(pocache, cname_m, &z);
-        string cname_v=var+"-v";
+        cppl_update(pocache, cname_m, &z);    // XXX the whole caching is NOT working! Everything starts always from scratch!
+        string cname_v=var+"-v";              // Implementation is defect!
         cppl_update(pocache, cname_v, &z);
         MatrixN z1(1,1);
         z1.setZero();
@@ -186,7 +186,12 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     t_cppl grads;
 
     #ifdef USE_VIENNACL
-    viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id+1)));
+    //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id+1)));
+    MatrixN thread_id(1,1);
+    thread_id(0,0)=id+1;
+    cppl_set(&cache, "thread_id", new MatrixN(thread_id));
+    (*(cache["thread_id"]))(0,0)=id+1;
+    cout << "thread_cache:" << (*(cache["thread_id"]))(0,0) << endl;
     #endif
     //cout << "Context start: " << id+1 << endl;
     forward(xb, yb, &cache);

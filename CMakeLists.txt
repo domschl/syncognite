@@ -24,6 +24,7 @@ find_package(OpenCL)
 #include_directories(${CUDA_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
+include_directories("cpneural")
 add_subdirectory (cptest)
 add_subdirectory (cpmnist)
 add_subdirectory (cpcifar10)

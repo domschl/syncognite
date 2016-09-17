@@ -1,4 +1,4 @@
-#include "cp-neural.h"
+#include <cp-neural.h>
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test

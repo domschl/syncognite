@@ -1,21 +1,3 @@
-#include <chrono>
-#include <ctime>
-#include "cp-timer.h"
-
-void Timer::startCpu() {
-        c_start = std::clock();
-    }
-double Timer::stopCpuMicro() {
-        std::clock_t c_end = std::clock();
-        return 1000000.0 * (double)(c_end-c_start) / (double)CLOCKS_PER_SEC;
-    }
-void Timer::startWall() {
-        t_start = std::chrono::high_resolution_clock::now();
-    }
-double Timer::stopWallMicro() {
-        auto t_end = std::chrono::high_resolution_clock::now();
-        return std::chrono::duration<double, std::micro>(t_end-t_start).count();
-    }
 
 /*
 #include <iostream>
