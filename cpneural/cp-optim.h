@@ -169,9 +169,10 @@ bool threadViennaClContextinit(unsigned int numThreads) {
     }
     viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
     std::vector<viennacl::ocl::device> const & devices = pf.devices();
-    cout << pf.devices().size() << " devices found." << endl;
+    int nrDevs = pf.devices().size();
+    cout << nrDevs << " devices found." << endl;
     for (unsigned int i=0; i<numThreads+1; i++) {
-        viennacl::ocl::setup_context(i, devices[0]); // XXX support for multiple devices could easily be added here!
+        viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
         cout << "Context " << i << " on: " << viennacl::ocl::get_context(static_cast<long>(i)).devices()[0].name() << endl;
     }
     // Set context to 0 for main program, 1-numThreads for threads
