@@ -63,7 +63,7 @@ public:
     ~Affine() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (params["W"]->rows() != x.cols()) {
             cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
             MatrixN y(0,0);
@@ -93,16 +93,7 @@ public:
             MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
             Wb<<*params["W"], *params["b"];
             MatrixN y2;
-            int thread_id;
-            if (pcache->find("thread_id")==pcache->end()) {
-                thread_id=0;
-                cout << "defThread fw" << endl;
-            } else {
-                MatrixN t=*((*pcache)["thread_id"]);
-                thread_id=t(0,0);
-                cout << "CacheTreadId fw:" << thread_id << endl;
-            }
-            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(thread_id)));
+            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
             viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols(), ctx);
             viennacl::matrix<float>vi_x1(x1.rows(), x1.cols(), ctx);
             viennacl::matrix<float>vi_y(x1.rows(), Wb.cols(), ctx);
@@ -117,7 +108,7 @@ public:
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         #ifdef USE_VIENNACL
         int algo=1;
         #else
@@ -133,16 +124,7 @@ public:
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
             #ifdef USE_VIENNACL
-            int thread_id;
-            if (pcache->find("thread_id")==pcache->end()) {
-                thread_id=0;
-                cout << "defThread bw" << endl;
-            } else {
-                MatrixN t=*((*pcache)["thread_id"]);
-                thread_id=t(0,0);
-                cout << "CacheTreadId bw:" << thread_id << endl;
-            }
-            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(thread_id)));
+            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
             viennacl::matrix<float>vi_Wt(W.cols(), W.rows(),ctx);
             viennacl::matrix<float>vi_dW(W.rows(), W.cols(),ctx);
             viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols(), ctx);
@@ -191,7 +173,7 @@ public:
     ~Relu() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl *pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl *pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN ych=x;
         for (unsigned int i=0; i<ych.size(); i++) {
@@ -201,7 +183,7 @@ public:
         }
         return ych;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, int id=0) override {
         MatrixN y=*((*pcache)["x"]);
         for (unsigned int i=0; i<y.size(); i++) {
             if (y(i)>0.0) y(i)=1.0;
@@ -262,26 +244,26 @@ public:
         delete rl;
         rl=nullptr;
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         t_cppl tcacheaf;
-        MatrixN y0=af->forward(x, &tcacheaf);
+        MatrixN y0=af->forward(x, &tcacheaf, id);
         mlPush("af", &tcacheaf, pcache);
         t_cppl tcachere;
-        MatrixN y=rl->forward(y0, &tcachere);
+        MatrixN y=rl->forward(y0, &tcachere, id);
         mlPush("re", &tcachere, pcache);
         return y;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, int id=0) override {
         t_cppl tcachere;
         t_cppl tgradsre;
         mlPop("re",pcache,&tcachere);
-        MatrixN dx0=rl->backward(dchain, &tcachere, &tgradsre);
+        MatrixN dx0=rl->backward(dchain, &tcachere, &tgradsre, id);
         mlPush("re",&tgradsre,pgrads);
         t_cppl tcacheaf;
         t_cppl tgradsaf;
         mlPop("af",pcache,&tcacheaf);
-        MatrixN dx=af->backward(dx0, &tcacheaf, &tgradsaf);
+        MatrixN dx=af->backward(dx0, &tcacheaf, &tgradsaf, id);
         mlPush("af",&tgradsaf,pgrads);
         return dx;
     }
@@ -331,7 +313,7 @@ public:
     ~BatchNorm() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         MatrixN *prm, *prv;
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
@@ -393,7 +375,7 @@ public:
         }
         return xout;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         if (pcache->find("sqse")==pcache->end()) cout << "Bad: no cache entry for sqse!" << endl;
         MatrixN sqse=*((*pcache)["sqse"]);
         if (pcache->find("xme")==pcache->end()) cout << "Bad: no cache entry for xme!" << endl;
@@ -454,7 +436,7 @@ public:
     ~Dropout() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         drop = cp.getPar("drop", (floatN)0.5);
         if (drop==1.0) return x;
@@ -485,7 +467,7 @@ public:
         }
         return xout;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         MatrixN dx;
         trainMode = cp.getPar("train", false);
         if (trainMode && drop!=1.0) {
@@ -518,7 +500,7 @@ public:
     ~Svm() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN correctClassScores(x.rows());
@@ -543,7 +525,7 @@ public:
         floatN loss = margins.sum() / margins.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         MatrixN margins=*((*pcache)["margins"]);
         MatrixN x=*((*pcache)["x"]);
         VectorN numPos(x.rows());
@@ -585,7 +567,7 @@ public:
     ~Softmax() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN mxc = x.rowwise().maxCoeff();
@@ -621,7 +603,7 @@ public:
         loss /= probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         MatrixN probs=*((*pcache)["probs"]);
 
         MatrixN dx=probs;
@@ -677,20 +659,20 @@ public:
         delete sm;
         sm=nullptr;
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         t_cppl c1;
-        MatrixN y0=af1->forward(x,&c1);
+        MatrixN y0=af1->forward(x,&c1, id);
         mlPush("af1",&c1,pcache);
         t_cppl c2;
-        MatrixN y1=rl->forward(y0,&c2);
+        MatrixN y1=rl->forward(y0,&c2, id);
         mlPush("rl",&c2,pcache);
         t_cppl c3;
-        MatrixN yo=af2->forward(y1,&c3);
+        MatrixN yo=af2->forward(y1,&c3, id);
         mlPush("af2",&c3,pcache);
         t_cppl c4;
-        MatrixN yu=sm->forward(yo,y,&c4);
+        MatrixN yu=sm->forward(yo,y,&c4, id);
         mlPush("sm",&c4,pcache);
         return yo;
     }
@@ -699,29 +681,29 @@ public:
         mlPop("sm",pcache,&c4);
         return sm->loss(y, &c4);
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         t_cppl c4;
         t_cppl g4;
         mlPop("sm",pcache,&c4);
-        MatrixN dx3=sm->backward(y, &c4, &g4);
+        MatrixN dx3=sm->backward(y, &c4, &g4, id);
         mlPush("sm",&g4,pgrads);
 
         t_cppl c3;
         t_cppl g3;
         mlPop("af2",pcache,&c3);
-        MatrixN dx2=af2->backward(dx3,&c3,&g3);
+        MatrixN dx2=af2->backward(dx3,&c3,&g3, id);
         mlPush("af2", &g3, pgrads);
 
         t_cppl c2;
         t_cppl g2;
         mlPop("rl",pcache,&c2);
-        MatrixN dx1=rl->backward(dx2, &c2, &g2);
+        MatrixN dx1=rl->backward(dx2, &c2, &g2, id);
         mlPush("rl", &g2, pgrads);
 
         t_cppl c1;
         t_cppl g1;
         mlPop("af1",pcache,&c1);
-        MatrixN dx=af1->backward(dx1, &c1, &g1);
+        MatrixN dx=af1->backward(dx1, &c1, &g1, id);
         mlPush("af1", &g1, pgrads);
 
         return dx;
@@ -835,7 +817,7 @@ public:
         }
         return lys;
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
         string cLay="input";
         vector<string> nLay;
         bool done=false;
@@ -854,8 +836,8 @@ public:
             Layer *p = layerMap[name];
             t_cppl cache;
             //cache.clear();
-            if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache);
-            else xn=p->forward(x0,y,&cache);
+            if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
+            else xn=p->forward(x0,y,&cache, id);
             if (pcache!=nullptr) {
                 mlPush(name, &cache, pcache);
             } else {
@@ -888,7 +870,7 @@ public:
         floatN ls=pl->loss(y, &cache);
         return ls;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         if (lossLayer=="") {
             cout << "Invalid configuration, no loss layer defined!" << endl;
             return y;
@@ -905,7 +887,7 @@ public:
             //grads.clear();
             Layer *pl=layerMap[cl];
             mlPop(cl,pcache,&cache);
-            dxn=pl->backward(dx0, &cache, &grads);
+            dxn=pl->backward(dx0, &cache, &grads, id);
             mlPush(cl,&grads,pgrads);
             vector<string> lyr=layerInputs[cl];
             if (lyr[0]=="input") {

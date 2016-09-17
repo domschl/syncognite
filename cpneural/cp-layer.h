@@ -428,11 +428,11 @@ public:
     t_cppl params;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache)  { MatrixN d(0,0); return d;}
-    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache)  { Tensor4 d(0,0,0,0); return d;}
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache)  { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads) { MatrixN d(0,0); return d;}
-    virtual Tensor4 backward(const Tensor4& dtL, t_cppl4* pcache, t_cppl4* pgrads) { Tensor4 d(0,0,0,0); return d;}
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
+    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id)  { Tensor4 d(0,0,0,0); return d;}
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    virtual Tensor4 backward(const Tensor4& dtL, t_cppl4* pcache, t_cppl4* pgrads, int id) { Tensor4 d(0,0,0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         /*for (int i=0; i<params.size(); i++) {
@@ -461,7 +461,7 @@ public:
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
     floatN test(const MatrixN& x, const MatrixN& y)  {
         setFlag("train",false);
-        MatrixN yt=forward(x, y, nullptr);
+        MatrixN yt=forward(x, y, nullptr, 0);
         if (yt.rows() != y.rows()) {
             cout << "test: incompatible row count!" << endl;
             return -1000.0;

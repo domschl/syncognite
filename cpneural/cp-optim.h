@@ -185,19 +185,11 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     t_cppl cache;
     t_cppl grads;
 
-    #ifdef USE_VIENNACL
-    //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id+1)));
-    MatrixN thread_id(1,1);
-    thread_id(0,0)=id+1;
-    cppl_set(&cache, "thread_id", new MatrixN(thread_id));
-    (*(cache["thread_id"]))(0,0)=id+1;
-    cout << "thread_cache:" << (*(cache["thread_id"]))(0,0) << endl;
-    #endif
     //cout << "Context start: " << id+1 << endl;
-    forward(xb, yb, &cache);
+    forward(xb, yb, &cache, id+1);
     //cout << "fw" << id+1 << endl;
     *ploss=loss(yb, &cache);
-    backward(yb, &cache, &grads);
+    backward(yb, &cache, &grads, id+1);
     //cout << "bw" << id+1 << endl;
     cppl_delete(&cache);
     //cout << "Context end: " << id+1 << endl;
