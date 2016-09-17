@@ -22,6 +22,7 @@ find_package(ViennaCL)
 find_package(OpenCL)
 find_package(CUDA)
 include_directories(${CUDA_INCLUDE_DIR})
+include_directories("/opt/cuda/include")
 
 add_subdirectory (cpneural)
 include_directories("cpneural")

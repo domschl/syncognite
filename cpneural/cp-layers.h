@@ -6,8 +6,9 @@
 #ifdef USE_VIENNACL
 //#pragma message("USE_VIENNACL is defined!")
 #define VIENNACL_HAVE_EIGEN
-//#define VIENNACL_WITH_OPENCL
-#define VIENNACL_WITH_CUDA
+#define VIENNACL_WITH_OPENCL
+//#include </opt/cuda/include/cuda.h>
+//#define VIENNACL_WITH_CUDA
 #endif
 
 #include "cp-math.h"
@@ -77,7 +78,7 @@ public:
         int algo=0;
         #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
-        if (algo==0) {
+        if (algo==0 || id>4) {
             /*
             y = x * (*params["W"]);
             RowVectorN b = *params["b"];
@@ -118,7 +119,7 @@ public:
         MatrixN dx(x.rows(),x.cols());
         MatrixN W(*params["W"]);
         MatrixN dW(W.rows(),W.cols());
-        if (algo==0) {
+        if (algo==0 || id>4) {
             dx = dchain * (*params["W"]).transpose(); // dx
             cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
