@@ -45,9 +45,11 @@ public:
         lr=cp.getPar("learning_rate", (floatN)1e-2);
         mm=cp.getPar("momentum",(floatN)0.9);
         string cname=var+"-velocity";
-        MatrixN z=MatrixN(x);
-        z.setZero();
-        cppl_update(pocache, cname, &z);
+        if (pocache->find("cname_v")==pocache->end()) {
+            MatrixN z=MatrixN(x);
+            z.setZero();
+            cppl_update(pocache, cname, &z);
+        }
         MatrixN dxw;
         MatrixN v;
         v=*(*pocache)[cname];
@@ -77,9 +79,11 @@ public:
         dc=cp.getPar("decay_rate", (floatN)0.99);
         ep=cp.getPar("epsilon", (floatN)1e-8);
         string cname=var+"-movavr";
-        MatrixN z=MatrixN(x);
-        z.setZero();
-        cppl_update(pocache, cname, &z);
+        if (pocache->find("cname")==pocache->end()) {
+            MatrixN z=MatrixN(x);
+            z.setZero();
+            cppl_update(pocache, cname, &z);
+        }
         *(*pocache)[cname]=dc * (*(*pocache)[cname]) + ((1.0 - dc) * (dx.array() * dx.array())).matrix();
         MatrixN dv=((*(*pocache)[cname]).array().sqrt() + ep).matrix();
         for (int i=0; i<dv.size(); i++) {
@@ -111,15 +115,23 @@ public:
         b2=cp.getPar("beta2", (floatN)0.999);
         ep=cp.getPar("epsilon", (floatN)1e-8);
         string cname_m=var+"-m";
-        MatrixN z=MatrixN(x);
-        z.setZero();
-        cppl_update(pocache, cname_m, &z);    // XXX the whole caching is NOT working! Everything starts always from scratch!
-        string cname_v=var+"-v";              // Implementation is defect!
-        cppl_update(pocache, cname_v, &z);
-        MatrixN z1(1,1);
-        z1.setZero();
+        if (pocache->find("cname_m")==pocache->end()) {
+            MatrixN z=MatrixN(x);
+            z.setZero();
+            cppl_update(pocache, cname_m, &z);
+        }
+        string cname_v=var+"-v";
+        if (pocache->find("cname_v")==pocache->end()) {
+            MatrixN z=MatrixN(x);
+            z.setZero();
+            cppl_update(pocache, cname_v, &z);
+        }
         string cname_t=var+"-t";
-        cppl_update(pocache, cname_t, &z1);
+        if (pocache->find("cname_t")==pocache->end()) {
+            MatrixN z1(1,1);
+            z1.setZero();
+            cppl_update(pocache, cname_t, &z1);
+        }
         floatN t=(*(*pocache)[cname_t])(0,0) + 1.0;
         (*(*pocache)[cname_t])(0,0)=t;
         *(*pocache)[cname_m]=b1 * (*(*pocache)[cname_m]) + (1.0 -b1) * dx;

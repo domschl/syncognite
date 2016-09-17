@@ -20,8 +20,8 @@ find_package(Threads REQUIRED)
 
 find_package(ViennaCL)
 find_package(OpenCL)
-#find_package(CUDA)
-#include_directories(${CUDA_INCLUDE_DIR})
+find_package(CUDA)
+include_directories(${CUDA_INCLUDE_DIR})
 
 add_subdirectory (cpneural)
 include_directories("cpneural")

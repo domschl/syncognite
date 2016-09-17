@@ -265,16 +265,21 @@ int main(int argc, char *argv[]) {
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",40);
     cpo.setPar("batch_size",400);
-    cpo.setPar("threads",1);
+    int numThreads=8;
+    cpo.setPar("threads",numThreads);
     cpo.setPar("regularization", (floatN)0.0); //0.0000001);
     floatN final_err;
+
+    #ifdef USE_VIENNACL
+    threadViennaClContextinit(numThreads);
+    #endif
 
     #ifdef USE_2LN
     cpo.setPar("learning_rate", (floatN)1e-2);
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
     cpo.setPar("regularization", (floatN)1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);

@@ -6,9 +6,9 @@
 #ifdef USE_VIENNACL
 //#pragma message("USE_VIENNACL is defined!")
 #define VIENNACL_HAVE_EIGEN
-#define VIENNACL_WITH_OPENCL
+//#define VIENNACL_WITH_OPENCL
+#define VIENNACL_WITH_CUDA
 #endif
-//#define VIENNACL_WITH_CUDA
 
 #include "cp-math.h"
 #include "cp-layer.h"
