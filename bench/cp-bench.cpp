@@ -59,9 +59,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
         */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->forward(x,&cache,10);
+            player->forward(x,&cache,0);
         } else {
-            player->forward(x,y,&cache,10);
+            player->forward(x,y,&cache,0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tf) tf=tcus;
@@ -72,9 +72,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->backward(x,&cache, &grads, 10);
+            player->backward(x,&cache, &grads, 0);
         } else {
-            player->backward(y,&cache, &grads, 10);
+            player->backward(y,&cache, &grads, 0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tb) tb=tcus;
