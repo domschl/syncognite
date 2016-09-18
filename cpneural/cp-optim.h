@@ -218,8 +218,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
+        int th=0;
+        //std::list<std::future<t_cppl>> gradsFut;
+        std::vector<std::future<t_cppl>> gradsFut;
         for (int b=0; b<chunks; b++) {
-            std::list<std::future<t_cppl>> gradsFut;
             int bi=b%nt;
             int y0,dy;
             y0=b*bs;
@@ -258,37 +260,58 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     }
                 }
             }
+            ++th;
+
+            //cout << "<{" << b << "}c" << th << ">"; std::flush(cout);
+
             gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
+            //gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
+            // gradsFut.push_back(f);
+            //gradsFut[bi]=std::async([this, xb, yb, &l, bi]{ workerThread(xb, yb, &l, bi); });
+            //=f;
+
+            //cout << "<r" << th << "/" << gradsFut.size() << ">"; std::flush(cout);
+
             //cout << endl;
 
-            t_cppl sgrad;
-            bool first=true;
-            for (std::list<std::future<t_cppl>>::iterator it=gradsFut.begin(); it != gradsFut.end(); ++it) {
-                t_cppl grd = it->get();
-                if (first) {
-                    for (auto g : grd) {
-                        sgrad[g.first] = new MatrixN(*(g.second));
-                        first=false;
-                    }
-                } else {
-                    for (auto g : grd) {
-                        *(sgrad[g.first]) += *(g.second);
-                    }
-                }
-                cppl_delete(&grd);
-            }
-            // cout << "db2:" << *(sgrad["af2-b"]) << endl;
-            if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
-                for (auto gi : sgrad) {
-                    *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
-                }
-            }
-            update(popti, &sgrad, "", &optiCache);
-            cppl_delete(&sgrad);
-            gradsFut.clear();
-            if (verbose && b%50==0) cout << "At: " << (floatN)b/(floatN)(chunks*nt)*100.0 << "\% of epoch, loss: " << l << endl;
-        }
+            if (bi==nt-1 || b==chunks-1) {
+                t_cppl sgrad;
+                bool first=true;
+                //cout << "gradFut size on get-loop: " << gradsFut.size() << endl;
+                for (auto &it : gradsFut) {
+                    //for (std::list<std::future<t_cppl>>::iterator it=gradsFut.begin(); it != gradsFut.end(); ++it)
 
+                    //cout << "<w" << th << ">"; std::flush(cout);
+
+                    --th;
+                    t_cppl grd = it.get();
+                    if (first) {
+                        for (auto g : grd) {
+                            sgrad[g.first] = new MatrixN(*(g.second));
+                            first=false;
+                        }
+                    } else {
+                        for (auto g : grd) {
+                            *(sgrad[g.first]) += *(g.second);
+                        }
+                    }
+                    cppl_delete(&grd);
+                }
+//                cout << endl;
+                // cout << "db2:" << *(sgrad["af2-b"]) << endl;
+                if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
+                    for (auto gi : sgrad) {
+                        *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
+                    }
+                }
+                update(popti, &sgrad, "", &optiCache);
+                cppl_delete(&sgrad);
+                gradsFut.clear();
+                if (verbose && b%50==0) cout << "At: " << (floatN)b/(floatN)(chunks*nt)*100.0 << "\% of epoch, loss: " << l << endl;
+                //cout << "UD" << endl;
+            }
+        }
+        //cout << "ED" << endl;
 
         //floatN errtra=test(x,y);
         floatN errval=test(xv,yv);

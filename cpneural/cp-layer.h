@@ -60,7 +60,10 @@ using Tensor4=Eigen::Tensor<floatN, 4>;
 
 
 #ifdef USE_VIENNACL
-#include <viennacl/matrix.hpp>
+#include "viennacl/scalar.hpp"
+#include "viennacl/vector.hpp"
+#include "viennacl/matrix.hpp"
+#include "viennacl/linalg/prod.hpp"
 #endif
 
 #ifdef USE_VIENNACL
@@ -364,9 +367,11 @@ public:
 int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
 int cpNumCpuThreads=1;
+#define MAX_GPUTHREADS 64
 
 bool threadViennaClContextinit(unsigned int numThreads) {
     #ifdef USE_VIENNACL
+    if (numThreads > MAX_GPUTHREADS) numThreads=MAX_GPUTHREADS;
     if (viennacl::ocl::get_platforms().size() == 0) {
         std::cerr << "Error: No ViennaClplatform found!" << std::endl;
         return false;
@@ -377,7 +382,7 @@ bool threadViennaClContextinit(unsigned int numThreads) {
     cout << nrDevs << " devices found." << endl;
     for (unsigned int i=0; i<numThreads; i++) {
         viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
-        cout << "Context " << i << " on: " << viennacl::ocl::get_context(static_cast<long>(i)).devices()[0].name() << endl;
+        cout << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
     }
     // Set context to 0 for main program, 1-numThreads for threads
     //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));

@@ -3,6 +3,7 @@
 
 #include "cp-math.h"
 #include "cp-layer.h"
+#include "cp-timer.h"
 
 
 class Nonlinearities {
@@ -69,7 +70,7 @@ public:
         #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
         if (algo==0 || id>=numGpuThreads) {
-            cout << "C" << id << " ";
+            // cout << "C" << id << " ";
             /*
             y = x * (*params["W"]);
             RowVectorN b = *params["b"];
@@ -78,7 +79,7 @@ public:
             y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         } else {
             #ifdef USE_VIENNACL
-            cout << "G" << id << "/" << numGpuThreads << " ";
+            // cout << "G" << id << "/" << numGpuThreads << " ";
             MatrixN x1(x.rows(),x.cols()+1);
             MatrixN xp1(x.rows(),1);
             xp1.setOnes();
@@ -117,7 +118,8 @@ public:
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
             #ifdef USE_VIENNACL
-            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
+            Timer t;
+            viennacl::context ctx(viennacl::ocl::get_context(id)); //static_cast<long>(id)
             viennacl::matrix<float>vi_Wt(W.cols(), W.rows(),ctx);
             viennacl::matrix<float>vi_dW(W.rows(), W.cols(),ctx);
             viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols(), ctx);
