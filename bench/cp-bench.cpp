@@ -59,9 +59,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
         */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->forward(x,&cache,0);
+            player->forward(x,&cache,10);
         } else {
-            player->forward(x,y,&cache,0);
+            player->forward(x,y,&cache,10);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tf) tf=tcus;
@@ -72,9 +72,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->backward(x,&cache, &grads, 0);
+            player->backward(x,&cache, &grads, 10);
         } else {
-            player->backward(y,&cache, &grads, 0);
+            player->backward(y,&cache, &grads, 10);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tb) tb=tcus;
@@ -103,9 +103,16 @@ int doBench() {
     int M=1000;
     int reps=0;
 
-    for (int mrep=0; mrep<2; mrep++) {
-        for (auto it : _syncogniteLayerFactory.mapl) {
+    //Eigen::setNbThreads(0);
+    for (int mrep=0; mrep<10; mrep++) {
+    /*    if (mrep > 0) {
+            cout << "Eigen thread count: " << mrep << endl;
+            Eigen::setNbThreads(mrep);
+        }
+*/        for (auto it : _syncogniteLayerFactory.mapl) {
             ++nr;
+            //if (mrep > 0 && it.first!="Affine") continue;
+
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             CpParams cp;
 
@@ -134,9 +141,10 @@ int doBench() {
 }
 
 int main() {
-    Eigen::initParallel();
-    registerLayers();
+    cpInitCompute();
 
+
+    registerLayers();
     int ret=0;
     ret=doBench();
     return ret;

@@ -141,23 +141,7 @@ bool  getMnistData(string filepath) {
          cout << it.first << " " << shape(*(it.second)) << endl;
      }
 
-
-     /*
-     vector<int> ins{0,4,16,25,108, 256,777};
-     for (auto in : ins) {
-         cout << "-------------------------" << endl;
-         cout << "Index: " << in << endl;
-         for (int cy=0; cy<28; cy++) {
-             for (int cx=0; cx<28; cx++) {
-                 floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
-                 if (pt<0.5) cout << " ";
-                 else cout << "*";
-             }
-             cout << endl;
-         }
-         cout << (*cpMnistData["t_test"])(in,0) << endl;
-     }
-     */
+     cpInitCompute();
 
 //#define USE_2LN 1
 #ifdef USE_2LN
@@ -241,15 +225,10 @@ bool  getMnistData(string filepath) {
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",200);
-    cpo.setPar("batch_size",400);
-    int numThreads=2;
-    cpo.setPar("threads",numThreads);
+    cpo.setPar("batch_size",1000);
     cpo.setPar("regularization", (floatN)0.0); //0.00001);
     floatN final_err;
 
-    #ifdef USE_VIENNACL
-    threadViennaClContextinit(numThreads);
-    #endif
 #ifdef USE_2LN
     cpo.setPar("learning_rate", (floatN)1e-3);
     cpo.setPar("regularization", 0.0);
@@ -268,3 +247,20 @@ bool  getMnistData(string filepath) {
      }
      return 0;
  }
+
+ /*
+ vector<int> ins{0,4,16,25,108, 256,777};
+ for (auto in : ins) {
+     cout << "-------------------------" << endl;
+     cout << "Index: " << in << endl;
+     for (int cy=0; cy<28; cy++) {
+         for (int cx=0; cx<28; cx++) {
+             floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
+             if (pt<0.5) cout << " ";
+             else cout << "*";
+         }
+         cout << endl;
+     }
+     cout << (*cpMnistData["t_test"])(in,0) << endl;
+ }
+ */

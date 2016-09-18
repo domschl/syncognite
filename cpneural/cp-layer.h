@@ -2,6 +2,7 @@
 #define _CP_LAYER_H
 
 #include <iostream>
+#include <fstream>
 #include <cctype>
 #include <string>
 #include <algorithm>
@@ -45,7 +46,33 @@ using floatN=float;
 
 using Tensor4=Eigen::Tensor<floatN, 4>;
 
-//#define NULL_MAT (MatrixN(0,0))
+#define USE_VIENNACL
+#ifdef USE_VIENNACL
+//#pragma message("USE_VIENNACL is defined!")
+#define VIENNACL_HAVE_EIGEN
+#define VIENNACL_WITH_OPENCL
+//#include </opt/cuda/include/cuda.h>
+//#define VIENNACL_WITH_CUDA
+#endif
+
+#include "cp-math.h"
+#include "cp-layer.h"
+
+
+#ifdef USE_VIENNACL
+#include <viennacl/matrix.hpp>
+#endif
+
+#ifdef USE_VIENNACL
+#include "viennacl/ocl/device.hpp"
+#include "viennacl/ocl/platform.hpp"
+#include "viennacl/ocl/backend.hpp"
+#endif
+
+// for cpInitCompute():
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 template <typename T>
 using cp_t_params = map<string, T>;
@@ -334,6 +361,90 @@ public:
     }
 };
 
+int cpNumGpuThreads=1;
+int cpNumEigenThreads=1;
+int cpNumPoolThreads=1;
+
+bool threadViennaClContextinit(unsigned int numThreads) {
+    #ifdef USE_VIENNACL
+    if (viennacl::ocl::get_platforms().size() == 0) {
+        std::cerr << "Error: No ViennaClplatform found!" << std::endl;
+        return false;
+    }
+    viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
+    std::vector<viennacl::ocl::device> const & devices = pf.devices();
+    int nrDevs = pf.devices().size();
+    cout << nrDevs << " devices found." << endl;
+    for (unsigned int i=0; i<numThreads; i++) {
+        viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
+        cout << "Context " << i << " on: " << viennacl::ocl::get_context(static_cast<long>(i)).devices()[0].name() << endl;
+    }
+    // Set context to 0 for main program, 1-numThreads for threads
+    //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
+    //cout << "Contexts created, got context 0 for main program." << endl;
+    #endif
+    return true;
+}
+
+int cpGetNumGpuThreads() {
+    return cpNumGpuThreads;
+}
+int cpGetNumEigenThreads() {
+    return cpNumEigenThreads;
+}
+int cpGetNumPoolThreads() {
+    return cpNumPoolThreads;
+}
+
+bool cpInitCompute(CpParams* poptions=nullptr) {
+    CpParams cp;
+    struct passwd *pw = getpwuid(getuid());
+    const char *homedir = pw->pw_dir;
+    string conffile = string(homedir) + "/.syncognite";
+    std::ifstream cfile(conffile);
+    if (cfile.is_open()) {
+        string line;
+        string conf;
+        while (std::getline(cfile,line)) {
+            conf+=line;
+        }
+        cp.setString(conf);
+        cfile.close();
+    } else {
+        cout << "New configureation, '" << conffile << "' not found." << endl;
+    }
+    // omp_set_num_threads(n)
+    // Eigen::setNbThreads(n);
+    // n=Eigen::nbThreads();
+// myfile << "Writing this to a file.\n";
+
+
+    cpNumGpuThreads=cp.getPar("NumGpuThreads", 1);
+    cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
+    cpNumPoolThreads=cp.getPar("NumPoolThreads", 1);
+    if (poptions!=nullptr) {
+        *poptions=cp;
+    }
+
+    Eigen::initParallel();
+    Eigen::setNbThreads(cpNumEigenThreads);
+
+    #ifdef USE_VIENNACL
+    threadViennaClContextinit(cpNumGpuThreads);
+    #endif
+
+    std::ofstream c2file(conffile);
+    if (c2file.is_open()) {
+        string line;
+        line=cp.getString();
+        c2file << line << endl;
+        c2file.close();
+    }
+    cout << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
+    cout << "ThreadPool is using: " << cpNumPoolThreads << " threads." << endl;
+    cout << "GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
+    return true;
+}
 
 class Optimizer {
 public:

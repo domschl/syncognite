@@ -1,23 +1,9 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
-
-#define USE_VIENNACL
-#ifdef USE_VIENNACL
-//#pragma message("USE_VIENNACL is defined!")
-#define VIENNACL_HAVE_EIGEN
-#define VIENNACL_WITH_OPENCL
-//#include </opt/cuda/include/cuda.h>
-//#define VIENNACL_WITH_CUDA
-#endif
-
 #include "cp-math.h"
 #include "cp-layer.h"
 
-
-#ifdef USE_VIENNACL
-#include <viennacl/matrix.hpp>
-#endif
 
 class Nonlinearities {
 public:
@@ -37,6 +23,7 @@ public:
 
 class Affine : public Layer {
 private:
+    int numGpuThreads;
     void setup(const CpParams& cx) {
         layerName="Affine";
         topoParams=2;
@@ -47,6 +34,7 @@ private:
         //cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
         cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
         cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
+        numGpuThreads=cpGetNumGpuThreads();
 
         params["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
@@ -78,7 +66,7 @@ public:
         int algo=0;
         #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
-        if (algo==0 || id>4) {
+        if (algo==0 || id>=numGpuThreads) {
             /*
             y = x * (*params["W"]);
             RowVectorN b = *params["b"];
@@ -119,7 +107,7 @@ public:
         MatrixN dx(x.rows(),x.cols());
         MatrixN W(*params["W"]);
         MatrixN dW(W.rows(),W.cols());
-        if (algo==0 || id>4) {
+        if (algo==0 || id>=numGpuThreads) {
             dx = dchain * (*params["W"]).transpose(); // dx
             cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db

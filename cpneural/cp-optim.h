@@ -8,11 +8,7 @@
 #include "cp-timer.h"
 #include "cp-layers.h"
 
-#ifdef USE_VIENNACL
-#include "viennacl/ocl/device.hpp"
-#include "viennacl/ocl/platform.hpp"
-#include "viennacl/ocl/backend.hpp"
-#endif
+
 
 class Sdg : public Optimizer {
     floatN lr;
@@ -173,39 +169,18 @@ if (timeit) {
 
 */
 
-bool threadViennaClContextinit(unsigned int numThreads) {
-    #ifdef USE_VIENNACL
-    if (viennacl::ocl::get_platforms().size() == 0) {
-        std::cerr << "Error: No ViennaClplatform found!" << std::endl;
-        return false;
-    }
-    viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
-    std::vector<viennacl::ocl::device> const & devices = pf.devices();
-    int nrDevs = pf.devices().size();
-    cout << nrDevs << " devices found." << endl;
-    for (unsigned int i=0; i<numThreads+1; i++) {
-        viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
-        cout << "Context " << i << " on: " << viennacl::ocl::get_context(static_cast<long>(i)).devices()[0].name() << endl;
-    }
-    // Set context to 0 for main program, 1-numThreads for threads
-    viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
-    cout << "Contexts created, got context 0 for main program." << endl;
-    #endif
-    return true;
-}
-
 t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
     t_cppl cache;
     t_cppl grads;
 
-    //cout << "Context start: " << id+1 << endl;
-    forward(xb, yb, &cache, id+1);
-    //cout << "fw" << id+1 << endl;
+    //cout << "Context start: " << id << endl;
+    forward(xb, yb, &cache, id);
+    //cout << "fw" << id << endl;
     *ploss=loss(yb, &cache);
-    backward(yb, &cache, &grads, id+1);
-    //cout << "bw" << id+1 << endl;
+    backward(yb, &cache, &grads, id);
+    //cout << "bw" << id << endl;
     cppl_delete(&cache);
-    //cout << "Context end: " << id+1 << endl;
+    //cout << "Context end: " << id << endl;
     return grads;
 }
 
@@ -218,7 +193,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
 
     int ep=popti->cp.getPar("epochs", (int)1); //Default only!
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
-    int nt=popti->cp.getPar("threads",(int)1); // Default only!
+    int nt=cpGetNumPoolThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
