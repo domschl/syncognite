@@ -24,6 +24,7 @@ public:
 class Affine : public Layer {
 private:
     int numGpuThreads;
+    int numCpuThreads;
     void setup(const CpParams& cx) {
         layerName="Affine";
         topoParams=2;
@@ -35,6 +36,7 @@ private:
         cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
         cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
         numGpuThreads=cpGetNumGpuThreads();
+        numCpuThreads=cpGetNumCpuThreads();
 
         params["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
@@ -67,6 +69,7 @@ public:
         #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
         if (algo==0 || id>=numGpuThreads) {
+            cout << "C" << id << " ";
             /*
             y = x * (*params["W"]);
             RowVectorN b = *params["b"];
@@ -75,6 +78,7 @@ public:
             y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         } else {
             #ifdef USE_VIENNACL
+            cout << "G" << id << "/" << numGpuThreads << " ";
             MatrixN x1(x.rows(),x.cols()+1);
             MatrixN xp1(x.rows(),1);
             xp1.setOnes();

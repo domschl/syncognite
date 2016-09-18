@@ -363,7 +363,7 @@ public:
 
 int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
-int cpNumPoolThreads=1;
+int cpNumCpuThreads=1;
 
 bool threadViennaClContextinit(unsigned int numThreads) {
     #ifdef USE_VIENNACL
@@ -392,8 +392,8 @@ int cpGetNumGpuThreads() {
 int cpGetNumEigenThreads() {
     return cpNumEigenThreads;
 }
-int cpGetNumPoolThreads() {
-    return cpNumPoolThreads;
+int cpGetNumCpuThreads() {
+    return cpNumCpuThreads;
 }
 
 bool cpInitCompute(CpParams* poptions=nullptr) {
@@ -421,7 +421,7 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
 
     cpNumGpuThreads=cp.getPar("NumGpuThreads", 1);
     cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
-    cpNumPoolThreads=cp.getPar("NumPoolThreads", 1);
+    cpNumCpuThreads=cp.getPar("NumCpuThreads", 1);
     if (poptions!=nullptr) {
         *poptions=cp;
     }
@@ -441,7 +441,7 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
         c2file.close();
     }
     cout << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
-    cout << "ThreadPool is using: " << cpNumPoolThreads << " threads." << endl;
+    cout << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
     cout << "GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
     return true;
 }

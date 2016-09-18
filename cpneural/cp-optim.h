@@ -193,7 +193,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
 
     int ep=popti->cp.getPar("epochs", (int)1); //Default only!
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
-    int nt=cpGetNumPoolThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
+    int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
@@ -205,61 +205,60 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     for (unsigned int i=0; i<shfl.size(); i++) shfl[i]=i;
 
     floatN l=0.0;
-    bs=bs/nt;
+    //bs=bs/nt;
     lr=lr/nt;
     Timer tw;
     popti->cp.setPar("learning_rate", lr); // adpated to thread-count XXX here?
-    int ebs=bs*nt;
-    int chunks=(x.rows()+ebs-1) / ebs;
-    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size/threads: " << bs;
-    cout << ", threads: " << nt << " (bz*ch*thr): " << chunks*bs*nt << endl;
+    //int ebs=bs*nt;
+    int chunks=(x.rows()+bs-1) / bs;
+    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+    cout << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
     for (int e=0; e<ep; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
-        for (int b=0; b<chunks*nt; b += nt) {
+        for (int b=0; b<chunks; b++) {
             std::list<std::future<t_cppl>> gradsFut;
-            for (int bi=0; bi<nt; bi++) {
-                int y0,dy;
-                y0=b*bs+bi*bs;
-                if (y0>=x.rows()) continue;
-                if (y0+bs > x.rows()) dy=x.rows()-y0-1;
-                else dy=bs;
-                if (y0+dy>x.rows() || dy<=0) {
-                    cout << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
-                }
-                //cout << "[" << y0 << "," << y0+dy-1 << "] ";
-
-                MatrixN xb(dy,x.cols());
-                MatrixN yb(dy,y.cols());
-                if (bShuffle) {
-                    for (int i=y0; i<y0+dy; i++) {
-                        int in=i-y0;
-                        for (int j=0; j<x.cols(); j++) {
-                            xb(in,j) = x(shfl[i],j);
-                        }
-                        for (int j=0; j<y.cols(); j++) {
-                            yb(in,j) = y(shfl[i],j);
-                        }
-                        if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
-                        else {
-                            ack[shfl[i]]++;
-                        }
-                    }
-
-                } else {
-                    xb=x.block(y0,0,dy,x.cols());
-                    yb=y.block(y0,0,dy,y.cols());
-                    for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
-                        if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
-                        else {
-                            ack[i]++;
-                        }
-                    }
-                }
-                gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
+            int bi=b%nt;
+            int y0,dy;
+            y0=b*bs;
+            if (y0>=x.rows()) continue;
+            if (y0+bs > x.rows()) dy=x.rows()-y0;
+            else dy=bs;
+            if (y0+dy>x.rows() || dy<=0) {
+                cout << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
             }
+            //cout << "[" << y0 << "," << y0+dy-1 << "] ";
+
+            MatrixN xb(dy,x.cols());
+            MatrixN yb(dy,y.cols());
+            if (bShuffle) {
+                for (int i=y0; i<y0+dy; i++) {
+                    int in=i-y0;
+                    for (int j=0; j<x.cols(); j++) {
+                        xb(in,j) = x(shfl[i],j);
+                    }
+                    for (int j=0; j<y.cols(); j++) {
+                        yb(in,j) = y(shfl[i],j);
+                    }
+                    if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
+                    else {
+                        ack[shfl[i]]++;
+                    }
+                }
+
+            } else {
+                xb=x.block(y0,0,dy,x.cols());
+                yb=y.block(y0,0,dy,y.cols());
+                for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
+                    if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
+                    else {
+                        ack[i]++;
+                    }
+                }
+            }
+            gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
             //cout << endl;
 
             t_cppl sgrad;
