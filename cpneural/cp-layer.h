@@ -20,7 +20,12 @@ using std::cout; using std::endl;
 using std::vector; using std::string; using std::map;
 
 //#define USE_DOUBLE
+#ifndef USE_DOUBLE
+#ifndef USE_FLOAT
+#pragma "Please define either USE_FLOAT or USE_DOUBLE"
 #define USE_FLOAT
+#endif
+#endif
 
 #ifdef USE_DOUBLE
 #ifdef USE_FLOAT
@@ -46,13 +51,18 @@ using floatN=float;
 
 using Tensor4=Eigen::Tensor<floatN, 4>;
 
-#define USE_VIENNACL
 #ifdef USE_VIENNACL
-//#pragma message("USE_VIENNACL is defined!")
 #define VIENNACL_HAVE_EIGEN
+#ifdef USE_OPENCL
 #define VIENNACL_WITH_OPENCL
-//#include </opt/cuda/include/cuda.h>
-//#define VIENNACL_WITH_CUDA
+#pragma info("Eigen is active with ViennaCl and OpenCL")
+#else
+#error "VIENNACL currently requires WITH_OPENCL Cmake option to be set."
+#endif
+#ifdef USE_CUDA
+#define VIENNACL_WITH_CUDA
+#pragma "CUDA and ViennaCL current does not work!"
+#endif
 #endif
 
 #include "cp-math.h"
@@ -403,6 +413,7 @@ int cpGetNumCpuThreads() {
 
 bool cpInitCompute(CpParams* poptions=nullptr) {
     CpParams cp;
+    string options="";
     struct passwd *pw = getpwuid(getuid());
     const char *homedir = pw->pw_dir;
     string conffile = string(homedir) + "/.syncognite";
@@ -435,8 +446,23 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
     Eigen::setNbThreads(cpNumEigenThreads);
 
     #ifdef USE_VIENNACL
+    options += "VIENNACL ";
     threadViennaClContextinit(cpNumGpuThreads);
+    #ifdef USE_OPENCL
+    options += "OPENCL ";
     #endif
+    #ifdef USE_CUDA
+    options += "CUDA ";
+    #endif
+    #endif
+
+    #ifdef USE_FLOAT
+    options+="FLOAT ";
+    #endif
+    #ifdef USE_OPENMP
+    options += "OPENMP ";
+    #endif
+
 
     std::ofstream c2file(conffile);
     if (c2file.is_open()) {
@@ -445,6 +471,7 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
         c2file << line << endl;
         c2file.close();
     }
+    cout << "Compile-time options: " << options << endl;
     cout << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
     cout << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
     cout << "GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;

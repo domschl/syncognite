@@ -104,7 +104,7 @@ int doBench() {
     int reps=0;
 
     //Eigen::setNbThreads(0);
-    for (int mrep=0; mrep<10; mrep++) {
+    for (int mrep=0; mrep<2; mrep++) {
     /*    if (mrep > 0) {
             cout << "Eigen thread count: " << mrep << endl;
             Eigen::setNbThreads(mrep);
