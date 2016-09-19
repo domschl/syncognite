@@ -4,6 +4,7 @@
 #include <future>
 #include <list>
 #include <set>
+#include <chrono>
 #include "cp-layer.h"
 #include "cp-timer.h"
 #include "cp-layers.h"
@@ -172,14 +173,22 @@ if (timeit) {
 t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
     t_cppl cache;
     t_cppl grads;
-
+    //Timer t,tw;
     //cout << "Context start: " << id << endl;
+    //t.startCpu();
+    //tw.startWall();
+    //auto start = std::chrono::steady_clock::now();
     forward(xb, yb, &cache, id);
     //cout << "fw" << id << endl;
     *ploss=loss(yb, &cache);
     backward(yb, &cache, &grads, id);
     //cout << "bw" << id << endl;
     cppl_delete(&cache);
+    //auto f=t.stopCpuMicro()/1000.0;
+    //auto fw=tw.stopWallMicro()/1000.0;
+    //auto end = std::chrono::steady_clock::now();
+    //auto diff = end - start;
+    //cout << "Thread: " << id << ", cpu-time: " << f << "ms, wall-time: " << fw << "ms, chrono-duration: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << endl;
     //cout << "Context end: " << id << endl;
     return grads;
 }

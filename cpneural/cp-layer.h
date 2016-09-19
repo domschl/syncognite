@@ -448,7 +448,7 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
         *poptions=cp;
     }
 
-    Eigen::initParallel();
+    // Eigen::initParallel();
     Eigen::setNbThreads(cpNumEigenThreads);
 
     #ifdef USE_VIENNACL
@@ -489,7 +489,7 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
     cout << "Compile-time options: " << options << endl;
     cout << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
     cout << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
-    cout << "GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
+    cout << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
     return true;
 }
 
