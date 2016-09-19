@@ -439,10 +439,10 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
     #ifdef USE_VIENNA
     cpNumGpuThreads=cp.getPar("NumGpuThreads", 1);
     #else
-    cpNumGpuThreads=std::thread::hardware_concurrency();
+    cpNumGpuThreads=0;
     #endif
     cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
-    int numHWThreads=sysconf(_SC_NPROCESSORS_ONLN);
+    int numHWThreads=std::thread::hardware_concurrency();
     cpNumCpuThreads=cp.getPar("NumCpuThreads", numHWThreads);
     if (poptions!=nullptr) {
         *poptions=cp;
