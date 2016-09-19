@@ -459,6 +459,15 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
     #ifdef USE_FLOAT
     options+="FLOAT ";
     #endif
+    #ifdef USE_AVX
+    options+="AVX ";
+    #endif
+    #ifdef USE_SSE2
+    options+="SSE2 ";
+    #endif
+    #ifdef USE_SSE4
+    options+="SSE4 ";
+    #endif
     #ifdef USE_OPENMP
     options += "OPENMP ";
     #endif
