@@ -553,26 +553,55 @@ cache = (x, w, b, conv_param)
 return out, cache
 */
 class Convolution : public Layer {
+    // N: number of data points
+    // C: color-depth
+    // H: height of input
+    // W: width of input;  input is N x (C x H x W)
+    // F: number of filter-kernels
+    // C: identical number of color-depth
+    // HH: filter-kernel height
+    // WW: filter-kernel depth;   kernel is F x (C x HH x WW)
+    // params:
+    //   stride
+    //   pad
+    // Output:
+    //   HO: output height
+    //   WO: output width
 private:
     int numGpuThreads;
     int numCpuThreads;
+    int C, H, W, F, HH, WW;
+    int HO, WO;
+    int pad, stride;
     void setup(const CpParams& cx) {
         layerName="Convolution";
         topoParams=4;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==4);
-        //cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
-        //cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
+        assert (topo.size()==6);
+        // TOPO: C, H, W, F, HH, WW
+        C=topo[0]; H=topo[1]; W=topo[2];
+        F=topo[3]; HH=topo[4]; WW=topo[5];
+        // W: F, C, HH, WW
+        cppl_set(&params4, "W", new Tensor4(F,C,HH,WW));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        //params["W"]->setRandom();
-        //floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
-        //*params["W"] *= xavier;
-        //params["b"]->setRandom();
-        //*params["b"] *= xavier;
+        pad = cp.getPar("pad", 0);
+        stride = cp.getPar("stride", 1);
+        if ((H + 2 * pad - HH) % stride != 0) {
+            cout << "H <-> stride does not fit!" << endl;
+        }
+        if ((W + 2 * pad - WW) % stride != 0) {
+            cout << "W <-> stride does not fit!" << endl;
+        }
+        HO = 1 + (H + 2 * pad - HH) / stride;
+        WO = 1 + (W + 2 * pad - WW) / stride;
+
+        params4["W"]->setRandom();
+        floatN xavier = 1.0/(floatN)(C+HH+WW);
+        *params["W"] *= xavier;
     }
 public:
     Convolution(const CpParams& cx) {
@@ -586,6 +615,7 @@ public:
     }
     virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new Tensor4(x));
+        // x: N, C, H, W;  w: F, C, HH, WW
         return x;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }

@@ -23,7 +23,7 @@ using std::vector; using std::string; using std::map;
 //#define USE_DOUBLE
 #ifndef USE_DOUBLE
 #ifndef USE_FLOAT
-#pragma "Please define either USE_FLOAT or USE_DOUBLE"
+#pragma message("Please define either USE_FLOAT or USE_DOUBLE")
 #define USE_FLOAT
 #endif
 #endif
@@ -56,13 +56,13 @@ using Tensor4=Eigen::Tensor<floatN, 4>;
 #define VIENNACL_HAVE_EIGEN
 #ifdef USE_OPENCL
 #define VIENNACL_WITH_OPENCL
-#pragma info("Eigen is active with ViennaCl and OpenCL")
+//#pragma message("Eigen is active with ViennaCl and OpenCL")
 #else
 #error "VIENNACL currently requires WITH_OPENCL Cmake option to be set."
 #endif
 #ifdef USE_CUDA
 #define VIENNACL_WITH_CUDA
-#pragma "CUDA and ViennaCL current does not work!"
+#error "CUDA option with ViennaCL currently does not work!"
 #endif
 #endif
 
@@ -614,6 +614,7 @@ public:
     int topoParams;
     CpParams cp;
     t_cppl params;
+    t_cppl4 params4;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
