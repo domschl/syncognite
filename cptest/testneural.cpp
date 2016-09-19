@@ -948,7 +948,7 @@ int doTests() {
 }
 
 int main() {
-    Eigen::initParallel();
+    cpInitCompute();
     int ret=0;
     ret=doTests();
     return ret;
