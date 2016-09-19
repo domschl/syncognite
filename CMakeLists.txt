@@ -22,7 +22,7 @@ option(WITH_VIENNACL "Use ViennaCL library" ON)
 option(WITH_CUDA "Use Nvidia CUDA libraries" OFF)
 option(WITH_OPENCL "Use OpenCL libraries" ON)
 
-if (DARWIN)
+if (APPLE)
     include_directories("/usr/local/include")
 endif()
 
