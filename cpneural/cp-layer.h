@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <sstream>
 #include <vector>
+#include <thread>
 #include <map>
 //#include <mutex>
 #include <Eigen/Dense>
@@ -438,10 +439,11 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
     #ifdef USE_VIENNA
     cpNumGpuThreads=cp.getPar("NumGpuThreads", 1);
     #else
-    cpNumGpuThreads=cp.getPar("NumGpuThreads", 0);
+    cpNumGpuThreads=std::thread::hardware_concurrency();
     #endif
     cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
-    cpNumCpuThreads=cp.getPar("NumCpuThreads", 1);
+    int numHWThreads=sysconf(_SC_NPROCESSORS_ONLN);
+    cpNumCpuThreads=cp.getPar("NumCpuThreads", numHWThreads);
     if (poptions!=nullptr) {
         *poptions=cp;
     }
