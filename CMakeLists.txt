@@ -90,8 +90,6 @@ if (WITH_VIENNACL)
             add_definitions(-DUSE_OPENCL)
             message(STATUS "Enabling OpenCL")
         endif()
-    else()
-        define_property(OpenCL_LIBRARY )
     endif()
 
     if (WITH_CUDA)
