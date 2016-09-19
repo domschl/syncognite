@@ -70,16 +70,16 @@ using Tensor4=Eigen::Tensor<floatN, 4>;
 
 
 #ifdef USE_VIENNACL
-#include "viennacl/scalar.hpp"
-#include "viennacl/vector.hpp"
-#include "viennacl/matrix.hpp"
-#include "viennacl/linalg/prod.hpp"
+#include <viennacl/scalar.hpp>
+#include <viennacl/vector.hpp>
+#include <viennacl/matrix.hpp>
+#include <viennacl/linalg/prod.hpp>
 #endif
 
 #ifdef USE_VIENNACL
-#include "viennacl/ocl/device.hpp"
-#include "viennacl/ocl/platform.hpp"
-#include "viennacl/ocl/backend.hpp"
+#include <viennacl/ocl/device.hpp>
+#include <viennacl/ocl/platform.hpp>
+#include <viennacl/ocl/backend.hpp>
 #endif
 
 // for cpInitCompute():
