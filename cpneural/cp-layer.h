@@ -436,8 +436,8 @@ bool cpInitCompute(CpParams* poptions=nullptr) {
 // myfile << "Writing this to a file.\n";
 
 
-    #ifdef USE_VIENNA
-    cpNumGpuThreads=cp.getPar("NumGpuThreads", 1);
+    #ifdef USE_VIENNACL
+    cpNumGpuThreads=cp.getPar("NumGpuThreads", 8);
     #else
     cpNumGpuThreads=0;
     #endif
