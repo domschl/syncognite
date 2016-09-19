@@ -475,6 +475,124 @@ public:
     }
 };
 
+// Convolution layer
+/*
+The input consists of N data points, each with C channels, height H and
+width W. We convolve each input with F different filters, where each filter
+spans all C channels and has height HH and width HH.
+
+Input:
+- x: Input data of shape (N, C, H, W)
+- w: Filter weights of shape (F, C, HH, WW)
+- b: Biases, of shape (F,)
+- conv_param: A dictionary with the following keys:
+  - 'stride': The number of pixels between adjacent receptive fields in the
+    horizontal and vertical directions.
+  - 'pad': The number of pixels that will be used to zero-pad the input.
+
+Returns a tuple of:
+- out: Output data, of shape (N, F, H', W') where H' and W' are given by
+  H' = 1 + (H + 2 * pad - HH) / stride
+  W' = 1 + (W + 2 * pad - WW) / stride
+- cache: (x, w, b, conv_param)
+"""
+out = None
+##########################################################################
+# TODO: Implement the convolutional forward pass.                        #
+# Hint: you can use the function np.pad for padding.                     #
+##########################################################################
+cache = (x, w, b, conv_param)
+N, C, H, W = x.shape
+F, C2, HH, WW = w.shape
+if C != C2:
+    print("Umm: C2!=C", C2, C)
+pad = conv_param['pad']
+stride = conv_param['stride']
+if (H + 2 * pad - HH) % stride != 0:
+    print("H <-> stride does not fit!")
+if (W + 2 * pad - WW) % stride != 0:
+    print("W <-> stride does not fit!")
+HO = 1 + (H + 2 * pad - HH) // stride
+WO = 1 + (W + 2 * pad - WW) // stride
+xo = np.zeros((N, F, HO, WO))
+
+xp = convpad(x, pad)
+sxp = xp.shape
+
+algo = 1
+if algo == 0:
+    for n in range(N):
+        xi = xp[n, :, :, :]
+        for y0 in range(0, sxp[2]-HH+1, stride):
+            for x0 in range(0, sxp[3]-WW+1, stride):
+                xic = xi[:, y0:y0+HH, x0:x0+WW]
+                for fi in range(F):
+                    fic = w[fi, :, :, :]
+                    pr = xic * fic
+                    xi0 = x0 // stride
+                    yi0 = y0 // stride
+                    xo[n, fi, yi0, xi0] = np.sum(pr) + b[fi]
+elif algo == 1:
+    for y0 in range(0, sxp[2]-HH+1, stride):
+        yi0 = y0 // stride
+        for x0 in range(0, sxp[3]-WW+1, stride):
+            xic = xp[:, :, y0:y0+HH, x0:x0+WW]
+            xi0 = x0 // stride
+            for fi in range(F):
+                wfi = w[fi, :, :, :]
+                prxw = xic * wfi
+                # print(prxw.shape, xic.shape, wfi.shape)
+                xo[:, fi, yi0, xi0] = np.sum(prxw, axis=(1, 2, 3)) + b[fi]
+
+# print("xo", xo.shape)
+out = xo
+##########################################################################
+#                             END OF YOUR CODE                           #
+##########################################################################
+cache = (x, w, b, conv_param)
+return out, cache
+*/
+class Convolution : public Layer {
+private:
+    int numGpuThreads;
+    int numCpuThreads;
+    void setup(const CpParams& cx) {
+        layerName="Convolution";
+        topoParams=4;
+        layerType=LayerType::LT_NORMAL;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo",vector<int>{0});
+        assert (topo.size()==4);
+        //cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
+        //cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
+        numGpuThreads=cpGetNumGpuThreads();
+        numCpuThreads=cpGetNumCpuThreads();
+
+        //params["W"]->setRandom();
+        //floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        //*params["W"] *= xavier;
+        //params["b"]->setRandom();
+        //*params["b"] *= xavier;
+    }
+public:
+    Convolution(const CpParams& cx) {
+        setup(cx);
+    }
+    Convolution(const string conf) {
+        setup(CpParams(conf));
+    }
+    ~Convolution() {
+        cppl_delete(&params);
+    }
+    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id=0) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new Tensor4(x));
+        return x;
+    //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
+    }
+    virtual Tensor4 backward(const Tensor4& dchain, t_cppl4* pcache, t_cppl4* pgrads, int id=0) override {
+        return dchain;
+    }
+};
 
 // Multiclass support vector machine Svm
 class Svm : public Layer {

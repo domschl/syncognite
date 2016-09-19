@@ -490,8 +490,29 @@ void cppl_delete(t_cppl *p) {
     p->erase(p->begin(),p->end());
 }
 
+void cppl_delete(t_cppl4 *p) {
+    int nr=0;
+    if (p->size()==0) {
+        return;
+    }
+    for (auto it : *p) {
+        if (it.second != nullptr) delete it.second;
+        (*p)[it.first]=nullptr;
+        ++nr;
+    }
+    p->erase(p->begin(),p->end());
+}
 
 void cppl_set(t_cppl *p, string key, MatrixN *val) {
+    auto it=p->find(key);
+    if (it != p->end()) {
+        cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
+        delete it->second;
+    }
+    (*p)[key]=val;
+}
+
+void cppl_set(t_cppl4 *p, string key, Tensor4 *val) {
     auto it=p->find(key);
     if (it != p->end()) {
         cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
@@ -503,6 +524,15 @@ void cppl_set(t_cppl *p, string key, MatrixN *val) {
 void cppl_update(t_cppl *p, string key, MatrixN *val) {
     if (p->find(key)==p->end()) {
         MatrixN *pm=new MatrixN(*val);
+        cppl_set(p, key, pm);
+    } else {
+        *((*p)[key])=*val;
+    }
+}
+
+void cppl_update(t_cppl4 *p, string key, Tensor4 *val) {
+    if (p->find(key)==p->end()) {
+        Tensor4 *pm=new Tensor4(*val);
         cppl_set(p, key, pm);
     } else {
         *((*p)[key])=*val;
