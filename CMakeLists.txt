@@ -22,6 +22,10 @@ option(WITH_VIENNACL "Use ViennaCL library" ON)
 option(WITH_CUDA "Use Nvidia CUDA libraries" OFF)
 option(WITH_OPENCL "Use OpenCL libraries" ON)
 
+if (DARWIN)
+    include_directories("/usr/local/include")
+endif()
+
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
@@ -61,7 +65,6 @@ if ((";${gcc_like_compilers};" MATCHES ";${CMAKE_CXX_COMPILER_ID};") AND
 endif()
 
 
-
 if (WITH_OPENMP)
     find_package(OpenMP)
     if (OPENMP_FOUND)
@@ -77,9 +80,6 @@ if (WITH_VIENNACL)
     if (ViennaCL_FOUND)
         add_definitions(-DUSE_VIENNACL)
         message(STATUS "Enabling ViennaCL")
-        if (DARWIN)
-            include_directories("/usr/local/include")
-        endif()
     endif()
 
     if (WITH_OPENCL)
