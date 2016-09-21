@@ -12,7 +12,6 @@
 #include <map>
 //#include <mutex>
 #include <Eigen/Dense>
-#include <unsupported/Eigen/CXX11/Tensor>
 
 #include "cp-math.h"
 #include "cp-util.h"
@@ -51,7 +50,6 @@ using floatN=float;
 #define CP_DEFAULT_NUM_EPS ((float)1.e-3)
 #endif
 
-using Tensor4=Eigen::Tensor<floatN, 4>;
 using CpParams=ParamParser<floatN>;
 
 #ifdef USE_VIENNACL
@@ -93,7 +91,6 @@ using CpParams=ParamParser<floatN>;
 
 //using t_cppl = cp_t_params<MatrixN *>;
 typedef t_param_parser<MatrixN *> t_cppl;
-typedef t_param_parser<Tensor4 *> t_cppl4;
 
 vector<unsigned int> shape(const MatrixN& m) {
     vector<unsigned int> s(2);
@@ -293,29 +290,7 @@ void cppl_delete(t_cppl *p) {
     p->erase(p->begin(),p->end());
 }
 
-void cppl_delete(t_cppl4 *p) {
-    int nr=0;
-    if (p->size()==0) {
-        return;
-    }
-    for (auto it : *p) {
-        if (it.second != nullptr) delete it.second;
-        (*p)[it.first]=nullptr;
-        ++nr;
-    }
-    p->erase(p->begin(),p->end());
-}
-
 void cppl_set(t_cppl *p, string key, MatrixN *val) {
-    auto it=p->find(key);
-    if (it != p->end()) {
-        cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
-        delete it->second;
-    }
-    (*p)[key]=val;
-}
-
-void cppl_set(t_cppl4 *p, string key, Tensor4 *val) {
     auto it=p->find(key);
     if (it != p->end()) {
         cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
@@ -327,15 +302,6 @@ void cppl_set(t_cppl4 *p, string key, Tensor4 *val) {
 void cppl_update(t_cppl *p, string key, MatrixN *val) {
     if (p->find(key)==p->end()) {
         MatrixN *pm=new MatrixN(*val);
-        cppl_set(p, key, pm);
-    } else {
-        *((*p)[key])=*val;
-    }
-}
-
-void cppl_update(t_cppl4 *p, string key, Tensor4 *val) {
-    if (p->find(key)==p->end()) {
-        Tensor4 *pm=new Tensor4(*val);
         cppl_set(p, key, pm);
     } else {
         *((*p)[key])=*val;
@@ -375,14 +341,11 @@ public:
     int topoParams;
     CpParams cp;
     t_cppl params;
-    t_cppl4 params4;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
-    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id)  { Tensor4 d(0,0,0,0); return d;}
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
-    virtual Tensor4 backward(const Tensor4& dtL, t_cppl4* pcache, t_cppl4* pgrads, int id) { Tensor4 d(0,0,0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         /*for (int i=0; i<params.size(); i++) {

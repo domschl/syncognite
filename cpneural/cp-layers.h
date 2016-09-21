@@ -593,7 +593,7 @@ private:
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
         // W: F, C, HH, WW
-        cppl_set(&params4, "W", new Tensor4(F,C,HH,WW));
+        cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -608,9 +608,9 @@ private:
         HO = 1 + (H + 2 * pad - HH) / stride;
         WO = 1 + (W + 2 * pad - WW) / stride;
 
-        params4["W"]->setRandom();
+        params["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(C+HH+WW);
-        *params4["W"] = *params4["W"] * xavier;
+        *params["W"] = *params["W"] * xavier;
     }
 public:
     Convolution(const CpParams& cx) {
@@ -620,27 +620,27 @@ public:
         setup(CpParams(conf));
     }
     ~Convolution() {
-        cppl_delete(&params4);
+        cppl_delete(&params);
     }
-    MatrixN im2col(Tensor4 x) {
+    MatrixN im2col(MatrixN x) {
         MatrixN x2c;
         return x2c;
     }
-    Tensor4 col2im(MatrixN x2c) {
-        Tensor4 x;
+    MatrixN col2im(MatrixN x2c) {
+        MatrixN x;
         return x;
     }
-    virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id=0) override {
-        if (pcache!=nullptr) cppl_set(pcache, "x", new Tensor4(x));
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         // x: N, C, H, W;  w: F, C, HH, WW
         MatrixN x2c=im2col(x);
-        MatrixN w2c=im2col(*params4["W"]);
+        MatrixN w2c=im2col(*params["W"]);
         MatrixN y2c=x2c * w2c;
-        Tensor4 y=col2im(y2c);
+        MatrixN y=col2im(y2c);
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
-    virtual Tensor4 backward(const Tensor4& dchain, t_cppl4* pcache, t_cppl4* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         return dchain;
     }
 };
