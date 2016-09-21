@@ -517,6 +517,15 @@ WO = 1 + (W + 2 * pad - WW) // stride
 xo = np.zeros((N, F, HO, WO))
 
 xp = convpad(x, pad)
+                    def convpad(a, p):
+                        sc = a.shape[:-1] + (p,)
+                        cp = np.zeros(sc)
+                        o1 = np.concatenate((cp, a, cp), axis=-1)
+                        sr = o1.shape[:-2] + (p,) + (o1.shape[-1],)
+                        rp = np.zeros(sr)
+                        o2 = np.concatenate((rp, o1, rp), axis=-2)
+                        return o2
+
 sxp = xp.shape
 
 algo = 1
@@ -601,7 +610,7 @@ private:
 
         params4["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(C+HH+WW);
-        *params["W"] *= xavier;
+        *params4["W"] = *params4["W"] * xavier;
     }
 public:
     Convolution(const CpParams& cx) {
@@ -611,12 +620,24 @@ public:
         setup(CpParams(conf));
     }
     ~Convolution() {
-        cppl_delete(&params);
+        cppl_delete(&params4);
+    }
+    MatrixN im2col(Tensor4 x) {
+        MatrixN x2c;
+        return x2c;
+    }
+    Tensor4 col2im(MatrixN x2c) {
+        Tensor4 x;
+        return x;
     }
     virtual Tensor4 forward(const Tensor4& x, t_cppl4* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new Tensor4(x));
         // x: N, C, H, W;  w: F, C, HH, WW
-        return x;
+        MatrixN x2c=im2col(x);
+        MatrixN w2c=im2col(*params4["W"]);
+        MatrixN y2c=x2c * w2c;
+        Tensor4 y=col2im(y2c);
+        return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual Tensor4 backward(const Tensor4& dchain, t_cppl4* pcache, t_cppl4* pgrads, int id=0) override {
