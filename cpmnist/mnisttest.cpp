@@ -141,7 +141,7 @@ bool  getMnistData(string filepath) {
          cout << it.first << " " << shape(*(it.second)) << endl;
      }
 
-     cpInitCompute();
+     cpInitCompute("Mnist");
 
 //#define USE_2LN 1
 #ifdef USE_2LN

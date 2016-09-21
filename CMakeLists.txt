@@ -112,7 +112,7 @@ add_subdirectory (cpcifar10)
 add_subdirectory (bench)
 
 set_property(TARGET cpneural PROPERTY CXX_STANDARD 11)
-set_property(TARGET testneural PROPERTY CXX_STANDARD 11)
+set_property(TARGET testneural PROPERTY CXX_STANDARD 14)
 set_property(TARGET mnisttest PROPERTY CXX_STANDARD 11)
 set_property(TARGET cifar10test PROPERTY CXX_STANDARD 11)
 set_property(TARGET bench PROPERTY CXX_STANDARD 11)

@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
          cout << it.first << " tensor-4" <<  endl;
      }
 
-     cpInitCompute();
+     cpInitCompute("Cifar10");
 
     MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
     MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);

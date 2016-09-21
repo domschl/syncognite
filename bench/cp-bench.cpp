@@ -141,7 +141,7 @@ int doBench() {
 }
 
 int main() {
-    cpInitCompute();
+    cpInitCompute("Bench");
 
 
     registerLayers();
