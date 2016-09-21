@@ -8,7 +8,7 @@
 #include "cp-layer.h"
 #include "cp-timer.h"
 #include "cp-layers.h"
-
+#include "cp-util.h"
 
 
 class Sdg : public Optimizer {
@@ -199,6 +199,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     t_cppl optiCache;
     setFlag("train",true);
     bool bShuffle=true;
+    Color::Modifier red(Color::FG_RED);
+    Color::Modifier green(Color::FG_GREEN);
+    Color::Modifier gray(Color::FG_LIGHT_GRAY);
+    Color::Modifier def(Color::FG_DEFAULT);
 
     int ep=popti->cp.getPar("epochs", (int)1); //Default only!
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
@@ -209,6 +213,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cout << ep << " " << bs << " " << lr << endl;
 
+    std::ofstream logfile;
+    logfile.open("log.txt");
+    logfile << "# Epoche\tLoss\tAccuracy" << endl;
+    std::flush(logfile);
     vector<unsigned int> ack(x.rows());
     vector<unsigned int> shfl(x.rows());
     for (unsigned int i=0; i<shfl.size(); i++) shfl[i]=i;
@@ -225,11 +233,12 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     for (int e=0; e<ep; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
-        if (verbose) cout << "Epoch: " << e+1 << endl; // << " learning-rate:" << lr << endl;
+        if (verbose) cout << "Epoch: " << green << e+1 << def << endl; // << " learning-rate:" << lr << endl;
         tw.startWall();
         int th=0;
         //std::list<std::future<t_cppl>> gradsFut;
         std::vector<std::future<t_cppl>> gradsFut;
+        int bold=0;
         for (int b=0; b<chunks; b++) {
             int bi=b%nt;
             int y0,dy;
@@ -316,16 +325,30 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 update(popti, &sgrad, "", &optiCache);
                 cppl_delete(&sgrad);
                 gradsFut.clear();
-                if (verbose && b%50==0) cout << "At: " << (floatN)b/(floatN)(chunks*nt)*100.0 << "\% of epoch, loss: " << l << endl;
+                if (verbose && b-bold>=50) {
+                    floatN twt=tw.stopWallMicro();
+                    floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
+                    floatN eta=twt/1000000.0-ett;
+                    floatN chtr=twt/1000.0/(floatN)(b*bs);
+                    cout << gray << "At: " << (floatN)b/(floatN)chunks*100.0 << "\% of epoch, " << chtr << " ms/data, ett: " << ett << "s, eta: " << eta << ",s loss: " << l << def << endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << endl;
+                    std::flush(logfile);
+                    bold=b;
+                }
                 //cout << "UD" << endl;
             }
         }
         //cout << "ED" << endl;
 
         //floatN errtra=test(x,y);
+        Timer tt;
+        tt.startWall();
         floatN errval=test(xv,yv);
+        floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
-        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, loss:" << l << " err(val):" << errval << " acc(val):" << accval << endl;
+        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, (" << ttst/1000000.0 << "s test) loss:" << l << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
+        logfile << e+1.0 << "\t" << l << "\t" << accval << endl;
+        std::flush(logfile);
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;
