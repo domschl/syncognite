@@ -628,7 +628,7 @@ public:
         //      p p x x x x x x x p p
         for (int yi=0; yi<HO*WO*N; yi++) {
             for (int xi=0; xi<C*HH*WW; xi++) {
-                if (xi<pad || yi<pad || xi>C*HH*WW-pad || yi>HO*WO-pad) {
+                if (xi<pad || yi<pad || xi>C*HH*WW-pad || yi>HO*WO-pad) { // XXX -1?
                     (*px2c)(yi,xi)=0;
                 } else {
                     int ns=yi/N;
@@ -636,6 +636,7 @@ public:
 
                     int xs=0;
                     int ys=0;
+
                     int xx=nr+xs+ys; // XXX nonsense!
                     (*px2c)(yi,xi)=x(ns,xx);
                 }
