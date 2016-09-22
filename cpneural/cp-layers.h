@@ -636,6 +636,8 @@ public:
 
                     int xs=0;
                     int ys=0;
+                    int xx=nr+xs+ys; // XXX nonsense!
+                    (*px2c)(yi,xi)=x(ns,xx);
                 }
             }
         }
