@@ -593,7 +593,7 @@ private:
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
         // W: F, C, HH, WW
-        cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
+        cppl_set(&params, "W", new MatrixN(F,C*HH*WW)); // Wb !
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -622,20 +622,37 @@ public:
     ~Convolution() {
         cppl_delete(&params);
     }
-    MatrixN im2col(MatrixN x) {
-        MatrixN x2c;
-        return x2c;
+    void im2col(MatrixN x, MatrixN *px2c) {
+        int N=shape(x)[0];
+        // add padding and b-caused 1s
+        //      p p x x x x x x x p p
+        for (int yi=0; yi<HO*WO*N; yi++) {
+            for (int xi=0; xi<C*HH*WW; xi++) {
+                if (xi<pad || yi<pad || xi>C*HH*WW-pad || yi>HO*WO-pad) {
+                    (*px2c)(yi,xi)=0;
+                } else {
+                    int ns=yi/N;
+                    int nr=yi%N;
+
+                    int xs=0;
+                    int ys=0;
+                }
+            }
+        }
     }
     MatrixN col2im(MatrixN x2c) {
         MatrixN x;
         return x;
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        // XXX cache x2c and use allocated memory for im2col call!
+        auto N=shape(x)[0];
+        MatrixN *px2c = new MatrixN(HO*WO*N, C*HH*WW);
+
         // x: N, C, H, W;  w: F, C, HH, WW
-        MatrixN x2c=im2col(x);
-        MatrixN w2c=im2col(*params["W"]);
-        MatrixN y2c=x2c * w2c;
+        im2col(x, px2c);
+
+        MatrixN y2c=*px2c * *(params["W"]);
         MatrixN y=col2im(y2c);
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
