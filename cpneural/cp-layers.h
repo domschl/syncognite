@@ -564,20 +564,20 @@ public:
                                     pix=0.0;
                                 } else {
                                     unsigned int xxs=cc*H*W+ys*W+xs;
-                                    if (xxs>=shape(xx)[1]) {
+/*                                    if (xxs>=shape(xx)[1]) {
                                         cout << "xxs illegal: " << xxs << endl;
                                     }
-                                    pix=xx(n,xxs);
+*/                                    pix=xx(n,xxs);
                                 }
                                 yd=cc*HH*WW+cy*WW+cx;
                                 xd=n*(HO*WO)+y*WO+x;
-                                if (yd<0 || yd>=C*HH*WW) {
+/*                                if (yd<0 || yd>=C*HH*WW) {
                                     cout << "yd illegal: " << yd << endl;
                                 }
                                 if (xd<0 || xd>=N*WO*HO) {
                                     cout << "xd illegal: " << xd << endl;
                                 }
-                                (*px2c)(yd,xd)=pix;
+*/                                (*px2c)(yd,xd)=pix;
                             }
                         }
                     }
@@ -589,7 +589,6 @@ public:
 
 
     MatrixN col2im(MatrixN y2c, int N) {
-        cout << "WO:" << WO << ", HO:"<<HO<<endl;
         MatrixN xx(N,F*WO*HO);
         for (int n=0; n<N; n++) {
             for (int x=0; x<F*WO*HO; x++) {
@@ -597,10 +596,11 @@ public:
                 int ox=p%(N*WO*HO);
                 int py=(p/(WO*HO))%F;
                 int px=ox%(WO*HO)+n*(WO*HO);
-                if (py>y2c.rows() || px>y2c.cols()) {
+/*                if (py>y2c.rows() || px>y2c.cols()) {
                     cout << "Illegal rows/cols in col2im:" << py << "," <<px<<endl;
                 }
-                else xx(n,x)=y2c(py,px);
+                else */
+                xx(n,x)=y2c(py,px);
             }
         }
         return xx;
@@ -615,17 +615,16 @@ public:
         // x: N, C, H, W;  w: F, C, HH, WW
         t.startCpu();
         im2col(x, px2c);
-        cout <<"x:"<<shape(x)<<endl;
-        cout <<"px2c:"<<shape(*px2c)<<endl;
         cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
+/*        cout <<"x:"<<shape(x)<<endl;
+        cout <<"px2c:"<<shape(*px2c)<<endl;
         cout << "w:"<<shape(*params["W"]) << endl;
-        t.startCpu();
+*/        t.startCpu();
         MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        cout <<"y2c:"<<shape(y2c)<<endl;
         cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
         t.startCpu();
         MatrixN y=col2im(y2c, N);
-        cout <<"y:"<<shape(y)<<endl;
+//        cout <<"y:"<<shape(y)<<endl;
         cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
         return y;
     }
