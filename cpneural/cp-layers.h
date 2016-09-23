@@ -548,12 +548,13 @@ public:
         //      p p x x x x x x x p p
         int xd, yd;
         int xs, ys;
+        int xxs, yys;
         int x0, y0;
-        int pix;
+        floatN pix;
         for (int n=0; n<N; n++) {
-            for (int y=0; y<WO; y++) {
-                for (int x=0; x<HO; x++) {
-                    xd=n*(WO*HO)+y*HO+x;
+            for (int y=0; y<HO; y++) {
+                for (int x=0; x<WO; x++) {
+                    yd=n*(WO*HO)+y*WO+x;
                     y0=y*stride-pad;
                     x0=x*stride-pad;
                     for (int cc=0; cc<C; cc++) {
@@ -561,12 +562,16 @@ public:
                             for (int cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 ys=y0+cy;
+                                char pd=' ';
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
-                                    pix=0;
+                                    pix=0.0;
+                                    pd='*';
                                 } else {
+
                                     pix=xx(n,cc*H*W+ys*W+xs);
                                 }
-                                yd=cc*HH*WW+cy*HH+cx;
+                                xd=cc*HH*WW+cy*WW+cx;
+                                cout <<"["<<ys<<","<<xs<<"|"<<yd<<","<<xd<<","<<pix<<pd<<"]";
                                 (*px2c)(yd,xd)=pix;
                             }
                         }
@@ -584,7 +589,8 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
-        MatrixN *px2c = new MatrixN(HO*WO*N, C*HH*WW);
+        MatrixN *px2c = new MatrixN(C*HH*WW, HO*WO*N);
+        px2c->setZero();
 
         // x: N, C, H, W;  w: F, C, HH, WW
         im2col(x, px2c);
@@ -593,7 +599,7 @@ public:
         cout << "F:" << F << " HO:"<< HO << " WO:" << WO << endl;
         cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
 
-        MatrixN y2c=((*params["W"]) * (*px2c).transpose()).colwise() + ColVectorN(*params["b"]);
+        MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         Eigen::Map<MatrixN> y2cm(y2c.data(), 2,12);
         cout << "y2cm:" << shape(y2cm) << endl;
         MatrixN y=col2im(y2cm);
