@@ -23,7 +23,7 @@ using std::vector; using std::string; using std::map;
 //#define USE_DOUBLE
 #ifndef USE_DOUBLE
 #ifndef USE_FLOAT
-#pragma message("Please define either USE_FLOAT or USE_DOUBLE")
+//pragma message("Please define either USE_FLOAT or USE_DOUBLE")
 #define USE_FLOAT
 #endif
 #endif

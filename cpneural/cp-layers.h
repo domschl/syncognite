@@ -537,31 +537,41 @@ public:
     ~Convolution() {
         cppl_delete(&params);
     }
-    void im2col(MatrixN x, MatrixN *px2c) {
-        int N=shape(x)[0];
+    void im2col(MatrixN xx, MatrixN *px2c) {
+        int N=shape(xx)[0];
         // add padding and b-caused 1s
         //      p p x x x x x x x p p
-        for (int yi=0; yi<HO*WO*N; yi++) {
-            for (int xi=0; xi<C*HH*WW; xi++) {
-
-
-
-
-                if (xi<pad || yi<pad || xi>C*HH*WW-pad || yi>HO*WO-pad) { // XXX -1?
-                    (*px2c)(yi,xi)=0;
-                } else {
-                    int ns=yi/N;
-                    int nr=yi%N;
-
-                    int xs=0;
-                    int ys=0;
-
-                    int xx=nr+xs+ys; // XXX nonsense!
-                    (*px2c)(yi,xi)=x(ns,xx);
+        int xd, yd;
+        int xs, ys;
+        int x0, y0;
+        int pix;
+        for (int n=0; n<N; n++) {
+            for (int y=0; y<WO; y++) {
+                for (int x=0; x<HO; x++) {
+                    xd=n*(WO*HO)+y*HO+x;
+                    y0=y*stride-pad;
+                    x0=x*stride-pad;
+                    for (int cc=0; cc<C; cc++) {
+                        for (int cy=0; cy<HH; cy++) {
+                            for (int cx=0; cx<WW; cx++) {
+                                xs=x0+cx;
+                                ys=y0+cy;
+                                if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
+                                    pix=0;
+                                } else {
+                                    pix=xx(n,cc*H*W+ys*W+xs);
+                                }
+                                yd=cc*HH*WW+cy*HH+cx;
+                                (*px2c)(yd,xd)=pix;
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+
+
     MatrixN col2im(MatrixN x2c) {
         MatrixN x;
         return x;
