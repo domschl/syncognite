@@ -589,16 +589,18 @@ public:
 
 
     MatrixN col2im(MatrixN y2c, int N) {
-        MatrixN xx(N,C*WO*HO);
+        cout << "WO:" << WO << ", HO:"<<HO<<endl;
+        MatrixN xx(N,F*WO*HO);
         for (int n=0; n<N; n++) {
             for (int x=0; x<F*WO*HO; x++) {
                 int p=n*F*WO*HO+x;
                 int ox=p%(N*WO*HO);
-                int oy=p/(N*WO*HO);
                 int py=(p/(WO*HO))%F;
                 int px=ox%(WO*HO)+n*(WO*HO);
-                cout << n << "," << x << "<-" << py << "," << px << endl;
-                xx(n,x)=y2c(py,px);
+                if (py>y2c.rows() || px>y2c.cols()) {
+                    cout << "Illegal rows/cols in col2im:" << py << "," <<px<<endl;
+                }
+                else xx(n,x)=y2c(py,px);
             }
         }
         return xx;
@@ -613,20 +615,19 @@ public:
         // x: N, C, H, W;  w: F, C, HH, WW
         t.startCpu();
         im2col(x, px2c);
+        cout <<"x:"<<shape(x)<<endl;
+        cout <<"px2c:"<<shape(*px2c)<<endl;
         cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
-
-        cout << "x:" << shape(x) << " x2c:" << shape(*px2c) << endl;
-        cout << "F:" << F << " HO:"<< HO << " WO:" << WO << endl;
-        cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
-
+        cout << "w:"<<shape(*params["W"]) << endl;
         t.startCpu();
-        MatrixN y2c0=(*params["W"]) * (*px2c);
-        MatrixN y2c=y2c0.colwise() + ColVectorN(*params["b"]);
-        cout << "y2c:" << shape(y2c) << endl << y2c << endl;
-        MatrixN y=col2im(y2c, N);
+        MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
+        cout <<"y2c:"<<shape(y2c)<<endl;
         cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
+        t.startCpu();
+        MatrixN y=col2im(y2c, N);
+        cout <<"y:"<<shape(y)<<endl;
+        cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
         return y;
-    //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         return dchain;
