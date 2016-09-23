@@ -475,7 +475,11 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
+
     return matComp(y,y0,"ConvolutionForward",eps);
+
+
+
 }
 
 
@@ -529,6 +533,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
 
     cppl_delete(&cache);
     cppl_delete(&grads);
+
     return allOk;
 }
 

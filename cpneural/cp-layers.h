@@ -548,30 +548,35 @@ public:
         //      p p x x x x x x x p p
         int xd, yd;
         int xs, ys;
-        int xxs, yys;
         int x0, y0;
         floatN pix;
         for (int n=0; n<N; n++) {
             for (int y=0; y<HO; y++) {
                 for (int x=0; x<WO; x++) {
-                    yd=n*(WO*HO)+y*WO+x;
                     y0=y*stride-pad;
                     x0=x*stride-pad;
                     for (int cc=0; cc<C; cc++) {
                         for (int cy=0; cy<HH; cy++) {
                             for (int cx=0; cx<WW; cx++) {
-                                xs=x0+cx;
                                 ys=y0+cy;
-                                char pd=' ';
+                                xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
                                     pix=0.0;
-                                    pd='*';
                                 } else {
-
-                                    pix=xx(n,cc*H*W+ys*W+xs);
+                                    unsigned int xxs=cc*H*W+ys*W+xs;
+                                    if (xxs>=shape(xx)[1]) {
+                                        cout << "xxs illegal: " << xxs << endl;
+                                    }
+                                    pix=xx(n,xxs);
                                 }
-                                xd=cc*HH*WW+cy*WW+cx;
-                                cout <<"["<<ys<<","<<xs<<"|"<<yd<<","<<xd<<","<<pix<<pd<<"]";
+                                yd=n*(C*HH*WW)+cc*HH*WW+cy*WW+cx;
+                                xd=y*WO+x;
+                                if (yd<0 || yd>=N*C*HH*WW) {
+                                    cout << "yd illegal: " << yd << endl;
+                                }
+                                if (xd<0 || xd>=WO*HO) {
+                                    cout << "xd illegal: " << xd << endl;
+                                }
                                 (*px2c)(yd,xd)=pix;
                             }
                         }
@@ -579,6 +584,7 @@ public:
                 }
             }
         }
+        cout << "x2c:" << *px2c << endl;
     }
 
 
@@ -591,18 +597,24 @@ public:
         auto N=shape(x)[0];
         MatrixN *px2c = new MatrixN(C*HH*WW, HO*WO*N);
         px2c->setZero();
+        Timer t;
 
         // x: N, C, H, W;  w: F, C, HH, WW
+        t.startCpu();
         im2col(x, px2c);
+        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
 
         cout << "x:" << shape(x) << " x2c:" << shape(*px2c) << endl;
         cout << "F:" << F << " HO:"<< HO << " WO:" << WO << endl;
         cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
 
+        t.startCpu();
         MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        Eigen::Map<MatrixN> y2cm(y2c.data(), 2,12);
-        cout << "y2cm:" << shape(y2cm) << endl;
+        cout << "y2c:" << y2c << endl;
+        Eigen::Map<MatrixN> y2cm(y2c.data(), N,F*WO*HO);
+        cout << "y2cm:" << shape(y2cm) << endl << y2cm << endl;
         MatrixN y=col2im(y2cm);
+        cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
