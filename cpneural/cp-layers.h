@@ -587,6 +587,52 @@ public:
         //cout << "x2c:" << endl << *px2c << endl;
     }
 
+    MatrixN iim2col(MatrixN x2c, int N) {
+        MatrixN dx(N,C*W*H);
+        dx.setZero();
+
+        int xd, yd;
+        int xs, ys;
+        int x0, y0;
+        floatN pix;
+        for (int n=0; n<N; n++) {
+            for (int y=0; y<HO; y++) {
+                for (int x=0; x<WO; x++) {
+                    y0=y*stride-pad;
+                    x0=x*stride-pad;
+                    for (int cc=0; cc<C; cc++) {
+                        for (int cy=0; cy<HH; cy++) {
+                            for (int cx=0; cx<WW; cx++) {
+                                ys=y0+cy;
+                                xs=x0+cx;
+                                if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
+                                    pix=0.0;
+                                } else {
+                                    unsigned int xxs=cc*H*W+ys*W+xs;
+/*                                    if (xxs>=shape(xx)[1]) {
+                                        cout << "xxs illegal: " << xxs << endl;
+                                    }
+*/
+                                    yd=cc*HH*WW+cy*WW+cx;
+                                    xd=n*(HO*WO)+y*WO+x;
+                                    dx(n,xxs) += x2c(yd,xd);
+                                }
+/*                                if (yd<0 || yd>=C*HH*WW) {
+                                    cout << "yd illegal: " << yd << endl;
+                                }
+                                if (xd<0 || xd>=N*WO*HO) {
+                                    cout << "xd illegal: " << xd << endl;
+                                }
+*/ //                                (*px2c)(yd,xd)=pix;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return dx;
+    }
 
     MatrixN col2im(MatrixN y2c, int N) {
         MatrixN xx(N,F*WO*HO);
@@ -677,7 +723,9 @@ public:
         cout << "x:" << shape(*(*pcache)["x"]) << endl;
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
-        MatrixN dx = dchain * (*params["W"]).transpose(); // dx
+        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+        cout << "dx2c:" << shape(dx2c) << endl;
+        MatrixN dx=iim2col(dx2c.transpose(), N);
         cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
         cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
 
