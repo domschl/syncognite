@@ -616,20 +616,34 @@ public:
         t.startCpu();
         im2col(x, px2c);
         cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
-/*        cout <<"x:"<<shape(x)<<endl;
+
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
+
+        cout <<"x:"<<shape(x)<<endl;
         cout <<"px2c:"<<shape(*px2c)<<endl;
-        cout << "w:"<<shape(*params["W"]) << endl;
-*/        t.startCpu();
+        cout << "W:"<<shape(*params["W"]) << endl;
+        cout << "b:"<<shape(*params["b"]) << endl;
+        t.startCpu();
         MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
         t.startCpu();
         MatrixN y=col2im(y2c, N);
-//        cout <<"y:"<<shape(y)<<endl;
         cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
+        cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        return dchain;
+        cout << "dchain:" << shape(dchain) << endl;
+        cout << "W:" << shape(*params["W"]) << endl;
+        cout << "x:" << shape(*(*pcache)["x"]) << endl;
+        cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
+        cout << "WO:" << WO << "," << "HO:" << HO << endl;
+        MatrixN dx = dchain * (*params["W"]).transpose(); // dx
+        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
+        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+
+        return dx;
     }
 };
 

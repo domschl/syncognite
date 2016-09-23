@@ -17,7 +17,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
         cout << msg << " err=" << dif << endl;
         return true;
     } else {
-        IOFormat CleanFmt(4, 0, ", ", "\n", "[", "");
+        IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
         cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
         cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
         cout << "err=" << dif << endl;
@@ -40,10 +40,10 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-     //Affine pe(CpParams("{topo=[4,3}"));
-     Affine pe("{topo=[4,3}");
-    *(pe.params["W")= W;
-    *(pe.params["b")=b;
+     //Affine pe(CpParams("{topo=[4,3]}"));
+     Affine pe("{topo=[4,3]}");
+    *(pe.params["W"])= W;
+    *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }
@@ -72,9 +72,9 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe("{topo=[4,5}");
-    *(pe.params["W")=W;
-    *(pe.params["b")=b;
+    Affine pe("{topo=[4,5]}");
+    *(pe.params["W"])=W;
+    *(pe.params["b"])=b;
     t_cppl cache;
     t_cppl grads;
     MatrixN y=pe.forward(x, &cache);
@@ -82,9 +82,9 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -102,7 +102,7 @@ bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.        ,  0.        ,  0.04545455,  0.13636364,
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
-    Relu rl(CpParams("{topo=[4}"));
+    Relu rl(CpParams("{topo=[4]}"));
     MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
@@ -123,7 +123,7 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Relu rl("{topo=[4}");
+    Relu rl("{topo=[4]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rl.forward(x, &cache);
@@ -163,7 +163,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.62625677, -1.24542905,  0.67804096,
           1.02169486,  0.1622018 , -0.74815305;
 
-    BatchNorm bn("{topo=[3;train=true}");
+    BatchNorm bn("{topo=[3];train=true}");
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
@@ -183,13 +183,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar(1,3);
     runvar << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache["running_mean"),runmean)) {
+    if (!matComp(*(cache["running_mean"]),runmean)) {
         cout << "BatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
         cout << "  BatchNorm running mean ok." << endl;
     }
-    if (!matComp(*(cache["running_var"),runvar)) {
+    if (!matComp(*(cache["running_var"]),runvar)) {
         cout << "BatchNorm running-var failed" << endl;
         allOk=false;
     } else {
@@ -211,9 +211,9 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
            12.02169486,  12.3244036 ,  10.75554084;
 
 
-    BatchNorm bn2("{topo=[3;train=true}");
-    *(bn2.params["gamma") << 1.0, 2.0, 3.0;
-    *(bn2.params["beta") << 11.0, 12.0, 13.0;
+    BatchNorm bn2("{topo=[3];train=true}");
+    *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
+    *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2);
     MatrixN mean2=xn20.colwise().mean();
@@ -233,13 +233,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean2 << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar2(1,3);
     runvar2 << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache2["running_mean"),runmean2)) {
+    if (!matComp(*(cache2["running_mean"]),runmean2)) {
         cout << "BatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
         cout << "  BatchNorm running mean2 ok." << endl;
     }
-    if (!matComp(*(cache2["running_var"),runvar2)) {
+    if (!matComp(*(cache2["running_var"]),runvar2)) {
         cout << "BatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {
@@ -250,15 +250,15 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache3;
     int nnr=200;
     MatrixN xt(nnr,3);
-    BatchNorm bn3("{topo=[3;train=true}");
-    *(bn3.params["gamma") << 1.0, 2.0, 3.0;
-    *(bn3.params["beta") << 0.0, -1.0, 4.0;
+    BatchNorm bn3("{topo=[3];train=true}");
+    *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
+    *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
         xt.setRandom();
         bn3.forward(xt,&cache3);
     }
-    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean") << endl;
-    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var") << endl;
+    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
+    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
     cout << "switching test" << endl;
     bn3.cp.setPar("train", false);
     if (bn3.cp.getPar("train", true)) cout << "INTERNAL ERROR: parSet boolean failed!" << endl;
@@ -266,13 +266,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN xn30=bn3.forward(xt, &cache3);
     MatrixN mean3=xn30.colwise().mean();
     cout << "  Mean:" << mean3 << endl;
-    if (!matComp(*(bn3.params["beta"), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
+    if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
     cout << "  StdDev:" << xmsq3 << endl;
-    if (!matComp(*(bn3.params["gamma"), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
+    if (!matComp(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
         allOk=0;
     }
     cppl_delete(&cache3);
@@ -308,9 +308,9 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -0.26565248,  0.26942709,  0.09496168, -0.00460701,  1.22847938,
               -0.54081537, -0.35927023, -0.23993959,  1.0851781 ,  0.51968779;
 
-    BatchNorm bn("{topo=[5;train=true}");
-    *(bn.params["gamma")=gamma;
-    *(bn.params["beta")=beta;
+    BatchNorm bn("{topo=[5];train=true}");
+    *(bn.params["gamma"])=gamma;
+    *(bn.params["beta"])=beta;
 
     t_cppl cache;
     t_cppl grads;
@@ -319,9 +319,9 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
     bool ret=matComp(dx,dx0,"BatchNormBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dgamma,*grads["gamma","BatchNormBackward dgamma",eps);
+    ret=matComp(dgamma,*grads["gamma"],"BatchNormBackward dgamma",eps);
     if (!ret) allOk=false;
-    ret=matComp(dbeta,*grads["beta","BatchNormBackward dbeta",eps);
+    ret=matComp(dbeta,*grads["beta"],"BatchNormBackward dbeta",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -337,7 +337,7 @@ bool checkDropout(float eps=3.0e-2) {
     floatN dop=0.8;
     x.array() += dl;
 
-    Dropout dp("{topo=[500;train=true}");
+    Dropout dp("{topo=[500];train=true}");
     dp.cp.setPar("drop",dop);
     MatrixN y=dp.forward(x, nullptr);
     dp.cp.setPar("train",false);
@@ -471,9 +471,9 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
          2.38090835,  2.38247847;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,4,4,3,4,4;stride=2;pad=1}");
-    *(cv.params["W")= W;
-    *(cv.params["b")=b;
+    Convolution cv("{topo=[3,4,4,3,4,4];stride=2;pad=1}");
+    *(cv.params["W"])= W;
+    *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
 
     return matComp(y,y0,"ConvolutionForward",eps);
@@ -994,9 +994,9 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
             3.31743501e+00,   4.34974790e+00,   3.30706714e+00;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,6,6,5,4,4;stride=2;pad=1}");
-    *(cv.params["W")= W;
-    *(cv.params["b")=b;
+    Convolution cv("{topo=[3,6,6,5,4,4];stride=2;pad=1}");
+    *(cv.params["W"])= W;
+    *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
 
     return matComp(y,y0,"ConvolutionForward",eps);
@@ -1163,7 +1163,7 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
            0.07628749, -0.71903468, -0.59633026,
            0.16882438, -1.63386718,  0.05015518,
            1.20848431, -0.93531694,  0.80268051;
-    MatrixN b(1,2);
+    MatrixN b(2,1);
     b <<  -0.48903285, -0.39030338;
     MatrixN dx(4, 75);
     dx << -1.05124493e+00,  -2.29874859e+00,  -9.73966637e-01,
@@ -1325,7 +1325,7 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
            -1.70975933, -11.79444595,  -0.87365394,
             6.52065458, -11.94349945, -15.29530413,
            -7.73371842,   3.40362722,  -8.78586713;
-    MatrixN db(1,2);
+    MatrixN db(2,1);
     db << 17.65964691,  -5.23295028;
     MatrixN dchain(4,50);
     dchain << 0.24836283,  0.33590279,  1.63346454,  0.21689593, -1.62253881,
@@ -1379,9 +1379,9 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
           -0.31282652,  0.71725415,  0.03513737,  0.10890985, -0.99803075,
           -1.6124455 , -0.3881734 ,  0.90206887,  1.34225259,  0.37395634;
 
-    Convolution cv("{topo=[4,5}");
-    *(cv.params["W")=W;
-    *(cv.params["b")=b;
+    Convolution cv("{topo=[3,5,5,2,3,3];stride=1;pad=1}");
+    *(cv.params["W"])=W;
+    *(cv.params["b"])=b;
     t_cppl cache;
     t_cppl grads;
     MatrixN y=cv.forward(x, &cache);
@@ -1389,9 +1389,9 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -1415,11 +1415,11 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl("{topo=[4,5}");
+    AffineRelu arl("{topo=[4,5]}");
     t_cppl cache;
     t_cppl grads;
-    *(arl.params["af-W")=W;
-    *(arl.params["af-b")=b;
+    *(arl.params["af-W"])=W;
+    *(arl.params["af-b"])=b;
     MatrixN y0=arl.forward(x, &cache);
     bool ret=matComp(y,y0,"AffineRelu",eps);
     if (!ret) allOk=false;
@@ -1442,9 +1442,9 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
 
     ret=matComp(dx,dx0,"AffineRelu dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["af-W"),"AffineRelu dW",eps);
+    ret=matComp(dW,*(grads["af-W"]),"AffineRelu dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["af-b"),"AffineRelu db",eps);
+    ret=matComp(db,*(grads["af-b"]),"AffineRelu db",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -1492,7 +1492,7 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm("{topo=[5}");
+    Softmax sm("{topo=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN probs0=sm.forward(x, y, &cache);
@@ -1567,7 +1567,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv("{topo=[5}");
+    Svm sv("{topo=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN margins0=sv.forward(x, y, &cache);
@@ -1624,10 +1624,10 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     cp.setPar("topo",vector<int>{D,H,C});
     TwoLayerNet tln(cp);
 
-    *(tln.params["af1-W")=W1;
-    *(tln.params["af1-b")=b1;
-    *(tln.params["af2-W")=W2;
-    *(tln.params["af2-b")=b2;
+    *(tln.params["af1-W"])=W1;
+    *(tln.params["af1-b"])=b1;
+    *(tln.params["af2-W"])=W2;
+    *(tln.params["af2-b"])=b2;
 
     t_cppl cache;
     t_cppl grads;
@@ -1669,13 +1669,13 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
         cout << gi.first << " ";
     }
     cout << endl;
-    ret=matComp(dW1,*(grads["af1-W"),"TwoLayerNet dW1",eps);
+    ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
     if (!ret) allOk=false;
-    ret=matComp(db1,*(grads["af1-b"),"TwoLayerNet db1",eps);
+    ret=matComp(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW2,*(grads["af2-W"),"TwoLayerNet dW2",eps);
+    ret=matComp(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps);
     if (!ret) allOk=false;
-    ret=matComp(db2,*(grads["af2-b"),"TwoLayerNet db2",eps);
+    ret=matComp(db2,*(grads["af2-b"]),"TwoLayerNet db2",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -1689,7 +1689,7 @@ bool registerTest() {
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
         cout << nr << ".: " << it.first << " ";
-        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first;
+        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
         cp.setPar("topo",std::vector<int>(te));
         Layer *l = CREATE_LAYER(it.first, cp)
@@ -1758,14 +1758,14 @@ int doTests() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    Affine pc(CpParams("{topo=[30,20}"));
+    Affine pc(CpParams("{topo=[30,20]}"));
     MatrixN x(10,30);
     x.setRandom();
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
 
-    Relu rl(CpParams("{topo=[20}"));
+    Relu rl(CpParams("{topo=[20]}"));
     MatrixN xr(10,20);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
@@ -1773,7 +1773,7 @@ int doTests() {
     }
 
     // Batchnorm - still some strangities:
-    BatchNorm bn("{topo=[10;train=true;noVectorizationTests=true}");
+    BatchNorm bn("{topo=[10];train=true;noVectorizationTests=true}");
     MatrixN xbr(20,10);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
@@ -1781,7 +1781,7 @@ int doTests() {
     }
 
     // Dropout
-    Dropout dp("{topo=[5;train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
+    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
     floatN h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -1790,7 +1790,7 @@ int doTests() {
         allOk=false;
     }
 
-    AffineRelu rx("{topo=[2,3}");
+    AffineRelu rx("{topo=[2,3]}");
     MatrixN xarl(30,2);
     xarl.setRandom();
     h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -1846,15 +1846,15 @@ int doTests() {
     }
 
     //Multilayer1
-    MultiLayer ml("{topo=[10;name='multi1'}");
+    MultiLayer ml("{topo=[10];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
-    Affine maf1("{topo=[10,10}");
+    Affine maf1("{topo=[10,10]}");
     ml.addLayer("af1",&maf1,vector<string>{"input"});
-    Relu mrl1("{topo=[10}");
+    Relu mrl1("{topo=[10]}");
     ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
-    Affine maf2("{topo=[10,10}");
+    Affine maf2("{topo=[10,10]}");
     ml.addLayer("af2",&maf2,vector<string>{"rl1"});
-    Softmax msm1("{topo=[10}");
+    Softmax msm1("{topo=[10]}");
     ml.addLayer("sm1",&msm1,vector<string>{"af2"});
     if (!ml.checkTopology()) {
         allOk=false;
@@ -1933,6 +1933,12 @@ int doTests() {
 
         exit(-1);
     }
+    if (checkConvolutionBackward()) {
+        cout << green << "ConvolutionBackward (Convolution) with test data: OK." << def << endl;
+    } else {
+        cout << red << "ConvolutionBackward (Convolution) with test data: ERROR." << def << endl;
+        allOk=false;
+    }
 
     if (checkAffineRelu()) {
         cout << green << "AffineRelu with test data: OK." << def << endl;
@@ -1985,8 +1991,8 @@ int doTests() {
     return 0;
 }
 
-int main(int argc, char *argv[) {
-    string name=std::experimental::filesystem::path(argv[0).filename();
+int main(int argc, char *argv[]) {
+    string name=std::experimental::filesystem::path(argv[0]).filename();
     cpInitCompute(name);
     int ret=0;
     ret=doTests();
