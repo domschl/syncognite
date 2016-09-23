@@ -593,9 +593,10 @@ public:
         cout << "F:" << F << " HO:"<< HO << " WO:" << WO << endl;
         cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
 
-        MatrixN y2c=((*params["W"]) * (*px2c)).rowwise() + RowVectorN(*params["b"]);
-        cout << "y2c:" << shape(y2c) << endl;
-        MatrixN y=col2im(y2c);
+        MatrixN y2c=((*params["W"]) * (*px2c).transpose()).colwise() + ColVectorN(*params["b"]);
+        Eigen::Map<MatrixN> y2cm(y2c.data(), 2,12);
+        cout << "y2cm:" << shape(y2cm) << endl;
+        MatrixN y=col2im(y2cm);
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }

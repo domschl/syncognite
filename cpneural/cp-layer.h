@@ -35,6 +35,7 @@ using std::vector; using std::string; using std::map;
 using MatrixN=Eigen::MatrixXd;
 using VectorN=Eigen::VectorXd;
 using RowVectorN=Eigen::RowVectorXd;
+using ColVectorN=Eigen::VectorXd;
 using ArrayN=Eigen::ArrayXd;
 using floatN=double;
 #define CP_DEFAULT_NUM_H (1.e-6)
@@ -44,6 +45,7 @@ using floatN=double;
 using MatrixN=Eigen::MatrixXf;
 using VectorN=Eigen::VectorXf;
 using RowVectorN=Eigen::RowVectorXf;
+using ColVectorN=Eigen::VectorXf;
 using ArrayN=Eigen::ArrayXf;
 using floatN=float;
 #define CP_DEFAULT_NUM_H ((float)1.e-4)
