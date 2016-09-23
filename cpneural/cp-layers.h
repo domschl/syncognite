@@ -605,6 +605,40 @@ public:
         }
         return xx;
     }
+
+    MatrixN icol2im(MatrixN dy, int N) {
+        MatrixN iy(F,N*H*W);
+        for (int f=0; f<F; f++) {
+            for (int x=0; x<N*H*W; x++) {
+                int p=f*N*H*W+x;
+                int ox=p%(F*H*W);
+                int py=(p/(W*H))%N;
+                int px=ox%(W*H)+f*(H*W);
+                iy(f,x)=dy(py,px);
+            }
+        }
+        return iy;
+    }
+
+
+/*
+        MatrixN xx(N,F*WO*HO);
+        for (int n=0; n<N; n++) {
+            for (int x=0; x<F*WO*HO; x++) {
+                int p=n*F*WO*HO+x;
+                int ox=p%(N*WO*HO);
+                int py=(p/(WO*HO))%F;
+                int px=ox%(WO*HO)+n*(WO*HO);
+                if (py>y2c.rows() || px>y2c.cols()) {
+                    cout << "Illegal rows/cols in col2im:" << py << "," <<px<<endl;
+                }
+                else
+                xx(n,x)=y2c(py,px);
+            }
+        }
+        return xx;
+    }
+    */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
@@ -634,14 +668,18 @@ public:
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        int N=shape(dchain)[0];
+        MatrixN dc2=icol2im(dchain,N);
+
         cout << "dchain:" << shape(dchain) << endl;
+        cout << "dc2:" << shape(dc2) << endl;
         cout << "W:" << shape(*params["W"]) << endl;
         cout << "x:" << shape(*(*pcache)["x"]) << endl;
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
         MatrixN dx = dchain * (*params["W"]).transpose(); // dx
-        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+        cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
+        cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
 
         return dx;
     }
