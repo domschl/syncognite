@@ -588,9 +588,20 @@ public:
     }
 
 
-    MatrixN col2im(MatrixN x2c) {
-        MatrixN x = MatrixN(x2c); // UUUHHH XXX
-        return x;
+    MatrixN col2im(MatrixN y2c, int N) {
+        MatrixN xx(N,C*WO*HO);
+        for (int n=0; n<N; n++) {
+            for (int x=0; x<F*WO*HO; x++) {
+                int p=n*F*WO*HO+x;
+                int ox=p%(N*WO*HO);
+                int oy=p/(N*WO*HO);
+                int py=(p/(WO*HO))%F;
+                int px=ox%(WO*HO)+n*(WO*HO);
+                cout << n << "," << x << "<-" << py << "," << px << endl;
+                xx(n,x)=y2c(py,px);
+            }
+        }
+        return xx;
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
@@ -610,12 +621,9 @@ public:
 
         t.startCpu();
         MatrixN y2c0=(*params["W"]) * (*px2c);
-        cout << "y2c0:" << y2c0 << endl;
         MatrixN y2c=y2c0.colwise() + ColVectorN(*params["b"]);
         cout << "y2c:" << shape(y2c) << endl << y2c << endl;
-        Eigen::Map<MatrixN> y2cm(y2c.data(), N,F*WO*HO);
-        cout << "y2cm:" << shape(y2cm) << endl << y2cm << endl;
-        MatrixN y=col2im(y2cm);
+        MatrixN y=col2im(y2c, N);
         cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
