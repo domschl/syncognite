@@ -569,12 +569,12 @@ public:
                                     }
                                     pix=xx(n,xxs);
                                 }
-                                yd=n*(C*HH*WW)+cc*HH*WW+cy*WW+cx;
-                                xd=y*WO+x;
-                                if (yd<0 || yd>=N*C*HH*WW) {
+                                yd=cc*HH*WW+cy*WW+cx;
+                                xd=n*(HO*WO)+y*WO+x;
+                                if (yd<0 || yd>=C*HH*WW) {
                                     cout << "yd illegal: " << yd << endl;
                                 }
-                                if (xd<0 || xd>=WO*HO) {
+                                if (xd<0 || xd>=N*WO*HO) {
                                     cout << "xd illegal: " << xd << endl;
                                 }
                                 (*px2c)(yd,xd)=pix;
@@ -584,7 +584,7 @@ public:
                 }
             }
         }
-        cout << "x2c:" << *px2c << endl;
+        //cout << "x2c:" << endl << *px2c << endl;
     }
 
 
@@ -595,7 +595,7 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
-        MatrixN *px2c = new MatrixN(C*HH*WW, HO*WO*N);
+        MatrixN *px2c = new MatrixN(C*HH*WW, N*HO*WO);
         px2c->setZero();
         Timer t;
 
@@ -609,8 +609,10 @@ public:
         cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
 
         t.startCpu();
-        MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        cout << "y2c:" << y2c << endl;
+        MatrixN y2c0=(*params["W"]) * (*px2c);
+        cout << "y2c0:" << y2c0 << endl;
+        MatrixN y2c=y2c0.colwise() + ColVectorN(*params["b"]);
+        cout << "y2c:" << shape(y2c) << endl << y2c << endl;
         Eigen::Map<MatrixN> y2cm(y2c.data(), N,F*WO*HO);
         cout << "y2cm:" << shape(y2cm) << endl << y2cm << endl;
         MatrixN y=col2im(y2cm);
