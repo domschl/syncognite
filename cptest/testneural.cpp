@@ -1790,6 +1790,14 @@ int doTests() {
         allOk=false;
     }
 
+    // Convolution
+    Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=1}");
+    MatrixN xcv(20,48);
+    xcv.setRandom();
+    if (!cv.selfTest(xcv, yz)) {
+        allOk=false;
+    }
+
     AffineRelu rx("{topo=[2,3]}");
     MatrixN xarl(30,2);
     xarl.setRandom();

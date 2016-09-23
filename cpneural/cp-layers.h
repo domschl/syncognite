@@ -695,36 +695,37 @@ public:
         // x: N, C, H, W;  w: F, C, HH, WW
         t.startCpu();
         im2col(x, px2c);
-        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
+//        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
 
-        cout <<"x:"<<shape(x)<<endl;
+/*        cout <<"x:"<<shape(x)<<endl;
         cout <<"px2c:"<<shape(*px2c)<<endl;
         cout << "W:"<<shape(*params["W"]) << endl;
         cout << "b:"<<shape(*params["b"]) << endl;
-        t.startCpu();
+*/        t.startCpu();
         MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
+//        cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
         t.startCpu();
         MatrixN y=col2im(y2c, N);
-        cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
+/*        cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
         cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
+*/        if (pcache==nullptr) delete px2c;
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         MatrixN dc2=icol2im(dchain,N);
 
-        cout << "dchain:" << shape(dchain) << endl;
+/*        cout << "dchain:" << shape(dchain) << endl;
         cout << "dc2:" << shape(dc2) << endl;
         cout << "W:" << shape(*params["W"]) << endl;
         cout << "x:" << shape(*(*pcache)["x"]) << endl;
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
-        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
-        cout << "dx2c:" << shape(dx2c) << endl;
+*/        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+//        cout << "dx2c:" << shape(dx2c) << endl;
         MatrixN dx=iim2col(dx2c.transpose(), N);
         cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
         cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
