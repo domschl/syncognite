@@ -499,7 +499,7 @@ private:
     int pad, stride;
     void setup(const CpParams& cx) {
         layerName="Convolution";
-        topoParams=4;
+        topoParams=6;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
@@ -508,7 +508,9 @@ private:
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
         // W: F, C, HH, WW
-        cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
+        //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
+        cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
+        cppl_set(&params, "b", new MatrixN(F,1));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -526,6 +528,9 @@ private:
         params["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(C+HH+WW);
         *params["W"] = *params["W"] * xavier;
+
+        params["b"]->setRandom();
+        *params["b"] = *params["b"] * xavier;
     }
 public:
     Convolution(const CpParams& cx) {
@@ -573,7 +578,7 @@ public:
 
 
     MatrixN col2im(MatrixN x2c) {
-        MatrixN x;
+        MatrixN x = MatrixN(x2c); // UUUHHH XXX
         return x;
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
@@ -584,7 +589,12 @@ public:
         // x: N, C, H, W;  w: F, C, HH, WW
         im2col(x, px2c);
 
-        MatrixN y2c=*px2c * *(params["Wb"]);
+        cout << "x:" << shape(x) << " x2c:" << shape(*px2c) << endl;
+        cout << "F:" << F << " HO:"<< HO << " WO:" << WO << endl;
+        cout << "W:" << shape(*params["W"]) << " b:" << shape(*params["b"]) << endl;
+
+        MatrixN y2c=((*params["W"]) * (*px2c)).rowwise() + RowVectorN(*params["b"]);
+        cout << "y2c:" << shape(y2c) << endl;
         MatrixN y=col2im(y2c);
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
@@ -846,6 +856,7 @@ void registerLayers() {
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Dropout", Dropout, 1)
+    REGISTER_LAYER("Convolution", Convolution, 6)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
