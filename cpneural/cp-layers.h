@@ -476,106 +476,21 @@ public:
 };
 
 // Convolution layer
-/*
-The input consists of N data points, each with C channels, height H and
-width W. We convolve each input with F different filters, where each filter
-spans all C channels and has height HH and width HH.
-
-Input:
-- x: Input data of shape (N, C, H, W)
-- w: Filter weights of shape (F, C, HH, WW)
-- b: Biases, of shape (F,)
-- conv_param: A dictionary with the following keys:
-  - 'stride': The number of pixels between adjacent receptive fields in the
-    horizontal and vertical directions.
-  - 'pad': The number of pixels that will be used to zero-pad the input.
-
-Returns a tuple of:
-- out: Output data, of shape (N, F, H', W') where H' and W' are given by
-  H' = 1 + (H + 2 * pad - HH) / stride
-  W' = 1 + (W + 2 * pad - WW) / stride
-- cache: (x, w, b, conv_param)
-"""
-out = None
-##########################################################################
-# TODO: Implement the convolutional forward pass.                        #
-# Hint: you can use the function np.pad for padding.                     #
-##########################################################################
-cache = (x, w, b, conv_param)
-N, C, H, W = x.shape
-F, C2, HH, WW = w.shape
-if C != C2:
-    print("Umm: C2!=C", C2, C)
-pad = conv_param['pad']
-stride = conv_param['stride']
-if (H + 2 * pad - HH) % stride != 0:
-    print("H <-> stride does not fit!")
-if (W + 2 * pad - WW) % stride != 0:
-    print("W <-> stride does not fit!")
-HO = 1 + (H + 2 * pad - HH) // stride
-WO = 1 + (W + 2 * pad - WW) // stride
-xo = np.zeros((N, F, HO, WO))
-
-xp = convpad(x, pad)
-                    def convpad(a, p):
-                        sc = a.shape[:-1] + (p,)
-                        cp = np.zeros(sc)
-                        o1 = np.concatenate((cp, a, cp), axis=-1)
-                        sr = o1.shape[:-2] + (p,) + (o1.shape[-1],)
-                        rp = np.zeros(sr)
-                        o2 = np.concatenate((rp, o1, rp), axis=-2)
-                        return o2
-
-sxp = xp.shape
-
-algo = 1
-if algo == 0:
-    for n in range(N):
-        xi = xp[n, :, :, :]
-        for y0 in range(0, sxp[2]-HH+1, stride):
-            for x0 in range(0, sxp[3]-WW+1, stride):
-                xic = xi[:, y0:y0+HH, x0:x0+WW]
-                for fi in range(F):
-                    fic = w[fi, :, :, :]
-                    pr = xic * fic
-                    xi0 = x0 // stride
-                    yi0 = y0 // stride
-                    xo[n, fi, yi0, xi0] = np.sum(pr) + b[fi]
-elif algo == 1:
-    for y0 in range(0, sxp[2]-HH+1, stride):
-        yi0 = y0 // stride
-        for x0 in range(0, sxp[3]-WW+1, stride):
-            xic = xp[:, :, y0:y0+HH, x0:x0+WW]
-            xi0 = x0 // stride
-            for fi in range(F):
-                wfi = w[fi, :, :, :]
-                prxw = xic * wfi
-                # print(prxw.shape, xic.shape, wfi.shape)
-                xo[:, fi, yi0, xi0] = np.sum(prxw, axis=(1, 2, 3)) + b[fi]
-
-# print("xo", xo.shape)
-out = xo
-##########################################################################
-#                             END OF YOUR CODE                           #
-##########################################################################
-cache = (x, w, b, conv_param)
-return out, cache
-*/
 class Convolution : public Layer {
-    // N: number of data points
+    // N: number of data points;  input is N x (C x W x H)
     // C: color-depth
+    // W: width of input
     // H: height of input
-    // W: width of input;  input is N x (C x H x W)
-    // F: number of filter-kernels
+    // F: number of filter-kernels;   kernel is F x (C x WW x HH)
     // C: identical number of color-depth
+    // WW: filter-kernel depth
     // HH: filter-kernel height
-    // WW: filter-kernel depth;   kernel is F x (C x HH x WW)
     // params:
     //   stride
     //   pad
-    // Output:
-    //   HO: output height
+    // Output: N x (F x WO x HO)
     //   WO: output width
+    //   HO: output height
 private:
     int numGpuThreads;
     int numCpuThreads;
@@ -593,7 +508,7 @@ private:
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
         // W: F, C, HH, WW
-        cppl_set(&params, "W", new MatrixN(F,C*HH*WW)); // Wb !
+        cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -628,6 +543,10 @@ public:
         //      p p x x x x x x x p p
         for (int yi=0; yi<HO*WO*N; yi++) {
             for (int xi=0; xi<C*HH*WW; xi++) {
+
+
+
+
                 if (xi<pad || yi<pad || xi>C*HH*WW-pad || yi>HO*WO-pad) { // XXX -1?
                     (*px2c)(yi,xi)=0;
                 } else {
@@ -655,7 +574,7 @@ public:
         // x: N, C, H, W;  w: F, C, HH, WW
         im2col(x, px2c);
 
-        MatrixN y2c=*px2c * *(params["W"]);
+        MatrixN y2c=*px2c * *(params["Wb"]);
         MatrixN y=col2im(y2c);
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
