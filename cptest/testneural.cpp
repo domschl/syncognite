@@ -17,7 +17,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
         cout << msg << " err=" << dif << endl;
         return true;
     } else {
-        IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
+        IOFormat CleanFmt(4, 0, ", ", "\n", "[", "");
         cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
         cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
         cout << "err=" << dif << endl;
@@ -40,10 +40,10 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-     //Affine pe(CpParams("{topo=[4,3]}"));
-     Affine pe("{topo=[4,3]}");
-    *(pe.params["W"])= W;
-    *(pe.params["b"])=b;
+     //Affine pe(CpParams("{topo=[4,3}"));
+     Affine pe("{topo=[4,3}");
+    *(pe.params["W")= W;
+    *(pe.params["b")=b;
     MatrixN y0=pe.forward(x, nullptr);
     return matComp(y,y0,"AffineForward",eps);
 }
@@ -72,9 +72,9 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe("{topo=[4,5]}");
-    *(pe.params["W"])=W;
-    *(pe.params["b"])=b;
+    Affine pe("{topo=[4,5}");
+    *(pe.params["W")=W;
+    *(pe.params["b")=b;
     t_cppl cache;
     t_cppl grads;
     MatrixN y=pe.forward(x, &cache);
@@ -82,9 +82,9 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"),"AffineBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"),"AffineBackward bx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -102,7 +102,7 @@ bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.        ,  0.        ,  0.04545455,  0.13636364,
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
-    Relu rl(CpParams("{topo=[4]}"));
+    Relu rl(CpParams("{topo=[4}"));
     MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
@@ -123,7 +123,7 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Relu rl("{topo=[4]}");
+    Relu rl("{topo=[4}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rl.forward(x, &cache);
@@ -163,7 +163,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.62625677, -1.24542905,  0.67804096,
           1.02169486,  0.1622018 , -0.74815305;
 
-    BatchNorm bn("{topo=[3];train=true}");
+    BatchNorm bn("{topo=[3;train=true}");
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
@@ -183,13 +183,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar(1,3);
     runvar << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache["running_mean"]),runmean)) {
+    if (!matComp(*(cache["running_mean"),runmean)) {
         cout << "BatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
         cout << "  BatchNorm running mean ok." << endl;
     }
-    if (!matComp(*(cache["running_var"]),runvar)) {
+    if (!matComp(*(cache["running_var"),runvar)) {
         cout << "BatchNorm running-var failed" << endl;
         allOk=false;
     } else {
@@ -211,9 +211,9 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
            12.02169486,  12.3244036 ,  10.75554084;
 
 
-    BatchNorm bn2("{topo=[3];train=true}");
-    *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
-    *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
+    BatchNorm bn2("{topo=[3;train=true}");
+    *(bn2.params["gamma") << 1.0, 2.0, 3.0;
+    *(bn2.params["beta") << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2);
     MatrixN mean2=xn20.colwise().mean();
@@ -233,13 +233,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean2 << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar2(1,3);
     runvar2 << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache2["running_mean"]),runmean2)) {
+    if (!matComp(*(cache2["running_mean"),runmean2)) {
         cout << "BatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
         cout << "  BatchNorm running mean2 ok." << endl;
     }
-    if (!matComp(*(cache2["running_var"]),runvar2)) {
+    if (!matComp(*(cache2["running_var"),runvar2)) {
         cout << "BatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {
@@ -250,15 +250,15 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache3;
     int nnr=200;
     MatrixN xt(nnr,3);
-    BatchNorm bn3("{topo=[3];train=true}");
-    *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
-    *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
+    BatchNorm bn3("{topo=[3;train=true}");
+    *(bn3.params["gamma") << 1.0, 2.0, 3.0;
+    *(bn3.params["beta") << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
         xt.setRandom();
         bn3.forward(xt,&cache3);
     }
-    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
-    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
+    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean") << endl;
+    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var") << endl;
     cout << "switching test" << endl;
     bn3.cp.setPar("train", false);
     if (bn3.cp.getPar("train", true)) cout << "INTERNAL ERROR: parSet boolean failed!" << endl;
@@ -266,13 +266,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN xn30=bn3.forward(xt, &cache3);
     MatrixN mean3=xn30.colwise().mean();
     cout << "  Mean:" << mean3 << endl;
-    if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
+    if (!matComp(*(bn3.params["beta"), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
     cout << "  StdDev:" << xmsq3 << endl;
-    if (!matComp(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
+    if (!matComp(*(bn3.params["gamma"), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
         allOk=0;
     }
     cppl_delete(&cache3);
@@ -308,9 +308,9 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -0.26565248,  0.26942709,  0.09496168, -0.00460701,  1.22847938,
               -0.54081537, -0.35927023, -0.23993959,  1.0851781 ,  0.51968779;
 
-    BatchNorm bn("{topo=[5];train=true}");
-    *(bn.params["gamma"])=gamma;
-    *(bn.params["beta"])=beta;
+    BatchNorm bn("{topo=[5;train=true}");
+    *(bn.params["gamma")=gamma;
+    *(bn.params["beta")=beta;
 
     t_cppl cache;
     t_cppl grads;
@@ -319,9 +319,9 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
     bool ret=matComp(dx,dx0,"BatchNormBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dgamma,*grads["gamma"],"BatchNormBackward dgamma",eps);
+    ret=matComp(dgamma,*grads["gamma","BatchNormBackward dgamma",eps);
     if (!ret) allOk=false;
-    ret=matComp(dbeta,*grads["beta"],"BatchNormBackward dbeta",eps);
+    ret=matComp(dbeta,*grads["beta","BatchNormBackward dbeta",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -337,7 +337,7 @@ bool checkDropout(float eps=3.0e-2) {
     floatN dop=0.8;
     x.array() += dl;
 
-    Dropout dp("{topo=[500];train=true}");
+    Dropout dp("{topo=[500;train=true}");
     dp.cp.setPar("drop",dop);
     MatrixN y=dp.forward(x, nullptr);
     dp.cp.setPar("train",false);
@@ -471,9 +471,9 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
          2.38090835,  2.38247847;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,4,4,3,4,4];stride=2;pad=1}");
-    *(cv.params["W"])= W;
-    *(cv.params["b"])=b;
+    Convolution cv("{topo=[3,4,4,3,4,4;stride=2;pad=1}");
+    *(cv.params["W")= W;
+    *(cv.params["b")=b;
     MatrixN y0=cv.forward(x, nullptr);
 
     return matComp(y,y0,"ConvolutionForward",eps);
@@ -994,15 +994,408 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
             3.31743501e+00,   4.34974790e+00,   3.30706714e+00;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,6,6,5,4,4];stride=2;pad=1}");
-    *(cv.params["W"])= W;
-    *(cv.params["b"])=b;
+    Convolution cv("{topo=[3,6,6,5,4,4;stride=2;pad=1}");
+    *(cv.params["W")= W;
+    *(cv.params["b")=b;
     MatrixN y0=cv.forward(x, nullptr);
 
     return matComp(y,y0,"ConvolutionForward",eps);
+}
+
+bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    MatrixN x(4, 75);
+    x << 4.06278962e-01,  -7.20029839e-01,  -8.77595062e-01,
+           -5.69242505e-01,  -8.21071312e-02,
+            3.02672415e-01,   3.11544794e-01,   6.78850317e-01,
+            3.05781256e-01,  -7.35247080e-01,
+            8.45416516e-01,   6.30175765e-01,   8.86099717e-01,
+            4.06562604e-01,  -6.02540397e-01,
+            7.59952834e-01,  -1.40269820e+00,   1.55009322e+00,
+           -2.13764150e-01,  -1.63679882e+00,
+            9.37892883e-01,   9.34623693e-01,   2.29637694e-01,
+           -3.94409953e-01,   3.19363695e-01,
+
+            1.40073427e+00,   7.65295699e-02,   2.59006411e+00,
+            1.18691543e+00,   4.27904098e-01,
+           -5.25571140e-02,   1.07981772e+00,   5.96898409e-01,
+            1.25859787e+00,  -3.11337115e-01,
+            5.49745455e-01,  -1.50192516e-01,   2.49671770e+00,
+           -5.76520517e-01,   2.90206527e-01,
+            6.83069753e-01,  -1.20577354e+00,  -7.83062617e-02,
+           -3.57863145e-02,  -6.89859016e-01,
+           -1.27705615e+00,  -3.38617839e-01,   6.57145506e-01,
+           -7.13872291e-01,  -2.25710594e-01,
+
+           -5.84950028e-01,   7.83725053e-01,   1.09521467e+00,
+            1.58652641e+00,  -6.59051523e-01,
+           -6.93647850e-01,  -4.62172438e-02,  -9.68867074e-01,
+            1.04253518e-01,   3.65878113e-01,
+           -6.20436137e-01,  -5.21133678e-01,  -4.51238975e-01,
+           -8.66231129e-01,  -9.77512021e-02,
+           -3.97595314e-01,   8.32288960e-02,   8.38346031e-02,
+           -9.61101576e-01,   5.56323841e-01,
+           -1.49203774e+00,  -7.62849617e-01,  -1.31800939e+00,
+           -1.01578863e-01,  -1.34451982e+00,
 
 
+            1.11629214e-02,   3.71619500e-01,   6.25515403e-01,
+            5.44265433e-01,   2.58030608e+00,
+           -2.89689208e+00,   1.03056164e+00,   1.43447215e+00,
+            6.74738238e-01,  -1.84511911e+00,
+           -3.22239263e-01,   1.74348499e+00,  -3.08882289e-01,
+            7.95603854e-01,   6.47311433e-01,
+           -3.02989147e+00,   9.76613215e-01,   8.84297919e-01,
+           -1.45695523e+00,  -4.42325369e-01,
+            1.18824527e+00,  -1.96667526e+00,  -1.05092338e+00,
+            1.30854716e+00,  -4.53888024e-01,
 
+           -3.79884804e-01,  -2.91014221e-01,   4.55696906e-01,
+            3.18405851e-01,  -9.25646477e-01,
+           -7.16927311e-01,  -2.01962127e-01,  -6.92560414e-01,
+            8.30975784e-01,   7.22272760e-02,
+           -9.96090540e-01,   3.99141248e-01,   3.61328510e-01,
+           -1.40803404e+00,   6.65305291e-01,
+           -1.59518843e-01,   4.43236368e-01,   2.04742247e-01,
+           -9.62888055e-01,  -1.09431312e+00,
+            1.28505241e-01,   8.07790580e-01,  -4.49374715e-01,
+           -4.32796239e-01,   2.52893798e-01,
+
+           -9.76817124e-02,   3.01471234e-02,  -2.82646447e-01,
+           -1.18352895e+00,  -1.29873542e+00,
+            8.43541861e-01,  -2.12674598e+00,   3.51783908e-01,
+            7.14241258e-01,  -4.46955064e-01,
+            6.92582940e-01,   1.45896797e+00,  -1.38710841e-01,
+           -3.30895817e-01,   1.76373937e+00,
+           -6.07684612e-02,  -2.27203416e+00,   7.18466352e-01,
+            2.66887655e-02,  -8.60609702e-01,
+            1.19592511e-01,  -6.65513272e-02,  -8.71728299e-01,
+            8.29179762e-01,   1.32132812e+00,
+
+
+           -9.84332692e-01,   1.62471472e+00,   6.49340001e-02,
+            4.34797318e-01,  -1.35201297e-02,
+            3.39988538e-01,   7.18879625e-01,   2.27799525e-01,
+            7.55022197e-01,   2.25099181e-01,
+           -3.31853138e-01,   6.92662234e-01,  -6.04908597e-01,
+            8.29683534e-01,   1.29697634e+00,
+           -5.56083891e-01,  -2.21421171e+00,   3.04101703e-01,
+            7.72354427e-01,  -1.55229213e+00,
+            1.89806416e+00,   7.26569169e-01,   6.54962282e-01,
+           -1.08347656e+00,   1.15445419e+00,
+
+            7.14851333e-01,   1.11924154e+00,   9.18968653e-01,
+            1.45678203e+00,  -1.91415949e+00,
+           -9.37495099e-01,   3.73281474e-01,   2.85868528e-01,
+            4.31681231e-01,   6.62499088e-02,
+           -1.48617873e+00,   5.57715334e-01,  -4.81057503e-01,
+            6.87051463e-01,  -1.12790482e+00,
+           -9.85240951e-01,  -1.67914658e+00,  -3.37574029e-01,
+           -6.03822018e-02,  -6.09262194e-01,
+            3.25978304e-01,   1.28333212e+00,  -5.41023192e-01,
+            1.69426400e+00,  -2.74843013e-01,
+
+           -1.27214735e+00,   6.93215016e-01,   7.16647831e-01,
+           -1.09714483e+00,   1.23395484e+00,
+            1.24751835e+00,   8.02806678e-01,   3.16606600e-01,
+            1.90285586e+00,  -4.29496923e-01,
+            2.51115376e-01,  -2.81213797e-01,   1.33733071e+00,
+            5.71380011e-01,   5.58810987e-01,
+           -6.41888643e-02,  -1.19084509e+00,   1.30599784e+00,
+            1.08158035e+00,  -3.00621112e-01,
+           -1.88638872e+00,   7.65711879e-01,  -6.86007084e-01,
+            1.20789193e+00,   1.09465112e-03,
+
+
+            4.42305847e-01,  -3.20980999e-01,   1.72799329e-01,
+           -8.09578504e-01,   1.32848119e+00,
+           -1.27895152e+00,   7.48160611e-01,   1.78569662e+00,
+           -1.29630689e-01,  -6.57212483e-02,
+           -5.68001480e-01,  -9.61151324e-01,   5.45035751e-01,
+           -4.23175743e-01,   5.69798706e-01,
+            1.84703153e+00,   2.20249121e-01,  -9.85408467e-01,
+            1.42521634e-01,  -7.85362836e-01,
+           -5.01210976e-01,   6.94574909e-01,  -8.23125847e-01,
+            5.60644174e-01,  -7.49678428e-01,
+
+           -1.93092403e+00,   1.11070681e+00,  -2.03649206e+00,
+            4.50199934e-01,  -1.61569811e+00,
+            6.62548119e-01,   1.99394670e+00,  -3.52990460e-01,
+            1.87800598e+00,   1.10399472e-01,
+            4.17827766e-01,   1.29448810e+00,   1.17098064e+00,
+            1.62768992e+00,  -3.23464275e-01,
+           -4.80745974e-01,  -1.87674952e-01,  -1.55835540e+00,
+            5.59698707e-01,  -1.61064340e+00,
+           -2.88041566e-01,  -4.98061608e-01,  -4.33308895e-01,
+           -3.04804433e-01,  -2.01560459e-01,
+
+            1.18815415e+00,  -3.61940600e-01,  -6.77218261e-01,
+            8.11354952e-01,  -1.55021295e-01,
+           -5.11231428e-01,  -3.66514256e-01,   1.36405386e+00,
+            1.76692645e+00,   1.25480705e+00,
+           -3.89975255e-01,   8.44315729e-02,   9.87579716e-01,
+            3.72766182e-01,   1.01085418e+00,
+           -1.96303607e+00,   9.59423670e-02,  -4.86589955e-02,
+           -7.59032117e-01,  -1.44189138e-01,
+           -1.36984009e+00,  -4.54511774e-01,   1.13057305e+00,
+           -1.98191411e+00,  -3.29108429e-02;
+    MatrixN W(2,27);
+    W << -0.35513837,  1.08467349, -0.35145376,
+          -0.72134629, -0.57565924, -2.01889725,
+           0.71046437,  1.40272846,  0.87700153,
+
+           0.10473475, -1.24258858, -2.13811078,
+           0.12652192,  0.58375631,  0.52330807,
+           0.19711781,  2.00618897,  0.02234399,
+
+           0.62735645,  1.38290462,  0.05514387,
+          -0.0482102 , -1.38552821, -0.58664296,
+          -0.05557414, -0.81669299,  0.08555432,
+
+
+          -0.33726335, -0.35330311, -0.27365944,
+           0.752816  , -0.02478639,  0.88443971,
+           0.02507951,  0.38114787, -0.53996567,
+
+           0.9637172 ,  0.66837392,  0.04000791,
+           0.87730628, -0.78766236,  0.09188994,
+           0.74565225,  0.07085615, -0.05643064,
+
+           0.07628749, -0.71903468, -0.59633026,
+           0.16882438, -1.63386718,  0.05015518,
+           1.20848431, -0.93531694,  0.80268051;
+    MatrixN b(1,2);
+    b <<  -0.48903285, -0.39030338;
+    MatrixN dx(4, 75);
+    dx << -1.05124493e+00,  -2.29874859e+00,  -9.73966637e-01,
+           -3.37391974e+00,  -6.32150176e-01,
+            1.60616065e+00,   2.15316518e+00,   3.20621313e-01,
+            1.13937584e-01,  -3.21442956e+00,
+            2.24212655e+00,  -4.42366045e+00,   1.32103657e+00,
+           -2.19160747e+00,  -3.04093836e+00,
+           -7.29661319e-01,   1.66222856e+00,   3.28816635e-01,
+           -1.59753791e+00,  -1.33415970e+00,
+            2.56879843e-01,   1.27687306e+00,   3.78606241e-01,
+           -1.94462219e-01,   1.12236159e+00,
+
+            2.49715723e+00,  -2.79149068e+00,  -1.05936217e+00,
+           -3.51867321e+00,   5.95934762e-01,
+           -3.02576129e+00,  -2.51966245e+00,   1.90066609e+00,
+           -4.19301715e+00,  -2.48896161e+00,
+           -1.42982951e+00,   7.66906326e-01,   1.66484653e+00,
+           -1.29710099e+00,  -2.40306365e+00,
+            2.89544608e+00,   2.07347535e+00,   9.32642406e-01,
+           -2.45991624e+00,   1.39608510e+00,
+           -5.38411133e-01,   2.18724772e+00,   5.36120619e+00,
+           -6.59577634e-01,  -3.44781960e+00,
+
+           -1.45689068e+00,  -1.86508989e+00,   8.26057589e-01,
+           -1.22345977e+00,   4.16844969e+00,
+           -1.20883333e+00,  -3.16983941e+00,   1.35396590e+00,
+           -3.61262425e+00,   6.35665455e+00,
+           -3.88149445e+00,   1.52888318e+00,  -5.12807222e-01,
+           -1.53637746e+00,   2.64847781e-01,
+           -4.62258725e+00,   5.06798935e+00,  -2.52076588e+00,
+           -6.33453363e+00,  -2.43650195e-01,
+           -4.24293924e+00,   2.36201816e+00,  -3.99325433e+00,
+           -4.99940613e+00,   4.44596711e+00,
+
+
+           -5.79238458e-01,  -1.33661598e+00,   4.65564246e+00,
+            2.95987665e+00,   2.14203246e+00,
+            1.69120963e+00,  -1.00955270e+00,  -1.56959716e+00,
+           -4.80704379e+00,  -3.58121519e+00,
+            1.61607936e+00,   3.97857094e+00,   2.50857403e+00,
+            1.42249803e+00,   2.35444446e+00,
+           -2.47712038e-01,  -5.86756713e+00,  -2.44594050e+00,
+           -1.83816661e+00,  -1.45681870e-01,
+           -1.28534449e+00,  -3.05204753e-01,  -1.09084146e+00,
+            1.33737462e+00,   1.12182440e+00,
+
+            3.60100014e+00,   6.75735422e-01,  -5.51404057e+00,
+           -2.58088363e+00,  -7.02856364e-01,
+            6.31473410e+00,  -1.15029320e+00,   3.64919006e+00,
+            2.89944274e+00,  -2.45077934e+00,
+           -5.54874511e+00,  -4.82090962e+00,  -1.69319209e+00,
+            3.25013436e-01,   3.12000720e-01,
+           -2.42610232e+00,  -2.73301586e+00,  -4.91398320e-01,
+           -1.42607512e+00,  -9.53401124e-01,
+            5.10246591e-04,   2.95690939e+00,   3.77013647e-01,
+            1.87054330e+00,   2.72208545e+00,
+
+           -5.03891926e-01,  -2.51765436e-01,  -1.11797102e+00,
+           -3.17096204e-01,   3.49341593e+00,
+            1.79220668e+00,  -1.57405679e+00,   2.08514649e+00,
+            1.74235469e+00,   8.98609184e-01,
+            2.55306356e+00,  -1.07878915e+00,   3.78724641e+00,
+            1.76701943e+00,  -2.45530386e+00,
+            2.29703711e+00,   4.65073974e+00,   1.34026012e+00,
+           -6.42727069e-01,  -3.04798824e+00,
+           -2.72556843e+00,   1.58668575e-01,  -3.55042552e+00,
+            1.24294202e+00,   6.04326193e-03,
+
+
+            1.46164065e+00,  -2.13003289e+00,   1.65809409e+00,
+           -2.63070942e+00,   9.51286555e-01,
+            2.63777114e+00,  -3.86190648e+00,   3.83261085e+00,
+            1.09964350e+00,  -8.17842653e-01,
+           -2.21345155e+00,  -4.18793533e+00,   3.41899518e+00,
+           -3.07799721e+00,   1.36377794e+00,
+            2.00054365e+00,   7.59555538e-01,  -9.32959063e-01,
+           -5.92048740e-01,   1.89336573e+00,
+            1.27429784e+00,   9.35228356e-01,   1.98937016e+00,
+            2.43316250e+00,  -1.59694729e-01,
+
+           -1.15985782e+00,  -2.28389966e+00,   2.21404222e+00,
+           -7.82713570e-02,   4.08077281e-01,
+           -3.57324982e+00,  -4.51360523e+00,   5.17732440e+00,
+           -1.32316465e+00,  -1.65582742e-01,
+            4.19573522e+00,  -3.82004696e+00,  -3.09166608e+00,
+            3.24012426e+00,   3.34803889e+00,
+            5.71596737e+00,  -6.19345957e+00,   4.75712600e+00,
+            4.04089454e+00,   3.13782543e-02,
+            8.06086994e-02,  -3.15779825e+00,   3.60781644e+00,
+           -1.93018150e+00,   9.71445495e-01,
+
+            1.98980950e+00,  -1.17287648e+00,   1.36591250e+00,
+           -1.96444065e-01,  -2.18003084e+00,
+            2.03618880e+00,  -1.43101590e+00,   5.30990912e+00,
+            9.20580520e-01,  -4.20831837e+00,
+           -6.89307507e+00,   1.48581582e+00,   3.39243604e+00,
+           -1.16846891e+00,  -7.63470010e-01,
+           -3.46039040e+00,  -3.40441746e+00,   9.60571960e-01,
+            5.59337395e-01,  -3.13771560e+00,
+            2.90251298e+00,  -5.41293335e+00,   8.64403001e+00,
+           -1.58639128e-02,  -2.26159459e+00,
+
+
+            8.20516613e-01,  -1.41506452e+00,  -1.73812035e+00,
+           -1.82298142e+00,  -4.63543831e+00,
+            8.56015738e-01,   5.82692858e-01,   2.80887781e-01,
+            4.43001557e+00,   1.95440071e+00,
+           -8.07785952e-01,  -2.24514804e+00,   2.55516978e+00,
+           -1.17418985e+00,   3.52573378e+00,
+            3.87510665e+00,   2.05495609e+00,  -1.73932865e+00,
+           -3.54592589e+00,   1.65528346e+00,
+           -2.96614012e+00,  -4.39427109e+00,  -3.03805747e+00,
+           -2.42601391e-01,  -8.07440715e-01,
+
+            2.02703143e+00,  -1.24179770e+00,  -1.36030480e+00,
+            5.85247950e+00,  -1.51857521e+00,
+            3.68622334e+00,  -4.01367285e+00,   1.61578132e-01,
+            6.10189585e+00,   4.33120913e+00,
+            1.64988685e+00,   3.16788640e+00,  -4.08750855e+00,
+            2.96251526e+00,  -1.55318546e+00,
+            2.02963383e-01,  -6.39720240e+00,  -2.54262042e+00,
+           -3.99168408e+00,   1.69465793e+00,
+            1.20834842e+00,   1.77218343e+00,   2.62972331e+00,
+           -2.73859387e+00,   9.98315627e-01,
+
+            2.23445472e+00,   9.39657519e-01,  -3.27009717e+00,
+            1.26660541e+00,  -3.48211453e+00,
+            7.13634600e+00,  -3.95823798e+00,  -2.40368353e+00,
+            2.06784867e+00,  -2.29939699e+00,
+            8.36871307e-01,  -4.39283210e+00,   2.55545879e+00,
+            4.32675205e+00,  -1.84820468e+00,
+            5.52361859e+00,   1.00335734e+00,  -3.77979654e-02,
+            3.98715622e+00,  -4.14629493e+00,
+            2.32110000e+00,  -2.31618185e+00,  -2.40899216e+00,
+           -3.90533589e+00,   2.69809612e-01;
+    MatrixN dW(2,27);
+    dW << 7.76312149,   4.66733323,   8.1890197 ,
+           -4.37454191,  -8.17503308,   9.13918729,
+           15.45904902,  10.25547064,  -5.66654275,
+
+            2.5788164 ,  -0.52958419,   5.25793559,
+           -5.94902815,  -2.16831493,   4.49496134,
+           12.40914405,  -2.33356582,   7.40659252,
+
+           -5.33814293,   0.80389108,  -6.77465292,
+          -10.76069027,   0.76758755,  -1.65334302,
+            3.82291043,  14.45696049, -10.832082  ,
+
+
+            1.8697618 , -10.03973545, -17.97308064,
+           -2.74154261,  12.05158818,  -3.25524939,
+           -4.35128392,  19.07935165,   6.61602367,
+
+           -0.86482772,  -1.00336309, -17.05030267,
+            0.64635664,  -9.738997  , -21.12904455,
+           -0.13885334,   2.11260808,  -8.50269923,
+
+           -1.70975933, -11.79444595,  -0.87365394,
+            6.52065458, -11.94349945, -15.29530413,
+           -7.73371842,   3.40362722,  -8.78586713;
+    MatrixN db(1,2);
+    db << 17.65964691,  -5.23295028;
+    MatrixN dchain(4,50);
+    dchain << 0.24836283,  0.33590279,  1.63346454,  0.21689593, -1.62253881,
+          -0.03400353,  1.11333587,  0.29573696,  0.51460659, -1.33410048,
+           1.64547739, -0.1804801 ,  1.24025162, -0.45958495, -0.20283745,
+           1.03576165, -0.15000759,  0.68291561,  0.7009178 , -1.4762639 ,
+          -0.53490811,  1.4532825 ,  1.05732343, -0.43142658, -0.90043725,
+
+           0.06497122,  0.78454725, -1.37572605,  0.02429663, -1.81137879,
+           2.45372871, -0.13105885, -0.24501502, -0.55008119, -0.80020087,
+          -0.02043736, -0.18257312, -0.04522444, -0.60268432, -0.583198  ,
+           0.48290751, -1.52625924,  0.77698356,  1.34897691, -0.22028905,
+           1.02520125, -0.6235423 ,  0.6826662 ,  2.25821506, -0.16988704,
+
+
+           1.92547065, -0.7597674 ,  0.02650591,  0.48386609, -1.49018314,
+          -0.66160909,  0.56016673,  0.63646527, -0.16713383,  0.67827109,
+          -0.11408664, -0.46282622, -0.12305173, -0.2496889 ,  0.0981504 ,
+           0.83435664,  0.26198835,  0.60408632,  0.24423178,  0.93440163,
+           1.14636587,  0.37361258,  0.51775075,  0.05434362, -0.05941737,
+
+          -1.13597924,  0.98548132,  2.31747878,  1.39949287, -0.12533536,
+          -0.87270972,  0.53574251, -2.23364113, -1.25404886,  0.33237128,
+           1.25517806,  0.17953582, -0.11638751, -0.03338221,  0.4097034 ,
+          -1.70492966, -1.62322879, -0.83435909,  0.36162776,  1.38937947,
+          -0.1061854 , -1.36092404,  1.12713214, -0.77828978, -1.06868978,
+
+
+          -0.18555716,  0.30072344,  0.91104691, -0.37014742,  1.00090184,
+           0.77200082, -1.02904854,  0.57819312,  0.1680283 ,  0.44558377,
+           2.48122876, -1.66522128,  0.7411329 ,  0.847575  , -0.51789978,
+          -0.98162056,  1.05644732,  1.09088424, -1.62324965,  1.24645441,
+          -0.67473992, -0.18413263, -1.07650479,  0.27888282, -0.82877504,
+
+          -0.77243645,  0.10673591, -0.20076532,  1.05422291,  0.32635894,
+          -0.13274228, -0.65980658, -1.44102273, -0.03213447,  1.63368114,
+           0.55986992, -0.25727178, -1.04349709, -0.24595085, -0.01306534,
+           0.97272734,  0.82970104, -2.10186315,  0.75964172,  0.37648694,
+          -0.55357048,  1.29400895, -2.55335323, -0.1089839 ,  1.43315407,
+
+
+           1.10654948, -1.27725299,  1.60625794,  1.11783959,  0.35670366,
+          -0.56180823,  1.2036319 , -1.54174391,  1.01668209, -0.36368006,
+           1.03223669, -0.5135541 , -0.01485799, -1.71322876,  0.87569716,
+          -0.52929955, -0.40194623,  0.71189275, -1.06158617,  0.58602659,
+           1.30356907,  1.15644221,  0.38860402,  0.89430991, -0.63994114,
+
+          -1.25225268,  1.13437715, -0.12101369, -1.47669536,  1.00405199,
+          -2.06014007,  0.11820221,  0.30668661, -0.34604699,  0.52438995,
+          -0.20236412,  0.91509269, -1.12761561, -1.68432089,  1.57649879,
+          -0.31282652,  0.71725415,  0.03513737,  0.10890985, -0.99803075,
+          -1.6124455 , -0.3881734 ,  0.90206887,  1.34225259,  0.37395634;
+
+    Convolution cv("{topo=[4,5}");
+    *(cv.params["W")=W;
+    *(cv.params["b")=b;
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=cv.forward(x, &cache);
+    MatrixN dx0=cv.backward(dchain, &cache, &grads);
+    bool allOk=true;
+    bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dW,*(grads["W"),"AffineBackward dW",eps);
+    if (!ret) allOk=false;
+    ret=matComp(db,*(grads["b"),"AffineBackward bx",eps);
+    if (!ret) allOk=false;
+    cppl_delete(&cache);
+    cppl_delete(&grads);
+    return allOk;
 }
 
 
@@ -1022,11 +1415,11 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl("{topo=[4,5]}");
+    AffineRelu arl("{topo=[4,5}");
     t_cppl cache;
     t_cppl grads;
-    *(arl.params["af-W"])=W;
-    *(arl.params["af-b"])=b;
+    *(arl.params["af-W")=W;
+    *(arl.params["af-b")=b;
     MatrixN y0=arl.forward(x, &cache);
     bool ret=matComp(y,y0,"AffineRelu",eps);
     if (!ret) allOk=false;
@@ -1049,9 +1442,9 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
 
     ret=matComp(dx,dx0,"AffineRelu dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["af-W"]),"AffineRelu dW",eps);
+    ret=matComp(dW,*(grads["af-W"),"AffineRelu dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["af-b"]),"AffineRelu db",eps);
+    ret=matComp(db,*(grads["af-b"),"AffineRelu db",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -1099,7 +1492,7 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm("{topo=[5]}");
+    Softmax sm("{topo=[5}");
     t_cppl cache;
     t_cppl grads;
     MatrixN probs0=sm.forward(x, y, &cache);
@@ -1174,7 +1567,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv("{topo=[5]}");
+    Svm sv("{topo=[5}");
     t_cppl cache;
     t_cppl grads;
     MatrixN margins0=sv.forward(x, y, &cache);
@@ -1231,10 +1624,10 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     cp.setPar("topo",vector<int>{D,H,C});
     TwoLayerNet tln(cp);
 
-    *(tln.params["af1-W"])=W1;
-    *(tln.params["af1-b"])=b1;
-    *(tln.params["af2-W"])=W2;
-    *(tln.params["af2-b"])=b2;
+    *(tln.params["af1-W")=W1;
+    *(tln.params["af1-b")=b1;
+    *(tln.params["af2-W")=W2;
+    *(tln.params["af2-b")=b2;
 
     t_cppl cache;
     t_cppl grads;
@@ -1276,13 +1669,13 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
         cout << gi.first << " ";
     }
     cout << endl;
-    ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
+    ret=matComp(dW1,*(grads["af1-W"),"TwoLayerNet dW1",eps);
     if (!ret) allOk=false;
-    ret=matComp(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps);
+    ret=matComp(db1,*(grads["af1-b"),"TwoLayerNet db1",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps);
+    ret=matComp(dW2,*(grads["af2-W"),"TwoLayerNet dW2",eps);
     if (!ret) allOk=false;
-    ret=matComp(db2,*(grads["af2-b"]),"TwoLayerNet db2",eps);
+    ret=matComp(db2,*(grads["af2-b"),"TwoLayerNet db2",eps);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -1296,7 +1689,7 @@ bool registerTest() {
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
         cout << nr << ".: " << it.first << " ";
-        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
+        t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first;
         CpParams cp;
         cp.setPar("topo",std::vector<int>(te));
         Layer *l = CREATE_LAYER(it.first, cp)
@@ -1365,14 +1758,14 @@ int doTests() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    Affine pc(CpParams("{topo=[30,20]}"));
+    Affine pc(CpParams("{topo=[30,20}"));
     MatrixN x(10,30);
     x.setRandom();
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
 
-    Relu rl(CpParams("{topo=[20]}"));
+    Relu rl(CpParams("{topo=[20}"));
     MatrixN xr(10,20);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
@@ -1380,7 +1773,7 @@ int doTests() {
     }
 
     // Batchnorm - still some strangities:
-    BatchNorm bn("{topo=[10];train=true;noVectorizationTests=true}");
+    BatchNorm bn("{topo=[10;train=true;noVectorizationTests=true}");
     MatrixN xbr(20,10);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
@@ -1388,7 +1781,7 @@ int doTests() {
     }
 
     // Dropout
-    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
+    Dropout dp("{topo=[5;train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
     floatN h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -1397,7 +1790,7 @@ int doTests() {
         allOk=false;
     }
 
-    AffineRelu rx("{topo=[2,3]}");
+    AffineRelu rx("{topo=[2,3}");
     MatrixN xarl(30,2);
     xarl.setRandom();
     h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -1453,15 +1846,15 @@ int doTests() {
     }
 
     //Multilayer1
-    MultiLayer ml("{topo=[10];name='multi1'}");
+    MultiLayer ml("{topo=[10;name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
-    Affine maf1("{topo=[10,10]}");
+    Affine maf1("{topo=[10,10}");
     ml.addLayer("af1",&maf1,vector<string>{"input"});
-    Relu mrl1("{topo=[10]}");
+    Relu mrl1("{topo=[10}");
     ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
-    Affine maf2("{topo=[10,10]}");
+    Affine maf2("{topo=[10,10}");
     ml.addLayer("af2",&maf2,vector<string>{"rl1"});
-    Softmax msm1("{topo=[10]}");
+    Softmax msm1("{topo=[10}");
     ml.addLayer("sm1",&msm1,vector<string>{"af2"});
     if (!ml.checkTopology()) {
         allOk=false;
@@ -1592,8 +1985,8 @@ int doTests() {
     return 0;
 }
 
-int main(int argc, char *argv[]) {
-    string name=std::experimental::filesystem::path(argv[0]).filename();
+int main(int argc, char *argv[) {
+    string name=std::experimental::filesystem::path(argv[0).filename();
     cpInitCompute(name);
     int ret=0;
     ret=doTests();
