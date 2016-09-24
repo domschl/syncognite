@@ -29,6 +29,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
 bool benchLayer(string name, Layer* player, int N, int M, int reps) {
     MatrixN x(N,M);
     MatrixN y(N,1);
+    MatrixN ya;
     x.setRandom();
     y.setRandom();
     for (int i=0; i<y.size(); i++) {
@@ -59,11 +60,12 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
         */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->forward(x,&cache,0);
+            ya=player->forward(x,&cache,0);
         } else {
-            player->forward(x,y,&cache,0);
+            ya=player->forward(x,y,&cache,0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
+        cout << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
         if (tcus<tf) tf=tcus;
 
 /*        if (name=="BatchNorm") {
@@ -72,7 +74,7 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->backward(x,&cache, &grads, 0);
+            player->backward(ya,&cache, &grads, 0);
         } else {
             player->backward(y,&cache, &grads, 0);
         }
@@ -116,15 +118,18 @@ int doBench() {
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             CpParams cp;
 
-            if (te>1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
-            else cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+            if (te==2) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
+            else if (te==1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+            else cout  << nr << ".: " << it.first << " N=" << N << endl;
 
             std::vector<int> tp(te);
             for (auto i=0; i< tp.size(); i++) tp[i]=M;
+            int MI=M;
             if (it.first=="Convolution") {
                 tp[0]=3;
                 tp[1]=100;
                 tp[2]=100;
+                MI=100*100*3;
                 tp[3]=32;
                 tp[4]=5;
                 tp[5]=5;
@@ -139,7 +144,7 @@ int doBench() {
                 cout << "Warmup..." << endl;
             }
             else reps=5;
-            if (!benchLayer(it.first, l, N, M, reps)) {
+            if (!benchLayer(it.first, l, N, MI, reps)) {
                 cout << "Error" << endl;
                 allOk=false;
             }

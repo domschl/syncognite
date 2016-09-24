@@ -1386,11 +1386,11 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=cv.forward(x, &cache);
     MatrixN dx0=cv.backward(dchain, &cache, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
+    bool ret=matComp(dx,dx0,"ConvolutionBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
+    ret=matComp(dW,*(grads["W"]),"ConvolutionBackward dW",eps);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
+    ret=matComp(db,*(grads["b"]),"ConvolutionBackward bx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);

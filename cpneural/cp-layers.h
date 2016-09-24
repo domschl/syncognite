@@ -517,10 +517,12 @@ private:
         pad = cp.getPar("pad", 0);
         stride = cp.getPar("stride", 1);
         if ((H + 2 * pad - HH) % stride != 0) {
-            cout << "H <-> stride does not fit!" << endl;
+            int r=(H + 2 * pad - HH) % stride;
+            cout << "H <-> stride does not fit! r=" << r << endl;
         }
         if ((W + 2 * pad - WW) % stride != 0) {
-            cout << "W <-> stride does not fit!" << endl;
+            int r=(W + 2 * pad - WW) % stride;
+            cout << "W <-> stride does not fit! r=" << r << endl;
         }
         HO = 1 + (H + 2 * pad - HH) / stride;
         WO = 1 + (W + 2 * pad - WW) / stride;
@@ -549,6 +551,7 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
+        int err=0;
         floatN pix;
         for (int n=0; n<N; n++) {
             for (int y=0; y<HO; y++) {
@@ -558,6 +561,10 @@ public:
                     for (int cc=0; cc<C; cc++) {
                         for (int cy=0; cy<HH; cy++) {
                             for (int cx=0; cx<WW; cx++) {
+                                if (err>5) {
+                                    cout << "FATAL i2c abort." << endl;
+                                    return;
+                                }
                                 ys=y0+cy;
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
@@ -566,6 +573,7 @@ public:
                                     unsigned int xxs=cc*H*W+ys*W+xs;
                                     if (xxs>=shape(xx)[1]) {
                                         cout << "i2c xxs illegal: " << shape(xx) << xxs << "=" << cc << "," << ys <<"," << xs << endl;
+                                        ++err;
                                         continue;
                                     }
                                     pix=xx(n,xxs);
@@ -574,10 +582,12 @@ public:
                                 xd=n*(HO*WO)+y*WO+x;
                                 if (yd<0 || yd>=C*HH*WW) {
                                     cout << "i2c yd illegal: " << yd << endl;
+                                    ++err;
                                     continue;
                                 }
                                 if (xd<0 || xd>=N*WO*HO) {
                                     cout << "i2c xd illegal: " << xd << endl;
+                                    ++err;
                                     continue;
                                 }
                                 (*px2c)(yd,xd)=pix;
@@ -597,6 +607,7 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
+        int err=0;
 //        floatN pix;
         for (int n=0; n<N; n++) {
             for (int y=0; y<HO; y++) {
@@ -606,6 +617,10 @@ public:
                     for (int cc=0; cc<C; cc++) {
                         for (int cy=0; cy<HH; cy++) {
                             for (int cx=0; cx<WW; cx++) {
+                                if (err>5) {
+                                    cout << "FATAL ii2c abort" << endl;
+                                    return dx;
+                                }
                                 ys=y0+cy;
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
@@ -614,16 +629,19 @@ public:
                                     unsigned int xxs=cc*H*W+ys*W+xs;
                                     if (xxs>=shape(dx)[1]) {
                                         cout << "ii2c xxs illegal: " << xxs << endl;
+                                        ++err;
                                         continue;
                                     }
                                     yd=cc*HH*WW+cy*WW+cx;
                                     xd=n*(HO*WO)+y*WO+x;
                                     if (yd<0 || yd>=C*HH*WW) {
                                         cout << "ii2c yd illegal: " << yd << endl;
+                                        ++err;
                                         continue;
                                     }
                                     if (xd<0 || xd>=N*WO*HO) {
                                         cout << "ii2c xd illegal: " << xd << endl;
+                                        ++err;
                                         continue;
                                     }
                                     dx(n,xxs) += x2c(yd,xd);
@@ -641,6 +659,7 @@ public:
 
     MatrixN col2im(MatrixN y2c, int N) {
         MatrixN xx(N,F*WO*HO);
+        int err=0;
         for (int n=0; n<N; n++) {
             for (int x=0; x<F*WO*HO; x++) {
                 int p=n*F*WO*HO+x;
@@ -649,6 +668,11 @@ public:
                 int px=ox%(WO*HO)+n*(WO*HO);
                 if (py>=y2c.rows() || px>=y2c.cols()) {
                     cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
+                    ++err;
+                    if (err>5) {
+                        cout << "FATAL c2i abort." << endl;
+                        return xx;
+                    }
                     continue;
                 }
                 xx(n,x)=y2c(py,px);
@@ -659,6 +683,7 @@ public:
 
     MatrixN icol2im(MatrixN dy, int N) {
         MatrixN iy(F,N*H*W);
+        int err=0;
         for (int f=0; f<F; f++) {
             for (int x=0; x<N*H*W; x++) {
                 int p=f*N*H*W+x;
@@ -667,6 +692,11 @@ public:
                 int px=ox%(W*H)+f*(H*W);
                 if (py>=dy.rows() || px>=dy.cols()) {
                     cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
+                    ++err;
+                    if (err>5) {
+                        cout << "FATAL ic2i abort." << endl;
+                        return iy;
+                    }
                     continue;
                 }
                 iy(f,x)=dy(py,px);
@@ -700,13 +730,17 @@ public:
         MatrixN *px2c = new MatrixN(C*HH*WW, N*HO*WO);
         px2c->setZero();
         //Timer t;
+        if (shape(x)[1]!=(unsigned int)C*W*H) {
+            cout << "ConvFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            return MatrixN(0,0);
+        }
 
         // x: N, C, H, W;  w: F, C, HH, WW
         //t.startCpu();
         im2col(x, px2c);
 //        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
 
-        //if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
         if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
 
 /*        cout <<"x:"<<shape(x)<<endl;
@@ -726,6 +760,10 @@ public:
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         MatrixN dc2=icol2im(dchain,N);
+        if (shape(dchain)[1]!=(unsigned int)F*HO*WO) {
+            cout << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
+            return MatrixN(0,0);
+        }
 
 /*        cout << "dchain:" << shape(dchain) << endl;
         cout << "dc2:" << shape(dc2) << endl;
