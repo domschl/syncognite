@@ -564,20 +564,23 @@ public:
                                     pix=0.0;
                                 } else {
                                     unsigned int xxs=cc*H*W+ys*W+xs;
-/*                                    if (xxs>=shape(xx)[1]) {
-                                        cout << "xxs illegal: " << xxs << endl;
+                                    if (xxs>=shape(xx)[1]) {
+                                        cout << "i2c xxs illegal: " << shape(xx) << xxs << "=" << cc << "," << ys <<"," << xs << endl;
+                                        continue;
                                     }
-*/                                    pix=xx(n,xxs);
+                                    pix=xx(n,xxs);
                                 }
                                 yd=cc*HH*WW+cy*WW+cx;
                                 xd=n*(HO*WO)+y*WO+x;
-/*                                if (yd<0 || yd>=C*HH*WW) {
-                                    cout << "yd illegal: " << yd << endl;
+                                if (yd<0 || yd>=C*HH*WW) {
+                                    cout << "i2c yd illegal: " << yd << endl;
+                                    continue;
                                 }
                                 if (xd<0 || xd>=N*WO*HO) {
-                                    cout << "xd illegal: " << xd << endl;
+                                    cout << "i2c xd illegal: " << xd << endl;
+                                    continue;
                                 }
-*/                                (*px2c)(yd,xd)=pix;
+                                (*px2c)(yd,xd)=pix;
                             }
                         }
                     }
@@ -594,7 +597,7 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
-        floatN pix;
+//        floatN pix;
         for (int n=0; n<N; n++) {
             for (int y=0; y<HO; y++) {
                 for (int x=0; x<WO; x++) {
@@ -606,24 +609,26 @@ public:
                                 ys=y0+cy;
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
-                                    pix=0.0;
+//                                    pix=0.0;
                                 } else {
                                     unsigned int xxs=cc*H*W+ys*W+xs;
-/*                                    if (xxs>=shape(xx)[1]) {
-                                        cout << "xxs illegal: " << xxs << endl;
+                                    if (xxs>=shape(dx)[1]) {
+                                        cout << "ii2c xxs illegal: " << xxs << endl;
+                                        continue;
                                     }
-*/
                                     yd=cc*HH*WW+cy*WW+cx;
                                     xd=n*(HO*WO)+y*WO+x;
+                                    if (yd<0 || yd>=C*HH*WW) {
+                                        cout << "ii2c yd illegal: " << yd << endl;
+                                        continue;
+                                    }
+                                    if (xd<0 || xd>=N*WO*HO) {
+                                        cout << "ii2c xd illegal: " << xd << endl;
+                                        continue;
+                                    }
                                     dx(n,xxs) += x2c(yd,xd);
                                 }
-/*                                if (yd<0 || yd>=C*HH*WW) {
-                                    cout << "yd illegal: " << yd << endl;
-                                }
-                                if (xd<0 || xd>=N*WO*HO) {
-                                    cout << "xd illegal: " << xd << endl;
-                                }
-*/ //                                (*px2c)(yd,xd)=pix;
+//                                (*px2c)(yd,xd)=pix;
                             }
                         }
                     }
@@ -642,10 +647,10 @@ public:
                 int ox=p%(N*WO*HO);
                 int py=(p/(WO*HO))%F;
                 int px=ox%(WO*HO)+n*(WO*HO);
-/*                if (py>y2c.rows() || px>y2c.cols()) {
-                    cout << "Illegal rows/cols in col2im:" << py << "," <<px<<endl;
+                if (py>=y2c.rows() || px>=y2c.cols()) {
+                    cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
+                    continue;
                 }
-                else */
                 xx(n,x)=y2c(py,px);
             }
         }
@@ -660,6 +665,10 @@ public:
                 int ox=p%(F*H*W);
                 int py=(p/(W*H))%N;
                 int px=ox%(W*H)+f*(H*W);
+                if (py>=dy.rows() || px>=dy.cols()) {
+                    cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
+                    continue;
+                }
                 iy(f,x)=dy(py,px);
             }
         }
@@ -690,24 +699,24 @@ public:
         auto N=shape(x)[0];
         MatrixN *px2c = new MatrixN(C*HH*WW, N*HO*WO);
         px2c->setZero();
-        Timer t;
+        //Timer t;
 
         // x: N, C, H, W;  w: F, C, HH, WW
-        t.startCpu();
+        //t.startCpu();
         im2col(x, px2c);
 //        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
 
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        //if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
 
 /*        cout <<"x:"<<shape(x)<<endl;
         cout <<"px2c:"<<shape(*px2c)<<endl;
         cout << "W:"<<shape(*params["W"]) << endl;
         cout << "b:"<<shape(*params["b"]) << endl;
-*/        t.startCpu();
+*/        //t.startCpu();
         MatrixN y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
 //        cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
-        t.startCpu();
+        //t.startCpu();
         MatrixN y=col2im(y2c, N);
 /*        cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
         cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;

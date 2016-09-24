@@ -1,5 +1,4 @@
 #include <cp-neural.h>
-#include <experimental/filesystem>
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
@@ -2000,7 +1999,7 @@ int doTests() {
 }
 
 int main(int argc, char *argv[]) {
-    string name=std::experimental::filesystem::path(argv[0]).filename();
+    string name="test";
     cpInitCompute(name);
     int ret=0;
     ret=doTests();

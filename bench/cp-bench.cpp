@@ -121,6 +121,16 @@ int doBench() {
 
             std::vector<int> tp(te);
             for (auto i=0; i< tp.size(); i++) tp[i]=M;
+            if (it.first=="Convolution") {
+                tp[0]=3;
+                tp[1]=100;
+                tp[2]=100;
+                tp[3]=32;
+                tp[4]=5;
+                tp[5]=5;
+                cp.setPar("pad",2);
+                cp.setPar("stride",3);
+            }
             cp.setPar("topo",tp);
             cp.setPar("train", true);
             Layer *l = CREATE_LAYER(it.first, cp)
