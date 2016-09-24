@@ -219,19 +219,24 @@ int main(int argc, char *argv[]) {
 // l1
     Convolution cv1("{topo=[3,32,32,48,4,4];stride=2;pad=1}");
     ml.addLayer("cv1",&cv1,vector<string>{"input"});
+    Relu mrl1("{topo=[12288]}");
+    ml.addLayer("rl1",&mrl1,vector<string>{"cv1"});
 // l2
     //HO = 1 + (H + 2 * pad - HH) / stride;
     //WO = 1 + (W + 2 * pad - WW) / stride;
-    Convolution cv2("{topo=[48,16,16,64,4,4];stride=2;pad=1}");
-    ml.addLayer("cv2",&cv2,vector<string>{"cv1"});
+    Convolution cv2("{topo=[48,16,16,128,4,4];stride=2;pad=1}");
+    ml.addLayer("cv2",&cv2,vector<string>{"rl1"});
+    Relu mrl2("{topo=[8192]}");
+    ml.addLayer("rl2",&mrl1,vector<string>{"cv2"});
 // l3
-    Convolution cv3("{topo=[64,8,8,96,2,2];stride=1;pad=1}");
-    ml.addLayer("cv3",&cv3,vector<string>{"cv2"});
-
+    Convolution cv3("{topo=[128,8,8,96,2,2];stride=1;pad=1}");
+    ml.addLayer("cv3",&cv3,vector<string>{"rl2"});
+    Relu mrl3("{topo=[7776]}");
+    ml.addLayer("rl3",&mrl1,vector<string>{"cv3"});
 // l4
     cp13.setPar("topo",vector<int>{96*9*9,N4});
     Affine maf4(cp13);
-    ml.addLayer("af4",&maf4,vector<string>{"cv3"});
+    ml.addLayer("af4",&maf4,vector<string>{"rl3"});
 
     cp14.setPar("topo", vector<int>{N4});
     BatchNorm bn4(cp14);
