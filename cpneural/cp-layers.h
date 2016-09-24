@@ -682,14 +682,15 @@ public:
     }
 
     MatrixN icol2im(MatrixN dy, int N) {
-        MatrixN iy(F,N*H*W);
+//        MatrixN iy(F,N*H*W);
+        MatrixN iy(F,N*HO*WO);
         int err=0;
         for (int f=0; f<F; f++) {
-            for (int x=0; x<N*H*W; x++) {
-                int p=f*N*H*W+x;
-                int ox=p%(F*H*W);
-                int py=(p/(W*H))%N;
-                int px=ox%(W*H)+f*(H*W);
+            for (int x=0; x<N*HO*WO; x++) {
+                int p=f*N*HO*WO+x;
+                int ox=p%(F*HO*WO);
+                int py=(p/(WO*HO))%N;
+                int px=ox%(WO*HO)+f*(HO*WO);
                 if (py>=dy.rows() || px>=dy.cols()) {
                     cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
                     ++err;
@@ -759,19 +760,21 @@ public:
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
-        MatrixN dc2=icol2im(dchain,N);
         if (shape(dchain)[1]!=(unsigned int)F*HO*WO) {
             cout << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-
 /*        cout << "dchain:" << shape(dchain) << endl;
-        cout << "dc2:" << shape(dc2) << endl;
         cout << "W:" << shape(*params["W"]) << endl;
         cout << "x:" << shape(*(*pcache)["x"]) << endl;
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
-*/        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+*/
+        MatrixN dc2=icol2im(dchain,N);
+
+//        cout << "dc2:" << shape(dc2) << endl;
+
+        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
 //        cout << "dx2c:" << shape(dx2c) << endl;
         MatrixN dx=iim2col(dx2c.transpose(), N);
         cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
