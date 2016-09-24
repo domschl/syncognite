@@ -163,8 +163,8 @@ int main(int argc, char *argv[]) {
     MultiLayer ml("{topo=[3072];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
     CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.5;
-// l1
+    floatN dropR=0.9;
+/*// l1
     cp1.setPar("topo",vector<int>{N0,N1});
     Affine maf1(cp1);
     ml.addLayer("af1",&maf1,vector<string>{"input"});
@@ -214,11 +214,24 @@ int main(int argc, char *argv[]) {
     cp12.setPar("topo", vector<int>{N3});
     cp12.setPar("drop", dropR);
     Dropout dr3(cp12);
-    ml.addLayer("dr3",&dr3,vector<string>{"rl3"});
+    ml.addLayer("dr3",&dr3,vector<string>{"rl3"});*/
+
+// l1
+    Convolution cv1("{topo=[3,32,32,48,4,4];stride=2;pad=1}");
+    ml.addLayer("cv1",&cv1,vector<string>{"input"});
+// l2
+    //HO = 1 + (H + 2 * pad - HH) / stride;
+    //WO = 1 + (W + 2 * pad - WW) / stride;
+    Convolution cv2("{topo=[48,16,16,48,4,4];stride=2;pad=1}");
+    ml.addLayer("cv2",&cv2,vector<string>{"cv1"});
+// l3
+    Convolution cv3("{topo=[48,8,8,64,2,2];stride=1;pad=1}");
+    ml.addLayer("cv3",&cv3,vector<string>{"cv2"});
+
 // l4
-    cp13.setPar("topo",vector<int>{N3,N4});
+    cp13.setPar("topo",vector<int>{64*9*9,N4});
     Affine maf4(cp13);
-    ml.addLayer("af4",&maf4,vector<string>{"dr3"});
+    ml.addLayer("af4",&maf4,vector<string>{"cv3"});
 
     cp14.setPar("topo", vector<int>{N4});
     BatchNorm bn4(cp14);
@@ -265,7 +278,7 @@ int main(int argc, char *argv[]) {
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",200);
-    cpo.setPar("batch_size",200);
+    cpo.setPar("batch_size",50);
     cpo.setPar("regularization", (floatN)0.0); //0.0000001);
     floatN final_err;
 
@@ -275,7 +288,7 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)5e-3); //2.2e-2);
     cpo.setPar("regularization", (floatN)1e-4);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
