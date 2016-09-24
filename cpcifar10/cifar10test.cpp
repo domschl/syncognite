@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
     MultiLayer ml("{topo=[3072];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
     CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.9;
+    floatN dropR=0.75;
 /*// l1
     cp1.setPar("topo",vector<int>{N0,N1});
     Affine maf1(cp1);
@@ -222,14 +222,14 @@ int main(int argc, char *argv[]) {
 // l2
     //HO = 1 + (H + 2 * pad - HH) / stride;
     //WO = 1 + (W + 2 * pad - WW) / stride;
-    Convolution cv2("{topo=[48,16,16,48,4,4];stride=2;pad=1}");
+    Convolution cv2("{topo=[48,16,16,64,4,4];stride=2;pad=1}");
     ml.addLayer("cv2",&cv2,vector<string>{"cv1"});
 // l3
-    Convolution cv3("{topo=[48,8,8,64,2,2];stride=1;pad=1}");
+    Convolution cv3("{topo=[64,8,8,96,2,2];stride=1;pad=1}");
     ml.addLayer("cv3",&cv3,vector<string>{"cv2"});
 
 // l4
-    cp13.setPar("topo",vector<int>{64*9*9,N4});
+    cp13.setPar("topo",vector<int>{96*9*9,N4});
     Affine maf4(cp13);
     ml.addLayer("af4",&maf4,vector<string>{"cv3"});
 
@@ -288,8 +288,9 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", (floatN)5e-3); //2.2e-2);
-    cpo.setPar("regularization", (floatN)1e-4);
+    cpo.setPar("learning_rate", (floatN)3e-2); //2.2e-2);
+    cpo.setPar("lr_decay", (floatN)0.97);
+    cpo.setPar("regularization", (floatN)5e-7);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif
