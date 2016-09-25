@@ -324,9 +324,9 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)3.5e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.975);
-    cpo.setPar("regularization", (floatN)1e-7);
+    cpo.setPar("regularization", (floatN)3e-9);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif

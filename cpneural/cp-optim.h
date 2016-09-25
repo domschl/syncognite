@@ -224,6 +224,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
 
     floatN l=0.0;
     floatN meanloss=0.0;
+    floatN m2loss=0.0;
     floatN meanacc=0.0;
     //bs=bs/nt;
     lr=lr/nt;
@@ -236,7 +237,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     for (int e=0; e<ep; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
-        if (verbose) cout << "Epoch: " << green << e+1 << def << "\r"; // << " learning-rate:" << lr << "\r";
+        if (verbose) {
+            cout << "Epoch: " << green << e+1 << def << "\r"; // << " learning-rate:" << lr << "\r";
+            std::flush(cout);
+        }
         tw.startWall();
         int th=0;
         //std::list<std::future<t_cppl>> gradsFut;
@@ -333,11 +337,17 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
                     floatN eta=twt/1000000.0-ett;
                     floatN chtr=twt/1000.0/(floatN)(b*bs);
-                    cout << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << ",s loss: " << l << def << "\r";
-                    std::flush(cout);
+                    float dv1=8.0;
+                    if (e<dv1) dv1=e+1.0;
+                    float dv2=20.0;
+                    if (e<dv2) dv2=e+1.0;
                     if (meanloss==0) meanloss=l;
-                    else meanloss=(7.0*meanloss+l)/8.0;
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss << endl;
+                    else meanloss=((dv1-1.0)*meanloss+l)/dv1;
+                    if (m2loss==0) m2loss=l;
+                    else m2loss=((dv2-1.0)*m2loss+l)/dv2;
+                    cout << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << def << "\r";
+                    std::flush(cout);
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss << "\t" << m2loss << endl;
                     std::flush(logfile);
                     bold=b;
                 }
@@ -352,10 +362,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         floatN errval=test(xv,yv);
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
-        if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << l << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
+        if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
-        logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << accval << "\t" << meanacc << endl;
+        logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << "\t" << m2loss << accval << "\t" << meanacc << endl;
         std::flush(logfile);
         setFlag("train",true);
         if (lr_decay!=1.0) {
