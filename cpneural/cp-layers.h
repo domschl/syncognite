@@ -827,7 +827,7 @@ if (algo==0 || id>=numGpuThreads) {
 //        cout << "dc2:" << shape(dc2) << endl;
 
         MatrixN dx;
-        if (algo==0) {
+        if (algo==0 || id>=numGpuThreads) {
             MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
             dx=iim2col(dx2c.transpose(), N);
             cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
@@ -844,14 +844,15 @@ if (algo==0 || id>=numGpuThreads) {
             viennacl::copy(dc2t, vi_dc2t);
             viennacl::copy(dc2, vi_dc2);
             viennacl::copy(*params["W"],vi_W);
-            viennacl::matrix<float> vi_dx2c=viennacl::linalg::prod(vi_dc2t,vi_W);
+            viennacl::matrix<float> vi_dx2c(dc2t.rows(),params["W"]->cols(),ctx);
+            vi_dx2c=viennacl::linalg::prod(vi_dc2t,vi_W);
             MatrixN dx2c(dc2t.rows(),params["W"]->cols());
             viennacl::copy(vi_dx2c, dx2c);
             dx=iim2col(dx2c.transpose(), N);
 
             MatrixN x2ct((*pcache)["x2c"]->cols(),(*pcache)["x2c"]->rows());
             x2ct=(*(*pcache)["x2c"]).transpose();
-            viennacl::matrix<float> vi_x2ct;
+            viennacl::matrix<float> vi_x2ct(x2ct.rows(),x2ct.cols(),ctx);
             viennacl::copy(x2ct, vi_x2ct);
             vi_dW=viennacl::linalg::prod(vi_dc2, vi_x2ct);
             MatrixN dW(params["W"]->rows(), params["W"]->cols());
