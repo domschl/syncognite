@@ -365,7 +365,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
-        logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << "\t" << m2loss << accval << "\t" << meanacc << endl;
+        logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
         std::flush(logfile);
         setFlag("train",true);
         if (lr_decay!=1.0) {
