@@ -5,6 +5,7 @@
 #include <list>
 #include <set>
 #include <chrono>
+#include <iomanip>
 #include "cp-layer.h"
 #include "cp-timer.h"
 #include "cp-layers.h"
@@ -235,7 +236,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     for (int e=0; e<ep; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
-        if (verbose) cout << "Epoch: " << green << e+1 << def << endl; // << " learning-rate:" << lr << endl;
+        if (verbose) cout << "Epoch: " << green << e+1 << def << "\r"; // << " learning-rate:" << lr << "\r";
         tw.startWall();
         int th=0;
         //std::list<std::future<t_cppl>> gradsFut;
@@ -332,10 +333,11 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
                     floatN eta=twt/1000000.0-ett;
                     floatN chtr=twt/1000.0/(floatN)(b*bs);
-                    cout << gray << "At: " << (floatN)b/(floatN)chunks*100.0 << "\% of epoch, " << chtr << " ms/data, ett: " << ett << "s, eta: " << eta << ",s loss: " << l << def << endl;
+                    cout << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << ",s loss: " << l << def << "\r";
+                    std::flush(cout);
                     if (meanloss==0) meanloss=l;
                     else meanloss=(7.0*meanloss+l)/8.0;
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss<< endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss << endl;
                     std::flush(logfile);
                     bold=b;
                 }
@@ -350,7 +352,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         floatN errval=test(xv,yv);
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
-        if (verbose) cout << "Time: "<< tw.stopWallMicro()/1000000.0 << "s, (" << ttst/1000000.0 << "s test) loss:" << l << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
+        if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << l << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
         logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << accval << "\t" << meanacc << endl;
