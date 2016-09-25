@@ -33,6 +33,7 @@ private:
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
         assert (topo.size()==2);
+        outTopo={topo[1]};
         //cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
         cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
         cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
@@ -44,6 +45,7 @@ private:
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
+        layerInit=true;
     }
 public:
     Affine(const CpParams& cx) {
@@ -155,8 +157,11 @@ private:
     void setup(const CpParams& cx) {
         layerName="Relu";
         layerType=LayerType::LT_NORMAL;
-        topoParams=1;
         cp=cx;
+        topoParams=1;
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        outTopo={topo[0]};
+        layerInit=true;
     }
 public:
     Relu(const CpParams& cx) {
@@ -214,7 +219,7 @@ private:
         cp=cx;
         vector<int> topo=cp.getPar("topo", vector<int>{0});
         assert (topo.size()==2);
-        //cout << "CrAffRelu:" << topo[0] <<"/" << topo[1] << endl;
+        outTopo={topo[1]};
         CpParams ca;
         ca.setPar("topo", vector<int>{topo[0],topo[1]});
         af=new Affine(ca);
@@ -223,6 +228,7 @@ private:
         cl.setPar("topo", vector<int>{topo[1]});
         rl=new Relu(cl);
         mlPush("re", &(rl->params), &params);
+        layerInit=true;
     }
 public:
     Affine *af;
@@ -286,6 +292,7 @@ private:
         momentum = cp.getPar("momentum", (floatN)0.9);
         trainMode = cp.getPar("train", (bool)false);
         vector<int> topo=cp.getPar("topo", vector<int>{0});
+        outTopo={topo[0]};
 
         MatrixN *pgamma=new MatrixN(1,topo[0]);
         pgamma->setOnes();
@@ -293,6 +300,7 @@ private:
         MatrixN *pbeta=new MatrixN(1,topo[0]);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
+        layerInit=true;
     }
 public:
     floatN eps;
@@ -410,12 +418,14 @@ private:
     void setup(const CpParams& cx) {
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
-        topoParams=1;
         cp=cx;
+        topoParams=1;
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        outTopo={topo[0]};
         drop = cp.getPar("drop", (floatN)0.5);
         trainMode = cp.getPar("train", (bool)false);
         freeze = cp.getPar("freeze", (bool)false);
-        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        layerInit=true;
     }
 public:
     floatN drop;
@@ -500,6 +510,7 @@ private:
     void setup(const CpParams& cx) {
         layerName="Convolution";
         topoParams=6;
+        bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
@@ -507,6 +518,7 @@ private:
         // TOPO: C, H, W, F, HH, WW
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
+
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
         cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
@@ -519,13 +531,17 @@ private:
         if ((H + 2 * pad - HH) % stride != 0) {
             int r=(H + 2 * pad - HH) % stride;
             cout << "H <-> stride does not fit! r=" << r << endl;
+            retval=false;
         }
         if ((W + 2 * pad - WW) % stride != 0) {
             int r=(W + 2 * pad - WW) % stride;
             cout << "W <-> stride does not fit! r=" << r << endl;
+            retval=false;
         }
         HO = 1 + (H + 2 * pad - HH) / stride;
         WO = 1 + (W + 2 * pad - WW) / stride;
+
+        outTopo={topo[3],WO,HO};
 
         params["W"]->setRandom();
         floatN xavier = 1.0/(floatN)(C+HH+WW);
@@ -533,6 +549,7 @@ private:
 
         params["b"]->setRandom();
         *params["b"] = *params["b"] * xavier;
+        layerInit=retval;
     }
 public:
     Convolution(const CpParams& cx) {
@@ -706,45 +723,6 @@ public:
         return iy;
     }
 
-
-/*
-
-if (algo==0 || id>=numGpuThreads) {
-    dx = dchain * (*params["W"]).transpose(); // dx
-    cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-    cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-} else {
-    #ifdef USE_VIENNACL
-    Timer t;
-    viennacl::context ctx(viennacl::ocl::get_context(id)); //static_cast<long>(id)
-    viennacl::matrix<float>vi_Wt(W.cols(), W.rows(),ctx);
-    viennacl::matrix<float>vi_dW(W.rows(), W.cols(),ctx);
-    viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols(), ctx);
-    viennacl::matrix<float>vi_xt(x.cols(), x.rows(), ctx);
-    viennacl::matrix<float>vi_dx(x.rows(), x.cols(), ctx);
-    MatrixN Wt;
-    Wt=W.transpose();
-    viennacl::copy(Wt, vi_Wt);
-    viennacl::copy(dchain, vi_dchain);
-    MatrixN xt;
-    xt=x.transpose();
-    viennacl::copy(xt, vi_xt);
-    vi_dx=viennacl::linalg::prod(vi_dchain,vi_Wt);
-    vi_dW=viennacl::linalg::prod(vi_xt, vi_dchain);
-    viennacl::copy(vi_dx, dx);
-    viennacl::copy(vi_dW, dW);
-    cppl_set(pgrads, "W", new MatrixN(dW));
-
-    //MatrixN dx2 = dchain * (*params["W"]).transpose(); // dx
-    //MatrixN dW2 = (*(*pcache)["x"]).transpose() * dchain; //dW
-    //matCompare(dx,dx2,"dx");
-    //matCompare(dW,dW2,"dW");
-
-    cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-    #endif
-}
-
-    */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
@@ -877,8 +855,11 @@ private:
     void setup(const CpParams& cx) {
         layerName="Svm";
         layerType=LayerType::LT_LOSS;
-        topoParams=1;
         cp=cx;
+        topoParams=1;
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        outTopo={topo[0]};
+        layerInit=true;
     }
 public:
     Svm(const CpParams& cx) {
@@ -944,8 +925,11 @@ private:
     void setup(const CpParams& cx) {
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
-        topoParams=1;
         cp=cx;
+        topoParams=1;
+        vector<int> topo=cp.getPar("topo", vector<int>{0});
+        outTopo={topo[0]};
+        layerInit=true;
     }
 public:
     Softmax(const CpParams& cx) {
@@ -1014,6 +998,8 @@ private:
         topoParams=3;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
+        outTopo={topo[2]};
+
         CpParams c1,c2,c3,c4;
         c1.setPar("topo",vector<int>{topo[0],topo[1]});
         c2.setPar("topo",vector<int>{topo[1]});
@@ -1027,6 +1013,7 @@ private:
         mlPush("af2", &(af2->params), &params);
         sm=new Softmax(c4);
         mlPush("sm", &(sm->params), &params);
+        layerInit=true;
     }
 public:
     Affine *af1;
@@ -1152,6 +1139,7 @@ public:
     }
     MultiLayer(string conf) {
         setup(CpParams(conf));
+        layerInit=true;
     }
     ~MultiLayer() {
     }
@@ -1164,11 +1152,14 @@ public:
             layerType=LayerType::LT_LOSS;
             lossLayer=name;
         }
+        if (player->layerInit==false) {
+            cout << "Attempt to add layer " << name << " with bad initialization." << endl;
+        }
         layerInputs[name]=inputLayers;
         mlPush(name, &(player->params), &params);
         checked=false;
     }
-    bool checkTopology() {
+    bool checkTopology(bool verbose=false) {
         if (lossLayer=="") {
             cout << "No loss layer defined!" << endl;
             return false;
@@ -1194,6 +1185,20 @@ public:
                     cout << "One (1) layer that uses " << cl << " as input needed, got: " << lyr.size() << endl;
                     return false;
                 }
+            }
+        }
+        if (verbose) {
+            bool done=false;
+            string cLay="input";
+            vector<string>nLay;
+            while (!done) {
+                nLay=getLayerFromInput(cLay);
+                string name=nLay[0];
+                Layer *p=layerMap[name];
+                cout << name << ": " << p->cp.getPar("topo", vector<int>{}) << " -> " << p->oTopo() << endl;
+                if (p->layerInit==false) cout << "  " << name << ": bad initialization!" << endl;
+                cLay=nLay[0];
+                if (p->layerType==LayerType::LT_LOSS) done=true;
             }
         }
         checked=true;

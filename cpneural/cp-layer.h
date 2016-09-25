@@ -341,10 +341,13 @@ public:
     string layerName;
     LayerType layerType;
     int topoParams;
+    vector<int>outTopo;
     CpParams cp;
     t_cppl params;
+    bool layerInit;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
+    virtual vector<int> oTopo() { return outTopo;}
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
