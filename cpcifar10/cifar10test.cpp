@@ -217,23 +217,23 @@ int main(int argc, char *argv[]) {
     ml.addLayer("dr3",&dr3,vector<string>{"rl3"});*/
 
 // l1     (W + 2 * pad - WW) % stride
-    cp1.setPar("topo",vector<int>{3,32,32,32,3,3});
-    cp1.setString("{stride=1;pad=0}");
+    cp1.setPar("topo",vector<int>{3,32,32,16,5,5});
+    cp1.setString("{stride=2;pad=1}");
     Convolution cv1(cp1);
     ml.addLayer("cv1",&cv1,vector<string>{"input"});
     cp2.setPar("topo",vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
     Relu mrl1(cp2);
     ml.addLayer("rl1",&mrl1,vector<string>{"cv1"});
 // l2
-    cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],128,3,3});
-    cp3.setString("{stride=3;pad=0}");
+    cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],16,5,5});
+    cp3.setString("{stride=1;pad=0}");
     Convolution cv2(cp3);
     ml.addLayer("cv2",&cv2,vector<string>{"rl1"});
     cp4.setPar("topo",vector<int>{cv2.oTopo()[0]*cv2.oTopo()[1]*cv2.oTopo()[2]});
     Relu mrl2(cp4);
     ml.addLayer("rl2",&mrl2,vector<string>{"cv2"});
 // l3
-    cp5.setPar("topo",vector<int>{cv2.oTopo()[0],cv2.oTopo()[1],cv2.oTopo()[2],96,2,2});
+    cp5.setPar("topo",vector<int>{cv2.oTopo()[0],cv2.oTopo()[1],cv2.oTopo()[2],16,3,3});
     cp5.setString("{stride=1;pad=0}");
     Convolution cv3(cp5);
     ml.addLayer("cv3",&cv3,vector<string>{"rl2"});
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
     Relu mrl3(cp6);
     ml.addLayer("rl3",&mrl3,vector<string>{"cv3"});
 // l4
-    cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],48,2,2});
+    cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],32,3,3});
     cp7.setString("{stride=1;pad=0}");
     Convolution cv4(cp7);
     ml.addLayer("cv4",&cv4,vector<string>{"rl3"});
@@ -249,7 +249,7 @@ int main(int argc, char *argv[]) {
     Relu mrl4(cp8);
     ml.addLayer("rl4",&mrl4,vector<string>{"cv4"});
 // l5
-    cp9.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2],48,2,2});
+    cp9.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2],64,3,3});
     cp9.setString("{stride=1;pad=0}");
     Convolution cv5(cp9);
     ml.addLayer("cv5",&cv5,vector<string>{"rl4"});
@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
     Relu mrl5(cp10);
     ml.addLayer("rl5",&mrl5,vector<string>{"cv5"});
 // l6
-    cp11.setPar("topo",vector<int>{cv5.oTopo()[0],cv5.oTopo()[1],cv5.oTopo()[2],48,2,2});
+    cp11.setPar("topo",vector<int>{cv5.oTopo()[0],cv5.oTopo()[1],cv5.oTopo()[2],128,3,3});
     cp11.setString("{stride=1;pad=0}");
     Convolution cv6(cp11);
     ml.addLayer("cv6",&cv6,vector<string>{"rl5"});
@@ -314,7 +314,7 @@ int main(int argc, char *argv[]) {
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",200);
-    cpo.setPar("batch_size",20);
+    cpo.setPar("batch_size",50);
     cpo.setPar("regularization", (floatN)0.0); //0.0000001);
     floatN final_err;
 
@@ -324,9 +324,9 @@ int main(int argc, char *argv[]) {
     tl.train(X, y, Xv, yv, "Adam", cpo);
     final_err=tl.test(Xt, yt);
     #else
-    cpo.setPar("learning_rate", (floatN)3.5e-2); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)3e-9);
+    cpo.setPar("regularization", (floatN)1e-5);
     ml.train(X, y, Xv, yv, "Adam", cpo);
     final_err=ml.test(Xt, yt);
     #endif

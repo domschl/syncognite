@@ -528,18 +528,35 @@ private:
 
         pad = cp.getPar("pad", 0);
         stride = cp.getPar("stride", 1);
+        if (pad>=stride) {
+            cout << "bad  configuration, pad:" << pad << ">=" << " stride:" << stride << endl;
+            retval=false;
+        }
         if ((H + 2 * pad - HH) % stride != 0) {
             int r=(H + 2 * pad - HH) % stride;
-            cout << "H <-> stride does not fit! r=" << r << endl;
-            retval=false;
+            if (r>pad) {
+                cout << "H <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
+                retval=false;
+            }
         }
         if ((W + 2 * pad - WW) % stride != 0) {
             int r=(W + 2 * pad - WW) % stride;
-            cout << "W <-> stride does not fit! r=" << r << endl;
-            retval=false;
+            if (r>pad) {
+                cout << "w <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
+                retval=false;
+            }
         }
         HO = 1 + (H + 2 * pad - HH) / stride;
         WO = 1 + (W + 2 * pad - WW) / stride;
+
+        if (HO*stride+HH-stride < H+pad) {
+            cout << "H: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
+            retval=false;
+        }
+        if (WO*stride+WW-stride < W+pad) {
+            cout << "W: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
+            retval=false;
+        }
 
         outTopo={topo[3],WO,HO};
 
