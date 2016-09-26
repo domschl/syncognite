@@ -200,6 +200,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     t_cppl optiCache;
     setFlag("train",true);
     bool bShuffle=true;
+    floatN lastAcc;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier gray(Color::FG_LIGHT_GRAY);
@@ -362,6 +363,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         floatN errval=test(xv,yv);
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
+        lastAcc=accval;
         if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
@@ -380,6 +382,6 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     }
     cppl_delete(&optiCache);
     delete popti;
-    return 0.0;
+    return lastAcc;
 }
 #endif

@@ -130,91 +130,16 @@ bool  getcifar10Data(string filepath) {
     return true;
 }
 
+/*CpParams autoOptimize(Layer *pLayer, CpParams& cpi, vector<string>& optiParams, MatrixN& X, MatrixN&y) {
 
-std::vector<string> classes{"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"};
-int main(int argc, char *argv[]) {
-     if (argc!=2) {
-         cout << "cifar10test <path-cifar10.h5-file>" << endl;
-         exit(-1);
-     }
-     getcifar10Data(argv[1]);
-     for (auto it : cpcifar10Data) {
-         cout << it.first << " " <<  shape(*it.second) << endl;
-     }
-     for (auto it : cpcifar10Data4) {
-         cout << it.first << " tensor-4" <<  endl;
-     }
+}*/
 
-     cpInitCompute("Cifar10");
-
-    MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
-    MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);
-    MatrixN Xv=(*(cpcifar10Data["train-data"])).block(49000,0,1000,3072);
-    MatrixN yv=(*(cpcifar10Data["train-labels"])).block(49000,0,1000,1);
-    MatrixN Xt=*(cpcifar10Data["test-data"]);
-    MatrixN yt=*(cpcifar10Data["test-labels"]);
-
-    //#define USE_2LN 1
-    #ifdef USE_2LN
-    TwoLayerNet tl(CpParams("{topo=[3072,1000,10]}"));
-    #else
-    //Multilayer1
-    int N0=3072,N1=1200,N2=1000,N3=700, N4=500, N5=200;
-    MultiLayer ml("{topo=[3072];name='multi1'}");
-    cout << "LayerName for ml: " << ml.layerName << endl;
+floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
+    int N4=500, N5=200;
     CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
     floatN dropR=0.75;
-/*// l1
-    cp1.setPar("topo",vector<int>{N0,N1});
-    Affine maf1(cp1);
-    ml.addLayer("af1",&maf1,vector<string>{"input"});
-
-    cp2.setPar("topo", vector<int>{N1});
-    BatchNorm bn1(cp2);
-    ml.addLayer("bn1",&bn1,vector<string>{"af1"});
-
-    cp3.setPar("topo", vector<int>{N1});
-    Relu mrl1(cp3);
-    ml.addLayer("rl1",&mrl1,vector<string>{"bn1"});
-
-    cp4.setPar("topo", vector<int>{N1});
-    cp4.setPar("drop", dropR);
-    Dropout dr1(cp4);
-    ml.addLayer("dr1",&dr1,vector<string>{"rl1"});
-// l2
-    cp5.setPar("topo",vector<int>{N1,N2});
-    Affine maf2(cp5);
-    ml.addLayer("af2",&maf2,vector<string>{"dr1"});
-
-    cp6.setPar("topo", vector<int>{N2});
-    BatchNorm bn2(cp6);
-    ml.addLayer("bn2",&bn2,vector<string>{"af2"});
-
-    cp7.setPar("topo", vector<int>{N2});
-    Relu mrl2(cp7);
-    ml.addLayer("rl2",&mrl2,vector<string>{"bn2"});
-
-    cp8.setPar("topo", vector<int>{N2});
-    cp8.setPar("drop", dropR);
-    Dropout dr2(cp8);
-    ml.addLayer("dr2",&dr2,vector<string>{"rl2"});
-// l3
-    cp9.setPar("topo",vector<int>{N2,N3});
-    Affine maf3(cp9);
-    ml.addLayer("af3",&maf3,vector<string>{"dr2"});
-
-    cp10.setPar("topo", vector<int>{N3});
-    BatchNorm bn3(cp10);
-    ml.addLayer("bn3",&bn3,vector<string>{"af3"});
-
-    cp11.setPar("topo", vector<int>{N3});
-    Relu mrl3(cp11);
-    ml.addLayer("rl3",&mrl3,vector<string>{"bn3"});
-
-    cp12.setPar("topo", vector<int>{N3});
-    cp12.setPar("drop", dropR);
-    Dropout dr3(cp12);
-    ml.addLayer("dr3",&dr3,vector<string>{"rl3"});*/
+    MultiLayer ml("{topo=[3072];name='multi1'}");
+    if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
 
 // l1     (W + 2 * pad - WW) % stride
     cp1.setPar("topo",vector<int>{3,32,32,16,5,5});
@@ -305,32 +230,96 @@ int main(int argc, char *argv[]) {
 
     Softmax msm1("{topo=[10]}");
     ml.addLayer("sm1",&msm1,vector<string>{"af6"});
-    if (!ml.checkTopology(true)) {
-        cout << "Topology-check for MultiLayer: ERROR." << endl;
+    if (!ml.checkTopology(verbose)) {
+        if (verbose) cout << "Topology-check for MultiLayer: ERROR." << endl;
     } else {
-        cout << "Topology-check for MultiLayer: ok." << endl;
+        if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
     }
-    #endif
+
+    floatN cAcc=ml.train(X, y, Xv, yv, "Adam", cpo);
+    floatN final_err;
+
+    if (evalFinal) {
+        final_err=ml.test(Xt, yt);
+        cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
+        cAcc=1-final_err;
+    }
+    return cAcc;
+}
+
+std::vector<string> classes{"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"};
+int main(int argc, char *argv[]) {
+    Color::Modifier red(Color::FG_RED);
+    Color::Modifier green(Color::FG_GREEN);
+    Color::Modifier gray(Color::FG_LIGHT_GRAY);
+    Color::Modifier def(Color::FG_DEFAULT);
+
+     if (argc!=2) {
+         cout << "cifar10test <path-cifar10.h5-file>" << endl;
+         exit(-1);
+     }
+     getcifar10Data(argv[1]);
+     for (auto it : cpcifar10Data) {
+         cout << it.first << " " <<  shape(*it.second) << endl;
+     }
+     for (auto it : cpcifar10Data4) {
+         cout << it.first << " tensor-4" <<  endl;
+     }
+
+     cpInitCompute("Cifar10");
+
+    MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
+    MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);
+    MatrixN Xv=(*(cpcifar10Data["train-data"])).block(49000,0,1000,3072);
+    MatrixN yv=(*(cpcifar10Data["train-labels"])).block(49000,0,1000,1);
+    MatrixN Xt=*(cpcifar10Data["test-data"]);
+    MatrixN yt=*(cpcifar10Data["test-labels"]);
+
+    //MultiLayer ml("{topo=[3072];name='multi1'}"); // unneeded. XXX remove the whole ifdef stuff, obsolete
+    //createMultilayer(&ml);
+
+    //Multilayer1
 
     CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
     cpo.setPar("epochs",200);
-    cpo.setPar("batch_size",50);
+    cpo.setPar("batch_size",30);
     cpo.setPar("regularization", (floatN)0.0); //0.0000001);
     floatN final_err;
 
 
-    #ifdef USE_2LN
-    cpo.setPar("learning_rate", (floatN)1e-2);
-    tl.train(X, y, Xv, yv, "Adam", cpo);
-    final_err=tl.test(Xt, yt);
-    #else
-    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)2e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
-    ml.train(X, y, Xv, yv, "Adam", cpo);
-    final_err=ml.test(Xt, yt);
-    #endif
-    cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
+
+    //vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; -> 1e-5
+    //vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; -> 1e-2
+    vector<floatN> regi{4e-5,2e-5,1e-5,8e-6,6e-6};
+    vector<floatN> learni{4e-2,2e-2,1e-2,6e-3,3e-3};
+    cpo.setPar("epochs",2);
+    floatN cmAcc=0.0, cAcc;
+    floatN bReg, bLearn;
+    for (auto learn : learni) {
+        cpo.setPar("learning_rate", learn);
+        for (auto reg : regi) {
+            cpo.setPar("regularization", reg);
+            cAcc=evalMultilayer(cpo, X, y, Xv, yv, Xt, yt);
+            if (cAcc > cmAcc) {
+                bReg=reg;
+                bLearn=learn;
+                cmAcc=cAcc;
+                cout << green << "Best: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+            } else {
+                cout << red << "      Acc:" << cAcc << ", Reg:" << reg << ", Learn:" << learn << def << endl;
+            }
+        }
+    }
+
+    cpo.setPar("learning_rate", bLearn);
+    cpo.setPar("regularization", bReg);
+    cpo.setPar("epochs",200);
+    cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+    cAcc=evalMultilayer(cpo, X, y, Xv, yv, Xt, yt, true, true);
+
     for (auto it : cpcifar10Data) {
          free(it.second);
          it.second=nullptr;

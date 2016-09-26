@@ -41,7 +41,7 @@ private:
         numCpuThreads=cpGetNumCpuThreads();
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/(floatN)(topo[0]+topo[1]); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/std::sqrt((floatN)(topo[0]+topo[1])); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
@@ -561,7 +561,7 @@ private:
         outTopo={topo[3],WO,HO};
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/(floatN)(C+HH+WW);
+        floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO));
         *params["W"] = *params["W"] * xavier;
 
         params["b"]->setRandom();
@@ -1142,7 +1142,6 @@ private:
         layerType=LayerType::LT_NORMAL;
         trainMode = cp.getPar("train", false);
         checked=false;
-        cout << "Setup for " << layerName << " was done." << endl;
     }
 public:
     map<string, Layer*> layerMap;
