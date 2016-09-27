@@ -24,15 +24,15 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-MatrixN linspace(MatrixN m0, floatN a, floatN b) {
+/*MatrixN linspace(MatrixN m0, floatN a, floatN b) {
     int n=m0.size();
     MatrixN y(m0);
-    for (auto i=1; i<=y.size(); i++) { // Strang, but numpy compatible
-        y[i]=(floatN)i/(float)n * (b-a)/+a;
+    for (auto i=0; i<=y.size(); i++) { // Strang, but numpy compatible
+        y(i)=(floatN)(i)/(floatN)(n) * (b-a)+a;
     }
     return y;
 }
-
+*/
 bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(2,4);
     x << -0.1       , -0.01428571,  0.07142857,  0.15714286,
@@ -1408,7 +1408,36 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
 bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(2,3*4*4); // 2x3x4x4 NxCxHxW
-    x << linspace(x,-0.3,0.4);
+    x << -0.3       , -0.29263158, -0.28526316, -0.27789474,
+          -0.27052632, -0.26315789, -0.25578947, -0.24842105,
+          -0.24105263, -0.23368421, -0.22631579, -0.21894737,
+          -0.21157895, -0.20421053, -0.19684211, -0.18947368,
+
+          -0.18210526, -0.17473684, -0.16736842, -0.16      ,
+          -0.15263158, -0.14526316, -0.13789474, -0.13052632,
+          -0.12315789, -0.11578947, -0.10842105, -0.10105263,
+          -0.09368421, -0.08631579, -0.07894737, -0.07157895,
+
+          -0.06421053, -0.05684211, -0.04947368, -0.04210526,
+          -0.03473684, -0.02736842, -0.02      , -0.01263158,
+          -0.00526316,  0.00210526,  0.00947368,  0.01684211,
+           0.02421053,  0.03157895,  0.03894737,  0.04631579,
+
+
+           0.05368421,  0.06105263,  0.06842105,  0.07578947,
+           0.08315789,  0.09052632,  0.09789474,  0.10526316,
+           0.11263158,  0.12      ,  0.12736842,  0.13473684,
+           0.14210526,  0.14947368,  0.15684211,  0.16421053,
+
+           0.17157895,  0.17894737,  0.18631579,  0.19368421,
+           0.20105263,  0.20842105,  0.21578947,  0.22315789,
+           0.23052632,  0.23789474,  0.24526316,  0.25263158,
+           0.26      ,  0.26736842,  0.27473684,  0.28210526,
+
+           0.28947368,  0.29684211,  0.30421053,  0.31157895,
+           0.31894737,  0.32631579,  0.33368421,  0.34105263,
+           0.34842105,  0.35578947,  0.36315789,  0.37052632,
+           0.37789474,  0.38526316,  0.39263158,  0.4;
     MatrixN y(2,12);
     y << -0.26315789, -0.24842105,
          -0.20421053, -0.18947368,
@@ -2224,13 +2253,26 @@ int doTests() {
     } else {
         cout << red << "ConvolutionForward (Convolution) with test data: ERROR." << def << endl;
         allOk=false;
-
         exit(-1);
     }
     if (checkConvolutionBackward()) {
         cout << green << "ConvolutionBackward (Convolution) with test data: OK." << def << endl;
     } else {
         cout << red << "ConvolutionBackward (Convolution) with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkPoolingForward()) {
+        cout << green << "PoolingForward with test data: OK." << def << endl;
+    } else {
+        cout << red << "PoolingForward with test data: ERROR." << def << endl;
+        allOk=false;
+        exit(-1);
+    }
+    if (checkPoolingBackward()) {
+        cout << green << "PoolingBackward with test data: OK." << def << endl;
+    } else {
+        cout << red << "PoolingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 

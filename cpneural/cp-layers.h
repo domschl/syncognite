@@ -903,12 +903,12 @@ private:
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        stride = cp.getPar("stride", 1);
+        stride = cp.getPar("stride", 2);
 
-        HO = C*((H-HH)/stride+1);
-        WO = C*((W-WW)/stride+1);
+        HO = (H-HH)/stride+1;
+        WO = (W-WW)/stride+1;
 
-        outTopo={topo[3],WO,HO};
+        outTopo={topo[3],C,WO,HO};
 
         layerInit=retval;
     }
@@ -926,46 +926,78 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
-        MatrixN *pmask = new MatrixN(N, C*H*W);
-        pmask->setZero();
-
         if (shape(x)[1]!=(unsigned int)C*W*H) {
-            cout << "ConvFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            cout << "PoolFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
         }
+        MatrixN *pmask = new MatrixN(N, C*H*W);
+        pmask->setZero();
+        MatrixN y(N,C*WO*HO);
+        y.setZero();
+        floatN mx;
+        int xs, ys,px, mxi, myi;
+        for (int n=0; n<(int)N; n++) {
+            for (int c=0; c<C; c++) {
+                for (int iy=0; iy<HO; iy++) {
+                    for (int ix=0; ix<WO; ix++) {
+                        mx=0.0; mxi= (-1); myi= (-1);
+                        for (int cy=0; cy<HH; cy++) {
+                            for (int cx=0; cx<WW; cx++) {
+                                xs=ix*stride+cx;
+                                ys=iy*stride+cy;
+                                if (xs>=W || ys>=H) continue;
+                                px=c*H*W+ys*W+xs;
+                                if (cx==0 && cy==0) mx=x(n,px);
+                                else {
+                                    if (x(n,px)>mx) {
+                                        mx=x(n,px);
+                                        myi=n;
+                                        mxi=px;
+                                    }
+                                }
+                            }
+                        }
+                        y(n,c*WO*HO+iy*WO+ix)=mx;
+                        if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi)=1.0;
+                    }
+                }
+            }
+        }
 
-        // x: N, C, H, W;  w: F, C, HH, WW
-        //t.startCpu();
-        im2col(x, px2c);
-//        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
+        cout << "x:" << endl << x << endl;
+        cout << "mask:" << endl << *pmask << endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
-        if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
+        if (pcache!=nullptr) cppl_set(pcache, "mask", pmask);
 
-/*        cout <<"x:"<<shape(x)<<endl;
-        cout <<"px2c:"<<shape(*px2c)<<endl;
-        cout << "W:"<<shape(*params["W"]) << endl;
-        cout << "b:"<<shape(*params["b"]) << endl;
-*/        //t.startCpu();
-        MatrixN y2c;
-            y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        }
-        if (pcache==nullptr) delete px2c;
+        if (pcache==nullptr) delete pmask;
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
-        if (shape(dchain)[1]!=(unsigned int)F*HO*WO) {
-            cout << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
+        if (shape(dchain)[1]!=(unsigned int)C*HO*WO) {
+            cout << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-        int algo=0;
-        MatrixN dc2=icol2im(dchain,N);
-            MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
-            dx=iim2col(dx2c.transpose(), N);
-            cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
-            cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
+        floatN mx;
+        int xs, ys;
+        for (int n=0; n<N; n++) {
+            for (int c=0; c<C; c++) {
+                for (int y=0; y<HO; y++) {
+                    for (int x=0; x<WO; x++) {
+                        for (int cy=0; cy<HH; cy++) {
+                            for (int cx=0; cx<WW; cx++) {
+                                xs=x*stride+cx;
+                                ys+y*stride+cy;
+                                if (xs>=W || ys>=H) continue;
+                                // if (cx==0 && cy==0) mx=x
+                            }
+                        }
+                    }
+                }
+            }
         }
+        MatrixN dx=*((*pcache)["mask"]);
         return dx;
     }
 };
