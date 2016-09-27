@@ -2121,6 +2121,12 @@ int doTests() {
     if (!pl.selfTest(xpl, yz)) {
         allOk=false;
     }
+    Pooling pl2("{topo=[3,5,5,3,3];stride=2}");
+    MatrixN xpl2(20,75);
+    xpl2.setRandom();
+    if (!pl2.selfTest(xpl2, yz)) {
+        allOk=false;
+    }
 
     AffineRelu rx("{topo=[2,3]}");
     MatrixN xarl(30,2);
