@@ -492,7 +492,7 @@ class Convolution : public Layer {
     // W: width of input
     // H: height of input
     // F: number of filter-kernels;   kernel is F x (C x WW x HH)
-    // C: identical number of color-depth
+    // C: identical number of color-depth    // XXX: move kernel sizes to params?
     // WW: filter-kernel depth
     // HH: filter-kernel height
     // params:
@@ -866,6 +866,110 @@ public:
     }
 };
 
+// Pooling layer
+class Pooling : public Layer {
+    // N: number of data points;  input is N x (C x W x H)
+    // C: color-depth
+    // W: width of input
+    // H: height of input
+    // C: identical number of color-depth
+    // WW: pooling-kernel depth
+    // HH: pooling-kernel height
+    // params:
+    //   stride
+    // Output: N x (C x WO x HO)
+    //   WO: output width
+    //   HO: output height
+private:
+    int numGpuThreads;
+    int numCpuThreads;
+    int C, H, W, HH, WW;
+    int HO, WO;
+    int stride;
+    void setup(const CpParams& cx) {
+        layerName="Pooling";
+        topoParams=5;  // XXX: move kernel sizes to params?
+        bool retval=true;
+        layerType=LayerType::LT_NORMAL;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo",vector<int>{0});
+        assert (topo.size()==6);
+        // TOPO: C, H, W,  HH, WW
+        C=topo[0]; H=topo[1]; W=topo[2];
+        HH=topo[3]; WW=topo[4];
+
+        // W: F, C, HH, WW
+        //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
+        numGpuThreads=cpGetNumGpuThreads();
+        numCpuThreads=cpGetNumCpuThreads();
+
+        stride = cp.getPar("stride", 1);
+
+        HO = C*((H-HH)/stride+1);
+        WO = C*((W-WW)/stride+1);
+
+        outTopo={topo[3],WO,HO};
+
+        layerInit=retval;
+    }
+public:
+    Pooling(const CpParams& cx) {
+        setup(cx);
+    }
+    Pooling(const string conf) {
+        setup(CpParams(conf));
+    }
+    ~Pooling() {
+        cppl_delete(&params);
+    }
+
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+        // XXX cache x2c and use allocated memory for im2col call!
+        auto N=shape(x)[0];
+        MatrixN *pmask = new MatrixN(N, C*H*W);
+        pmask->setZero();
+
+        if (shape(x)[1]!=(unsigned int)C*W*H) {
+            cout << "ConvFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            return MatrixN(0,0);
+        }
+
+        // x: N, C, H, W;  w: F, C, HH, WW
+        //t.startCpu();
+        im2col(x, px2c);
+//        cout << "im2col:"<<t.stopCpuMicro()<<"µs"<<endl;
+
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
+        if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
+
+/*        cout <<"x:"<<shape(x)<<endl;
+        cout <<"px2c:"<<shape(*px2c)<<endl;
+        cout << "W:"<<shape(*params["W"]) << endl;
+        cout << "b:"<<shape(*params["b"]) << endl;
+*/        //t.startCpu();
+        MatrixN y2c;
+            y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
+        }
+        if (pcache==nullptr) delete px2c;
+        return y;
+    }
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        int N=shape(dchain)[0];
+        if (shape(dchain)[1]!=(unsigned int)F*HO*WO) {
+            cout << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
+            return MatrixN(0,0);
+        }
+        int algo=0;
+        MatrixN dc2=icol2im(dchain,N);
+            MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+            dx=iim2col(dx2c.transpose(), N);
+            cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
+            cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
+        }
+        return dx;
+    }
+};
+
 // Multiclass support vector machine Svm
 class Svm : public Layer {
 private:
@@ -1127,7 +1231,8 @@ void registerLayers() {
     REGISTER_LAYER("AffineRelu", AffineRelu, 2)
     REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Dropout", Dropout, 1)
-    REGISTER_LAYER("Convolution", Convolution, 6)
+    REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
+    REGISTER_LAYER("Pooling", Pooling, 5)  // XXX: adapt to 3 + params?
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
