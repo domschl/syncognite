@@ -19,6 +19,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
         cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
         cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
+        cout << msg << "  ∂:" << endl << (m0-m1).format(CleanFmt) << endl;
         cout << "err=" << dif << endl;
         return false;
     }
@@ -2106,10 +2107,18 @@ int doTests() {
     }
 
     // Convolution
-    Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=1}");
+    Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=0}");
     MatrixN xcv(20,48);
     xcv.setRandom();
     if (!cv.selfTest(xcv, yz)) {
+        allOk=false;
+    }
+
+    // Pooling
+    Pooling pl("{topo=[3,4,4,2,2];stride=2}");
+    MatrixN xpl(20,48);
+    xpl.setRandom();
+    if (!pl.selfTest(xpl, yz)) {
         allOk=false;
     }
 

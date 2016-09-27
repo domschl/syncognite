@@ -947,7 +947,11 @@ public:
                                 ys=iy*stride+cy;
                                 if (xs>=W || ys>=H) continue;
                                 px=c*H*W+ys*W+xs;
-                                if (cx==0 && cy==0) mx=x(n,px);
+                                if (cx==0 && cy==0) {
+                                    mx=x(n,px);
+                                    myi=n;
+                                    mxi=px;
+                            }
                                 else {
                                     if (x(n,px)>mx) {
                                         mx=x(n,px);
@@ -958,14 +962,15 @@ public:
                             }
                         }
                         y(n,c*WO*HO+iy*WO+ix)=mx;
-                        if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi)=1.0;
+                        if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi) += 1.0;
+                        //if ((*pmask)(myi,mxi) > 1.0) cout << "It has happened!" << endl;
                     }
                 }
             }
         }
 
-        cout << "x:" << endl << x << endl;
-        cout << "mask:" << endl << *pmask << endl;
+        //cout << "x:" << endl << x << endl;
+        //cout << "mask:" << endl << *pmask << endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
         if (pcache!=nullptr) cppl_set(pcache, "mask", pmask);
@@ -979,25 +984,31 @@ public:
             cout << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-        floatN mx;
-        int xs, ys;
-        for (int n=0; n<N; n++) {
+        MatrixN *pmask = new MatrixN(N, C*H*W);
+        pmask->setZero();
+        MatrixN dx(N,C*W*H);
+        dx.setZero();
+        int xs, ys, px, py;
+        for (int n=0; n<(int)N; n++) {
             for (int c=0; c<C; c++) {
-                for (int y=0; y<HO; y++) {
-                    for (int x=0; x<WO; x++) {
+                for (int iy=0; iy<HO; iy++) {
+                    for (int ix=0; ix<WO; ix++) {
                         for (int cy=0; cy<HH; cy++) {
                             for (int cx=0; cx<WW; cx++) {
-                                xs=x*stride+cx;
-                                ys+y*stride+cy;
+                                xs=ix*stride+cx;
+                                ys=iy*stride+cy;
                                 if (xs>=W || ys>=H) continue;
-                                // if (cx==0 && cy==0) mx=x
+                                px=c*H*W+ys*W+xs;
+                                py=c*WO*HO+iy*WO+ix;
+                                MatrixN *pmask=(*pcache)["mask"];
+                                dx(n, px) += dchain(n,py) * (*pmask)(n, px);
                             }
                         }
                     }
                 }
             }
         }
-        MatrixN dx=*((*pcache)["mask"]);
+
         return dx;
     }
 };
