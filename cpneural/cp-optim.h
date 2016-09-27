@@ -333,7 +333,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 update(popti, &sgrad, "", &optiCache);
                 cppl_delete(&sgrad);
                 gradsFut.clear();
-                if (verbose && b-bold>=50) {
+                if (verbose && b-bold>=5) {
                     floatN twt=tw.stopWallMicro();
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
                     floatN eta=twt/1000000.0-ett;
