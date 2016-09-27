@@ -985,8 +985,6 @@ public:
             cout << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-        MatrixN *pmask = new MatrixN(N, C*H*W);
-        pmask->setZero();
         MatrixN dx(N,C*W*H);
         dx.setZero();
         int xs, ys, px, py;
