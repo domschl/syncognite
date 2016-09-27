@@ -526,10 +526,10 @@ private:
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        pad = cp.getPar("pad", 0);
         stride = cp.getPar("stride", 1);
-        if (pad>=stride) {
-            cout << "bad  configuration, pad:" << pad << ">=" << " stride:" << stride << endl;
+        pad = cp.getPar("pad", (int)((HH-1)/2));
+        if (pad>=HH || pad>=WW) {
+            cout << "bad  configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
             retval=false;
         }
         if ((H + 2 * pad - HH) % stride != 0) {
@@ -910,7 +910,7 @@ private:
         HO = (H-HH)/stride+1;
         WO = (W-WW)/stride+1;
 
-        outTopo={topo[3],C,WO,HO};
+        outTopo={C,WO,HO};
 
         layerInit=retval;
     }
