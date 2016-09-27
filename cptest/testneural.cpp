@@ -1453,7 +1453,7 @@ bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.32631579,  0.34105263,
           0.38526316,  0.4;
          // TOPO: C, H, W, F, HH, WW
-    Pooling pl("{topo=[3,4,4,2,2];stride=2}");
+    Pooling pl("{topo=[3,4,4];stride=2}");
     MatrixN y0=pl.forward(x, nullptr);
 
     return matComp(y,y0,"PoolingForward",eps);
@@ -1700,7 +1700,7 @@ bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
            0.        ,  0.        ,  1.40399454,
            0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
           -0.62679592,  0.        ,  0.;
-    Pooling pl("{topo=[2,8,8,2,2];stride=2}");
+    Pooling pl("{topo=[2,8,8];stride=2}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=pl.forward(x, &cache);
@@ -2115,16 +2115,10 @@ int doTests() {
     }
 
     // Pooling
-    Pooling pl("{topo=[3,4,4,2,2];stride=2}");
+    Pooling pl("{topo=[3,4,4];stride=2}");
     MatrixN xpl(20,48);
     xpl.setRandom();
     if (!pl.selfTest(xpl, yz)) {
-        allOk=false;
-    }
-    Pooling pl2("{topo=[3,5,5,3,3];stride=2}");
-    MatrixN xpl2(20,75);
-    xpl2.setRandom();
-    if (!pl2.selfTest(xpl2, yz)) {
         allOk=false;
     }
 

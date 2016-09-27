@@ -893,17 +893,19 @@ private:
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==6);
-        // TOPO: C, H, W,  HH, WW
+        assert (topo.size()==3);
+        stride = cp.getPar("stride", 2);
+        // TOPO: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
         C=topo[0]; H=topo[1]; W=topo[2];
-        HH=topo[3]; WW=topo[4];
-
+        HH=stride; WW=stride;  // XXX: Simplification, our algo doesn't work for HH or WW != stride.
+        if (HH!=stride || WW!=stride) {
+            cout << "Implementation only supports stride equal to HH and WW!";
+            retval=false;
+        }
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
-
-        stride = cp.getPar("stride", 2);
 
         HO = (H-HH)/stride+1;
         WO = (W-WW)/stride+1;
@@ -962,8 +964,7 @@ public:
                             }
                         }
                         y(n,c*WO*HO+iy*WO+ix)=mx;
-                        if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi) += 1.0;
-                        //if ((*pmask)(myi,mxi) > 1.0) cout << "It has happened!" << endl;
+                        if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi) = 1.0;
                     }
                 }
             }
@@ -1275,7 +1276,7 @@ void registerLayers() {
     REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Dropout", Dropout, 1)
     REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
-    REGISTER_LAYER("Pooling", Pooling, 5)  // XXX: adapt to 3 + params?
+    REGISTER_LAYER("Pooling", Pooling, 3)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
