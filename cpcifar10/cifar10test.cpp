@@ -376,7 +376,7 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
 floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
     int N4=500, N5=200;
     CpParams cp1,cp2,cp3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.8;
+    floatN dropR=0.6;
     MultiLayer ml("{topo=[3072];name='multi1'}");
     if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
 
@@ -560,13 +560,13 @@ int main(int argc, char *argv[]) {
         }
         cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=6.e-3;
-        bReg=9.e-5;
+        bLearn=8.e-3;
+        bReg=1.e-5;
     }
 
     cpo.setPar("learning_rate", bLearn);
     cpo.setPar("regularization", bReg);
-    cpo.setPar("epochs",50);
+    cpo.setPar("epochs",25);
     evalMultilayer(cpo, X, y, Xv, yv, Xt, yt, true, true);
 
     for (auto it : cpcifar10Data) {

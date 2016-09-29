@@ -888,7 +888,7 @@ private:
     int stride;
     void setup(const CpParams& cx) {
         layerName="Pooling";
-        topoParams=5;  // XXX: move kernel sizes to params?
+        topoParams=3;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
@@ -1011,6 +1011,104 @@ public:
         return dx;
     }
 };
+
+
+// SpatialBatchNorm layer
+class SpatialBatchNorm : public Layer {
+    // N: number of data points;  input is N x (C x W x H)
+    // C: color-depth
+    // W: width of input
+    // H: height of input
+    // C: identical number of color-depth
+    // WW: SpatialBatchNorm-kernel depth
+    // HH: SpatialBatchNorm-kernel height
+    // params:
+    //   stride
+    // Output: N x (C x WO x HO)
+    //   WO: output width
+    //   HO: output height
+private:
+    int C, H, W;
+    BatchNorm *pbn;
+    void setup(const CpParams& cx) {
+        layerName="SpatialBatchNorm";
+        topoParams=3;  // XXX: move kernel sizes to params?
+        bool retval=true;
+        layerType=LayerType::LT_NORMAL;
+        cp=cx;
+        vector<int> topo=cp.getPar("topo",vector<int>{0});
+        assert (topo.size()==3);
+        // TOPO: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
+        C=topo[0]; H=topo[1]; W=topo[2];
+        outTopo={C,H,W};
+
+        CpParams cs(cp);
+        cs.setPar("topo",vector<int>{C*H*W});
+        pbn = new BatchNorm(cs);
+        mlPush("bn", &(pbn->params), &params);
+
+        layerInit=retval;
+    }
+public:
+    SpatialBatchNorm(const CpParams& cx) {
+        setup(cx);
+    }
+    SpatialBatchNorm(const string conf) {
+        setup(CpParams(conf));
+    }
+    ~SpatialBatchNorm() {
+        //cppl_delete(&params);
+        delete pbn;
+        pbn=nullptr;
+    }
+
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+        // XXX cache x2c and use allocated memory for im2col call!
+        int N=shape(x)[0];
+        if (shape(x)[1]!=(unsigned int)C*W*H) {
+            cout << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            return MatrixN(0,0);
+        }
+        MatrixN xs(C,N*H*W);
+        for (int n=0; n<N; n++) {  // Uhhh..
+            for (int c=0; c<C; c++) {
+                for (int h=0; h<H; h++) {
+                    for (int w=0; w<W; w++) {
+                        xs(c,n*H*W+h*W+w)=x(n,c*H*W+h*W+w);
+                    }
+                }
+            }
+        }
+
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+
+        t_cppl tcachebn;
+        MatrixN ys=pbn->forward(x, &tcachebn, id);
+        mlPush("bn", &tcachebn, pcache);
+
+        MatrixN y;
+        for (int n=0; n<N; n++) {  // Uhhh..
+            for (int c=0; c<C; c++) {
+                for (int h=0; h<H; h++) {
+                    for (int w=0; w<W; w++) {
+                        y(n,c*H*W+h*W+w)=ys(c,n*H*W+h*W+w);
+                    }
+                }
+            }
+        }
+        return y;
+    }
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        int N=shape(dchain)[0];
+        if (shape(dchain)[1]!=(unsigned int)C*H*W) {
+            cout << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
+            return MatrixN(0,0);
+        }
+        MatrixN dx;
+        return dx;
+    }
+};
+
 
 // Multiclass support vector machine Svm
 class Svm : public Layer {
@@ -1275,6 +1373,7 @@ void registerLayers() {
     REGISTER_LAYER("Dropout", Dropout, 1)
     REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
     REGISTER_LAYER("Pooling", Pooling, 3)
+    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
