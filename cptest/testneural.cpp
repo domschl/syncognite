@@ -2107,10 +2107,12 @@ int doTests() {
     }
 
     // Convolution
-    Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=0}");
-    MatrixN xcv(20,48);
+    //Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=0}");
+    //MatrixN xcv(20,48);
+    Convolution cv("{topo=[3,5,5,2,3,3];stride=1;pad=1}");
+    MatrixN xcv(2,75);
     xcv.setRandom();
-    if (!cv.selfTest(xcv, yz)) {
+    if (!cv.selfTest(xcv, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
 

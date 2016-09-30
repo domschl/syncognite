@@ -533,14 +533,14 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    bool autoOpt=false;
+    bool autoOpt=true;
 
     floatN bReg, bLearn;
     if (autoOpt) {
         //vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; -> 1e-5
         //vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; -> 1e-2
-        vector<floatN> regi{4e-5,2e-5,1e-5,8e-6,6e-6}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
-        vector<floatN> learni{4e-2,2e-2,1e-2,6e-3,3e-3}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
+        vector<floatN> regi{1e-5,3e-5,6e-5,9e-5}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
+        vector<floatN> learni{1e-3,3e-3,6e-3,1e-2}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
         cpo.setPar("epochs",2);
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {

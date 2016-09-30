@@ -584,7 +584,8 @@ public:
     ~Convolution() {
         cppl_delete(&params);
     }
-/*    void im2col(MatrixN xx, MatrixN *px2c) {
+    /*
+    void im2col(MatrixN xx, MatrixN *px2c) {
         int N=shape(xx)[0];
         // add padding and b-caused 1s
         //      p p x x x x x x x p p
@@ -638,7 +639,8 @@ public:
             }
         }
         //cout << "x2c:" << endl << *px2c << endl;
-    }*/
+    }
+    */
     void im2col(MatrixN xx, MatrixN *px2c) {
         int N=shape(xx)[0];
         // add padding and b-caused 1s
@@ -646,6 +648,8 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
+        int cchhww,cchw;
+        int xxso;
         unsigned int xxs;
         floatN pix;
         for (int n=0; n<N; n++) {
@@ -655,17 +659,20 @@ public:
                     x0=x*stride-pad;
                     xd=n*(HO*WO)+y*WO+x;
                     for (int cc=0; cc<C; cc++) {
+                        cchhww=cc*HH*WW;
+                        cchw=cc*H*W;
                         for (int cy=0; cy<HH; cy++) {
                             ys=y0+cy;
+                            xxso=cchw+ys*W;
                             for (int cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
                                     pix=0.0;
                                 } else {
-                                    xxs=cc*H*W+ys*W+xs;
+                                    xxs=xxso+xs;
                                     pix=xx(n,xxs);
                                 }
-                                yd=cc*HH*WW+cy*WW+cx;
+                                yd=cchhww+cy*WW+cx;
                                 (*px2c)(yd,xd)=pix;
                             }
                         }
@@ -675,8 +682,8 @@ public:
         }
         //cout << "x2c:" << endl << *px2c << endl;
     }
-
-/*    MatrixN iim2col(MatrixN x2c, int N) {
+/*
+    MatrixN iim2col(MatrixN x2c, int N) {
         MatrixN dx(N,C*W*H);
         dx.setZero();
 
@@ -731,7 +738,8 @@ public:
         }
 
         return dx;
-    }*/
+    }
+    */
     MatrixN iim2col(MatrixN x2c, int N) {
         MatrixN dx(N,C*W*H);
         dx.setZero();
@@ -740,6 +748,7 @@ public:
         int xs, ys;
         int x0, y0;
         unsigned int xxs;
+        int cchw, cchhww, xxso;
         for (int n=0; n<N; n++) {
             for (int y=0; y<HO; y++) {
                 for (int x=0; x<WO; x++) {
@@ -747,14 +756,17 @@ public:
                     x0=x*stride-pad;
                     xd=n*(HO*WO)+y*WO+x;
                     for (int cc=0; cc<C; cc++) {
+                        cchw=cc*H*W;
+                        cchhww=cc*HH*WW;
                         for (int cy=0; cy<HH; cy++) {
                             ys=y0+cy;
+                            xxso=cchw+ys*W;
                             if (ys<0 || ys>=H) continue;
                             for (int cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W) continue;
-                                xxs=cc*H*W+ys*W+xs;
-                                yd=cc*HH*WW+cy*WW+cx;
+                                xxs=xxso+xs;
+                                yd=cchhww+cy*WW+cx;
                                 dx(n,xxs) += x2c(yd,xd);
                             }
                         }
@@ -769,12 +781,13 @@ public:
     MatrixN col2im(MatrixN y2c, int N) {
         MatrixN xx(N,F*WO*HO);
 //        int err=0;
+        int WHO=WO*HO;
         for (int n=0; n<N; n++) {
-            for (int x=0; x<F*WO*HO; x++) {
-                int p=n*F*WO*HO+x;
-                int ox=p%(N*WO*HO);
-                int py=(p/(WO*HO))%F;
-                int px=ox%(WO*HO)+n*(WO*HO);
+            for (int x=0; x<F*WHO; x++) {
+                int p=n*F*WHO+x;
+                int ox=p%(N*WHO);
+                int py=(p/(WHO))%F;
+                int px=ox%(WHO)+n*(WHO);
 /*                if (py>=y2c.rows() || px>=y2c.cols()) {
                     cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
                     ++err;
@@ -794,12 +807,13 @@ public:
 //        MatrixN iy(F,N*H*W);
         MatrixN iy(F,N*HO*WO);
 //        int err=0;
+        int HWO=WO*HO;
         for (int f=0; f<F; f++) {
-            for (int x=0; x<N*HO*WO; x++) {
-                int p=f*N*HO*WO+x;
-                int ox=p%(F*HO*WO);
-                int py=(p/(WO*HO))%N;
-                int px=ox%(WO*HO)+f*(HO*WO);
+            for (int x=0; x<N*HWO; x++) {
+                int p=f*N*HWO+x;
+                int ox=p%(F*HWO);
+                int py=(p/(HWO))%N;
+                int px=ox%(HWO)+f*(HWO);
 /*                if (py>=dy.rows() || px>=dy.cols()) {
                     cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
                     ++err;
@@ -848,9 +862,7 @@ public:
         if (algo==0 || id>=numGpuThreads) {
             y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         } else {
-            #ifdef USE_GPU
             y2c=matmul(params["W"], px2c, id, mlverbose).colwise() + ColVectorN(*params["b"]);
-            #endif
         }
         if (mlverbose) cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
         if (mlverbose) t.startWall();
@@ -887,7 +899,6 @@ public:
             cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
             cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
         } else {
-            #ifdef USE_GPU
             MatrixN dc2t;
             dc2t=dc2.transpose();
             MatrixN W=*params["W"];
@@ -898,7 +909,6 @@ public:
             MatrixN dW=matmul(&dc2,&x2ct,id,mlverbose);
             cppl_set(pgrads, "W", new MatrixN(dW));
             cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
-            #endif
         }
         return dx;
     }
