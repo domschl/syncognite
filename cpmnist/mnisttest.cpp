@@ -245,6 +245,7 @@ bool  getMnistData(string filepath) {
          free(it.second);
          it.second=nullptr;
      }
+     cpExitCompute();
      return 0;
  }
 

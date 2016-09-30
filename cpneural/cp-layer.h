@@ -222,7 +222,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
         cudaFree(cc);
 */       // cout << "  cFree:" << t.stopWallMicro() << endl;
 
-        if (verbose) cout << "Cuda matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+        if (verbose) cout << "Cuda matmul " << shape(*a) << shape(*b) << ": " << t.stopWallMicro() << endl;
         #else
         #error "USE_DOUBLE not supported with USE_CUDA"
         #endif

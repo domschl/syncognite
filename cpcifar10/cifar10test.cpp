@@ -573,6 +573,8 @@ int main(int argc, char *argv[]) {
          free(it.second);
          it.second=nullptr;
      }
+     cpExitCompute();
+
      return 0;
  }
 
