@@ -54,6 +54,10 @@ using floatN=float;
 
 using CpParams=ParamParser<floatN>;
 
+#if defined (USE_VIENNACL) || (USE_CUDA)
+#define USE_GPU
+#endif
+
 #ifdef USE_VIENNACL
 #define VIENNACL_HAVE_EIGEN
 #ifdef USE_OPENCL
@@ -70,7 +74,6 @@ using CpParams=ParamParser<floatN>;
 
 #include "cp-math.h"
 #include "cp-layer.h"
-
 
 #ifdef USE_VIENNACL
 #include <viennacl/scalar.hpp>
@@ -138,40 +141,71 @@ void peekMat(const string label, const MatrixN& m) {
         cout << endl;
     }
 }
+#ifdef USE_CUDA
+cublasHandle_t *cuHandles;
+#define CUDA_THRESHOLD 600
+#endif
 
-MatrixN matmul(MatrixN *a, MatrixN *b) {
+#ifdef USE_VIENNACL
+#define VIENNACL_THRESHOLD 600
+#endif
+
+MatrixN matmul(MatrixN *a, MatrixN *b, int contextId) {
     #ifdef USE_CUDA
     // Create a handle for CUBLAS
-    const floatN alpha=1;
-    const floatN beta=0;
-    cublasHandle_t handle;
-    cublasCreate(&handle);
-    #ifdef USE_FLOAT
-    MatrixN c(a->rows(), b->cols());
-    float *ca, *cb, *cc;
-    cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
-    cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
-    cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
 
-    cudaMemcpy(ca,a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
-    cudaMemcpy(cb,b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+    if (a->rows()+a->cols()+b->cols() < CUDA_THRESHOLD) {
+        return *a* *b;
+    } else {
 
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha, ca, a->cols(), cb, b->cols(), &beta, cc, c.cols());
+        const floatN alpha=1;
+        const floatN beta=0;
 
-    cudaMemcpy(c.data(),cc,c.rows()*c.cols()*sizeof(float),cudaMemcpyDeviceToHost);
+        #ifdef USE_FLOAT
+        MatrixN c(a->rows(), b->cols());
+        float *ca, *cb, *cc;
 
-    cudaFree(ca);
-    cudaFree(cb);
-    cudaFree(cc);
+        cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
+        cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
+        cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
+
+        cudaMemcpy(ca,a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        cudaMemcpy(cb,b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+
+        cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
+                    ca, a->rows(), cb, b->rows(), &beta, cc, c.rows());
+
+        cudaMemcpy(c.data(),cc,c.rows()*c.cols()*sizeof(float),cudaMemcpyDeviceToHost);
+
+        cudaFree(ca);
+        cudaFree(cb);
+        cudaFree(cc);
+
+        #else
+        #error "USE_DOUBLE not supported with USE_CUDA"
+        #endif
+
+        return c;
+    }
+
     #else
-    #error "USE_DOUBLE not supported with USE_CUDA"
-    #endif
-    cublasDestroy(handle);
-
-    return c;
-
+    #ifdef USE_VIENNACL
+    if (a->rows()+a->cols()+b->cols() < VIENNACL_THRESHOLD) {
+        return *a* *b;
+    } else {
+        viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(contextId)));
+        viennacl::matrix<float>vi_b(b.rows(), b.cols(), ctx);
+        viennacl::matrix<float>vi_a(a.rows(), a.cols(), ctx);
+        viennacl::matrix<float>vi_y(a.rows(), b.cols(), ctx);
+        viennacl::copy(b, vi_b);
+        viennacl::copy(a, vi_a);
+        vi_y = viennacl::linalg::prod(vi_a, vi_b);
+        viennacl::copy(vi_y, y);
+        return y;
+    }
     #else
     return *a* *b;
+    #endif
     #endif
 }
 
@@ -180,7 +214,7 @@ int cpNumEigenThreads=1;
 int cpNumCpuThreads=1;
 #define MAX_GPUTHREADS 64
 
-bool threadViennaClContextinit(unsigned int numThreads) {
+bool threadContextInit(unsigned int numThreads) {
     #ifdef USE_VIENNACL
     if (numThreads > MAX_GPUTHREADS) numThreads=MAX_GPUTHREADS;
     if (viennacl::ocl::get_platforms().size() == 0) {
@@ -198,6 +232,26 @@ bool threadViennaClContextinit(unsigned int numThreads) {
     // Set context to 0 for main program, 1-numThreads for threads
     //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
     //cout << "Contexts created, got context 0 for main program." << endl;
+    #else
+    #ifdef USE_CUDA
+    cuHandles=(cublasContext **)malloc(sizeof(cublasHandle_t) * cpNumGpuThreads);
+    for (int i=0; i<cpNumGpuThreads; i++) {
+        cublasCreate(&(cuHandles[i]));
+        cout << "Context " << i << " on: cublas" << endl;
+    }
+
+    #endif
+    #endif
+    return true;
+}
+
+bool threadContextDestroy() {
+    #ifdef USE_CUDA
+    for (int i=0; i<cpNumGpuThreads; i++) {
+        cublasDestroy(cuHandles[i]);
+    }
+    free(cuHandles);
+    cuHandles=nullptr;
     #endif
     return true;
 }
@@ -236,7 +290,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
 // myfile << "Writing this to a file.\n";
 
 
-    #ifdef USE_VIENNACL
+    #ifdef USE_GPU
     cpNumGpuThreads=cp.getPar("NumGpuThreads", 8);
     #else
     cpNumGpuThreads=0;
@@ -253,13 +307,15 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
 
     #ifdef USE_VIENNACL
     options += "VIENNACL ";
-    threadViennaClContextinit(cpNumGpuThreads);
+    threadContextInit(cpNumGpuThreads);
     #ifdef USE_OPENCL
     options += "OPENCL ";
     #endif
+    #endif
+
     #ifdef USE_CUDA
     options += "CUDA ";
-    #endif
+    threadContextInit(cpNumGpuThreads);
     #endif
 
     #ifdef USE_FLOAT
@@ -291,6 +347,12 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
     cout << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
     cout << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
     return true;
+}
+
+void cpExitCompute() {
+    #ifdef USE_GPU
+    threadContextDestroy();
+    #endif
 }
 
 class Optimizer {

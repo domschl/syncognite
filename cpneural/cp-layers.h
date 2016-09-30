@@ -64,7 +64,7 @@ public:
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
 
-        #ifdef USE_VIENNACL
+        #ifdef USE_GPU
         int algo=1;
         #else
         int algo=0;
@@ -79,7 +79,7 @@ public:
             */
             y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         } else {
-            #ifdef USE_VIENNACL
+            #ifdef USE_GPU
             // cout << "G" << id << "/" << numGpuThreads << " ";
             MatrixN x1(x.rows(),x.cols()+1);
             MatrixN xp1(x.rows(),1);
@@ -88,7 +88,8 @@ public:
             MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
             Wb<<*params["W"], *params["b"];
             MatrixN y2;
-            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
+            y=matmul(&x1,&Wb,id);
+/*            viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
             viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols(), ctx);
             viennacl::matrix<float>vi_x1(x1.rows(), x1.cols(), ctx);
             viennacl::matrix<float>vi_y(x1.rows(), Wb.cols(), ctx);
@@ -96,6 +97,7 @@ public:
             viennacl::copy(x1, vi_x1);
             vi_y = viennacl::linalg::prod(vi_x1, vi_Wb);
             viennacl::copy(vi_y, y);
+*/
             //MatrixN yc = x1 * Wb;
             //matCompare(y,yc,"consistency");
             #endif
@@ -104,7 +106,7 @@ public:
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        #ifdef USE_VIENNACL
+        #ifdef USE_GPU
         int algo=1;
         #else
         int algo=0;
@@ -118,27 +120,31 @@ public:
             cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
             cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         } else {
-            #ifdef USE_VIENNACL
-            Timer t;
+            #ifdef USE_GPU
+            MatrixN Wt;
+            Wt=W.transpose();
+            MatrixN xt;
+            xt=x.transpose();
+            MatrixN dc=dchain;
+            dx=matmul(&dc,&Wt,id);
+            cppl_set(pgrads, "W", new MatrixN(matmul(&xt,&dc,id)));
+
+/*            Timer t;
             viennacl::context ctx(viennacl::ocl::get_context(id)); //static_cast<long>(id)
             viennacl::matrix<float>vi_Wt(W.cols(), W.rows(),ctx);
             viennacl::matrix<float>vi_dW(W.rows(), W.cols(),ctx);
             viennacl::matrix<float>vi_dchain(dchain.rows(), dchain.cols(), ctx);
             viennacl::matrix<float>vi_xt(x.cols(), x.rows(), ctx);
             viennacl::matrix<float>vi_dx(x.rows(), x.cols(), ctx);
-            MatrixN Wt;
-            Wt=W.transpose();
             viennacl::copy(Wt, vi_Wt);
             viennacl::copy(dchain, vi_dchain);
-            MatrixN xt;
-            xt=x.transpose();
             viennacl::copy(xt, vi_xt);
             vi_dx=viennacl::linalg::prod(vi_dchain,vi_Wt);
             vi_dW=viennacl::linalg::prod(vi_xt, vi_dchain);
             viennacl::copy(vi_dx, dx);
             viennacl::copy(vi_dW, dW);
             cppl_set(pgrads, "W", new MatrixN(dW));
-
+*/
             //MatrixN dx2 = dchain * (*params["W"]).transpose(); // dx
             //MatrixN dW2 = (*(*pcache)["x"]).transpose() * dchain; //dW
             //matCompare(dx,dx2,"dx");
@@ -765,19 +771,22 @@ public:
         cout << "b:"<<shape(*params["b"]) << endl;
 */        //t.startCpu();
         MatrixN y2c;
-        #ifdef USE_VIENNACL
+        #ifdef USE_GPU
         algo=1;
         #endif
         if (algo==0 || id>=numGpuThreads) {
             y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         } else {
-            #ifdef USE_VIENNACL
+            #ifdef USE_GPU
             MatrixN x1(px2c->rows()+1,px2c->cols());
             MatrixN xp1(1,px2c->cols());
             xp1.setOnes();
             x1 << *px2c, xp1;
             MatrixN Wb((*params["W"]).rows(),(*params["W"]).cols()+1);
             Wb<<*params["W"], *params["b"];
+            y2c=matmul(&Wb,&x1,id);
+
+            /*
             MatrixN y2;
             viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
             viennacl::matrix<float>vi_Wb(Wb.rows(), Wb.cols(), ctx);
@@ -789,16 +798,17 @@ public:
             MatrixN y2cm(Wb.rows(),x1.cols());
             viennacl::copy(vi_y, y2cm);
             y2c=y2cm;
+            */
             //MatrixN yc = x1 * Wb;
             //matCompare(y,yc,"consistency");
             #endif
         }
-//        cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
-        //t.startCpu();
+        // cout << "matmul:"<<t.stopCpuMicro()<<"µs"<<endl;
+        // t.startCpu();
         MatrixN y=col2im(y2c, N);
-/*        cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
-        cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
-*/        if (pcache==nullptr) delete px2c;
+        // cout << "col2im:"<<t.stopCpuMicro()<<"µs"<<endl;
+        // cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
+        if (pcache==nullptr) delete px2c;
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
@@ -808,17 +818,18 @@ public:
             return MatrixN(0,0);
         }
         int algo=0;
-        #ifdef  USE_VIENNACL
+        #ifdef  USE_GPU
         algo=1;
         #endif
-/*        cout << "dchain:" << shape(dchain) << endl;
+        /*
+        cout << "dchain:" << shape(dchain) << endl;
         cout << "W:" << shape(*params["W"]) << endl;
         cout << "x:" << shape(*(*pcache)["x"]) << endl;
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
-*/
+        */
         MatrixN dc2=icol2im(dchain,N);
-//        cout << "dc2:" << shape(dc2) << endl;
+        // cout << "dc2:" << shape(dc2) << endl;
 
         MatrixN dx;
         if (algo==0 || id>=numGpuThreads) {
@@ -827,14 +838,23 @@ public:
             cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
             cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
         } else {
-            #ifdef USE_VIENNACL
+            #ifdef USE_GPU
+            MatrixN dc2t;
+            dc2t=dc2.transpose();
+            MatrixN W=*params["W"];
+            MatrixN dx2c=matmul(&dc2t,&W,id);
+            dx=iim2col(dx2c.transpose(), N);
+
+            MatrixN x2ct=(*(*pcache)["x2c"]).transpose();
+            MatrixN dW=matmul(&dc2,&x2ct,id);
+            cppl_set(pgrads, "W", new MatrixN(dW));
+
+            /*
             viennacl::context ctx(viennacl::ocl::get_context(id)); //static_cast<long>(id)
             viennacl::matrix<float>vi_W(params["W"]->rows(), params["W"]->cols(),ctx);
             viennacl::matrix<float>vi_dW(params["W"]->rows(), params["W"]->cols(),ctx);
             viennacl::matrix<float>vi_dc2(dc2.rows(), dc2.cols(), ctx);
             viennacl::matrix<float>vi_dc2t(dc2.cols(), dc2.rows(), ctx);
-            MatrixN dc2t;
-            dc2t=dc2.transpose();
             viennacl::copy(dc2t, vi_dc2t);
             viennacl::copy(dc2, vi_dc2);
             viennacl::copy(*params["W"],vi_W);
@@ -852,7 +872,7 @@ public:
             MatrixN dW(params["W"]->rows(), params["W"]->cols());
             viennacl::copy(vi_dW, dW);
             cppl_set(pgrads, "W", new MatrixN(dW));
-
+            */
             //MatrixN dx2 = dchain * (*params["W"]).transpose(); // dx
             //MatrixN dW2 = (*(*pcache)["x"]).transpose() * dchain; //dW
             //matCompare(dx,dx2,"dx");
