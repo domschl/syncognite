@@ -180,11 +180,13 @@ int main() {
 
     registerLayers();
     int ret=0;
-    //ret=doBench();
+    ret=doBench();
 
     #ifdef USE_CUDA
-    cout << "Cuda tests:" << endl;
-    cudaBench();
+    if (cpNumGpuThreads()>0){
+        cout << "Cuda tests:" << endl;
+        cudaBench();
+    }
     #endif
 
     cpExitCompute();
