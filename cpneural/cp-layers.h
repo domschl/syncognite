@@ -5,7 +5,6 @@
 #include "cp-layer.h"
 #include "cp-timer.h"
 
-
 class Nonlinearities {
 public:
     MatrixN sigmoid(MatrixN& m) {

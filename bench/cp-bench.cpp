@@ -65,7 +65,7 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
             ya=player->forward(x,y,&cache,0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
-        cout << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
+        // cout << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
         if (tcus<tf) tf=tcus;
 
 /*        if (name=="BatchNorm") {
@@ -106,7 +106,7 @@ int doBench() {
     int reps=0;
 
     //Eigen::setNbThreads(0);
-    for (int mrep=0; mrep<2; mrep++) {
+    for (int mrep=0; mrep<1; mrep++) {
     /*    if (mrep > 0) {
             cout << "Eigen thread count: " << mrep << endl;
             Eigen::setNbThreads(mrep);
@@ -140,10 +140,11 @@ int doBench() {
             cp.setPar("train", true);
             Layer *l = CREATE_LAYER(it.first, cp)
             if (reps==0) {
-                reps=10; // warm-up for first measurement
-                cout << "Warmup..." << endl;
+                //reps=10; // warm-up for first measurement
+                //cout << "Warmup..." << endl;
+                reps=1;
             }
-            else reps=5;
+            else reps=1;
             if (!benchLayer(it.first, l, N, MI, reps)) {
                 cout << "Error" << endl;
                 allOk=false;
@@ -162,5 +163,9 @@ int main() {
     registerLayers();
     int ret=0;
     ret=doBench();
+
+    #ifdef USE_CUDA
+    cout << "Cuda tests:" << endl;
+    #endif
     return ret;
 }

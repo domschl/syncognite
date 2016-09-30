@@ -85,6 +85,11 @@ using CpParams=ParamParser<floatN>;
 #include <viennacl/ocl/backend.hpp>
 #endif
 
+#ifdef USE_CUDA
+#include <cuda_runtime_api.h>
+#include <cublas_v2.h>
+#endif
+
 // for cpInitCompute():
 #include <unistd.h>
 #include <sys/types.h>
@@ -134,6 +139,41 @@ void peekMat(const string label, const MatrixN& m) {
     }
 }
 
+MatrixN matmul(MatrixN *a, MatrixN *b) {
+    #ifdef USE_CUDA
+    // Create a handle for CUBLAS
+    const floatN alpha=1;
+    const floatN beta=0;
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+    #ifdef USE_FLOAT
+    MatrixN c(a->rows(), b->cols());
+    float *ca, *cb, *cc;
+    cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
+    cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
+    cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
+
+    cudaMemcpy(ca,a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
+    cudaMemcpy(cb,b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+
+    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha, ca, a->cols(), cb, b->cols(), &beta, cc, c.cols());
+
+    cudaMemcpy(c.data(),cc,c.rows()*c.cols()*sizeof(float),cudaMemcpyDeviceToHost);
+
+    cudaFree(ca);
+    cudaFree(cb);
+    cudaFree(cc);
+    #else
+    #error "USE_DOUBLE not supported with USE_CUDA"
+    #endif
+    cublasDestroy(handle);
+
+    return c;
+
+    #else
+    return *a* *b;
+    #endif
+}
 
 int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
