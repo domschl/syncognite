@@ -512,6 +512,7 @@ private:
     int C, H, W, F, HH, WW;
     int HO, WO;
     int pad, stride;
+    bool mlverbose=true;
     void setup(const CpParams& cx) {
         layerName="Convolution";
         topoParams=6;
@@ -778,6 +779,9 @@ public:
             y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         } else {
             #ifdef USE_GPU
+            y2c=matmul(params["W"], px2c, id, mlverbose).colwise() + ColVectorN(*params["b"]);
+
+            /*
             MatrixN x1(px2c->rows()+1,px2c->cols());
             MatrixN xp1(1,px2c->cols());
             xp1.setOnes();
@@ -785,7 +789,7 @@ public:
             MatrixN Wb((*params["W"]).rows(),(*params["W"]).cols()+1);
             Wb<<*params["W"], *params["b"];
             y2c=matmul(&Wb,&x1,id);
-
+            */
             /*
             MatrixN y2;
             viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(id)));
@@ -842,11 +846,11 @@ public:
             MatrixN dc2t;
             dc2t=dc2.transpose();
             MatrixN W=*params["W"];
-            MatrixN dx2c=matmul(&dc2t,&W,id);
+            MatrixN dx2c=matmul(&dc2t,&W,id,mlverbose);
             dx=iim2col(dx2c.transpose(), N);
 
             MatrixN x2ct=(*(*pcache)["x2c"]).transpose();
-            MatrixN dW=matmul(&dc2,&x2ct,id);
+            MatrixN dW=matmul(&dc2,&x2ct,id,mlverbose);
             cppl_set(pgrads, "W", new MatrixN(dW));
 
             /*

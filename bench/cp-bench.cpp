@@ -157,54 +157,9 @@ int doBench() {
 }
 
 #ifdef USE_CUDA
-MatrixN matmulL(MatrixN *a, MatrixN *b) {
-    // Create a handle for CUBLAS
-    const floatN alpha=1;
-    const floatN beta=0;
-    cublasHandle_t handle;
-    Timer t,t1;
-    t.startWall();
-    cublasCreate(&handle);
-    cout << "  handle created: " << t.stopWallMicro() << endl;
-    t.startWall();
-    t1.startWall();
-    MatrixN c(a->rows(), b->cols());
-    float *ca, *cb, *cc;
-    cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
-    cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
-    cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
-    cout << "  cudaMalloc done: " << t.stopWallMicro() << endl;
-    t.startWall();
 
-    cudaMemcpy(ca,a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
-    cudaMemcpy(cb,b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
-    cout << "  cudaMalloc memcpy: " << t.stopWallMicro() << endl;
-    t.startWall();
-
-    cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
-                ca, a->rows(), cb, b->rows(), &beta, cc, c.rows());
-
-    cout << "  cuda matrix multiplication sgemm: " << t.stopWallMicro() << endl;
-    t.startWall();
-
-    cudaMemcpy(c.data(),cc,c.rows()*c.cols()*sizeof(float),cudaMemcpyDeviceToHost);
-    cout << "  cudaMemcpy result: " << t.stopWallMicro() << endl;
-    t.startWall();
-
-    cudaFree(ca);
-    cudaFree(cb);
-    cudaFree(cc);
-    cout << "  cudaMalloc free: " << t.stopWallMicro() << endl;
-    t.startWall();
-    cout << " Cuda alloc&mult: " << t1.stopWallMicro() << endl;
-
-    cublasDestroy(handle);
-    cout << "  cudaDestroy: " << t.stopWallMicro() << endl;
-
-    return c;
-}
 void cudaBench() {
-    int N=14, K=13, M=12;
+    int N=80, K=200300, M=70;
     MatrixN a(N,K),b(K,M),c0(N,M),c1(N,M);
     a.setRandom();
     b.setRandom();
@@ -213,9 +168,9 @@ void cudaBench() {
     c0=a*b;
     cout << "Eigen: " << t1.stopWallMicro() << endl << endl;
     t1.startWall();
-    c1=matmulL(&a,&b);
+    c1=matmul(&a,&b,0,true);
     cout << "Cuda : " << t1.stopWallMicro() << endl << endl;
-    matComp(c0,c1,"cuda-divergence",1e-13);
+    matComp(c0,c1,"cuda-divergence",0.01);
 }
 #endif
 
@@ -225,11 +180,11 @@ int main() {
 
     registerLayers();
     int ret=0;
-    ret=doBench();
+    //ret=doBench();
 
     #ifdef USE_CUDA
-    //cout << "Cuda tests:" << endl;
-    //cudaBench();
+    cout << "Cuda tests:" << endl;
+    cudaBench();
     #endif
 
     cpExitCompute();

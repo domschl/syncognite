@@ -2341,5 +2341,6 @@ int main(int argc, char *argv[]) {
     cpInitCompute(name);
     int ret=0;
     ret=doTests();
+    cpExitCompute();
     return ret;
 }

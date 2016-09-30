@@ -15,6 +15,7 @@
 
 #include "cp-math.h"
 #include "cp-util.h"
+#include "cp-timer.h"
 
 using Eigen::IOFormat;
 using std::cout; using std::endl;
@@ -142,45 +143,86 @@ void peekMat(const string label, const MatrixN& m) {
     }
 }
 #ifdef USE_CUDA
+#define MAX_GPUTHREADS 64
 cublasHandle_t *cuHandles;
+float *cuScratch1[MAX_GPUTHREADS];
+float *cuScratch2[MAX_GPUTHREADS];
+float *cuScratch3[MAX_GPUTHREADS];
+long maxCuScratch=0;
+
 #define CUDA_THRESHOLD 600
+#define CUDA_SCRATCH_SIZE 100000000
+
+void checkScratch(long n, bool verbose=false) {
+    if (n > maxCuScratch) {
+        maxCuScratch=n;
+        if (verbose) cout << "maxCuScratch:" << maxCuScratch << endl;
+        if (maxCuScratch > CUDA_SCRATCH_SIZE) {
+            cout << "Internal error, CUDA_SCRATCH_SIZE exceeded: " << maxCuScratch << " > " << CUDA_SCRATCH_SIZE << endl;
+            exit(-1);
+        }
+    }
+}
+
 #endif
 
 #ifdef USE_VIENNACL
+#define MAX_GPUTHREADS 64
 #define VIENNACL_THRESHOLD 600
 #endif
 
-MatrixN matmul(MatrixN *a, MatrixN *b, int contextId) {
+MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
+    Timer t,t1;
     #ifdef USE_CUDA
     // Create a handle for CUBLAS
 
     if (a->rows()+a->cols()+b->cols() < CUDA_THRESHOLD) {
-        return *a* *b;
+        if (verbose) t.startWall();
+        MatrixN y= *a* *b;
+        if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+        return y;
     } else {
 
         const floatN alpha=1;
         const floatN beta=0;
 
         #ifdef USE_FLOAT
+        if (verbose) t.startWall();
         MatrixN c(a->rows(), b->cols());
         float *ca, *cb, *cc;
-
-        cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
+        //cout << shape(*a) << " x " << shape(*b) << endl;
+        //t.startWall();
+/*        cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
         cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
         cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
+*/      //  cout << "  cAlloc:" << t.stopWallMicro() << endl;
 
-        cudaMemcpy(ca,a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
-        cudaMemcpy(cb,b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        if (verbose) t1.startWall();
+        checkScratch(a->rows() * (a->cols()), verbose);
+        checkScratch(b->rows() * (b->cols()), verbose);
+        checkScratch(a->rows() * (b->cols()), verbose);
 
+        cudaMemcpy(cuScratch1[contextId],a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        cudaMemcpy(cuScratch2[contextId],b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        if (verbose) cout << "  cMemcpy:" << t1.stopWallMicro() << endl;
+
+        if (verbose) t1.startWall();
         cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
-                    ca, a->rows(), cb, b->rows(), &beta, cc, c.rows());
+                    cuScratch1[contextId], a->rows(), cuScratch2[contextId], b->rows(), &beta,
+                    cuScratch3[contextId], c.rows());
+        if (verbose) cout << "  cMathML:" << t1.stopWallMicro() << endl;
 
-        cudaMemcpy(c.data(),cc,c.rows()*c.cols()*sizeof(float),cudaMemcpyDeviceToHost);
+        if (verbose) t1.startWall();
+        cudaMemcpy(c.data(),cuScratch3[contextId],a->rows()*b->cols()*sizeof(float),cudaMemcpyDeviceToHost);
+        if (verbose) cout << "  cMemcp2:" << t1.stopWallMicro() << endl;
 
-        cudaFree(ca);
+        //t.startWall();
+/*        cudaFree(ca);
         cudaFree(cb);
         cudaFree(cc);
+*/       // cout << "  cFree:" << t.stopWallMicro() << endl;
 
+        if (verbose) cout << "Cuda matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
         #else
         #error "USE_DOUBLE not supported with USE_CUDA"
         #endif
@@ -191,7 +233,10 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId) {
     #else
     #ifdef USE_VIENNACL
     if (a->rows()+a->cols()+b->cols() < VIENNACL_THRESHOLD) {
-        return *a* *b;
+        t.startWall();
+        MatrixN y= *a* *b;
+        if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+        return y;
     } else {
         viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(contextId)));
         viennacl::matrix<float>vi_b(b.rows(), b.cols(), ctx);
@@ -204,7 +249,10 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId) {
         return y;
     }
     #else
-    return *a* *b;
+    t.startWall();
+    MatrixN y= *a* *b;
+    if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+    return y;
     #endif
     #endif
 }
@@ -212,7 +260,6 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId) {
 int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
 int cpNumCpuThreads=1;
-#define MAX_GPUTHREADS 64
 
 bool threadContextInit(unsigned int numThreads) {
     #ifdef USE_VIENNACL
@@ -238,6 +285,9 @@ bool threadContextInit(unsigned int numThreads) {
     for (int i=0; i<cpNumGpuThreads; i++) {
         cublasCreate(&(cuHandles[i]));
         cout << "Context " << i << " on: cublas" << endl;
+        cudaMallocHost((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE);
+        cudaMallocHost((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE);
+        cudaMallocHost((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE);
     }
 
     #endif
@@ -248,6 +298,9 @@ bool threadContextInit(unsigned int numThreads) {
 bool threadContextDestroy() {
     #ifdef USE_CUDA
     for (int i=0; i<cpNumGpuThreads; i++) {
+        cudaFreeHost(&(cuScratch1[i]));
+        cudaFreeHost(&(cuScratch2[i]));
+        cudaFreeHost(&(cuScratch3[i]));
         cublasDestroy(cuHandles[i]);
     }
     free(cuHandles);
