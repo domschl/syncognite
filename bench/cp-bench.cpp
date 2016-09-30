@@ -183,7 +183,7 @@ int main() {
     ret=doBench();
 
     #ifdef USE_CUDA
-    if (cpNumGpuThreads()>0){
+    if (cpGetNumGpuThreads()>0){
         cout << "Cuda tests:" << endl;
         cudaBench();
     }
