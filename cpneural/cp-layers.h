@@ -567,7 +567,7 @@ private:
         outTopo={topo[3],WO,HO};
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO));
+        floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO))*10.0;
         *params["W"] = *params["W"] * xavier;
 
         params["b"]->setRandom();
@@ -828,9 +828,9 @@ public:
         }
 
         // x: N, C, H, W;  w: F, C, HH, WW
-        t.startWall();
+        if (mlverbose) t.startWall();
         im2col(x, px2c);
-        cout << "im2col:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) cout << "im2col:"<<t.stopWallMicro()<<"µs"<<endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
         if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
@@ -840,7 +840,7 @@ public:
         cout << "W:"<<shape(*params["W"]) << endl;
         cout << "b:"<<shape(*params["b"]) << endl;
 */
-        t.startWall();
+        if (mlverbose) t.startWall();
         MatrixN y2c;
         #ifdef USE_GPU
         algo=1;
@@ -852,10 +852,10 @@ public:
             y2c=matmul(params["W"], px2c, id, mlverbose).colwise() + ColVectorN(*params["b"]);
             #endif
         }
-        cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
-        t.startWall();
+        if (mlverbose) cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) t.startWall();
         MatrixN y=col2im(y2c, N);
-        cout << "col2im:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) cout << "col2im:"<<t.stopWallMicro()<<"µs"<<endl;
         // cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
         if (pcache==nullptr) delete px2c;
         return y;

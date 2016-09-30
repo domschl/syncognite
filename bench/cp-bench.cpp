@@ -159,7 +159,7 @@ int doBench() {
 #ifdef USE_CUDA
 
 void cudaBench() {
-    int N=80, K=200300, M=70;
+    int N=801, K=20000, M=70;
     MatrixN a(N,K),b(K,M),c0(N,M),c1(N,M);
     a.setRandom();
     b.setRandom();
@@ -168,7 +168,7 @@ void cudaBench() {
     c0=a*b;
     cout << "Eigen: " << t1.stopWallMicro() << endl << endl;
     t1.startWall();
-    c1=matmul(&a,&b,0,true);
+    c1=matmul(&a,&b,1,true);
     cout << "Cuda : " << t1.stopWallMicro() << endl << endl;
     matComp(c0,c1,"cuda-divergence",0.01);
 }

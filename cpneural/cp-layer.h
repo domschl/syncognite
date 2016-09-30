@@ -150,7 +150,7 @@ float *cuScratch2[MAX_GPUTHREADS];
 float *cuScratch3[MAX_GPUTHREADS];
 long maxCuScratch=0;
 
-#define CUDA_THRESHOLD 1
+#define CUDA_THRESHOLD 100
 #define CUDA_SCRATCH_SIZE 100000000
 
 void checkScratch(long n, bool verbose=false) {
@@ -176,9 +176,9 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     #ifdef USE_CUDA
     // Create a handle for CUBLAS
 
-    if (a->rows()+a->cols()+b->cols() < CUDA_THRESHOLD) {
+    if (a->rows()<CUDA_THRESHOLD || a->cols()<CUDA_THRESHOLD || b->cols()<CUDA_THRESHOLD) {
         if (verbose) t.startWall();
-        MatrixN y= *a* *b;
+        MatrixN y= *a * (*b);
         if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
         return y;
     } else {
@@ -234,7 +234,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     #ifdef USE_VIENNACL
     if (a->rows()+a->cols()+b->cols() < VIENNACL_THRESHOLD) {
         t.startWall();
-        MatrixN y= *a* *b;
+        MatrixN y= *a* (*b);
         if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
         return y;
     } else {
@@ -250,7 +250,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     }
     #else
     t.startWall();
-    MatrixN y= *a* *b;
+    MatrixN y= *a* (*b);
     if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
     return y;
     #endif
