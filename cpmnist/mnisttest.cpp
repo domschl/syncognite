@@ -238,7 +238,7 @@ bool  getMnistData(string filepath) {
     cpo.setPar("learning_rate", (floatN)5e-2);
     cpo.setPar("regularization", (floatN)1e-6);
     ml.train(X, y, Xv, yv, "Adam", cpo);
-    final_err=ml.test(Xt, yt, cpo.getPar("batch_size"));
+    final_err=ml.test(Xt, yt, cpo.getPar("batch_size", 50));
 #endif
     cout << "Final error on test-set:" << final_err << endl;
     for (auto it : cpMnistData) {

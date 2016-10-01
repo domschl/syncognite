@@ -496,7 +496,7 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
     floatN final_err;
 
     if (evalFinal) {
-        final_err=ml.test(Xt, yt, cpo.getPar("batch_size"));
+        final_err=ml.test(Xt, yt, cpo.getPar("batch_size", 50));
         cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
         cAcc=1-final_err;
     }

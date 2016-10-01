@@ -597,7 +597,7 @@ public:
             xb=x.block(x0,0,dl,x.cols());
             yb=y.block(x0,0,dl,y.cols());
             MatrixN yt=forward(xb, yb, nullptr, 0);
-            if (yt.rows() != y.rows()) {
+            if (yt.rows() != yb.rows()) {
                 cout << "test: incompatible row count!" << endl;
                 return -1000.0;
             }
@@ -614,7 +614,7 @@ public:
                     cout << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
                     return -1000.0;
                 }
-                if (ji==y(i,0)) ++co;
+                if (ji==yb(i,0)) ++co;
             }
         }
         floatN err=1.0-(floatN)co/(floatN)y.rows();
