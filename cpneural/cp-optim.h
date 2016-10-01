@@ -346,7 +346,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         //floatN errtra=test(x,y);
         Timer tt;
         tt.startWall();
-        floatN errval=test(xv,yv);
+        floatN errval=test(xv,yv,bs);
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
         lastAcc=accval;
