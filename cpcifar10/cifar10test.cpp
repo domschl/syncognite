@@ -88,14 +88,19 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
                 cpcifar10Data[name] = new MatrixN(dims[0],dims[1]*dims[2]*dims[3]);
                 pi4 = (int *)malloc(sizeof(int) * dims[0] * dims[1] * dims[2] * dims[3]);
                 if (pi4) {
+                    //int doout=10000;
                     dataset.read(pi4, H5::PredType::NATIVE_INT, mspace1, filespace );
                     for (int z=0; z<dims[0]; z++) {
                         for (int y=0; y<dims[1]; y++) {
                             for (int x=0; x<dims[2]; x++) {
                                 for (int w=0; w<dims[3]; w++) {
                                     (*(cpcifar10Data4[name]))(z,y,x,w)=(floatN)pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w];
-                                    (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w)=(floatN)pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w] / 256.0;
-                                }
+                                    (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w)=(floatN)(pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w]) / 256.0 - 0.5;
+/*                                    while (doout>0) {
+                                        cout << "[" << pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w] << " -> " << (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w) << "]  " ;
+                                        --doout;
+                                    }
+*/                                }
                             }
                         }
                     }
@@ -375,7 +380,7 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
 */
 floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
     int N4=500, N5=200;
-    CpParams cp1,cp2,cp3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
+    CpParams cp1,cp1x1,cp2,cp3,cp3x3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
     floatN dropR=0.6;
     MultiLayer ml("{topo=[3072];name='multi1'}");
     if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
@@ -385,9 +390,14 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
     cp1.setString("{stride=1;pad=2}");
     Convolution cv1(cp1);
     ml.addLayer("cv1",&cv1,vector<string>{"input"});
+
+    cp1x1.setPar("topo", vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
+    BatchNorm bn1x1(cp1x1);
+    ml.addLayer("bn1x1",&bn1x1,vector<string>{"cv1"});
+
     cp2.setPar("topo",vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
     Relu mrl1(cp2);
-    ml.addLayer("rl1",&mrl1,vector<string>{"cv1"});
+    ml.addLayer("rl1",&mrl1,vector<string>{"bn1x1"});
 // l2
     cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],48,5,5});
     cp3.setString("{stride=1;pad=2}");
@@ -401,9 +411,14 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
     cp5.setString("{stride=2;pad=0}");
     Convolution cv3(cp5);
     ml.addLayer("cv3",&cv3,vector<string>{"rl2"});
+
+    cp3x3.setPar("topo", vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
+    BatchNorm bn3x3(cp3x3);
+    ml.addLayer("bn3x3",&bn3x3,vector<string>{"cv3"});
+
     cp6.setPar("topo",vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
     Relu mrl3(cp6);
-    ml.addLayer("rl3",&mrl3,vector<string>{"cv3"});
+    ml.addLayer("rl3",&mrl3,vector<string>{"bn3x3"});
 // l4
     cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],48,3,3});
     cp7.setString("{stride=1;pad=1}");
@@ -488,8 +503,21 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
     return cAcc;
 }
 
-
 std::vector<string> classes{"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"};
+
+void checkPrint(MatrixN& X, MatrixN& y, int id) {
+    cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+    for (int i=0; i<3072; i++) {
+        if (i%32==0) cout<<endl;
+        if (i%(32*32)==0) cout<< "-------------" << endl;
+        floatN p=X(id,i);
+        if (p<-0.25) cout << " ";
+        else if (p<0.0) cout << ".";
+        else if (p<0.25) cout << "o";
+        else cout << "#";
+    }
+}
+
 int main(int argc, char *argv[]) {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
@@ -508,6 +536,7 @@ int main(int argc, char *argv[]) {
          cout << it.first << " tensor-4" <<  endl;
      }
 
+
      cpInitCompute("Cifar10");
 
     MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
@@ -516,6 +545,10 @@ int main(int argc, char *argv[]) {
     MatrixN yv=(*(cpcifar10Data["train-labels"])).block(49000,0,1000,1);
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
+
+    //checkPrint(X,y,10);
+    //checkPrint(X,y,20);
+    //checkPrint(X,y,30);
 
     //MultiLayer ml("{topo=[3072];name='multi1'}"); // unneeded. XXX remove the whole ifdef stuff, obsolete
     //createMultilayer(&ml);
@@ -533,7 +566,7 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    bool autoOpt=true;
+    bool autoOpt=false;
 
     floatN bReg, bLearn;
     if (autoOpt) {
@@ -560,7 +593,7 @@ int main(int argc, char *argv[]) {
         }
         cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=8.e-3;
+        bLearn=1.e-3;
         bReg=1.e-5;
     }
 

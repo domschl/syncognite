@@ -567,7 +567,7 @@ private:
         outTopo={topo[3],WO,HO};
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO))*10.0;
+        floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO)) / 10.0;
         *params["W"] = *params["W"] * xavier;
 
         params["b"]->setRandom();
@@ -584,7 +584,7 @@ public:
     ~Convolution() {
         cppl_delete(&params);
     }
-    /*
+/*
     void im2col(MatrixN xx, MatrixN *px2c) {
         int N=shape(xx)[0];
         // add padding and b-caused 1s
@@ -640,7 +640,7 @@ public:
         }
         //cout << "x2c:" << endl << *px2c << endl;
     }
-    */
+*/
     void im2col(MatrixN xx, MatrixN *px2c) {
         int N=shape(xx)[0];
         // add padding and b-caused 1s
@@ -744,7 +744,7 @@ public:
 
         return dx;
     }
-    */
+*/
     MatrixN iim2col(MatrixN x2c, int N) {
         MatrixN dx(N,C*W*H);
         dx.setZero();
@@ -1561,15 +1561,44 @@ public:
             }
             if (p->layerType==LayerType::LT_LOSS) done=true;
             cLay=name;
-            for (int i=0; i<xn.size(); i++) if (std::isnan(xn(i)) || std::isinf(xn(i))) {
-                cout << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
+            int oi=-10;
+            int fi=-10;
+            bool cont=false;
+            bool inferr=false;
+            for (int i=0; i<xn.size(); i++) {
+                if (std::isnan(xn(i)) || std::isinf(xn(i))) {
+                    if (i-1==oi) {
+                        if (!cont) {
+                            cont=true;
+                        }
+                    } else {
+                        cout << "[" << i;
+                        if (std::isnan(xn(i))) cout << "N"; else cout <<"I";
+                        fi=i;
+                        cont=false;
+                    }
+                    oi=i;
+                    inferr=true;
+                } else {
+                    if (fi==i-1) {
+                        cout << "]";
+                        cont=false;
+                    } else if (oi==i-1) {
+                        cont=false;
+                        cout << ".." << oi;
+                        if (std::isnan(xn(oi))) cout << "N"; else cout <<"I";
+                        cout << "]";
+                    }
+                }
+            }
+            if (inferr) {
+                cout << endl << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
                 //cout << "x:" << x0 << endl;
                 cout << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
                 peekMat("x:", x0);
                 cout << "y=" << name << "(x):";
                 peekMat("", xn);
                 exit(-1);
-                return x0;
             }
             x0=xn;
         }

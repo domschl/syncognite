@@ -150,7 +150,7 @@ float *cuScratch2[MAX_GPUTHREADS];
 float *cuScratch3[MAX_GPUTHREADS];
 long maxCuScratch=0;
 
-#define CUDA_THRESHOLD 100
+#define CUDA_THRESHOLD 30
 #define CUDA_SCRATCH_SIZE 100000000
 
 void checkScratch(long n, bool verbose=false) {
@@ -288,6 +288,10 @@ bool threadContextInit(unsigned int numThreads) {
         cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocWriteCombined);
         cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocWriteCombined);
         cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
+
+//        cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
+//        cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
+//        cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocDefault);
     }
     cudaSetDeviceFlags(cudaDeviceScheduleAuto); //BlockingSync); //ScheduleYield); //Spin); //cudaDeviceScheduleBlockingSync
     #endif
