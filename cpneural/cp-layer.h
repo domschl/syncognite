@@ -151,7 +151,7 @@ float *cuScratch3[MAX_GPUTHREADS];
 long maxCuScratch=0;
 
 #define CUDA_THRESHOLD 30
-#define CUDA_SCRATCH_SIZE 100000000
+#define CUDA_SCRATCH_SIZE 300000000
 
 void checkScratch(long n, bool verbose=false) {
     if (n > maxCuScratch) {
@@ -198,22 +198,58 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
 */      //  cout << "  cAlloc:" << t.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
-        checkScratch(a->rows() * (a->cols()), verbose);
-        checkScratch(b->rows() * (b->cols()), verbose);
-        checkScratch(a->rows() * (b->cols()), verbose);
+        checkScratch(a->rows() * (a->cols()) * sizeof(float), verbose);
+        checkScratch(b->rows() * (b->cols()) * sizeof(float), verbose);
+        checkScratch(a->rows() * (b->cols()) * sizeof(float), verbose);
 
-        cudaMemcpy(cuScratch1[contextId],a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
-        cudaMemcpy(cuScratch2[contextId],b->data(),b->rows()*(b->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        cudaError_t cudaStat;
+        cudaStat=cudaMemcpy(cuScratch1[contextId],a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
+        if (cudaStat != cudaSuccess) {
+            cout << "cudaMemcpy1 failed: " << cudaStat << endl;
+            exit(-1);
+        }
+        int sz=b->rows()*(b->cols())*sizeof(float);
+        cudaStat=cudaMemcpy(cuScratch2[contextId],b->data(),sz,cudaMemcpyHostToDevice);
+        if (cudaStat != cudaSuccess) {
+            cout << "cudaMemcpy2 failed:" << cudaStat << "Size: " << sz << endl;
+            switch (cudaStat) {
+                case cudaErrorInvalidValue:
+                    cout << "InvVal";
+                    break;
+                case cudaErrorInvalidPitchValue:
+                    cout << "InvPitch";
+                    break;
+                case cudaErrorInvalidDevicePointer:
+                    cout << "InvDevPtr";
+                    break;
+                case cudaErrorInvalidMemcpyDirection:
+                    cout << "InvDir";
+                    break;
+                default:
+                    cout << "Undocumented error";
+                    break;
+            }
+            cout << endl;
+            exit(-1);
+        }
         if (verbose) cout << "  cMemcpy:" << t1.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
-        cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
+        if (cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
                     cuScratch1[contextId], a->rows(), cuScratch2[contextId], b->rows(), &beta,
-                    cuScratch3[contextId], c.rows());
+                    cuScratch3[contextId], c.rows()) != CUBLAS_STATUS_SUCCESS) {
+            cout << "cublasSgemm failed!" << endl;
+            exit(-1);
+
+        }
         if (verbose) cout << "  cMathML:" << t1.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
-        cudaMemcpy(c.data(),cuScratch3[contextId],a->rows()*b->cols()*sizeof(float),cudaMemcpyDeviceToHost);
+        cudaStat=cudaMemcpy(c.data(),cuScratch3[contextId],a->rows()*b->cols()*sizeof(float),cudaMemcpyDeviceToHost);
+        if (cudaStat != cudaSuccess) {
+            cout << "cudaMemcpy3 failed:" << cudaStat << endl;
+            exit(-1);
+        }
         if (verbose) cout << "  cMemcp2:" << t1.stopWallMicro() << endl;
 
         //t.startWall();
@@ -285,13 +321,25 @@ bool threadContextInit(unsigned int numThreads) {
     for (int i=0; i<cpNumGpuThreads; i++) {
         cublasCreate(&(cuHandles[i]));
         cout << "Context " << i << " on: cublas" << endl;
-        cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocWriteCombined);
-        cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocWriteCombined);
-        cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
+        //cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
+        //cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
+        //cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
 
-//        cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
-//        cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
-//        cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocDefault);
+        // cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
+        // cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
+        // cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocDefault);
+        if (cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
+            cout << "cudaMallocHost failed!" << endl;
+            exit(-1);
+        }
+        if (cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
+            cout << "cudaMallocHost failed!" << endl;
+            exit(-1);
+        }
+        if (cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
+            cout << "cudaMallocHost failed!" << endl;
+            exit(-1);
+        }
     }
     cudaSetDeviceFlags(cudaDeviceScheduleAuto); //BlockingSync); //ScheduleYield); //Spin); //cudaDeviceScheduleBlockingSync
     #endif
