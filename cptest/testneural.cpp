@@ -2051,7 +2051,7 @@ bool trainTest() {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
 
-    CpParams cpo("{verbose=0;epochs=200;batch_size=20;learning_rate=1e-2;"\
+    CpParams cpo("{verbose=0;epochs=200.0;batch_size=20;learning_rate=1e-2;"\
                 "lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsilon=1e-8;threads=2}");
     floatN final_err;
 

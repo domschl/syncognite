@@ -206,7 +206,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     Color::Modifier gray(Color::FG_LIGHT_GRAY);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int ep=popti->cp.getPar("epochs", (int)1); //Default only!
+    float epf=popti->cp.getPar("epochs", (float)1.0); //Default only!
+    int ep=(int)ceil(epf);
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
     int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
@@ -235,7 +236,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     int chunks=(x.rows()+bs-1) / bs;
     cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cout << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
-    for (int e=0; e<ep; e++) {
+    bool fracend=false;
+    for (int e=0; e<ep && !fracend; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) {
@@ -247,7 +249,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         //std::list<std::future<t_cppl>> gradsFut;
         std::vector<std::future<t_cppl>> gradsFut;
         int bold=0;
-        for (int b=0; b<chunks; b++) {
+        for (int b=0; b<chunks && !fracend; b++) {
             int bi=b%nt;
             int y0,dy;
             y0=b*bs;
@@ -270,45 +272,30 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     for (int j=0; j<y.cols(); j++) {
                         yb(in,j) = y(shfl[i],j);
                     }
-                    if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
+/*                    if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
                     else {
                         ack[shfl[i]]++;
                     }
-                }
+    */            }
 
             } else {
                 xb=x.block(y0,0,dy,x.cols());
                 yb=y.block(y0,0,dy,y.cols());
-                for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
+            /*    for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
                     if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
                     else {
                         ack[i]++;
                     }
-                }
+                }*/
             }
             ++th;
 
-            //cout << "<{" << b << "}c" << th << ">"; std::flush(cout);
-
             gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
-            //gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
-            // gradsFut.push_back(f);
-            //gradsFut[bi]=std::async([this, xb, yb, &l, bi]{ workerThread(xb, yb, &l, bi); });
-            //=f;
-
-            //cout << "<r" << th << "/" << gradsFut.size() << ">"; std::flush(cout);
-
-            //cout << endl;
-
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
                 //cout << "gradFut size on get-loop: " << gradsFut.size() << endl;
                 for (auto &it : gradsFut) {
-                    //for (std::list<std::future<t_cppl>>::iterator it=gradsFut.begin(); it != gradsFut.end(); ++it)
-
-                    //cout << "<w" << th << ">"; std::flush(cout);
-
                     --th;
                     t_cppl grd = it.get();
                     if (first) {
@@ -323,8 +310,6 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     }
                     cppl_delete(&grd);
                 }
-//                cout << endl;
-                // cout << "db2:" << *(sgrad["af2-b"]) << endl;
                 if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
                     for (auto gi : sgrad) {
                         *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
@@ -353,6 +338,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     bold=b;
                 }
                 //cout << "UD" << endl;
+                if ((float)e+(floatN)b/(floatN)chunks > epf) fracend=true;
             }
         }
         //cout << "ED" << endl;
@@ -374,14 +360,15 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             lr *= lr_decay;
             popti->cp.setPar("learning_rate", lr);
         }
-        for (unsigned int i=0; i<ack.size(); i++) {
+/*        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {
                 cout << "Datapoint: " << i << " should be active once, was active: " << ack[i] << endl;
             }
         }
-    }
+*/    }
     cppl_delete(&optiCache);
     delete popti;
     return lastAcc;
 }
+
 #endif

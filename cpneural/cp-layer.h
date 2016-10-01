@@ -151,7 +151,7 @@ float *cuScratch3[MAX_GPUTHREADS];
 long maxCuScratch=0;
 
 #define CUDA_THRESHOLD 30
-#define CUDA_SCRATCH_SIZE 300000000
+#define CUDA_SCRATCH_SIZE 330000000
 
 void checkScratch(long n, bool verbose=false) {
     if (n > maxCuScratch) {
@@ -584,28 +584,38 @@ public:
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
                         string optimizer, const CpParams& cp);
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
-    floatN test(const MatrixN& x, const MatrixN& y)  {
+    floatN test(const MatrixN& x, const MatrixN& y, int batchsize=100)  {
         setFlag("train",false);
-        MatrixN yt=forward(x, y, nullptr, 0);
-        if (yt.rows() != y.rows()) {
-            cout << "test: incompatible row count!" << endl;
-            return -1000.0;
-        }
+        int bs=batchsize;
+        int N=shape(x)[0];
+        MatrixN xb,yb;
         int co=0;
-        for (int i=0; i<yt.rows(); i++) {
-            int ji=-1;
-            floatN pr=-10000;
-            for (int j=0; j<yt.cols(); j++) {
-                if (yt(i,j)>pr) {
-                    pr=yt(i,j);
-                    ji=j;
-                }
-            }
-            if (ji==(-1)) {
-                cout << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+        for (int ck=0; ck<(N+bs-1)/bs; ck++) {
+            int x0=ck*bs;
+            int dl=bs;
+            if (x0+dl>N) dl=N-dl;
+            xb=x.block(x0,0,dl,x.cols());
+            yb=y.block(x0,0,dl,y.cols());
+            MatrixN yt=forward(xb, yb, nullptr, 0);
+            if (yt.rows() != y.rows()) {
+                cout << "test: incompatible row count!" << endl;
                 return -1000.0;
             }
-            if (ji==y(i,0)) ++co;
+            for (int i=0; i<yt.rows(); i++) {
+                int ji=-1;
+                floatN pr=-10000;
+                for (int j=0; j<yt.cols(); j++) {
+                    if (yt(i,j)>pr) {
+                        pr=yt(i,j);
+                        ji=j;
+                    }
+                }
+                if (ji==(-1)) {
+                    cout << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                    return -1000.0;
+                }
+                if (ji==y(i,0)) ++co;
+            }
         }
         floatN err=1.0-(floatN)co/(floatN)y.rows();
         return err;
