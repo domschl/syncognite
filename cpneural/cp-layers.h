@@ -648,23 +648,28 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
-        int cchhww,cchw;
+        int n,x,y,cx,cy,cc;
+        int cchhww,cchw,cchhwwcyww;
         int xxso;
+        int HOWO=HO*WO;
+        int HHWW=HH*WW;
+        int HW=H*W;
         unsigned int xxs;
         floatN pix;
-        for (int n=0; n<N; n++) {
-            for (int y=0; y<HO; y++) {
-                for (int x=0; x<WO; x++) {
-                    y0=y*stride-pad;
+        for (n=0; n<N; n++) {
+            for (y=0; y<HO; y++) {
+                y0=y*stride-pad;
+                for (x=0; x<WO; x++) {
                     x0=x*stride-pad;
-                    xd=n*(HO*WO)+y*WO+x;
-                    for (int cc=0; cc<C; cc++) {
-                        cchhww=cc*HH*WW;
-                        cchw=cc*H*W;
-                        for (int cy=0; cy<HH; cy++) {
+                    xd=n*HOWO+y*WO+x;
+                    for (cc=0; cc<C; cc++) {
+                        cchhww=cc*HHWW;
+                        cchw=cc*HW;
+                        for (cy=0; cy<HH; cy++) {
                             ys=y0+cy;
                             xxso=cchw+ys*W;
-                            for (int cx=0; cx<WW; cx++) {
+                            cchhwwcyww=cchhww+cy*WW;
+                            for (cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
                                     pix=0.0;
@@ -672,7 +677,7 @@ public:
                                     xxs=xxso+xs;
                                     pix=xx(n,xxs);
                                 }
-                                yd=cchhww+cy*WW+cx;
+                                yd=cchhwwcyww+cx;
                                 (*px2c)(yd,xd)=pix;
                             }
                         }
@@ -747,26 +752,31 @@ public:
         int xd, yd;
         int xs, ys;
         int x0, y0;
+        int n,x,y,cc,cy,cx;
         unsigned int xxs;
-        int cchw, cchhww, xxso;
-        for (int n=0; n<N; n++) {
-            for (int y=0; y<HO; y++) {
-                for (int x=0; x<WO; x++) {
-                    y0=y*stride-pad;
+        int cchw, cchhww, xxso, cchhwwcyww;
+        int HOWO=HO*WO;
+        int HHWW=HH*WW;
+        int HW=H*W;
+        for (n=0; n<N; n++) {
+            for (y=0; y<HO; y++) {
+                y0=y*stride-pad;
+                for (x=0; x<WO; x++) {
                     x0=x*stride-pad;
-                    xd=n*(HO*WO)+y*WO+x;
-                    for (int cc=0; cc<C; cc++) {
-                        cchw=cc*H*W;
-                        cchhww=cc*HH*WW;
-                        for (int cy=0; cy<HH; cy++) {
+                    xd=n*HOWO+y*WO+x;
+                    for (cc=0; cc<C; cc++) {
+                        cchw=cc*HW;
+                        cchhww=cc*HHWW;
+                        for (cy=0; cy<HH; cy++) {
                             ys=y0+cy;
                             xxso=cchw+ys*W;
+                            cchhwwcyww=cchhww+cy*WW;
                             if (ys<0 || ys>=H) continue;
-                            for (int cx=0; cx<WW; cx++) {
+                            for (cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W) continue;
                                 xxs=xxso+xs;
-                                yd=cchhww+cy*WW+cx;
+                                yd=cchhwwcyww+cx;
                                 dx(n,xxs) += x2c(yd,xd);
                             }
                         }
