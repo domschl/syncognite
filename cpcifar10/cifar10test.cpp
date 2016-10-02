@@ -381,7 +381,7 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
 floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
     int N4=500, N5=200;
     CpParams cp1,cp1x1,cp2,cp3,cp3x3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.5;
+    floatN dropR=0.7;
     MultiLayer ml("{topo=[3072];name='multi1'}");
     if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
 
@@ -566,15 +566,15 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    bool autoOpt=false;
+    bool autoOpt=true;
 
     floatN bReg, bLearn;
     if (autoOpt) {
         //vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; -> 1e-5
         //vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; -> 1e-2
-        vector<floatN> regi{1e-1,5e-2,1e-2,5e-3,1e-3,1e-4,1e-5,1e-6,1e-7}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
+        vector<floatN> regi{1e-1,5e-2,1e-2,5e-3,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
         vector<floatN> learni{1e-2,5e-3,1e-3}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
-        cpo.setPar("epochs",(floatN)0.10);
+        cpo.setPar("epochs",(floatN)2.0);
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {
             cpo.setPar("learning_rate", learn);
@@ -599,7 +599,7 @@ int main(int argc, char *argv[]) {
 
     cpo.setPar("learning_rate", bLearn);
     cpo.setPar("regularization", bReg);
-    cpo.setPar("epochs",(floatN)25.0);
+    cpo.setPar("epochs",(floatN)100.0);
     evalMultilayer(cpo, X, y, Xv, yv, Xt, yt, true, true);
 
     for (auto it : cpcifar10Data) {
