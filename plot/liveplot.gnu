@@ -1,6 +1,7 @@
 set autoscale y
 set autoscale y2
 set ytics nomirror
+set grid ytics lc rgb "#bbbbbb" lw 1 lt 0
 set y2tics
 set tics out
 set xlabel "Epoch"
