@@ -1114,6 +1114,7 @@ private:
         CpParams cs(cp);
         cs.setPar("topo",vector<int>{N0*H*W});
         pbn = new BatchNorm(cs);
+        pbn->cp.setPar("train",cp.getPar("train",false));
         mlPush("bn", &(pbn->params), &params);
 
         layerInit=retval;
@@ -1172,6 +1173,7 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         int N=shape(x)[0];
+        pbn->cp.setPar("train",cp.getPar("train",false));
         if (shape(x)[1]!=(unsigned int)C*W*H) {
             cout << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
@@ -1198,6 +1200,7 @@ public:
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
+        pbn->cp.setPar("train",cp.getPar("train",false));
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
             cout << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);

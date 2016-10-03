@@ -2032,7 +2032,7 @@ int tFunc(floatN x, int c) {
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
-    int N=300,NV=10,NT=10,I=5,H=20,C=4;
+    int N=300,NV=30,NT=30,I=5,H=20,C=4;
     cp.setPar("topo",vector<int>{I,H,C});
     TwoLayerNet tln(cp);
 
@@ -2051,16 +2051,21 @@ bool trainTest() {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
 
-    CpParams cpo("{verbose=0;epochs=200.0;batch_size=20;learning_rate=1e-2;"\
+    CpParams cpo("{verbose=true;epochs=200.0;batch_size=20;learning_rate=1e-2;"\
                 "lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsilon=1e-8;threads=2}");
-    floatN final_err;
+
+    floatN train_err,test_err,val_err;
 
     tln.train(X, y, Xv, yv, "Adam", cpo);
     //tln.train(X, y, Xv, yv, "Sdg", cpo);
-    final_err=tln.test(Xt, yt);
+    train_err=tln.test(X, y);
+    val_err=tln.test(Xv, yv);
+    test_err=tln.test(Xt, yt);
 
-    cout << "Train-test, err=" << final_err << endl;
-    if (final_err>0.2) allOk=false;
+    cout << "Train-test, train-err=" << train_err << endl;
+    cout << "       validation-err=" << val_err << endl;
+    cout << "       final test-err=" << val_err << endl;
+    if (test_err>0.2 || test_err>0.2 || train_err>0.2) allOk=false;
     return allOk;
 }
 
@@ -2121,6 +2126,14 @@ int doTests() {
     MatrixN xpl(20,48);
     xpl.setRandom();
     if (!pl.selfTest(xpl, yz)) {
+        allOk=false;
+    }
+
+    // SpatialBatchNorm
+    SpatialBatchNorm sbn("{topo=[3,4,4,20];train=true;noVectorizationTests=true}");
+    MatrixN xsbn(20,3*4*4);
+    xsbn.setRandom();
+    if (!sbn.selfTest(xsbn, yz)) {
         allOk=false;
     }
 
