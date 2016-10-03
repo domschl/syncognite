@@ -566,7 +566,7 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    bool autoOpt=true;
+    bool autoOpt=false;
 
     floatN bReg, bLearn;
     if (autoOpt) {
@@ -593,13 +593,13 @@ int main(int argc, char *argv[]) {
         }
         cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=1.e-2;
-        bReg=1.e-3;
+        bLearn=1.e-3;
+        bReg=1.e-7;
     }
 
     cpo.setPar("learning_rate", bLearn);
     cpo.setPar("regularization", bReg);
-    cpo.setPar("epochs",(floatN)100.0);
+    cpo.setPar("epochs",(floatN)40.0);
     evalMultilayer(cpo, X, y, Xv, yv, Xt, yt, true, true);
 
     for (auto it : cpcifar10Data) {
