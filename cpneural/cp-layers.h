@@ -1097,22 +1097,22 @@ class SpatialBatchNorm : public Layer {
     //   WO: output width
     //   HO: output height
 private:
-    int C, H, W;
+    int C, H, W, N0;
     BatchNorm *pbn;
     void setup(const CpParams& cx) {
         layerName="SpatialBatchNorm";
-        topoParams=3;  // XXX: move kernel sizes to params?
+        topoParams=4;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==3);
-        // TOPO: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
-        C=topo[0]; H=topo[1]; W=topo[2];
+        assert (topo.size()==4);
+        // TOPO: C, H, W, N0  // Unusual: we need to know the batch_size for creation of the BN layer!
+        C=topo[0]; H=topo[1]; W=topo[2]; N0=topo[3];
         outTopo={C,H,W};
 
         CpParams cs(cp);
-        cs.setPar("topo",vector<int>{C*H*W});
+        cs.setPar("topo",vector<int>{N0*H*W});
         pbn = new BatchNorm(cs);
         mlPush("bn", &(pbn->params), &params);
 
@@ -1131,6 +1131,44 @@ public:
         pbn=nullptr;
     }
 
+    MatrixN nchw2cnhw(const MatrixN &x, const int N) {
+        MatrixN xs(C,N*H*W);
+        int nhw,chw,h0,h1;
+        for (int n=0; n<N; n++) {  // Uhhh..
+            nhw=n*H*W;
+            for (int c=0; c<C; c++) {
+                chw=c*H*W;
+                for (int h=0; h<H; h++) {
+                    h0=nhw+h*W;
+                    h1=chw+h*W;
+                    for (int w=0; w<W; w++) {
+                        xs(c,h0+w)=x(n,h1+w);
+                    }
+                }
+            }
+        }
+        return xs;
+    }
+
+    MatrixN cnhw2nchw(const MatrixN& ys, const int N) {
+        MatrixN y(N,C*H*W);
+        int nhw,chw,h0,h1;
+        for (int n=0; n<N; n++) {  // Uhhh..
+            nhw=n*H*W;
+            for (int c=0; c<C; c++) {
+                chw=c*H*W;
+                for (int h=0; h<H; h++) {
+                    h0=nhw+h*W;
+                    h1=chw+h*W;
+                    for (int w=0; w<W; w++) {
+                        y(n,h1+w)=ys(c,h0+w);
+                    }
+                }
+            }
+        }
+        return y;
+    }
+
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         int N=shape(x)[0];
@@ -1138,42 +1176,42 @@ public:
             cout << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
         }
-        MatrixN xs(C,N*H*W);
-        for (int n=0; n<N; n++) {  // Uhhh..
-            for (int c=0; c<C; c++) {
-                for (int h=0; h<H; h++) {
-                    for (int w=0; w<W; w++) {
-                        xs(c,n*H*W+h*W+w)=x(n,c*H*W+h*W+w);
-                    }
-                }
-            }
+        if (N>N0) {
+            cout << "SpatialBatchNorm Fw: batch_size at forward time" << N << " must be <= topo[4] init value:" << N0 << endl;
+            return MatrixN(0,0);
         }
 
+        MatrixN xs=nchw2cnhw(x, N);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
 
-        t_cppl tcachebn;
-        MatrixN ys=pbn->forward(x, &tcachebn, id);
-        mlPush("bn", &tcachebn, pcache);
-
-        MatrixN y;
-        for (int n=0; n<N; n++) {  // Uhhh..
-            for (int c=0; c<C; c++) {
-                for (int h=0; h<H; h++) {
-                    for (int w=0; w<W; w++) {
-                        y(n,c*H*W+h*W+w)=ys(c,n*H*W+h*W+w);
-                    }
-                }
-            }
+        MatrixN ys;
+        if (pcache != nullptr) {
+            t_cppl tcachebn;
+            ys=pbn->forward(xs, &tcachebn, id);
+            mlPush("bn", &tcachebn, pcache);
+        } else {
+            ys=pbn->forward(xs, nullptr, id);
         }
+
+        MatrixN y=cnhw2nchw(ys, N);
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        //int N=shape(dchain)[0];
+        int N=shape(dchain)[0];
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
             cout << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-        MatrixN dx;
+
+        MatrixN dcn=nchw2cnhw(dchain, N);
+        t_cppl tcachebn;
+        t_cppl tgradsbn;
+        mlPop("bn",pcache,&tcachebn);
+        MatrixN dxc=pbn->backward(dcn,&tcachebn,&tgradsbn,id);
+        mlPush("bn",&tgradsbn,pgrads);
+
+        MatrixN dx=cnhw2nchw(dxc,N);
+
         return dx;
     }
 };
@@ -1442,7 +1480,7 @@ void registerLayers() {
     REGISTER_LAYER("Dropout", Dropout, 1)
     REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
     REGISTER_LAYER("Pooling", Pooling, 3)
-    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
+    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 4)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)

@@ -146,6 +146,7 @@ int doBench() {
                 tp[0]=3;
                 tp[1]=100;
                 tp[2]=100;
+                tp[3]=N;
                 MI=100*100*3;
             }
             cp.setPar("topo",tp);
