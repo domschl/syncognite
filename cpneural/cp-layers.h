@@ -995,24 +995,29 @@ public:
         MatrixN y(N,C*WO*HO);
         y.setZero();
         floatN mx;
+        int chw,chowo,px0,iy0;
         int xs, ys,px, mxi, myi;
         for (int n=0; n<(int)N; n++) {
             for (int c=0; c<C; c++) {
+                chw=c*H*W;
+                chowo=c*HO*WO;
                 for (int iy=0; iy<HO; iy++) {
+                    iy0=chowo+iy*WO;
                     for (int ix=0; ix<WO; ix++) {
                         mx=0.0; mxi= (-1); myi= (-1);
                         for (int cy=0; cy<HH; cy++) {
+                            ys=iy*stride+cy;
+                            px0=chw+ys*W;
+                            if (ys>=H) continue;
                             for (int cx=0; cx<WW; cx++) {
                                 xs=ix*stride+cx;
-                                ys=iy*stride+cy;
-                                if (xs>=W || ys>=H) continue;
-                                px=c*H*W+ys*W+xs;
+                                if (xs>=W) continue;
+                                px=px0+xs;
                                 if (cx==0 && cy==0) {
                                     mx=x(n,px);
                                     myi=n;
                                     mxi=px;
-                            }
-                                else {
+                                } else {
                                     if (x(n,px)>mx) {
                                         mx=x(n,px);
                                         myi=n;
@@ -1021,7 +1026,7 @@ public:
                                 }
                             }
                         }
-                        y(n,c*WO*HO+iy*WO+ix)=mx;
+                        y(n,iy0+ix)=mx;
                         if (mxi!=(-1) && myi!=(-1)) (*pmask)(myi,mxi) = 1.0;
                     }
                 }
@@ -1045,18 +1050,25 @@ public:
         }
         MatrixN dx(N,C*W*H);
         dx.setZero();
+        int chw,chowo,px0,py0,ix0;
         int xs, ys, px, py;
         for (int n=0; n<(int)N; n++) {
             for (int c=0; c<C; c++) {
+                chw=c*H*W;
+                chowo=c*WO*HO;
                 for (int iy=0; iy<HO; iy++) {
+                    py0=chowo+iy*WO;
                     for (int ix=0; ix<WO; ix++) {
+                        ix0=ix*stride;
                         for (int cy=0; cy<HH; cy++) {
+                            ys=iy*stride+cy;
+                            px0=chw+ys*W;
+                            if (ys>=H) continue;
                             for (int cx=0; cx<WW; cx++) {
-                                xs=ix*stride+cx;
-                                ys=iy*stride+cy;
-                                if (xs>=W || ys>=H) continue;
-                                px=c*H*W+ys*W+xs;
-                                py=c*WO*HO+iy*WO+ix;
+                                xs=ix0+cx;
+                                if (xs>=W) continue;
+                                px=px0+xs;
+                                py=py0+ix;
                                 MatrixN *pmask=(*pcache)["mask"];
                                 dx(n, px) += dchain(n,py) * (*pmask)(n, px);
                             }
@@ -1065,7 +1077,6 @@ public:
                 }
             }
         }
-
         return dx;
     }
 };

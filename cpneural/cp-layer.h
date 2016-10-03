@@ -593,7 +593,7 @@ public:
         for (int ck=0; ck<(N+bs-1)/bs; ck++) {
             int x0=ck*bs;
             int dl=bs;
-            if (x0+dl>N) dl=N-dl;
+            if (x0+dl>N) dl=N-x0;
             xb=x.block(x0,0,dl,x.cols());
             yb=y.block(x0,0,dl,y.cols());
             MatrixN yt=forward(xb, yb, nullptr, 0);
