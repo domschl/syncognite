@@ -126,7 +126,7 @@ int doBench() {
             for (auto i=0; i< tp.size(); i++) tp[i]=M;
             int MI=M;
             if (it.first=="Convolution") {
-                tp[0]=3;
+/*                tp[0]=3;
                 tp[1]=100;
                 tp[2]=100;
                 MI=100*100*3;
@@ -135,6 +135,17 @@ int doBench() {
                 tp[5]=5;
                 cp.setPar("pad",2);
                 cp.setPar("stride",3);
+*/                tp[0]=3;
+                tp[1]=31;
+                tp[2]=31;
+                MI=31*31*3;
+                N=100;
+                tp[3]=25;
+                tp[4]=3;
+                tp[5]=3;
+                cp.setPar("pad",1);
+                cp.setPar("stride",1);
+                cp.setPar("verbose",true);
             } else if (it.first=="Pooling") {
                 tp[0]=3;
                 tp[1]=100;

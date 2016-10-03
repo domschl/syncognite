@@ -512,7 +512,7 @@ private:
     int C, H, W, F, HH, WW;
     int HO, WO;
     int pad, stride;
-    bool mlverbose=false;
+    bool mlverbose;
     void setup(const CpParams& cx) {
         layerName="Convolution";
         topoParams=6;
@@ -533,6 +533,7 @@ private:
         numCpuThreads=cpGetNumCpuThreads();
 
         stride = cp.getPar("stride", 1);
+        mlverbose = cp.getPar("verbose", false);
         pad = cp.getPar("pad", (int)((HH-1)/2));
         if (pad>=HH || pad>=WW) {
             cout << "bad  configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
@@ -787,31 +788,76 @@ public:
 
         return dx;
     }
-
+/*
     MatrixN col2im(MatrixN y2c, int N) {
         MatrixN xx(N,F*WO*HO);
 //        int err=0;
         int WHO=WO*HO;
+        int NWHO=N*WHO;
+        int p,ox,px,py;
+        int nfwho;
+        int nwho;
         for (int n=0; n<N; n++) {
+            nfwho=n*F*WHO;
+            nwho=n*WHO;
             for (int x=0; x<F*WHO; x++) {
-                int p=n*F*WHO+x;
-                int ox=p%(N*WHO);
-                int py=(p/(WHO))%F;
-                int px=ox%(WHO)+n*(WHO);
-/*                if (py>=y2c.rows() || px>=y2c.cols()) {
-                    cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
-                    ++err;
-                    if (err>5) {
-                        cout << "FATAL c2i abort." << endl;
-                        return xx;
-                    }
-                    continue;
-                }
-*/                xx(n,x)=y2c(py,px);
+                p=nfwho+x;
+                ox=p%NWHO;
+                py=(p/WHO)%F;
+                px=ox%WHO+nwho;
+                xx(n,x)=y2c(py,px);
             }
         }
         return xx;
     }
+
+*/
+    MatrixN col2im(MatrixN ycol, int N) {
+        MatrixN xx(N,F*WO*HO);
+        // add padding and b-caused 1s
+        //      p p x x x x x x x p p
+        int xd, yd;
+        int xs, ys;
+        int x0, y0;
+        int n,x,y,cx,cy,cc;
+        int cchhww,cchw,cchhwwcyww;
+        int xxso;
+        int HOWO=HO*WO;
+        int HHWW=HH*WW;
+        int HW=H*W;
+        unsigned int xxs;
+        for (n=0; n<N; n++) {
+            for (y=0; y<HO; y++) {
+                y0=y*stride-pad;
+                for (x=0; x<WO; x++) {
+                    x0=x*stride-pad;
+                    xd=n*HOWO+y*WO+x;
+                    for (cc=0; cc<C; cc++) {
+                        cchhww=cc*HHWW;
+                        cchw=cc*HW;
+                        for (cy=0; cy<HH; cy++) {
+                            ys=y0+cy;
+                            if (ys<0 || ys>=H) continue;
+                            xxso=cchw+ys*W;
+                            cchhwwcyww=cchhww+cy*WW;
+                            for (cx=0; cx<WW; cx++) {
+                                xs=x0+cx;
+                                if (xs<0 || xs>=W) { //pad
+                                    continue;
+                                } else {
+                                    xxs=xxso+xs;
+                                    yd=cchhwwcyww+cx;
+                                    xx(n,xxs)=ycol(yd,xd);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    return xx;
+    }
+
 
     MatrixN icol2im(MatrixN dy, int N) {
 //        MatrixN iy(F,N*H*W);
@@ -838,6 +884,59 @@ public:
         }
         return iy;
     }
+/*
+    MatrixN col2im(MatrixN y2c, int N) {
+        MatrixN xx(N,F*WO*HO);
+//        int err=0;
+        int WHO=WO*HO;
+        for (int n=0; n<N; n++) {
+            for (int x=0; x<F*WHO; x++) {
+                int p=n*F*WHO+x;
+                int ox=p%(N*WHO);
+                int py=(p/(WHO))%F;
+                int px=ox%(WHO)+n*(WHO);
+                if (py>=y2c.rows() || px>=y2c.cols()) {
+                    cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
+                    ++err;
+                    if (err>5) {
+                        cout << "FATAL c2i abort." << endl;
+                        return xx;
+                    }
+                    continue;
+                }
+                xx(n,x)=y2c(py,px);
+            }
+        }
+        return xx;
+    }
+
+    MatrixN icol2im(MatrixN dy, int N) {
+//        MatrixN iy(F,N*H*W);
+        MatrixN iy(F,N*HO*WO);
+//        int err=0;
+        int HWO=WO*HO;
+        for (int f=0; f<F; f++) {
+            for (int x=0; x<N*HWO; x++) {
+                int p=f*N*HWO+x;
+                int ox=p%(F*HWO);
+                int py=(p/(HWO))%N;
+                int px=ox%(HWO)+f*(HWO);
+                if (py>=dy.rows() || px>=dy.cols()) {
+                    cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
+                    ++err;
+                    if (err>5) {
+                        cout << "FATAL ic2i abort." << endl;
+                        return iy;
+                    }
+                    continue;
+                }
+                iy(f,x)=dy(py,px);
+            }
+        }
+        return iy;
+    }
+*/
+    MatrixN dummy(MatrixN d) {return d;}
 
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
@@ -874,7 +973,10 @@ public:
         } else {
             y2c=matmul(params["W"], px2c, id, mlverbose).colwise() + ColVectorN(*params["b"]);
         }
-        if (mlverbose) cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) {
+            y2c=dummy(y2c);
+            cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
+        }
         if (mlverbose) t.startWall();
         MatrixN y=col2im(y2c, N);
         if (mlverbose) cout << "col2im:"<<t.stopWallMicro()<<"µs"<<endl;

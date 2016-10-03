@@ -176,7 +176,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     #ifdef USE_CUDA
     // Create a handle for CUBLAS
 
-    if (a->rows()<CUDA_THRESHOLD || a->cols()<CUDA_THRESHOLD || b->cols()<CUDA_THRESHOLD) {
+    if (a->rows() + a->cols() + b->cols()<CUDA_THRESHOLD) {
         if (verbose) t.startWall();
         MatrixN y= *a * (*b);
         if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
