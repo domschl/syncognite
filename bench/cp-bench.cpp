@@ -135,6 +135,18 @@ int doBench() {
                 tp[5]=5;
                 cp.setPar("pad",2);
                 cp.setPar("stride",3);
+            } else if (it.first=="Pooling") {
+                tp[0]=3;
+                tp[1]=100;
+                tp[2]=100;
+                MI=100*100*3;
+                cp.setPar("pad",2);
+                cp.setPar("stride",2);
+            } else if (it.first=="SpatialBatchNorm") {
+                tp[0]=3;
+                tp[1]=100;
+                tp[2]=100;
+                MI=100*100*3;
             }
             cp.setPar("topo",tp);
             cp.setPar("train", true);

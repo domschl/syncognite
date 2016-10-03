@@ -1157,7 +1157,7 @@ public:
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        int N=shape(dchain)[0];
+        //int N=shape(dchain)[0];
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
             cout << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
@@ -1663,5 +1663,263 @@ public:
 
 };
 
+class LayerBlock : public Layer {
+private:
+    void setup(const CpParams& cx) {
+        cp=cx;
+        layerName="block"; //cp.getPar("name","block");
+        lossLayer="";
+        layerType=LayerType::LT_NORMAL;
+        trainMode = cp.getPar("train", false);
+        checked=false;
+    }
+public:
+    map<string, Layer*> layerMap;
+    map<string, vector<string>> layerInputs;
+    string lossLayer;
+    bool checked;
+    bool trainMode;
 
+    LayerBlock(const CpParams& cx) {
+        setup(cx);
+    }
+    LayerBlock(const string conf) {
+        setup(CpParams(conf));
+        layerInit=true;
+    }
+    ~LayerBlock() {
+        for (auto pli : layerMap) {
+            if (pli.second != nullptr) {
+                free(pli.second);
+                pli.second=nullptr;
+            }
+        }
+        layerMap.clear();
+    }
+    bool removeLayer(const string name) {
+        auto fi=layerMap.find(name);
+        if (fi == layerMap.end()) {
+            cout << "Cannot remove layer: " << name << ", a layer with this name does not exist in block " << layerName << endl;
+            return false;
+        }
+        free(fi->second);
+        layerMap.erase(fi);
+        return true;
+    }
+    bool addLayer(const string name, const CpParams& cp, const vector<string> inputLayers) {
+        if (layerMap.find(name) != layerMap.end()) {
+            cout << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
+            return false;
+        }
+        if (_syncogniteLayerFactory.mapl.find(name) == _syncogniteLayerFactory.mapl.end()) {
+            cout << "Cannot add layer: " << name << ", a layer with this name is not defined." << endl;
+            return false;
+        }
+        layerMap[name]=CREATE_LAYER(name, cp)   // Macro!
+        Layer *pLayer = layerMap[name];
+        if (pLayer->layerInit==false) {
+            cout << "Attempt to add layer " << name << " failed: Bad initialization." << endl;
+            removeLayer(name);
+            return false;
+        }
+        if (pLayer->layerType==LayerType::LT_LOSS) {
+            if (lossLayer!="") {
+                cout << "ERROR: a loss layer with name: " << lossLayer << "has already been defined, cannot add new loss layer: " << name << " to " << layerName << endl;
+                removeLayer(name);
+                return false;
+            }
+            layerType=LayerType::LT_LOSS;
+            lossLayer=name;
+        }
+        layerInputs[name]=inputLayers;
+        mlPush(name, &(pLayer->params), &params);
+        checked=false;
+        return true;
+    }
+    bool addLayer(string name, string params, vector<string> inputLayers) {
+        return addLayer(name, CpParams(params), inputLayers);
+    }
+
+    bool checkTopology(bool verbose=false) {
+        if (lossLayer=="") {
+            cout << "No loss layer defined!" << endl;
+            return false;
+        }
+        vector<string> lyr;
+        lyr=getLayerFromInput("input");
+        if (lyr.size()!=1) {
+            cout << "One (1) layer with name >input< needed, got: " << lyr.size() << endl;
+        }
+        bool done=false;
+        vector<string> lst;
+        while (!done) {
+            string cl=lyr[0];
+            for (auto li : lst) if (li==cl) {
+                cout << "recursion with layer: " << cl << endl;
+                return false;
+            }
+            lst.push_back(cl);
+            if (cl==lossLayer) done=true;
+            else {
+                lyr=getLayerFromInput(cl);
+                if (lyr.size()!=1) {
+                    cout << "One (1) layer that uses " << cl << " as input needed, got: " << lyr.size() << endl;
+                    return false;
+                }
+            }
+        }
+        if (verbose) {
+            bool done=false;
+            string cLay="input";
+            vector<string>nLay;
+            while (!done) {
+                nLay=getLayerFromInput(cLay);
+                string name=nLay[0];
+                Layer *p=layerMap[name];
+                cout << name << ": " << p->cp.getPar("topo", vector<int>{}) << " -> " << p->oTopo() << endl;
+                if (p->layerInit==false) cout << "  " << name << ": bad initialization!" << endl;
+                cLay=nLay[0];
+                if (p->layerType==LayerType::LT_LOSS) done=true;
+            }
+        }
+        checked=true;
+        return true;
+    }
+    vector<string> getLayerFromInput(string input) {
+        vector<string> lys;
+        for (auto li : layerInputs) {
+            for (auto lii : li.second) {
+                if (lii==input) lys.push_back(li.first);
+            }
+        }
+        return lys;
+    }
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+        string cLay="input";
+        vector<string> nLay;
+        bool done=false;
+        MatrixN x0=x;
+        MatrixN xn;
+        trainMode = cp.getPar("train", false);
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        while (!done) {
+            nLay=getLayerFromInput(cLay);
+            if (nLay.size()!=1) {
+                cout << "Unexpected topology: "<< nLay.size() << " layer follow layer " << cLay << " 1 expected.";
+                return x;
+            }
+            string name=nLay[0];
+            Layer *p = layerMap[name];
+            t_cppl cache;
+            //cache.clear();
+            if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
+            else xn=p->forward(x0,y,&cache, id);
+            if (pcache!=nullptr) {
+                mlPush(name, &cache, pcache);
+            } else {
+                cppl_delete(&cache);
+            }
+            if (p->layerType==LayerType::LT_LOSS) done=true;
+            cLay=name;
+            int oi=-10;
+            int fi=-10;
+            bool cont=false;
+            bool inferr=false;
+            for (int i=0; i<xn.size(); i++) {
+                if (std::isnan(xn(i)) || std::isinf(xn(i))) {
+                    if (i-1==oi) {
+                        if (!cont) {
+                            cont=true;
+                        }
+                    } else {
+                        cout << "[" << i;
+                        if (std::isnan(xn(i))) cout << "N"; else cout <<"I";
+                        fi=i;
+                        cont=false;
+                    }
+                    oi=i;
+                    inferr=true;
+                } else {
+                    if (fi==i-1) {
+                        cout << "]";
+                        cont=false;
+                    } else if (oi==i-1) {
+                        cont=false;
+                        cout << ".." << oi;
+                        if (std::isnan(xn(oi))) cout << "N"; else cout <<"I";
+                        cout << "]";
+                    }
+                }
+            }
+            if (inferr) {
+                cout << endl << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
+                //cout << "x:" << x0 << endl;
+                cout << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
+                peekMat("x:", x0);
+                cout << "y=" << name << "(x):";
+                peekMat("", xn);
+                exit(-1);
+            }
+            x0=xn;
+        }
+        return xn;
+    }
+    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+        t_cppl cache;
+        if (lossLayer=="") {
+            cout << "Invalid configuration, no loss layer defined!" << endl;
+            return 1000.0;
+        }
+        Layer* pl=layerMap[lossLayer];
+        mlPop(lossLayer, pcache, &cache);
+        floatN ls=pl->loss(y, &cache);
+        return ls;
+    }
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        if (lossLayer=="") {
+            cout << "Invalid configuration, no loss layer defined!" << endl;
+            return y;
+        }
+        bool done=false;
+        MatrixN dxn;
+        string cl=lossLayer;
+        MatrixN dx0=y;
+        trainMode = cp.getPar("train", false);
+        while (!done) {
+            t_cppl cache;
+            t_cppl grads;
+            //cache.clear();
+            //grads.clear();
+            Layer *pl=layerMap[cl];
+            mlPop(cl,pcache,&cache);
+            dxn=pl->backward(dx0, &cache, &grads, id);
+            mlPush(cl,&grads,pgrads);
+            vector<string> lyr=layerInputs[cl];
+            if (lyr[0]=="input") {
+                done=true;
+            } else {
+                cl=lyr[0];
+                dx0=dxn;
+            }
+        }
+        return dxn;
+    }
+    virtual bool update(Optimizer *popti, t_cppl *pgrads, string var, t_cppl *pocache) override {
+        for (auto ly : layerMap) {
+            t_cppl grads;
+            string cl=ly.first;
+            Layer *pl=ly.second;
+            mlPop(cl, pgrads, &grads);
+            pl->update(popti,&grads, var+layerName+cl, pocache);  // XXX push/pop pocache?
+        }
+        return true;
+    }
+    virtual void setFlag(string name, bool val) override {
+        cp.setPar(name,val);
+        for (auto ly : layerMap) {
+            ly.second->setFlag(name, val);
+        }
+    }
+};
 #endif
