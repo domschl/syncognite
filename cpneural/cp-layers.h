@@ -788,7 +788,7 @@ public:
 
         return dx;
     }
-/*
+
     MatrixN col2im(MatrixN y2c, int N) {
         MatrixN xx(N,F*WO*HO);
 //        int err=0;
@@ -811,7 +811,8 @@ public:
         return xx;
     }
 
-*/
+
+/*
     MatrixN col2im(MatrixN ycol, int N) {
         MatrixN xx(N,F*WO*HO);
         // add padding and b-caused 1s
@@ -857,7 +858,7 @@ public:
         }
     return xx;
     }
-
+*/
 
     MatrixN icol2im(MatrixN dy, int N) {
 //        MatrixN iy(F,N*H*W);
