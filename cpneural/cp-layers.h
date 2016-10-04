@@ -524,6 +524,9 @@ private:
         // TOPO: C, H, W, F, HH, WW
         C=topo[0]; H=topo[1]; W=topo[2];
         F=topo[3]; HH=topo[4]; WW=topo[5];
+        if (F*HH*WW==0) {
+            F=16; HH=3; WW=3;
+        }
 
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
@@ -1861,7 +1864,7 @@ public:
         layerMap.erase(fi);
         return true;
     }
-    bool addLayer(const string name, const CpParams& cp, const vector<string> inputLayers) {
+    bool addLayer(const string name, CpParams& cp, const vector<string> inputLayers) {
         if (layerMap.find(name) != layerMap.end()) {
             cout << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
@@ -1869,6 +1872,41 @@ public:
         if (_syncogniteLayerFactory.mapl.find(name) == _syncogniteLayerFactory.mapl.end()) {
             cout << "Cannot add layer: " << name << ", a layer with this name is not defined." << endl;
             return false;
+        }
+        string firstInput="";  // XXX multiple input layers!
+        for (auto li : inputLayers) {
+            if (li!="input") {
+                if (layerMap.find(name) == layerMap.end()) {
+                    cout << "Cannot add layer: " << name << ", it depends on an input layer " << li << ", which is not defined." << endl;
+                    return false;
+                } else {
+                    if (firstInput=="") firstInput=li;
+                }
+            } else {
+                firstInput="input";
+            }
+        }
+
+        if (firstInput!="" && firstInput!="input") {
+            auto lP=layerMap.find(firstInput);
+            if (lP==layerMap.end()) {
+                cout << "Can't find input-layer: " << firstInput << " internal error in layer defintion of " << name << endl;
+                return false;
+            }
+            vector<int> topo, topoP;
+            topo=cp.getPar("topo", vector<int>{});
+            topoP=lP->second->oTopo();
+            if (topoP.size()==0) {
+                cout << "Missing outTopo defintion for inputLayer " << firstInput << endl;
+                return false;
+            }
+            if (topo.size()<topoP.size()) {
+                topo=topoP;
+            }
+            for (unsigned int i=0; i<topoP.size(); i++) {
+                topo[i]=topoP[i];
+            }
+            cp.setPar("topo",topo);
         }
         layerMap[name]=CREATE_LAYER(name, cp)   // Macro!
         Layer *pLayer = layerMap[name];
@@ -1892,7 +1930,8 @@ public:
         return true;
     }
     bool addLayer(string name, string params, vector<string> inputLayers) {
-        return addLayer(name, CpParams(params), inputLayers);
+        CpParams cp(params);
+        return addLayer(name, cp, inputLayers);
     }
 
     bool checkTopology(bool verbose=false) {
