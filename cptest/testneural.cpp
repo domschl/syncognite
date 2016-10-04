@@ -480,7 +480,7 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
          2.38090835,  2.38247847;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,4,4,3,4,4];stride=2;pad=1}");
+    Convolution cv("{topo=[3,4,4];kernel=[3,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
@@ -1003,7 +1003,7 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
             3.31743501e+00,   4.34974790e+00,   3.30706714e+00;
 
          // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,6,6,5,4,4];stride=2;pad=1}");
+    Convolution cv("{topo=[3,6,6];kernel=[5,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
@@ -1388,7 +1388,7 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
           -0.31282652,  0.71725415,  0.03513737,  0.10890985, -0.99803075,
           -1.6124455 , -0.3881734 ,  0.90206887,  1.34225259,  0.37395634;
 
-    Convolution cv("{topo=[3,5,5,2,3,3];stride=1;pad=1}");
+    Convolution cv("{topo=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
     *(cv.params["W"])=W;
     *(cv.params["b"])=b;
     t_cppl cache;
@@ -2114,7 +2114,7 @@ int doTests() {
     // Convolution
     //Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=0}");
     //MatrixN xcv(20,48);
-    Convolution cv("{topo=[3,5,5,2,3,3];stride=1;pad=1}");
+    Convolution cv("{topo=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
     MatrixN xcv(2,75);
     xcv.setRandom();
     if (!cv.selfTest(xcv, yz, 1e-2, 1e-3)) {
@@ -2130,7 +2130,7 @@ int doTests() {
     }
 
     // SpatialBatchNorm
-    SpatialBatchNorm sbn("{topo=[3,4,4,20];train=true;noVectorizationTests=true}");
+    SpatialBatchNorm sbn("{topo=[3,4,4];train=true;batch_size=20;noVectorizationTests=true}");
     MatrixN xsbn(20,3*4*4);
     xsbn.setRandom();
     if (!sbn.selfTest(xsbn, yz)) {

@@ -515,15 +515,17 @@ private:
     bool mlverbose;
     void setup(const CpParams& cx) {
         layerName="Convolution";
-        topoParams=6;
+        topoParams=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==6);
+        assert (topo.size()==3);
+        vector<int> kernel=cp.getPar("kernel", vector<int>{0});
+        assert (kernel.size()==3);
         // TOPO: C, H, W, F, HH, WW
         C=topo[0]; H=topo[1]; W=topo[2];
-        F=topo[3]; HH=topo[4]; WW=topo[5];
+        F=kernel[0]; HH=kernel[1]; WW=kernel[3];
         if (F*HH*WW==0) {
             F=16; HH=3; WW=3;
         }
@@ -568,7 +570,7 @@ private:
             retval=false;
         }
 
-        outTopo={topo[3],WO,HO};
+        outTopo={kernel[0],WO,HO};
 
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO)) / 10.0;
@@ -1207,14 +1209,15 @@ private:
     BatchNorm *pbn;
     void setup(const CpParams& cx) {
         layerName="SpatialBatchNorm";
-        topoParams=4;  // XXX: move kernel sizes to params?
+        topoParams=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==4);
-        // TOPO: C, H, W, N0  // Unusual: we need to know the batch_size for creation of the BN layer!
-        C=topo[0]; H=topo[1]; W=topo[2]; N0=topo[3];
+        assert (topo.size()==3);
+        // TOPO: C, H, W
+        C=topo[0]; H=topo[1]; W=topo[2];
+        N0=cp.getPar("batch_size",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
         outTopo={C,H,W};
 
         CpParams cs(cp);
@@ -1285,7 +1288,7 @@ public:
             return MatrixN(0,0);
         }
         if (N>N0) {
-            cout << "SpatialBatchNorm Fw: batch_size at forward time" << N << " must be <= topo[4] init value:" << N0 << endl;
+            cout << "SpatialBatchNorm Fw: batch_size at forward time" << N << " must be <= batch_size init value:" << N0 << endl;
             return MatrixN(0,0);
         }
 
@@ -1589,7 +1592,7 @@ void registerLayers() {
     REGISTER_LAYER("Dropout", Dropout, 1)
     REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
     REGISTER_LAYER("Pooling", Pooling, 3)
-    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 4)
+    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
