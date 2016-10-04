@@ -25,22 +25,24 @@ class Affine : public Layer {
 private:
     int numGpuThreads;
     int numCpuThreads;
+    int hidden;
     void setup(const CpParams& cx) {
         layerName="Affine";
-        topoParams=2;
+        topoParams=1;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==2);
-        outTopo={topo[1]};
+        assert (topo.size()==1);
+        hidden=cp.getPar("hidden",1024);
+        outTopo={hidden};
         //cout << "CrAff:" << topo[0] <<"/" << topo[1] << endl;
-        cppl_set(&params, "W", new MatrixN(topo[0],topo[1])); // W
-        cppl_set(&params, "b", new MatrixN(1,topo[1])); // b
+        cppl_set(&params, "W", new MatrixN(topo[0],hidden)); // W
+        cppl_set(&params, "b", new MatrixN(1,hidden)); // b
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(topo[0]+topo[1])); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/std::sqrt((floatN)(topo[0]+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
@@ -217,20 +219,23 @@ void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
 
 class AffineRelu : public Layer {
 private:
+    int hidden;
     void setup(const CpParams& cx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         topoParams=2;
         cp=cx;
-        vector<int> topo=cp.getPar("topo", vector<int>{0});
-        assert (topo.size()==2);
-        outTopo={topo[1]};
+        vector<int> topo=cp.getPar("topo", vector<int>{});
+        assert (topo.size()==1);
+        hidden=cp.getPar("hidden",1024);
+        outTopo={hidden};
         CpParams ca;
-        ca.setPar("topo", vector<int>{topo[0],topo[1]});
+        ca.setPar("topo", vector<int>{topo[0]});
+        ca.setPar("hidden", hidden);
         af=new Affine(ca);
         mlPush("af", &(af->params), &params);
         CpParams cl;
-        cl.setPar("topo", vector<int>{topo[1]});
+        cl.setPar("topo", vector<int>{hidden});
         rl=new Relu(cl);
         mlPush("re", &(rl->params), &params);
         layerInit=true;
@@ -1472,19 +1477,27 @@ public:
 
 class TwoLayerNet : public Layer {
 private:
+    vector<int> hidden;
     void setup(const CpParams& cx) {
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
-        topoParams=3;
+        topoParams=1;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{0});
-        outTopo={topo[2]};
+        vector<int> topo=cp.getPar("topo",vector<int>{});
+        hidden=cp.getPar("hidden",vector<int>{});
+
+        assert (topo.size()==1);
+        assert (hidden.size()==2);
+
+        outTopo={hidden[1]};
 
         CpParams c1,c2,c3,c4;
-        c1.setPar("topo",vector<int>{topo[0],topo[1]});
-        c2.setPar("topo",vector<int>{topo[1]});
-        c3.setPar("topo",vector<int>{topo[1],topo[2]});
-        c4.setPar("topo",vector<int>{topo[2]});
+        c1.setPar("topo",vector<int>{topo[0]});
+        c1.setPar("hidden",vector<int>{hidden[0]});
+        c2.setPar("topo",vector<int>{hidden[0]});
+        c3.setPar("topo",vector<int>{hidden[0]});
+        c3.setPar("hidden",vector<int>{hidden[1]});
+        c4.setPar("topo",vector<int>{hidden[1]});
         af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);
         rl=new Relu(c2);
@@ -1585,17 +1598,17 @@ public:
 
 
 void registerLayers() {
-    REGISTER_LAYER("Affine", Affine, 2)
+    REGISTER_LAYER("Affine", Affine, 1)
     REGISTER_LAYER("Relu", Relu, 1)
-    REGISTER_LAYER("AffineRelu", AffineRelu, 2)
+    REGISTER_LAYER("AffineRelu", AffineRelu, 1)
     REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Dropout", Dropout, 1)
-    REGISTER_LAYER("Convolution", Convolution, 6) // XXX: adapt to 3 + params?
+    REGISTER_LAYER("Convolution", Convolution, 3)
     REGISTER_LAYER("Pooling", Pooling, 3)
     REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
-    REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 3)
+    REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
 }
 
 class MultiLayer : public Layer {

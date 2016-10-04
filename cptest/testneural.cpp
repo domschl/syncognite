@@ -50,7 +50,7 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          -0.23480519,  0.03272727,  0.30025974;
 
      //Affine pe(CpParams("{topo=[4,3]}"));
-     Affine pe("{topo=[4,3]}");
+     Affine pe("{topo=[4];hidden=3}");
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr);
@@ -81,7 +81,7 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe("{topo=[4,5]}");
+    Affine pe("{topo=[4];hidden=5}");
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -1731,7 +1731,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl("{topo=[4,5]}");
+    AffineRelu arl("{topo=[4];hidden=5}");
     t_cppl cache;
     t_cppl grads;
     *(arl.params["af-W"])=W;
@@ -1937,7 +1937,8 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
          -0.51027569,  2.3685213;
 
     CpParams cp;
-    cp.setPar("topo",vector<int>{D,H,C});
+    cp.setPar("topo",vector<int>{D});
+    cp.setPar("hidden",vector<int>{H,C});
     TwoLayerNet tln(cp);
 
     *(tln.params["af1-W"])=W1;
@@ -2033,7 +2034,8 @@ bool trainTest() {
     bool allOk=true;
     CpParams cp;
     int N=300,NV=30,NT=30,I=5,H=20,C=4;
-    cp.setPar("topo",vector<int>{I,H,C});
+    cp.setPar("topo",vector<int>{I});
+    cp.setPar("hidden",vector<int>{H,C});
     TwoLayerNet tln(cp);
 
     MatrixN X(N,I);
@@ -2079,7 +2081,7 @@ int doTests() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    Affine pc(CpParams("{topo=[30,20]}"));
+    Affine pc(CpParams("{topo=[30];hidden=20}"));
     MatrixN x(10,30);
     x.setRandom();
     if (!pc.selfTest(x,yz)) {
@@ -2137,7 +2139,7 @@ int doTests() {
         allOk=false;
     }
 
-    AffineRelu rx("{topo=[2,3]}");
+    AffineRelu rx("{topo=[2];hidden=3}");
     MatrixN xarl(30,2);
     xarl.setRandom();
     h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -2149,7 +2151,8 @@ int doTests() {
     // TwoLayerNet
     int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
     CpParams tcp;
-    tcp.setPar("topo", vector<int>{ntl1,ntl2,ntl3});
+    tcp.setPar("topo",vector<int>{ntl1});
+    tcp.setPar("hidden",vector<int>{ntl2,ntl3});
     TwoLayerNet tl(tcp);
     MatrixN xtl(ntlN,ntl1);
     xtl.setRandom();
@@ -2195,11 +2198,11 @@ int doTests() {
     //Multilayer1
     MultiLayer ml("{topo=[10];name='multi1'}");
     cout << "LayerName for ml: " << ml.layerName << endl;
-    Affine maf1("{topo=[10,10]}");
+    Affine maf1("{topo=[10];hidden=10}");
     ml.addLayer("af1",&maf1,vector<string>{"input"});
     Relu mrl1("{topo=[10]}");
     ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
-    Affine maf2("{topo=[10,10]}");
+    Affine maf2("{topo=[10];hidden=10}");
     ml.addLayer("af2",&maf2,vector<string>{"rl1"});
     Softmax msm1("{topo=[10]}");
     ml.addLayer("sm1",&msm1,vector<string>{"af2"});
