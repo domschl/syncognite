@@ -140,9 +140,7 @@ int doBench() {
                 tp[2]=31;
                 MI=31*31*3;
                 N=100;
-                tp[3]=25;
-                tp[4]=3;
-                tp[5]=3;
+                cp.setPar("kernel",vector<int>{25,3,3});
                 cp.setPar("pad",1);
                 cp.setPar("stride",1);
                 cp.setPar("verbose",true);
@@ -157,7 +155,7 @@ int doBench() {
                 tp[0]=3;
                 tp[1]=100;
                 tp[2]=100;
-                tp[3]=N;
+                cp.setPar("batch_norm",N);
                 MI=100*100*3;
             }
             cp.setPar("topo",tp);
