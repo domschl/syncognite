@@ -530,7 +530,7 @@ private:
         assert (kernel.size()==3);
         // TOPO: C, H, W, F, HH, WW
         C=topo[0]; H=topo[1]; W=topo[2];
-        F=kernel[0]; HH=kernel[1]; WW=kernel[3];
+        F=kernel[0]; HH=kernel[1]; WW=kernel[2];
         if (F*HH*WW==0) {
             F=16; HH=3; WW=3;
         }
@@ -1484,7 +1484,7 @@ private:
         topoParams=1;
         cp=cx;
         vector<int> topo=cp.getPar("topo",vector<int>{});
-        hidden=cp.getPar("hidden",vector<int>{});
+        hidden=cp.getPar("hidden",vector<int>{1024,1024});
 
         assert (topo.size()==1);
         assert (hidden.size()==2);
@@ -1493,10 +1493,10 @@ private:
 
         CpParams c1,c2,c3,c4;
         c1.setPar("topo",vector<int>{topo[0]});
-        c1.setPar("hidden",vector<int>{hidden[0]});
+        c1.setPar("hidden",hidden[0]);
         c2.setPar("topo",vector<int>{hidden[0]});
         c3.setPar("topo",vector<int>{hidden[0]});
-        c3.setPar("hidden",vector<int>{hidden[1]});
+        c3.setPar("hidden",hidden[1]);
         c4.setPar("topo",vector<int>{hidden[1]});
         af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);
