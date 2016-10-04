@@ -142,7 +142,83 @@ bool  getMnistData(string filepath) {
      }
 
      cpInitCompute("Mnist");
+     registerLayers();
 
+     MatrixN X=*(cpMnistData["x_train"]);
+     MatrixN y=*(cpMnistData["t_train"]);
+     MatrixN Xv=*(cpMnistData["x_valid"]);
+     MatrixN yv=*(cpMnistData["t_valid"]);
+     MatrixN Xt=*(cpMnistData["x_test"]);
+     MatrixN yt=*(cpMnistData["t_test"]);
+
+     LayerBlock ms("name='DomsNet'");
+     ms.addLayer("Convolution", "cv1", "{topo=[1,28,28];kernel=[16,3,3];stride=1;pad=1}",vector<string>{"input"});
+     ms.addLayer("BatchNorm","sb1","",vector<string>{"cv1"});
+     ms.addLayer("Relu","rl1","",vector<string>{"sb1"});
+     ms.addLayer("Dropout","doc1","{drop=0.5}",vector<string>{"rl1"});
+     ms.addLayer("Convolution", "cv2", "{topo=[0,0,0];kernel=[32,3,3];stride=1;pad=1}",vector<string>{"doc1"});
+     ms.addLayer("Relu","rl2","",vector<string>{"cv2"});
+     ms.addLayer("Convolution", "cv3", "{topo=[0,0,0];kernel=[64,3,3];stride=2;pad=1}",vector<string>{"rl2"});
+     ms.addLayer("BatchNorm","sb2","",vector<string>{"cv3"});
+     ms.addLayer("Relu","rl3","",vector<string>{"sb2"});
+     ms.addLayer("Dropout","doc2","{drop=0.5}",vector<string>{"rl3"});
+     ms.addLayer("Convolution", "cv4", "{topo=[0,0,0];kernel=[64,3,3];stride=1;pad=1}",vector<string>{"doc2"});
+     ms.addLayer("Relu","rl4","",vector<string>{"cv4"});
+     ms.addLayer("Convolution", "cv5", "{topo=[0,0,0];kernel=[128,3,3];stride=2;pad=1}",vector<string>{"rl4"});
+     ms.addLayer("BatchNorm","sb3","",vector<string>{"cv5"});
+     ms.addLayer("Relu","rl5","",vector<string>{"sb3"});
+     ms.addLayer("Dropout","doc3","{drop=0.5}",vector<string>{"rl5"});
+     //ms.addLayer("Convolution", "cv6", "{topo=[0,0,0];kernel=[64,3,3];stride=2;pad=1}",vector<string>{"rl5"});
+     //ms.addLayer("Relu","rl6","",vector<string>{"cv6"});
+     //ms.addLayer("Convolution", "cv7", "{topo=[0,0,0];kernel=[64,3,3];stride=1;pad=1}",vector<string>{"rl6"});
+     //ms.addLayer("Relu","rl7","",vector<string>{"cv7"});
+
+     ms.addLayer("Affine","af1","{topo=[0];hidden=1024}",vector<string>{"doc3"});
+     ms.addLayer("BatchNorm","bn1","",vector<string>{"af1"});
+     ms.addLayer("Relu","rla1","",vector<string>{"bn1"});
+     ms.addLayer("Dropout","do1","{drop=0.7}",vector<string>{"rla1"});
+     ms.addLayer("Affine","af2","{topo=[0];hidden=512}",vector<string>{"do1"});
+     ms.addLayer("BatchNorm","bn2","",vector<string>{"af2"});
+     ms.addLayer("Relu","rla2","",vector<string>{"bn2"});
+     ms.addLayer("Dropout","do2","{drop=0.7}",{"rla2"});
+     ms.addLayer("Affine","af3","{topo=[0];hidden=10}",vector<string>{"do2"});
+     ms.addLayer("Softmax","sm1","",vector<string>{"af3"});
+
+     bool verbose=true;
+     if (verbose) cout << "Checking multi-layer topology..." << endl;
+     if (!ms.checkTopology(verbose)) {
+         cout << "Topology-check for MultiLayer: ERROR." << endl;
+         exit(-1);
+     } else {
+         if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
+     }
+
+     CpParams cpo("{verbose=true;lr_decay=0.95;epsilon=1e-8}");
+     cpo.setPar("epochs",(floatN)40.0);
+     cpo.setPar("batch_size",25);
+     cpo.setPar("learning_rate", (floatN)1e-4);
+     cpo.setPar("regularization", (floatN)1e-7);
+
+     ms.train(X, y, Xv, yv, "Adam", cpo);
+
+     floatN train_err, val_err, test_err;
+     train_err=ms.test(X, y, cpo.getPar("batch_size", 50));
+     val_err=ms.test(Xv, yv, cpo.getPar("batch_size", 50));
+     test_err=ms.test(Xt, yt, cpo.getPar("batch_size", 50));
+
+     cout << "Final results on MNIST after " << cpo.getPar("epochs",0) << " epochs:" << endl;
+     cout << "      Train-error: " << train_err << endl;
+     cout << " Validation-error: " << val_err << endl;
+     cout << "       Test-error: " << test_err << endl;
+
+     for (auto it : cpMnistData) {
+          free(it.second);
+          it.second=nullptr;
+      }
+     cpExitCompute();
+ }
+
+/*
 //#define USE_2LN 1
 #ifdef USE_2LN
         TwoLayerNet tl(CpParams("{topo=[784,1024,10]}"));
@@ -247,7 +323,7 @@ bool  getMnistData(string filepath) {
      }
      cpExitCompute();
      return 0;
- }
+ }*/
 
  /*
  vector<int> ins{0,4,16,25,108, 256,777};
