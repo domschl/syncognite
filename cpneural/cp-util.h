@@ -294,6 +294,7 @@ public:
         }
         return bparams[par];
     }
+    // Traveler beware: cast argument to (string) is using string-constants, otherwise it's taken for int-array!
     string getPar(string par, string def="") {
         auto it=sparams.find(par);
         if (it==sparams.end()) {
@@ -322,6 +323,7 @@ public:
         erase(par);
         bparams[par]=val;
     }
+    // Traveler beware: cast argument to (string) is using string-constants, otherwise it's taken for int-array!
     void setPar(string par, string val) {
         erase(par);
         // XXX: encode escape stuff:   ;{}

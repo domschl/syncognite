@@ -1890,7 +1890,7 @@ class LayerBlock : public Layer {
 private:
     void setup(const CpParams& cx) {
         cp=cx;
-        layerName=cp.getPar("name","block");
+        layerName=cp.getPar("name",(string)"block");
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
         trainMode = cp.getPar("train", false);
