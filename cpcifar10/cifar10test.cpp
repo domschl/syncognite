@@ -135,370 +135,60 @@ bool  getcifar10Data(string filepath) {
     return true;
 }
 
-/*CpParams autoOptimize(Layer *pLayer, CpParams& cpi, vector<string>& optiParams, MatrixN& X, MatrixN&y) {
-
-}
 
 floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
-    int N4=500, N5=200;
-    CpParams cp1,cp2,cp3,cp4,cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.75;
-    MultiLayer ml("{topo=[3072];name='multi1'}");
-    if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
+    LayerBlock lb("name='DomsNet'");
+    lb.addLayer("Convolution", "cv1", "{inputShape=[3,32,32];kernel=[48,5,5];stride=1;pad=2}",{"input"});
+    lb.addLayer("BatchNorm","sb1","",{"cv1"});
+    lb.addLayer("Relu","rl1","",{"sb1"});
+    lb.addLayer("Dropout","doc1","{drop=0.8}",{"rl1"});
+    lb.addLayer("Convolution", "cv2", "{kernel=[48,3,3];stride=1;pad=1}",{"doc1"});
+    lb.addLayer("Relu","rl2","",{"cv2"});
+    lb.addLayer("Convolution", "cv3", "{kernel=[64,3,3];stride=2;pad=1}",{"rl2"});
+    lb.addLayer("BatchNorm","sb2","",{"cv3"});
+    lb.addLayer("Relu","rl3","",{"sb2"});
+    lb.addLayer("Dropout","doc2","{drop=0.8}",{"rl3"});
+    lb.addLayer("Convolution", "cv4", "{kernel=[64,3,3];stride=1;pad=1}",{"doc2"});
+    lb.addLayer("Relu","rl4","",{"cv4"});
+    lb.addLayer("Convolution", "cv5", "{kernel=[128,3,3];stride=2;pad=1}",{"rl4"});
+    lb.addLayer("BatchNorm","sb3","",{"cv5"});
+    lb.addLayer("Relu","rl5","",{"sb3"});
+    lb.addLayer("Dropout","doc3","{drop=0.8}",{"rl5"});
+    lb.addLayer("Convolution", "cv6", "{kernel=[128,3,3];stride=1;pad=1}",{"doc3"});
+    lb.addLayer("Relu","rl6","",{"cv6"});
+    //lb.addLayer("Convolution", "cv7", "{kernel=[64,3,3];stride=1;pad=1}",{"rl6"});
+    //lb.addLayer("Relu","rl7","",{"cv7"});
 
-// l1     (W + 2 * pad - WW) % stride
-    cp1.setPar("topo",vector<int>{3,32,32,16,5,5});
-    cp1.setString("{stride=2;pad=1}");
-    Convolution cv1(cp1);
-    ml.addLayer("cv1",&cv1,vector<string>{"input"});
-    cp2.setPar("topo",vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
-    Relu mrl1(cp2);
-    ml.addLayer("rl1",&mrl1,vector<string>{"cv1"});
-// l2
-    cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],16,5,5});
-    cp3.setString("{stride=1;pad=0}");
-    Convolution cv2(cp3);
-    ml.addLayer("cv2",&cv2,vector<string>{"rl1"});
-    cp4.setPar("topo",vector<int>{cv2.oTopo()[0]*cv2.oTopo()[1]*cv2.oTopo()[2]});
-    Relu mrl2(cp4);
-    ml.addLayer("rl2",&mrl2,vector<string>{"cv2"});
-// l3
-    cp5.setPar("topo",vector<int>{cv2.oTopo()[0],cv2.oTopo()[1],cv2.oTopo()[2],16,3,3});
-    cp5.setString("{stride=1;pad=0}");
-    Convolution cv3(cp5);
-    ml.addLayer("cv3",&cv3,vector<string>{"rl2"});
-    cp6.setPar("topo",vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
-    Relu mrl3(cp6);
-    ml.addLayer("rl3",&mrl3,vector<string>{"cv3"});
-// l4
-    cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],32,3,3});
-    cp7.setString("{stride=1;pad=0}");
-    Convolution cv4(cp7);
-    ml.addLayer("cv4",&cv4,vector<string>{"rl3"});
-    cp8.setPar("topo",vector<int>{cv4.oTopo()[0]*cv4.oTopo()[1]*cv4.oTopo()[2]});
-    Relu mrl4(cp8);
-    ml.addLayer("rl4",&mrl4,vector<string>{"cv4"});
-// l5
-    cp9.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2],64,3,3});
-    cp9.setString("{stride=1;pad=0}");
-    Convolution cv5(cp9);
-    ml.addLayer("cv5",&cv5,vector<string>{"rl4"});
-    cp10.setPar("topo",vector<int>{cv5.oTopo()[0]*cv5.oTopo()[1]*cv5.oTopo()[2]});
-    Relu mrl5(cp10);
-    ml.addLayer("rl5",&mrl5,vector<string>{"cv5"});
-// l6
-    cp11.setPar("topo",vector<int>{cv5.oTopo()[0],cv5.oTopo()[1],cv5.oTopo()[2],128,3,3});
-    cp11.setString("{stride=1;pad=0}");
-    Convolution cv6(cp11);
-    ml.addLayer("cv6",&cv6,vector<string>{"rl5"});
-    cp12.setPar("topo",vector<int>{cv6.oTopo()[0]*cv6.oTopo()[1]*cv6.oTopo()[2]});
-    Relu mrl6(cp12);
-    ml.addLayer("rl6",&mrl6,vector<string>{"cv6"});
-// l7
-    cp13.setPar("topo",vector<int>{cv6.oTopo()[0]*cv6.oTopo()[1]*cv6.oTopo()[2],N4});
-    Affine maf4(cp13);
-    ml.addLayer("af4",&maf4,vector<string>{"rl6"});
+    lb.addLayer("Affine","af1","{hidden=1024}",{"rl6"});
+    lb.addLayer("BatchNorm","bn1","",{"af1"});
+    lb.addLayer("Relu","rla1","",{"bn1"});
+    lb.addLayer("Dropout","do1","{drop=0.7}",{"rla1"});
+    lb.addLayer("Affine","af2","{hidden=512}",{"do1"});
+    lb.addLayer("BatchNorm","bn2","",{"af2"});
+    lb.addLayer("Relu","rla2","",{"bn2"});
+    lb.addLayer("Dropout","do2","{drop=0.7}",{"rla2"});
+    lb.addLayer("Affine","af3","{hidden=10}",{"do2"});
+    lb.addLayer("Softmax","sm1","",{"af3"});
 
-    cp14.setPar("topo", vector<int>{N4});
-    BatchNorm bn4(cp14);
-    ml.addLayer("bn4",&bn4,vector<string>{"af4"});
-
-    cp15.setPar("topo", vector<int>{N4});
-    Relu mrl7(cp15);
-    ml.addLayer("rl7",&mrl7,vector<string>{"bn4"});
-
-    cp16.setPar("topo", vector<int>{N4});
-    cp16.setPar("drop", dropR);
-    Dropout dr4(cp16);
-    ml.addLayer("dr4",&dr4,vector<string>{"rl7"});
-// l8
-    cp17.setPar("topo",vector<int>{N4,N5});
-    Affine maf5(cp17);
-    ml.addLayer("af5",&maf5,vector<string>{"dr4"});
-
-    cp18.setPar("topo", vector<int>{N5});
-    BatchNorm bn5(cp18);
-    ml.addLayer("bn5",&bn5,vector<string>{"af5"});
-
-    cp19.setPar("topo", vector<int>{N5});
-    Relu mrl8(cp19);
-    ml.addLayer("rl8",&mrl8,vector<string>{"bn5"});
-
-    cp20.setPar("topo", vector<int>{N5});
-    cp20.setPar("drop", dropR);
-    Dropout dr5(cp20);
-    ml.addLayer("dr5",&dr5,vector<string>{"rl8"});
-// l9
-    cp21.setPar("topo",vector<int>{N5,10});
-    Affine maf6(cp21);
-    ml.addLayer("af6",&maf6,vector<string>{"dr5"});
-
-    Softmax msm1("{topo=[10]}");
-    ml.addLayer("sm1",&msm1,vector<string>{"af6"});
-    if (!ml.checkTopology(verbose)) {
-        if (verbose) cout << "Topology-check for MultiLayer: ERROR." << endl;
+    if (verbose) cout << "Checking LayerBlock topology..." << endl;
+    if (!lb.checkTopology(verbose)) {
+        if (verbose) cout << "Topology-check for LayerBlock: ERROR." << endl;
     } else {
-        if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
+        if (verbose) cout << "Topology-check for LayerBLock: ok." << endl;
     }
 
-    floatN cAcc=ml.train(X, y, Xv, yv, "Adam", cpo);
-    floatN final_err;
+    floatN cAcc=lb.train(X, y, Xv, yv, "Adam", cpo);
 
+    floatN train_err, val_err, test_err;
     if (evalFinal) {
-        final_err=ml.test(Xt, yt);
-        cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
-        cAcc=1-final_err;
-    }
-    return cAcc;
-}
-*/
+        train_err=lb.test(X, y, cpo.getPar("batch_size", 50));
+        val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
+        test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
 
-/*// DomConvNet
-floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
-    int N4=500, N5=200;
-    CpParams cp1,cp2,cp3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.8;
-    MultiLayer ml("{topo=[3072];name='multi1'}");
-    if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
-
-// l1     (W + 2 * pad - WW) % stride   ||    pad = (filter_size - 1) // 2
-    cp1.setPar("topo",vector<int>{3,32,32,48,5,5});
-    cp1.setString("{stride=1;pad=2}");
-    Convolution cv1(cp1);
-    ml.addLayer("cv1",&cv1,vector<string>{"input"});
-    cp2.setPar("topo",vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
-    Relu mrl1(cp2);
-    ml.addLayer("rl1",&mrl1,vector<string>{"cv1"});
-// l2
-    cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],48,5,5});
-    cp3.setString("{stride=1;pad=2}");
-    Convolution cv2(cp3);
-    ml.addLayer("cv2",&cv2,vector<string>{"rl1"});
-    cp4.setPar("topo",vector<int>{cv2.oTopo()[0]*cv2.oTopo()[1]*cv2.oTopo()[2]});
-    Relu mrl2(cp4);
-    ml.addLayer("rl2",&mrl2,vector<string>{"cv2"});
-    cp41.setPar("topo",vector<int>{cv2.oTopo()[0],cv2.oTopo()[1],cv2.oTopo()[2]});
-    cp41.setPar("stride",2);
-    Pooling pl1(cp41);
-    ml.addLayer("pl1",&pl1,vector<string>{"rl2"});
-
-// l3
-    cp5.setPar("topo",vector<int>{pl1.oTopo()[0],pl1.oTopo()[1],pl1.oTopo()[2],48,3,3});
-    cp5.setString("{stride=1;pad=1}");
-    Convolution cv3(cp5);
-    ml.addLayer("cv3",&cv3,vector<string>{"pl1"});
-    cp6.setPar("topo",vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
-    Relu mrl3(cp6);
-    ml.addLayer("rl3",&mrl3,vector<string>{"cv3"});
-// l4
-    cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],48,3,3});
-    cp7.setString("{stride=1;pad=1}");
-    Convolution cv4(cp7);
-    ml.addLayer("cv4",&cv4,vector<string>{"rl3"});
-    cp8.setPar("topo",vector<int>{cv4.oTopo()[0]*cv4.oTopo()[1]*cv4.oTopo()[2]});
-    Relu mrl4(cp8);
-    ml.addLayer("rl4",&mrl4,vector<string>{"cv4"});
-    cp42.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2]});
-    cp42.setPar("stride",2);
-    Pooling pl2(cp42);
-    ml.addLayer("pl2",&pl2,vector<string>{"rl4"});
-// // l5
-//     cp9.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2],64,3,3});
-//     cp9.setString("{stride=1;pad=0}");
-//     Convolution cv5(cp9);
-//     ml.addLayer("cv5",&cv5,vector<string>{"rl4"});
-//     cp10.setPar("topo",vector<int>{cv5.oTopo()[0]*cv5.oTopo()[1]*cv5.oTopo()[2]});
-//     Relu mrl5(cp10);
-//     ml.addLayer("rl5",&mrl5,vector<string>{"cv5"});
-// // l6
-//     cp11.setPar("topo",vector<int>{cv5.oTopo()[0],cv5.oTopo()[1],cv5.oTopo()[2],128,3,3});
-//     cp11.setString("{stride=1;pad=0}");
-//     Convolution cv6(cp11);
-//     ml.addLayer("cv6",&cv6,vector<string>{"rl5"});
-//     cp12.setPar("topo",vector<int>{cv6.oTopo()[0]*cv6.oTopo()[1]*cv6.oTopo()[2]});
-//     Relu mrl6(cp12);
-//     ml.addLayer("rl6",&mrl6,vector<string>{"cv6"});
-// l7
-    cp13.setPar("topo",vector<int>{pl2.oTopo()[0]*pl2.oTopo()[1]*pl2.oTopo()[2],N4});
-    Affine maf4(cp13);
-    ml.addLayer("af4",&maf4,vector<string>{"pl2"});
-
-    cp14.setPar("topo", vector<int>{N4});
-    BatchNorm bn4(cp14);
-    ml.addLayer("bn4",&bn4,vector<string>{"af4"});
-
-    cp15.setPar("topo", vector<int>{N4});
-    Relu mrl7(cp15);
-    ml.addLayer("rl7",&mrl7,vector<string>{"bn4"});
-
-    cp16.setPar("topo", vector<int>{N4});
-    cp16.setPar("drop", dropR);
-    Dropout dr4(cp16);
-    ml.addLayer("dr4",&dr4,vector<string>{"rl7"});
-// l8
-    cp17.setPar("topo",vector<int>{N4,N5});
-    Affine maf5(cp17);
-    ml.addLayer("af5",&maf5,vector<string>{"dr4"});
-
-    cp18.setPar("topo", vector<int>{N5});
-    BatchNorm bn5(cp18);
-    ml.addLayer("bn5",&bn5,vector<string>{"af5"});
-
-    cp19.setPar("topo", vector<int>{N5});
-    Relu mrl8(cp19);
-    ml.addLayer("rl8",&mrl8,vector<string>{"bn5"});
-
-    cp20.setPar("topo", vector<int>{N5});
-    cp20.setPar("drop", dropR);
-    Dropout dr5(cp20);
-    ml.addLayer("dr5",&dr5,vector<string>{"rl8"});
-// l9
-    cp21.setPar("topo",vector<int>{N5,10});
-    Affine maf6(cp21);
-    ml.addLayer("af6",&maf6,vector<string>{"dr5"});
-
-    Softmax msm1("{topo=[10]}");
-    ml.addLayer("sm1",&msm1,vector<string>{"af6"});
-
-    if (verbose) cout << "Checking multi-layer topology..." << endl;
-    if (!ml.checkTopology(verbose)) {
-        if (verbose) cout << "Topology-check for MultiLayer: ERROR." << endl;
-    } else {
-        if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
-    }
-
-    floatN cAcc=ml.train(X, y, Xv, yv, "Adam", cpo);
-    floatN final_err;
-
-    if (evalFinal) {
-        final_err=ml.test(Xt, yt);
-        cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
-        cAcc=1-final_err;
-    }
-    return cAcc;
-}
-*/
-floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
-    int N4=500, N5=200;
-    CpParams cp1,cp1x1,cp2,cp3,cp3x3,cp4,cp41, cp42, cp5,cp6,cp7,cp8,cp9,cp10,cp11,cp12,cp13,cp14,cp15,cp16,cp17,cp18,cp19,cp20,cp21;
-    floatN dropR=0.7;
-    MultiLayer ml("{topo=[3072];name='multi1'}");
-    if (verbose) cout << "LayerName for ml: " << ml.layerName << endl;
-
-// l1     (W + 2 * pad - WW) % stride   ||    pad = (filter_size - 1) // 2
-    cp1.setPar("topo",vector<int>{3,32,32,48,5,5});
-    cp1.setString("{stride=1;pad=2}");
-    Convolution cv1(cp1);
-    ml.addLayer("cv1",&cv1,vector<string>{"input"});
-
-    cp1x1.setPar("topo", vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
-    BatchNorm bn1x1(cp1x1);
-    ml.addLayer("bn1x1",&bn1x1,vector<string>{"cv1"});
-
-    cp2.setPar("topo",vector<int>{cv1.oTopo()[0]*cv1.oTopo()[1]*cv1.oTopo()[2]});
-    Relu mrl1(cp2);
-    ml.addLayer("rl1",&mrl1,vector<string>{"bn1x1"});
-// l2
-    cp3.setPar("topo",vector<int>{cv1.oTopo()[0],cv1.oTopo()[1],cv1.oTopo()[2],48,5,5});
-    cp3.setString("{stride=1;pad=2}");
-    Convolution cv2(cp3);
-    ml.addLayer("cv2",&cv2,vector<string>{"rl1"});
-    cp4.setPar("topo",vector<int>{cv2.oTopo()[0]*cv2.oTopo()[1]*cv2.oTopo()[2]});
-    Relu mrl2(cp4);
-    ml.addLayer("rl2",&mrl2,vector<string>{"cv2"});
-// l3
-    cp5.setPar("topo",vector<int>{cv2.oTopo()[0],cv2.oTopo()[1],cv2.oTopo()[2],48,2,2});
-    cp5.setString("{stride=2;pad=0}");
-    Convolution cv3(cp5);
-    ml.addLayer("cv3",&cv3,vector<string>{"rl2"});
-
-    cp3x3.setPar("topo", vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
-    BatchNorm bn3x3(cp3x3);
-    ml.addLayer("bn3x3",&bn3x3,vector<string>{"cv3"});
-
-    cp6.setPar("topo",vector<int>{cv3.oTopo()[0]*cv3.oTopo()[1]*cv3.oTopo()[2]});
-    Relu mrl3(cp6);
-    ml.addLayer("rl3",&mrl3,vector<string>{"bn3x3"});
-// l4
-    cp7.setPar("topo",vector<int>{cv3.oTopo()[0],cv3.oTopo()[1],cv3.oTopo()[2],48,3,3});
-    cp7.setString("{stride=1;pad=1}");
-    Convolution cv4(cp7);
-    ml.addLayer("cv4",&cv4,vector<string>{"rl3"});
-    cp8.setPar("topo",vector<int>{cv4.oTopo()[0]*cv4.oTopo()[1]*cv4.oTopo()[2]});
-    Relu mrl4(cp8);
-    ml.addLayer("rl4",&mrl4,vector<string>{"cv4"});
-// l5
-    cp9.setPar("topo",vector<int>{cv4.oTopo()[0],cv4.oTopo()[1],cv4.oTopo()[2],48,3,3});
-    cp9.setString("{stride=1;pad=1}");
-    Convolution cv5(cp9);
-    ml.addLayer("cv5",&cv5,vector<string>{"rl4"});
-    cp10.setPar("topo",vector<int>{cv5.oTopo()[0]*cv5.oTopo()[1]*cv5.oTopo()[2]});
-    Relu mrl5(cp10);
-    ml.addLayer("rl5",&mrl5,vector<string>{"cv5"});
-// l6
-    cp11.setPar("topo",vector<int>{cv5.oTopo()[0],cv5.oTopo()[1],cv5.oTopo()[2],48,2,2});
-    cp11.setString("{stride=2;pad=0}");
-    Convolution cv6(cp11);
-    ml.addLayer("cv6",&cv6,vector<string>{"rl5"});
-    cp12.setPar("topo",vector<int>{cv6.oTopo()[0]*cv6.oTopo()[1]*cv6.oTopo()[2]});
-    Relu mrl6(cp12);
-    ml.addLayer("rl6",&mrl6,vector<string>{"cv6"});
-// l7
-    cp13.setPar("topo",vector<int>{cv6.oTopo()[0]*cv6.oTopo()[1]*cv6.oTopo()[2],N4});
-    Affine maf4(cp13);
-    ml.addLayer("af4",&maf4,vector<string>{"rl6"});
-
-    cp14.setPar("topo", vector<int>{N4});
-    BatchNorm bn4(cp14);
-    ml.addLayer("bn4",&bn4,vector<string>{"af4"});
-
-    cp15.setPar("topo", vector<int>{N4});
-    Relu mrl7(cp15);
-    ml.addLayer("rl7",&mrl7,vector<string>{"bn4"});
-
-    cp16.setPar("topo", vector<int>{N4});
-    cp16.setPar("drop", dropR);
-    Dropout dr4(cp16);
-    ml.addLayer("dr4",&dr4,vector<string>{"rl7"});
-// l8
-    cp17.setPar("topo",vector<int>{N4,N5});
-    Affine maf5(cp17);
-    ml.addLayer("af5",&maf5,vector<string>{"dr4"});
-
-    cp18.setPar("topo", vector<int>{N5});
-    BatchNorm bn5(cp18);
-    ml.addLayer("bn5",&bn5,vector<string>{"af5"});
-
-    cp19.setPar("topo", vector<int>{N5});
-    Relu mrl8(cp19);
-    ml.addLayer("rl8",&mrl8,vector<string>{"bn5"});
-
-    cp20.setPar("topo", vector<int>{N5});
-    cp20.setPar("drop", dropR);
-    Dropout dr5(cp20);
-    ml.addLayer("dr5",&dr5,vector<string>{"rl8"});
-// l9
-    cp21.setPar("topo",vector<int>{N5,10});
-    Affine maf6(cp21);
-    ml.addLayer("af6",&maf6,vector<string>{"dr5"});
-
-    Softmax msm1("{topo=[10]}");
-    ml.addLayer("sm1",&msm1,vector<string>{"af6"});
-
-    if (verbose) cout << "Checking multi-layer topology..." << endl;
-    if (!ml.checkTopology(verbose)) {
-        if (verbose) cout << "Topology-check for MultiLayer: ERROR." << endl;
-    } else {
-        if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
-    }
-
-    floatN cAcc=ml.train(X, y, Xv, yv, "Adam", cpo);
-    floatN final_err;
-
-    if (evalFinal) {
-        final_err=ml.test(Xt, yt, cpo.getPar("batch_size", 50));
-        cout << "Final error on test-set:" << final_err << ", accuracy:" << 1.0-final_err << endl;
-        cAcc=1-final_err;
+        cout << "Final results on MNIST after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
+        cout << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
+        cout << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
+        cout << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
     }
     return cAcc;
 }
@@ -546,25 +236,13 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    //checkPrint(X,y,10);
-    //checkPrint(X,y,20);
-    //checkPrint(X,y,30);
-
-    //MultiLayer ml("{topo=[3072];name='multi1'}"); // unneeded. XXX remove the whole ifdef stuff, obsolete
-    //createMultilayer(&ml);
-
-    //Multilayer1
-
-    CpParams cpo("{verbose=true;learning_rate=1e-2;lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsion=1e-8}");
-    cpo.setPar("epochs",(floatN)200.0);
-    cpo.setPar("batch_size",50);
-    cpo.setPar("regularization", (floatN)0.0); //0.0000001);
-    floatN final_err;
-
-
+    CpParams cpo("{verbose=true;epsion=1e-8}");
     cpo.setPar("learning_rate", (floatN)2e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
+
+    cpo.setPar("epochs",(floatN)40.0);
+    cpo.setPar("batch_size",50);
 
     bool autoOpt=false;
 
