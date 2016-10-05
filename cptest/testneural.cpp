@@ -2005,7 +2005,7 @@ bool registerTest() {
     cout << "Registered Layers:" << endl;
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
-        cout << nr << ".: " << it.first << " " << endl;;
+        cout << nr << ".: " << it.first << " ";
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
         cp.setPar("inputShape",std::vector<int>(te));
