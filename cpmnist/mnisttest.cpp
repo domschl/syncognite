@@ -152,28 +152,28 @@ bool  getMnistData(string filepath) {
      MatrixN yt=*(cpMnistData["t_test"]);
 
      LayerBlock ms("name='DomsNet'");
-     ms.addLayer("Convolution", "cv1", "{topo=[1,28,28];kernel=[16,3,3];stride=1;pad=1}",vector<string>{"input"});
+     ms.addLayer("Convolution", "cv1", "{topo=[1,28,28];kernel=[48,5,5];stride=1;pad=2}",vector<string>{"input"});
      ms.addLayer("BatchNorm","sb1","",vector<string>{"cv1"});
      ms.addLayer("Relu","rl1","",vector<string>{"sb1"});
-     ms.addLayer("Dropout","doc1","{drop=0.5}",vector<string>{"rl1"});
-     ms.addLayer("Convolution", "cv2", "{topo=[0,0,0];kernel=[32,3,3];stride=1;pad=1}",vector<string>{"doc1"});
+     ms.addLayer("Dropout","doc1","{drop=0.8}",vector<string>{"rl1"});
+     ms.addLayer("Convolution", "cv2", "{topo=[0,0,0];kernel=[48,3,3];stride=1;pad=1}",vector<string>{"doc1"});
      ms.addLayer("Relu","rl2","",vector<string>{"cv2"});
      ms.addLayer("Convolution", "cv3", "{topo=[0,0,0];kernel=[64,3,3];stride=2;pad=1}",vector<string>{"rl2"});
      ms.addLayer("BatchNorm","sb2","",vector<string>{"cv3"});
      ms.addLayer("Relu","rl3","",vector<string>{"sb2"});
-     ms.addLayer("Dropout","doc2","{drop=0.5}",vector<string>{"rl3"});
+     ms.addLayer("Dropout","doc2","{drop=0.8}",vector<string>{"rl3"});
      ms.addLayer("Convolution", "cv4", "{topo=[0,0,0];kernel=[64,3,3];stride=1;pad=1}",vector<string>{"doc2"});
      ms.addLayer("Relu","rl4","",vector<string>{"cv4"});
      ms.addLayer("Convolution", "cv5", "{topo=[0,0,0];kernel=[128,3,3];stride=2;pad=1}",vector<string>{"rl4"});
      ms.addLayer("BatchNorm","sb3","",vector<string>{"cv5"});
      ms.addLayer("Relu","rl5","",vector<string>{"sb3"});
-     ms.addLayer("Dropout","doc3","{drop=0.5}",vector<string>{"rl5"});
-     //ms.addLayer("Convolution", "cv6", "{topo=[0,0,0];kernel=[64,3,3];stride=2;pad=1}",vector<string>{"rl5"});
-     //ms.addLayer("Relu","rl6","",vector<string>{"cv6"});
+     ms.addLayer("Dropout","doc3","{drop=0.8}",vector<string>{"rl5"});
+     ms.addLayer("Convolution", "cv6", "{topo=[0,0,0];kernel=[128,3,3];stride=1;pad=1}",vector<string>{"doc3"});
+     ms.addLayer("Relu","rl6","",vector<string>{"cv6"});
      //ms.addLayer("Convolution", "cv7", "{topo=[0,0,0];kernel=[64,3,3];stride=1;pad=1}",vector<string>{"rl6"});
      //ms.addLayer("Relu","rl7","",vector<string>{"cv7"});
 
-     ms.addLayer("Affine","af1","{topo=[0];hidden=1024}",vector<string>{"doc3"});
+     ms.addLayer("Affine","af1","{topo=[0];hidden=1024}",vector<string>{"rl6"});
      ms.addLayer("BatchNorm","bn1","",vector<string>{"af1"});
      ms.addLayer("Relu","rla1","",vector<string>{"bn1"});
      ms.addLayer("Dropout","do1","{drop=0.7}",vector<string>{"rla1"});
@@ -195,9 +195,9 @@ bool  getMnistData(string filepath) {
 
      CpParams cpo("{verbose=true;lr_decay=0.95;epsilon=1e-8}");
      cpo.setPar("epochs",(floatN)40.0);
-     cpo.setPar("batch_size",25);
-     cpo.setPar("learning_rate", (floatN)1e-4);
-     cpo.setPar("regularization", (floatN)1e-7);
+     cpo.setPar("batch_size",50);
+     cpo.setPar("learning_rate", (floatN)5e-4);
+     cpo.setPar("regularization", (floatN)1e-8);
 
      ms.train(X, y, Xv, yv, "Adam", cpo);
 
