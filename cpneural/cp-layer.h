@@ -468,13 +468,7 @@ public:
 };
 
 enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
-/*
-typedef struct LayerParams {
-    map<string, int> iParams;
-    map<string, floatN> fParams;
-} t_layer_params;
 
-*///typedef std::vector<int> t_layer_topo;
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
 
@@ -547,14 +541,14 @@ class Layer {
 public:
     string layerName;
     LayerType layerType;
-    int topoParams;
-    vector<int>outTopo;
+    int inputShapeRang;
+    vector<int>outputShape;
     CpParams cp;
     t_cppl params;
     bool layerInit;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
-    virtual vector<int> oTopo() { return outTopo;}
+    virtual vector<int> getOutputShape() { return outputShape;}
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}

@@ -28,24 +28,24 @@ private:
     int hidden;
     void setup(const CpParams& cx) {
         layerName="Affine";
-        topoParams=1;
+        inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",1024);
-        outTopo={hidden};
+        outputShape={hidden};
 
-        cppl_set(&params, "W", new MatrixN(intopo,hidden)); // W
+        cppl_set(&params, "W", new MatrixN(inputShapeFlat,hidden)); // W
         cppl_set(&params, "b", new MatrixN(1,hidden)); // b
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(intopo+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
@@ -168,13 +168,13 @@ private:
         layerName="Relu";
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        topoParams=1;
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        inputShapeRang=1;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
-        outTopo=topo;
+        outputShape=inputShape;
         layerInit=true;
     }
 public:
@@ -230,22 +230,22 @@ private:
     void setup(const CpParams& cx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
-        topoParams=2;
+        inputShapeRang=2;
         cp=cx;
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",1024);
-        outTopo={hidden};
+        outputShape={hidden};
         CpParams ca;
-        ca.setPar("topo", vector<int>{intopo});
+        ca.setPar("inputShape", vector<int>{inputShapeFlat});
         ca.setPar("hidden", hidden);
         af=new Affine(ca);
         mlPush("af", &(af->params), &params);
         CpParams cl;
-        cl.setPar("topo", vector<int>{hidden});
+        cl.setPar("inputShape", vector<int>{hidden});
         rl=new Relu(cl);
         mlPush("re", &(rl->params), &params);
         layerInit=true;
@@ -306,22 +306,22 @@ private:
     void setup(const CpParams& cx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
-        topoParams=1;
+        inputShapeRang=1;
         cp=cx;
         eps = cp.getPar("eps", (floatN)1e-5);
         momentum = cp.getPar("momentum", (floatN)0.9);
         trainMode = cp.getPar("train", (bool)false);
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
-        outTopo={topo};
+        outputShape={inputShape};
 
-        MatrixN *pgamma=new MatrixN(1,intopo);
+        MatrixN *pgamma=new MatrixN(1,inputShapeFlat);
         pgamma->setOnes();
         cppl_set(&params,"gamma",pgamma);
-        MatrixN *pbeta=new MatrixN(1,intopo);
+        MatrixN *pbeta=new MatrixN(1,inputShapeFlat);
         pbeta->setZero();
         cppl_set(&params,"beta",pbeta);
         layerInit=true;
@@ -443,13 +443,13 @@ private:
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        topoParams=1;
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        inputShapeRang=1;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
-        outTopo={topo};
+        outputShape={inputShape};
         drop = cp.getPar("drop", (floatN)0.5);
         trainMode = cp.getPar("train", (bool)false);
         freeze = cp.getPar("freeze", (bool)false);
@@ -538,19 +538,23 @@ private:
     bool mlverbose;
     void setup(const CpParams& cx) {
         layerName="Convolution";
-        topoParams=3;
+        inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{});
-        if (topo.size()!=3) retval=false;
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        if (inputShape.size()!=3) {
+            retval=false;
+        } else { // inputShape: C, H, W;
+            C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
+        }
 
         vector<int> kernel=cp.getPar("kernel", vector<int>{});
-        if (kernel.size()!=3) retval=false;
-
-        // TOPO: C, H, W, F, HH, WW
-        C=topo[0]; H=topo[1]; W=topo[2];
-        F=kernel[0]; HH=kernel[1]; WW=kernel[2];
+        if (kernel.size()!=3) {
+            retval=false;
+        } else { // Kernel: F, HH, WW
+            F=kernel[0]; HH=kernel[1]; WW=kernel[2];
+        }
         if (F*HH*WW==0) {
             F=16; HH=3; WW=3;
         }
@@ -595,7 +599,7 @@ private:
             retval=false;
         }
 
-        outTopo={kernel[0],WO,HO};
+        outputShape={F,WO,HO};
 
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO)) / 10.0;
@@ -1079,15 +1083,15 @@ private:
     int stride;
     void setup(const CpParams& cx) {
         layerName="Pooling";
-        topoParams=3;  // XXX: move kernel sizes to params?
+        inputShapeRang=3;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{0});
-        assert (topo.size()==3);
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{0});
+        assert (inputShape.size()==3);
         stride = cp.getPar("stride", 2);
-        // TOPO: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
-        C=topo[0]; H=topo[1]; W=topo[2];
+        // inputShape: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
+        C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
         HH=stride; WW=stride;  // XXX: Simplification, our algo doesn't work for HH or WW != stride.
         if (HH!=stride || WW!=stride) {
             cout << "Implementation only supports stride equal to HH and WW!";
@@ -1101,7 +1105,7 @@ private:
         HO = (H-HH)/stride+1;
         WO = (W-WW)/stride+1;
 
-        outTopo={C,WO,HO};
+        outputShape={C,WO,HO};
 
         layerInit=retval;
     }
@@ -1234,19 +1238,19 @@ private:
     BatchNorm *pbn;
     void setup(const CpParams& cx) {
         layerName="SpatialBatchNorm";
-        topoParams=3;
+        inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{});
-        assert (topo.size()==3);
-        // TOPO: C, H, W
-        C=topo[0]; H=topo[1]; W=topo[2];
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        assert (inputShape.size()==3);
+        // inputShape: C, H, W
+        C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
         N0=cp.getPar("batch_size",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
-        outTopo={C,H,W};
+        outputShape={C,H,W};
 
         CpParams cs(cp);
-        cs.setPar("topo",vector<int>{N0*H*W});
+        cs.setPar("inputShape",vector<int>{N0*H*W});
         pbn = new BatchNorm(cs);
         pbn->cp.setPar("train",cp.getPar("train",false));
         mlPush("bn", &(pbn->params), &params);
@@ -1361,13 +1365,13 @@ private:
         layerName="Svm";
         layerType=LayerType::LT_LOSS;
         cp=cx;
-        topoParams=1;
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        inputShapeRang=1;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
-        outTopo={intopo};
+        outputShape={inputShapeFlat};
         layerInit=true;
     }
 public:
@@ -1435,13 +1439,13 @@ private:
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
         cp=cx;
-        topoParams=1;
-        vector<int> topo=cp.getPar("topo", vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        inputShapeRang=1;
+        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
-        outTopo={intopo};
+        outputShape={inputShapeFlat};
         layerInit=true;
     }
 public:
@@ -1510,26 +1514,26 @@ private:
         bool retval=true;
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
-        topoParams=1;
+        inputShapeRang=1;
         cp=cx;
-        vector<int> topo=cp.getPar("topo",vector<int>{});
-        int intopo=1;
-        for (int j : topo) {
-            intopo *= j;
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",vector<int>{1024,1024});
 
         if (hidden.size()!=2) retval=false;
 
-        outTopo={hidden[1]};
+        outputShape={hidden[1]};
 
         CpParams c1,c2,c3,c4;
-        c1.setPar("topo",vector<int>{intopo});
+        c1.setPar("inputShape",vector<int>{inputShapeFlat});
         c1.setPar("hidden",hidden[0]);
-        c2.setPar("topo",vector<int>{hidden[0]});
-        c3.setPar("topo",vector<int>{hidden[0]});
+        c2.setPar("inputShape",vector<int>{hidden[0]});
+        c3.setPar("inputShape",vector<int>{hidden[0]});
         c3.setPar("hidden",hidden[1]);
-        c4.setPar("topo",vector<int>{hidden[1]});
+        c4.setPar("inputShape",vector<int>{hidden[1]});
         af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);
         rl=new Relu(c2);
@@ -1643,6 +1647,7 @@ void registerLayers() {
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
 }
 
+/*
 class MultiLayer : public Layer {
 private:
     void setup(const CpParams& cx) {
@@ -1722,17 +1727,17 @@ public:
                 string name=nLay[0];
                 Layer *p=layerMap[name];
 
-                int intopo=1;
-                for (int j : p->cp.getPar("topo", vector<int>{})) {
-                    intopo *= j;
+                int inputShapeFlat=1;
+                for (int j : p->cp.getPar("inputShape", vector<int>{})) {
+                    inputShapeFlat *= j;
                 }
-                int outtopo=1;
-                for (int j : p->oTopo()) {
-                    outtopo *= j;
+                int outputShape=1;
+                for (int j : p->getOutputShape()) {
+                    outputShape *= j;
                 }
 
-                cout << name << ": " << p->cp.getPar("topo", vector<int>{}) << "[" << intopo << "]";
-                cout << " -> " << p->oTopo() << "[" << outtopo << "]" << endl;
+                cout << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
+                cout << " -> " << p->getOutputShape() << "[" << outputShape << "]" << endl;
 
                 if (p->layerInit==false) cout << "  " << name << ": bad initialization!" << endl;
                 cLay=nLay[0];
@@ -1880,7 +1885,7 @@ public:
     }
 
 };
-
+*/
 class LayerBlock : public Layer {
 private:
     void setup(const CpParams& cx) {
@@ -1929,7 +1934,7 @@ public:
             cout << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
         }
-        if (_syncogniteLayerFactory.mapl.find(layerclass) == _syncogniteLayerFactory.mapl.end()) {
+        if (_syncogniteLayerFactory.mapl.find(layerclass) == _syncogniteLayerFactory.mapl.end() and layerclass!="Input") {
             cout << "Cannot add layer: " << layerclass << ", layer class is not defined." << endl;
             return false;
         }
@@ -1953,20 +1958,20 @@ public:
                 cout << "Can't find input-layer: " << firstInput << " internal error in layer defintion of " << name << endl;
                 return false;
             }
-            vector<int> topo, topoP;
-            topo=cp.getPar("topo", vector<int>{});
-            topoP=lP->second->oTopo();
-            if (topoP.size()==0) {
-                cout << "Missing outTopo defintion for inputLayer " << firstInput << endl;
+            vector<int> inputShape, prevOutputShape;
+            inputShape=cp.getPar("inputShape", vector<int>{});
+            prevOutputShape=lP->second->getOutputShape();
+            if (prevOutputShape.size()==0) {
+                cout << "Missing outputShape defintion for inputLayer " << firstInput << endl;
                 return false;
             }
-            if (topo.size()<topoP.size()) {
-                topo=topoP;
+            if (inputShape.size()<prevOutputShape.size()) {
+                inputShape=prevOutputShape;
             }
-            for (unsigned int i=0; i<topoP.size(); i++) {
-                topo[i]=topoP[i];
+            for (unsigned int i=0; i<prevOutputShape.size(); i++) {
+                inputShape[i]=prevOutputShape[i];
             }
-            cp.setPar("topo",topo);
+            cp.setPar("inputShape",inputShape);
         }
         layerMap[name]=CREATE_LAYER(layerclass, cp)   // Macro!
         Layer *pLayer = layerMap[name];
@@ -2031,17 +2036,17 @@ public:
                 string name=nLay[0];
                 Layer *p=layerMap[name];
 
-                int intopo=1;
-                for (int j : p->cp.getPar("topo", vector<int>{})) {
-                    intopo *= j;
+                int inputShapeFlat=1;
+                for (int j : p->cp.getPar("inputShape", vector<int>{})) {
+                    inputShapeFlat *= j;
                 }
-                int outtopo=1;
-                for (int j : p->oTopo()) {
-                    outtopo *= j;
+                int outputShapeFlat=1;
+                for (int j : p->getOutputShape()) {
+                    outputShapeFlat *= j;
                 }
 
-                cout << name << ": " << p->cp.getPar("topo", vector<int>{}) << "[" << intopo << "]";
-                cout << " -> " << p->oTopo() << "[" << outtopo << "]" << endl;
+                cout << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
+                cout << " -> " << p->getOutputShape() << "[" << outputShapeFlat << "]" << endl;
 
                 if (p->layerInit==false) cout << "  " << name << ": bad initialization!" << endl;
                 cLay=nLay[0];

@@ -122,22 +122,22 @@ int doBench() {
             else if (te==1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
             else cout  << nr << ".: " << it.first << " N=" << N << endl;
 
-            std::vector<int> tp(te);
-            for (auto i=0; i< tp.size(); i++) tp[i]=M;
+            std::vector<int> inputShape(te);
+            for (auto i=0; i< inputShape.size(); i++) inputShape[i]=M;
             int MI=M;
             if (it.first=="Convolution") {
-/*                tp[0]=3;
-                tp[1]=100;
-                tp[2]=100;
+/*                inputShape[0]=3;
+                inputShape[1]=100;
+                inputShape[2]=100;
                 MI=100*100*3;
-                tp[3]=8;
-                tp[4]=5;
-                tp[5]=5;
+                inputShape[3]=8;
+                inputShape[4]=5;
+                inputShape[5]=5;
                 cp.setPar("pad",2);
                 cp.setPar("stride",3);
-*/                tp[0]=3;
-                tp[1]=31;
-                tp[2]=31;
+*/                inputShape[0]=3;
+                inputShape[1]=31;
+                inputShape[2]=31;
                 MI=31*31*3;
                 N=100;
                 cp.setPar("kernel",vector<int>{25,3,3});
@@ -145,20 +145,20 @@ int doBench() {
                 cp.setPar("stride",1);
                 cp.setPar("verbose",true);
             } else if (it.first=="Pooling") {
-                tp[0]=3;
-                tp[1]=100;
-                tp[2]=100;
+                inputShape[0]=3;
+                inputShape[1]=100;
+                inputShape[2]=100;
                 MI=100*100*3;
                 cp.setPar("pad",2);
                 cp.setPar("stride",2);
             } else if (it.first=="SpatialBatchNorm") {
-                tp[0]=3;
-                tp[1]=100;
-                tp[2]=100;
+                inputShape[0]=3;
+                inputShape[1]=100;
+                inputShape[2]=100;
                 cp.setPar("batch_norm",N);
                 MI=100*100*3;
             }
-            cp.setPar("topo",tp);
+            cp.setPar("inputShape",inputShape);
             cp.setPar("train", true);
             Layer *l = CREATE_LAYER(it.first, cp)
             if (reps==0) {

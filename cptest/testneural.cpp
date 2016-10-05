@@ -49,8 +49,8 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-     //Affine pe(CpParams("{topo=[4,3]}"));
-     Affine pe("{topo=[4];hidden=3}");
+     //Affine pe(CpParams("{inputShape=[4,3]}"));
+     Affine pe("{inputShape=[4];hidden=3}");
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr);
@@ -81,7 +81,7 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe("{topo=[4];hidden=5}");
+    Affine pe("{inputShape=[4];hidden=5}");
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -111,7 +111,7 @@ bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.        ,  0.        ,  0.04545455,  0.13636364,
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
-    Relu rl(CpParams("{topo=[4]}"));
+    Relu rl(CpParams("{inputShape=[4]}"));
     MatrixN y0=rl.forward(x, nullptr);
     return matComp(y,y0,"ReluForward",eps);
 }
@@ -132,7 +132,7 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Relu rl("{topo=[4]}");
+    Relu rl("{inputShape=[4]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rl.forward(x, &cache);
@@ -172,7 +172,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.62625677, -1.24542905,  0.67804096,
           1.02169486,  0.1622018 , -0.74815305;
 
-    BatchNorm bn("{topo=[3];train=true}");
+    BatchNorm bn("{inputShape=[3];train=true}");
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
@@ -220,7 +220,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
            12.02169486,  12.3244036 ,  10.75554084;
 
 
-    BatchNorm bn2("{topo=[3];train=true}");
+    BatchNorm bn2("{inputShape=[3];train=true}");
     *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
@@ -259,7 +259,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache3;
     int nnr=200;
     MatrixN xt(nnr,3);
-    BatchNorm bn3("{topo=[3];train=true}");
+    BatchNorm bn3("{inputShape=[3];train=true}");
     *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
@@ -317,7 +317,7 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
               -0.26565248,  0.26942709,  0.09496168, -0.00460701,  1.22847938,
               -0.54081537, -0.35927023, -0.23993959,  1.0851781 ,  0.51968779;
 
-    BatchNorm bn("{topo=[5];train=true}");
+    BatchNorm bn("{inputShape=[5];train=true}");
     *(bn.params["gamma"])=gamma;
     *(bn.params["beta"])=beta;
 
@@ -346,7 +346,7 @@ bool checkDropout(float eps=3.0e-2) {
     floatN dop=0.8;
     x.array() += dl;
 
-    Dropout dp("{topo=[500];train=true}");
+    Dropout dp("{inputShape=[500];train=true}");
     dp.cp.setPar("drop",dop);
     MatrixN y=dp.forward(x, nullptr);
     dp.cp.setPar("train",false);
@@ -479,8 +479,8 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
          2.36270298,  2.36904306,
          2.38090835,  2.38247847;
 
-         // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,4,4];kernel=[3,4,4];stride=2;pad=1}");
+         // inputShape: C, H, W; kernel: F, HH, WW
+    Convolution cv("{inputShape=[3,4,4];kernel=[3,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
@@ -1002,8 +1002,8 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
             4.36236970e+00,   5.74131530e+00,   4.34944365e+00,
             3.31743501e+00,   4.34974790e+00,   3.30706714e+00;
 
-         // TOPO: C, H, W, F, HH, WW
-    Convolution cv("{topo=[3,6,6];kernel=[5,4,4];stride=2;pad=1}");
+         // inputShape: C, H, W; Kernel: F, HH, WW
+    Convolution cv("{inputShape=[3,6,6];kernel=[5,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr);
@@ -1388,7 +1388,7 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
           -0.31282652,  0.71725415,  0.03513737,  0.10890985, -0.99803075,
           -1.6124455 , -0.3881734 ,  0.90206887,  1.34225259,  0.37395634;
 
-    Convolution cv("{topo=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
+    Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
     *(cv.params["W"])=W;
     *(cv.params["b"])=b;
     t_cppl cache;
@@ -1452,8 +1452,8 @@ bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.26736842,  0.28210526,
           0.32631579,  0.34105263,
           0.38526316,  0.4;
-         // TOPO: C, H, W, F, HH, WW
-    Pooling pl("{topo=[3,4,4];stride=2}");
+         // inputShape: C, H, W; kernel: F, HH=stride, WW=stride
+    Pooling pl("{inputShape=[3,4,4];stride=2}");
     MatrixN y0=pl.forward(x, nullptr);
 
     return matComp(y,y0,"PoolingForward",eps);
@@ -1700,7 +1700,7 @@ bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
            0.        ,  0.        ,  1.40399454,
            0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
           -0.62679592,  0.        ,  0.;
-    Pooling pl("{topo=[2,8,8];stride=2}");
+    Pooling pl("{inputShape=[2,8,8];stride=2}");
     t_cppl cache;
     t_cppl grads;
     MatrixN y=pl.forward(x, &cache);
@@ -1731,7 +1731,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl("{topo=[4];hidden=5}");
+    AffineRelu arl("{inputShape=[4];hidden=5}");
     t_cppl cache;
     t_cppl grads;
     *(arl.params["af-W"])=W;
@@ -1808,7 +1808,7 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm("{topo=[5]}");
+    Softmax sm("{inputShape=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN probs0=sm.forward(x, y, &cache);
@@ -1883,7 +1883,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv("{topo=[5]}");
+    Svm sv("{inputShape=[5]}");
     t_cppl cache;
     t_cppl grads;
     MatrixN margins0=sv.forward(x, y, &cache);
@@ -1937,7 +1937,7 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
          -0.51027569,  2.3685213;
 
     CpParams cp;
-    cp.setPar("topo",vector<int>{D});
+    cp.setPar("inputShape",vector<int>{D});
     cp.setPar("hidden",vector<int>{H,C});
     TwoLayerNet tln(cp);
 
@@ -2005,10 +2005,10 @@ bool registerTest() {
     cout << "Registered Layers:" << endl;
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
-        cout << nr << ".: " << it.first << " ";
+        cout << nr << ".: " << it.first << " " << endl;;
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
-        cp.setPar("topo",std::vector<int>(te));
+        cp.setPar("inputShape",std::vector<int>(te));
         Layer *l = CREATE_LAYER(it.first, cp)
         if (l->layerType == LT_NORMAL) {
             cout << "normal layer" << endl;
@@ -2034,7 +2034,7 @@ bool trainTest() {
     bool allOk=true;
     CpParams cp;
     int N=300,NV=30,NT=30,I=5,H=20,C=4;
-    cp.setPar("topo",vector<int>{I});
+    cp.setPar("inputShape",vector<int>{I});
     cp.setPar("hidden",vector<int>{H,C});
     TwoLayerNet tln(cp);
 
@@ -2081,14 +2081,14 @@ int doTests() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    Affine pc(CpParams("{topo=[30];hidden=20}"));
+    Affine pc(CpParams("{inputShape=[30];hidden=20}"));
     MatrixN x(10,30);
     x.setRandom();
     if (!pc.selfTest(x,yz)) {
         allOk=false;
     }
 
-    Relu rl(CpParams("{topo=[20]}"));
+    Relu rl(CpParams("{inputShape=[20]}"));
     MatrixN xr(10,20);
     xr.setRandom();
     if (!rl.selfTest(xr,yz)) {
@@ -2096,7 +2096,7 @@ int doTests() {
     }
 
     // Batchnorm - still some strangities:
-    BatchNorm bn("{topo=[10];train=true;noVectorizationTests=true}");
+    BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
     MatrixN xbr(20,10);
     xbr.setRandom();
     if (!bn.selfTest(xbr,yz, 1e-4, 1e-3)) {
@@ -2104,7 +2104,7 @@ int doTests() {
     }
 
     // Dropout
-    Dropout dp("{topo=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
+    Dropout dp("{inputShape=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
     MatrixN xdp(3,5);
     xdp.setRandom();
     floatN h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -2114,9 +2114,9 @@ int doTests() {
     }
 
     // Convolution
-    //Convolution cv("{topo=[3,4,4,16,3,3];stride=1;pad=0}");
+    //Convolution cv("{inputShape=[3,4,4,16,3,3];stride=1;pad=0}");
     //MatrixN xcv(20,48);
-    Convolution cv("{topo=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
+    Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
     MatrixN xcv(2,75);
     xcv.setRandom();
     if (!cv.selfTest(xcv, yz, 1e-2, 1e-3)) {
@@ -2124,7 +2124,7 @@ int doTests() {
     }
 
     // Pooling
-    Pooling pl("{topo=[3,4,4];stride=2}");
+    Pooling pl("{inputShape=[3,4,4];stride=2}");
     MatrixN xpl(20,48);
     xpl.setRandom();
     if (!pl.selfTest(xpl, yz)) {
@@ -2132,14 +2132,14 @@ int doTests() {
     }
 
     // SpatialBatchNorm
-    SpatialBatchNorm sbn("{topo=[3,4,4];train=true;batch_size=20;noVectorizationTests=true}");
+    SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;batch_size=20;noVectorizationTests=true}");
     MatrixN xsbn(20,3*4*4);
     xsbn.setRandom();
     if (!sbn.selfTest(xsbn, yz)) {
         allOk=false;
     }
 
-    AffineRelu rx("{topo=[2];hidden=3}");
+    AffineRelu rx("{inputShape=[2];hidden=3}");
     MatrixN xarl(30,2);
     xarl.setRandom();
     h=1e-6; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -2151,7 +2151,7 @@ int doTests() {
     // TwoLayerNet
     int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
     CpParams tcp;
-    tcp.setPar("topo",vector<int>{ntl1});
+    tcp.setPar("inputShape",vector<int>{ntl1});
     tcp.setPar("hidden",vector<int>{ntl2,ntl3});
     TwoLayerNet tl(tcp);
     MatrixN xtl(ntlN,ntl1);
@@ -2168,7 +2168,7 @@ int doTests() {
     // Softmax
     int smN=10, smC=4;
     CpParams c1;
-    c1.setPar("topo",vector<int>{smC});
+    c1.setPar("inputShape",vector<int>{smC});
     Softmax mx(c1);
     MatrixN xmx(smN,smC);
     xmx.setRandom();
@@ -2183,7 +2183,7 @@ int doTests() {
     // SVM
     int svN=10, svC=5;
     CpParams c2;
-    c2.setPar("topo",vector<int>{svC});
+    c2.setPar("inputShape",vector<int>{svC});
     Svm sv(c2);
     MatrixN xsv(svN,svC);
     xsv.setRandom();
@@ -2195,22 +2195,18 @@ int doTests() {
         allOk=false;
     }
 
-    //Multilayer1
-    MultiLayer ml("{topo=[10];name='multi1'}");
-    cout << "LayerName for ml: " << ml.layerName << endl;
-    Affine maf1("{topo=[10];hidden=10}");
-    ml.addLayer("af1",&maf1,vector<string>{"input"});
-    Relu mrl1("{topo=[10]}");
-    ml.addLayer("rl1",&mrl1,vector<string>{"af1"});
-    Affine maf2("{topo=[10];hidden=10}");
-    ml.addLayer("af2",&maf2,vector<string>{"rl1"});
-    Softmax msm1("{topo=[10]}");
-    ml.addLayer("sm1",&msm1,vector<string>{"af2"});
-    if (!ml.checkTopology()) {
+    //LayerBlock1
+    LayerBlock lb("{name='testblock'}");
+    cout << "LayerName for lb: " << lb.layerName << endl;
+    lb.addLayer("Affine","af1","{inputShape=[10]}",{"input"});
+    lb.addLayer("Relu","rl1","",{"af1"});
+    lb.addLayer("Affine","af2","{hidden=10}",{"rl1"});
+    lb.addLayer("Softmax","sm1","",{"af2"});
+    if (!lb.checkTopology()) {
         allOk=false;
-        cout << red << "Topology-check for MultiLayer: ERROR." << def << endl;
+        cout << red << "Topology-check for LayerBlock: ERROR." << def << endl;
     } else {
-        cout << green << "Topology-check for MultiLayer: ok." << def << endl;
+        cout << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
     MatrixN xml(30,10);
     xml.setRandom();
@@ -2219,9 +2215,9 @@ int doTests() {
 
     h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!ml.selfTest(xml,yml, h, eps)) {
+    if (!lb.selfTest(xml,yml, h, eps)) {
         allOk=false;
-        cout << red << "Numerical gradient for MultiLayer: ERROR." << def << endl;
+        cout << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
 
     cout << "=== 2.: Test-data tests" << endl;
