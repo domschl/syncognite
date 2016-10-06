@@ -469,6 +469,22 @@ public:
     ~Dropout() {
         cppl_delete(&params);
     }
+
+
+    unsigned long fastrand(void) {          //period 2^96-1
+    static unsigned long x=123456789, y=362436069, z=521288629;
+    unsigned long t;
+        x ^= x << 16;
+        x ^= x >> 5;
+        x ^= x << 1;
+
+       t = x;
+       x = y;
+       y = z;
+       z = t ^ x ^ y;
+
+      return z;
+    }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         drop = cp.getPar("drop", (floatN)0.5);
@@ -485,10 +501,13 @@ public:
             } else {
                 pmask=new MatrixN(x);
                 if (freeze) srand(123);
-                pmask->setRandom();
+                // pmask->setRandom();
+                pmask->setZero();
+                int dr=(int)(drop*1000.0);
                 for (int i=0; i<x.size(); i++) {
-                    if (((*pmask)(i)+1.0)/2.0 < drop) (*pmask)(i)=1.0;
-                    else (*pmask)(i)=0.0;
+                    //if (((*pmask)(i)+1.0)/2.0 < drop) (*pmask)(i)=1.0;
+                    //else (*pmask)(i)=0.0;
+                    if (fastrand()%1000 < dr) (*pmask)(i)=1.0;
                 }
                 xout = x.array() * (*pmask).array();
                 if (pcache!=nullptr) cppl_set(pcache, "dropmask", pmask);
@@ -1738,7 +1757,7 @@ public:
             if (bench) t.startWall();
             if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
             else xn=p->forward(x0,y,&cache, id);
-            if (bench) cout << name << "-fw: " << t.stopWallMicro() << "µs." << endl;
+            if (bench) cout << name << "-fw:\t" << t.stopWallMicro() << endl;
             if (pcache!=nullptr) {
                 mlPush(name, &cache, pcache);
             } else {
@@ -1820,7 +1839,7 @@ public:
             mlPop(cl,pcache,&cache);
             if (bench) t.startWall();
             dxn=pl->backward(dx0, &cache, &grads, id);
-            if (bench) cout << cl << "-bw: " << t.stopWallMicro() << "µs." << endl;
+            if (bench) cout << cl << "-bw:\t" << t.stopWallMicro() << endl;
             mlPush(cl,&grads,pgrads);
             vector<string> lyr=layerInputs[cl];
             if (lyr[0]=="input") {
