@@ -2202,7 +2202,7 @@ int doTests() {
     lb.addLayer("Relu","rl1","",{"af1"});
     lb.addLayer("Affine","af2","{hidden=10}",{"rl1"});
     lb.addLayer("Softmax","sm1","",{"af2"});
-    if (!lb.checkTopology()) {
+    if (!lb.checkTopology(true)) {
         allOk=false;
         cout << red << "Topology-check for LayerBlock: ERROR." << def << endl;
     } else {

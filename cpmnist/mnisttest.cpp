@@ -151,7 +151,7 @@ bool  getMnistData(string filepath) {
      MatrixN Xt=*(cpMnistData["x_test"]);
      MatrixN yt=*(cpMnistData["t_test"]);
 
-     LayerBlock lb("name='DomsNet'");
+     LayerBlock lb("{name='DomsNet';bench=false}");
      lb.addLayer("Convolution", "cv1", "{inputShape=[1,28,28];kernel=[48,5,5];stride=1;pad=2}",{"input"});
      lb.addLayer("BatchNorm","sb1","",{"cv1"});
      lb.addLayer("Relu","rl1","",{"sb1"});
