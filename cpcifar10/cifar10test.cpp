@@ -189,7 +189,7 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
         val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
         test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
 
-        cout << "Final results on MNIST after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
+        cout << "Final results on CIFAR10 after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
         cout << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
         cout << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
         cout << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
