@@ -196,6 +196,23 @@ void cudaBench() {
 }
 #endif
 
+//HO = 1 + (H + 2 * pad - HH) / stride;
+//WO = 1 + (W + 2 * pad - WW) / stride;
+
+void colmagic() {
+    int N=8;
+    Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
+    vector<int> vo=cv.getOutputShape();
+    int F=vo[0], HO=vo[1], WO=vo[2];
+    int rws=4;
+    MatrixN m(rws,HO * WO * F * N / rws);
+    m.setZero();
+    for (int i=0; i<m.size(); i++) m(i%rws,i/rws)=i;
+    cout << "OLD:" << endl;
+    cv.col2imx(m,N);
+    cout << "NEW:" << endl;
+    cv.col2im(m,N);
+}
 int main() {
     cpInitCompute("Bench");
 
@@ -210,6 +227,8 @@ int main() {
         cudaBench();
     }
     #endif
+
+    //colmagic();
 
     cpExitCompute();
     return ret;

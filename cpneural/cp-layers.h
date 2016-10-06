@@ -620,64 +620,8 @@ public:
     ~Convolution() {
         cppl_delete(&params);
     }
-/*
-    void im2col(MatrixN xx, MatrixN *px2c) {
-        int N=shape(xx)[0];
-        // add padding and b-caused 1s
-        //      p p x x x x x x x p p
-        int xd, yd;
-        int xs, ys;
-        int x0, y0;
-        int err=0;
-        floatN pix;
-        for (int n=0; n<N; n++) {
-            for (int y=0; y<HO; y++) {
-                for (int x=0; x<WO; x++) {
-                    y0=y*stride-pad;
-                    x0=x*stride-pad;
-                    for (int cc=0; cc<C; cc++) {
-                        for (int cy=0; cy<HH; cy++) {
-                            for (int cx=0; cx<WW; cx++) {
-                                if (err>5) {
-                                    cout << "FATAL i2c abort." << endl;
-                                    return;
-                                }
-                                ys=y0+cy;
-                                xs=x0+cx;
-                                if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
-                                    pix=0.0;
-                                } else {
-                                    unsigned int xxs=cc*H*W+ys*W+xs;
-                                    if (xxs>=shape(xx)[1]) {
-                                        cout << "i2c xxs illegal: " << shape(xx) << xxs << "=" << cc << "," << ys <<"," << xs << endl;
-                                        ++err;
-                                        continue;
-                                    }
-                                    pix=xx(n,xxs);
-                                }
-                                yd=cc*HH*WW+cy*WW+cx;
-                                xd=n*(HO*WO)+y*WO+x;
-                                if (yd<0 || yd>=C*HH*WW) {
-                                    cout << "i2c yd illegal: " << yd << endl;
-                                    ++err;
-                                    continue;
-                                }
-                                if (xd<0 || xd>=N*WO*HO) {
-                                    cout << "i2c xd illegal: " << xd << endl;
-                                    ++err;
-                                    continue;
-                                }
-                                (*px2c)(yd,xd)=pix;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        //cout << "x2c:" << endl << *px2c << endl;
-    }
-*/
-    void im2col(MatrixN xx, MatrixN *px2c) {
+
+    void im2col(const MatrixN &xx, MatrixN *px2c) {
         int N=shape(xx)[0];
         // add padding and b-caused 1s
         //      p p x x x x x x x p p
@@ -703,16 +647,14 @@ public:
                         cchw=cc*HW;
                         for (cy=0; cy<HH; cy++) {
                             ys=y0+cy;
+                            if (ys<0 || ys>=H) continue; // pad -> zero
                             xxso=cchw+ys*W;
                             cchhwwcyww=cchhww+cy*WW;
                             for (cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
-                                if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
-                                    pix=0.0;
-                                } else {
-                                    xxs=xxso+xs;
-                                    pix=xx(n,xxs);
-                                }
+                                if (xs<0 || xs>=W) continue;
+                                xxs=xxso+xs;
+                                pix=xx(n,xxs);
                                 yd=cchhwwcyww+cx;
                                 (*px2c)(yd,xd)=pix;
                             }
@@ -721,67 +663,9 @@ public:
                 }
             }
         }
-        //cout << "x2c:" << endl << *px2c << endl;
     }
-/*
-    MatrixN iim2col(MatrixN x2c, int N) {
-        MatrixN dx(N,C*W*H);
-        dx.setZero();
 
-        int xd, yd;
-        int xs, ys;
-        int x0, y0;
-        int err=0;
-//        floatN pix;
-        for (int n=0; n<N; n++) {
-            for (int y=0; y<HO; y++) {
-                for (int x=0; x<WO; x++) {
-                    y0=y*stride-pad;
-                    x0=x*stride-pad;
-                    for (int cc=0; cc<C; cc++) {
-                        for (int cy=0; cy<HH; cy++) {
-                            for (int cx=0; cx<WW; cx++) {
-                                if (err>5) {
-                                    cout << "FATAL ii2c abort" << endl;
-                                    return dx;
-                                }
-                                ys=y0+cy;
-                                xs=x0+cx;
-                                if (xs<0 || xs>=W || ys<0 || ys>=H) { //pad
-//                                    pix=0.0;
-                                } else {
-                                    unsigned int xxs=cc*H*W+ys*W+xs;
-                                    if (xxs>=shape(dx)[1]) {
-                                        cout << "ii2c xxs illegal: " << xxs << endl;
-                                        ++err;
-                                        continue;
-                                    }
-                                    yd=cc*HH*WW+cy*WW+cx;
-                                    xd=n*(HO*WO)+y*WO+x;
-                                    if (yd<0 || yd>=C*HH*WW) {
-                                        cout << "ii2c yd illegal: " << yd << endl;
-                                        ++err;
-                                        continue;
-                                    }
-                                    if (xd<0 || xd>=N*WO*HO) {
-                                        cout << "ii2c xd illegal: " << xd << endl;
-                                        ++err;
-                                        continue;
-                                    }
-                                    dx(n,xxs) += x2c(yd,xd);
-                                }
-//                                (*px2c)(yd,xd)=pix;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return dx;
-    }
-*/
-    MatrixN iim2col(MatrixN x2c, int N) {
+    MatrixN iim2col(const MatrixN &x2c, int N) {
         MatrixN dx(N,C*W*H);
         dx.setZero();
 
@@ -805,9 +689,9 @@ public:
                         cchhww=cc*HHWW;
                         for (cy=0; cy<HH; cy++) {
                             ys=y0+cy;
+                            if (ys<0 || ys>=H) continue;
                             xxso=cchw+ys*W;
                             cchhwwcyww=cchhww+cy*WW;
-                            if (ys<0 || ys>=H) continue;
                             for (cx=0; cx<WW; cx++) {
                                 xs=x0+cx;
                                 if (xs<0 || xs>=W) continue;
@@ -824,7 +708,7 @@ public:
         return dx;
     }
 
-    MatrixN col2im(MatrixN y2c, int N) {
+    MatrixN col2imx(const MatrixN& y2c, int N) {
         MatrixN xx(N,F*WO*HO);
 //        int err=0;
         int WHO=WO*HO;
@@ -843,135 +727,63 @@ public:
                 xx(n,x)=y2c(py,px);
             }
         }
+        cout << "col2im-in :" << endl << y2c << endl << endl;
+        cout << "col2im-out:" << endl << xx << endl << endl;
+//        cout << "." << endl;
         return xx;
     }
 
-
-/*
-    MatrixN col2im(MatrixN ycol, int N) {
-        MatrixN xx(N,F*WO*HO);
-        // add padding and b-caused 1s
-        //      p p x x x x x x x p p
-        int xd, yd;
-        int xs, ys;
-        int x0, y0;
-        int n,x,y,cx,cy,cc;
-        int cchhww,cchw,cchhwwcyww;
-        int xxso;
-        int HOWO=HO*WO;
-        int HHWW=HH*WW;
-        int HW=H*W;
-        unsigned int xxs;
-        for (n=0; n<N; n++) {
-            for (y=0; y<HO; y++) {
-                y0=y*stride-pad;
-                for (x=0; x<WO; x++) {
-                    x0=x*stride-pad;
-                    xd=n*HOWO+y*WO+x;
-                    for (cc=0; cc<C; cc++) {
-                        cchhww=cc*HHWW;
-                        cchw=cc*HW;
-                        for (cy=0; cy<HH; cy++) {
-                            ys=y0+cy;
-                            if (ys<0 || ys>=H) continue;
-                            xxso=cchw+ys*W;
-                            cchhwwcyww=cchhww+cy*WW;
-                            for (cx=0; cx<WW; cx++) {
-                                xs=x0+cx;
-                                if (xs<0 || xs>=W) { //pad
-                                    continue;
-                                } else {
-                                    xxs=xxso+xs;
-                                    yd=cchhwwcyww+cx;
-                                    xx(n,xxs)=ycol(yd,xd);
-                                }
-                            }
-                        }
-                    }
-                }
+    MatrixN col2im(const MatrixN& y2c, int N) {
+        //cout << N << "," << F << "," << HO << "," << WO << endl;
+        MatrixN xx(N,F*HO*WO);
+        int py=0,px=0;
+        int sx=0,sy=0;
+        int MX=y2c.cols();
+        int NX=HO*WO;
+        int c=0;
+        for (int i=0; i<y2c.size(); i++) {
+            xx(py,px)=y2c(sy,sx);
+            ++sx;
+            if (sx==MX) {
+                sx=0; ++sy;
             }
-        }
-    return xx;
-    }
-*/
-
-    MatrixN icol2im(MatrixN dy, int N) {
-//        MatrixN iy(F,N*H*W);
-        MatrixN iy(F,N*HO*WO);
-//        int err=0;
-        int HWO=WO*HO;
-        for (int f=0; f<F; f++) {
-            for (int x=0; x<N*HWO; x++) {
-                int p=f*N*HWO+x;
-                int ox=p%(F*HWO);
-                int py=(p/(HWO))%N;
-                int px=ox%(HWO)+f*(HWO);
-/*                if (py>=dy.rows() || px>=dy.cols()) {
-                    cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
-                    ++err;
-                    if (err>5) {
-                        cout << "FATAL ic2i abort." << endl;
-                        return iy;
-                    }
-                    continue;
+            ++c;
+            ++px;
+            if (c==NX) {
+                c=0;
+                px-=NX;
+                ++py;
+                if (py==N) {
+                    py=0;
+                    px+=NX;
                 }
-*/                iy(f,x)=dy(py,px);
-            }
-        }
-        return iy;
-    }
-/*
-    MatrixN col2im(MatrixN y2c, int N) {
-        MatrixN xx(N,F*WO*HO);
-//        int err=0;
-        int WHO=WO*HO;
-        for (int n=0; n<N; n++) {
-            for (int x=0; x<F*WHO; x++) {
-                int p=n*F*WHO+x;
-                int ox=p%(N*WHO);
-                int py=(p/(WHO))%F;
-                int px=ox%(WHO)+n*(WHO);
-                if (py>=y2c.rows() || px>=y2c.cols()) {
-                    cout << "c2i Illegal rows/cols in col2im:" << shape(y2c)<< py << "," <<px<<endl;
-                    ++err;
-                    if (err>5) {
-                        cout << "FATAL c2i abort." << endl;
-                        return xx;
-                    }
-                    continue;
-                }
-                xx(n,x)=y2c(py,px);
             }
         }
         return xx;
     }
 
-    MatrixN icol2im(MatrixN dy, int N) {
+    MatrixN icol2im(const MatrixN& dy, int N) {
 //        MatrixN iy(F,N*H*W);
         MatrixN iy(F,N*HO*WO);
 //        int err=0;
+        int p,ox,py,px;
+        int fhwo;
         int HWO=WO*HO;
-        for (int f=0; f<F; f++) {
-            for (int x=0; x<N*HWO; x++) {
-                int p=f*N*HWO+x;
-                int ox=p%(F*HWO);
-                int py=(p/(HWO))%N;
-                int px=ox%(HWO)+f*(HWO);
-                if (py>=dy.rows() || px>=dy.cols()) {
-                    cout << "ic2i Illegal rows/cols in col2im:" << shape(dy)<< py << "," <<px<<endl;
-                    ++err;
-                    if (err>5) {
-                        cout << "FATAL ic2i abort." << endl;
-                        return iy;
-                    }
-                    continue;
-                }
+        int FHWO=F*HWO;
+        int f,x;
+        for (f=0; f<F; f++) {
+            fhwo=f*HWO;
+            for (x=0; x<N*HWO; x++) {
+                p=f*N*HWO+x;
+                ox=p%FHWO;
+                py=(p/HWO)%N;
+                px=ox%HWO+fhwo;
                 iy(f,x)=dy(py,px);
             }
         }
         return iy;
     }
-*/
+
     MatrixN dummy(MatrixN d) {return d;}
 
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
@@ -1015,7 +827,7 @@ public:
         }
         if (mlverbose) t.startWall();
         MatrixN y=col2im(y2c, N);
-        if (mlverbose) cout << "col2im:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) cout << "col2im:"<<t.stopWallMicro()<<"µs" << shape(y2c) << "->" << shape(y)<<endl;
         // cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
         if (pcache==nullptr) delete px2c;
         return y;
@@ -1027,6 +839,7 @@ public:
             return MatrixN(0,0);
         }
         int algo=0;
+        Timer t;
         #ifdef  USE_GPU
         algo=1;
         #endif
@@ -1037,15 +850,22 @@ public:
         cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
         cout << "WO:" << WO << "," << "HO:" << HO << endl;
         */
+        if (mlverbose) t.startWall();
         MatrixN dc2=icol2im(dchain,N);
-        // cout << "dc2:" << shape(dc2) << endl;
+        if (mlverbose) cout << "icol2im:"<<t.stopWallMicro()<<"µs"<<endl;
 
         MatrixN dx;
         if (algo==0 || id>=numGpuThreads) {
+            if (mlverbose) t.startWall();
             MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+            if (mlverbose) cout << "bw-m1:"<<t.stopWallMicro()<<"µs"<<endl;
+            if (mlverbose) t.startWall();
             dx=iim2col(dx2c.transpose(), N);
+            if (mlverbose) cout << "iim2col:"<<t.stopWallMicro()<<"µs"<<endl;
+            if (mlverbose) t.startWall();
             cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
             cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
+            if (mlverbose) cout << "bw-m2:"<<t.stopWallMicro()<<"µs"<<endl;
         } else {
             MatrixN dc2t;
             dc2t=dc2.transpose();
