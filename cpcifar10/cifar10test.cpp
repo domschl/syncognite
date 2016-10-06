@@ -138,28 +138,32 @@ bool  getcifar10Data(string filepath) {
 
 floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
     LayerBlock lb("name='DomsNet'");
-    lb.addLayer("Convolution", "cv1", "{inputShape=[3,32,32];kernel=[48,5,5];stride=1;pad=2}",{"input"});
+    lb.addLayer("Convolution", "cv1", "{inputShape=[3,32,32];kernel=[64,5,5];stride=1;pad=2}",{"input"});
     lb.addLayer("BatchNorm","sb1","",{"cv1"});
     lb.addLayer("Relu","rl1","",{"sb1"});
-    lb.addLayer("Dropout","doc1","{drop=0.8}",{"rl1"});
-    lb.addLayer("Convolution", "cv2", "{kernel=[48,3,3];stride=1;pad=1}",{"doc1"});
+    lb.addLayer("Dropout","doc1","{drop=0.5}",{"rl1"});
+    lb.addLayer("Convolution", "cv2", "{kernel=[64,3,3];stride=1;pad=1}",{"doc1"});
     lb.addLayer("Relu","rl2","",{"cv2"});
-    lb.addLayer("Convolution", "cv3", "{kernel=[64,3,3];stride=2;pad=1}",{"rl2"});
+    lb.addLayer("Convolution", "cv3", "{kernel=[128,3,3];stride=2;pad=1}",{"rl2"});
     lb.addLayer("BatchNorm","sb2","",{"cv3"});
     lb.addLayer("Relu","rl3","",{"sb2"});
     lb.addLayer("Dropout","doc2","{drop=0.8}",{"rl3"});
-    lb.addLayer("Convolution", "cv4", "{kernel=[64,3,3];stride=1;pad=1}",{"doc2"});
+    lb.addLayer("Convolution", "cv4", "{kernel=[128,3,3];stride=1;pad=1}",{"doc2"});
     lb.addLayer("Relu","rl4","",{"cv4"});
-    lb.addLayer("Convolution", "cv5", "{kernel=[128,3,3];stride=2;pad=1}",{"rl4"});
+    lb.addLayer("Convolution", "cv5", "{kernel=[256,3,3];stride=2;pad=1}",{"rl4"});
     lb.addLayer("BatchNorm","sb3","",{"cv5"});
     lb.addLayer("Relu","rl5","",{"sb3"});
-    lb.addLayer("Dropout","doc3","{drop=0.8}",{"rl5"});
-    lb.addLayer("Convolution", "cv6", "{kernel=[128,3,3];stride=1;pad=1}",{"doc3"});
+    lb.addLayer("Dropout","doc3","{drop=0.6}",{"rl5"});
+    lb.addLayer("Convolution", "cv6", "{kernel=[256,3,3];stride=1;pad=1}",{"doc3"});
     lb.addLayer("Relu","rl6","",{"cv6"});
-    //lb.addLayer("Convolution", "cv7", "{kernel=[64,3,3];stride=1;pad=1}",{"rl6"});
-    //lb.addLayer("Relu","rl7","",{"cv7"});
+    lb.addLayer("Dropout","doc4","{drop=0.6}",{"rl6"});
+    lb.addLayer("Convolution", "cv7", "{kernel=[512,3,3];stride=2;pad=1}",{"doc4"});
+    lb.addLayer("Relu","rl7","",{"cv7"});
+    lb.addLayer("Dropout","doc5","{drop=0.6}",{"rl7"});
+    lb.addLayer("Convolution", "cv8", "{kernel=[512,3,3];stride=1;pad=1}",{"doc5"});
+    lb.addLayer("Relu","rl8","",{"cv8"});
 
-    lb.addLayer("Affine","af1","{hidden=1024}",{"rl6"});
+    lb.addLayer("Affine","af1","{hidden=1024}",{"rl8"});
     lb.addLayer("BatchNorm","bn1","",{"af1"});
     lb.addLayer("Relu","rla1","",{"bn1"});
     lb.addLayer("Dropout","do1","{drop=0.7}",{"rla1"});
@@ -214,20 +218,21 @@ int main(int argc, char *argv[]) {
     Color::Modifier gray(Color::FG_LIGHT_GRAY);
     Color::Modifier def(Color::FG_DEFAULT);
 
-     if (argc!=2) {
-         cout << "cifar10test <path-cifar10.h5-file>" << endl;
-         exit(-1);
-     }
-     getcifar10Data(argv[1]);
-     for (auto it : cpcifar10Data) {
-         cout << it.first << " " <<  shape(*it.second) << endl;
-     }
-     for (auto it : cpcifar10Data4) {
-         cout << it.first << " tensor-4" <<  endl;
-     }
+    if (argc!=2) {
+        cout << "cifar10test <path-cifar10.h5-file>" << endl;
+        exit(-1);
+    }
+    getcifar10Data(argv[1]);
+    for (auto it : cpcifar10Data) {
+        cout << it.first << " " <<  shape(*it.second) << endl;
+    }
+    for (auto it : cpcifar10Data4) {
+        cout << it.first << " tensor-4" <<  endl;
+    }
 
 
-     cpInitCompute("Cifar10");
+    cpInitCompute("Cifar10");
+    registerLayers();
 
     MatrixN X=(*(cpcifar10Data["train-data"])).block(0,0,49000,3072);
     MatrixN y=(*(cpcifar10Data["train-labels"])).block(0,0,49000,1);
@@ -272,7 +277,7 @@ int main(int argc, char *argv[]) {
         cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
         bLearn=1.e-3;
-        bReg=1.e-7;
+        bReg=1.e-6;
     }
 
     cpo.setPar("learning_rate", bLearn);
