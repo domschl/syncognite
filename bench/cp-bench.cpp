@@ -200,7 +200,7 @@ void cudaBench() {
 //WO = 1 + (W + 2 * pad - WW) / stride;
 
 void colmagic() {
-    int N=8;
+    int N=7;
     Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
     vector<int> vo=cv.getOutputShape();
     int F=vo[0], HO=vo[1], WO=vo[2];
@@ -212,6 +212,25 @@ void colmagic() {
     cv.col2imx(m,N);
     cout << "NEW:" << endl;
     cv.col2im(m,N);
+}
+
+void icolmagic() {
+    int N=19;
+    Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
+    vector<int> vo=cv.getOutputShape();
+    int F=vo[0], HO=vo[1], WO=vo[2];
+    int rws=4;
+    //MatrixN m(rws,HO * WO * F * N / rws);
+    MatrixN m(N,HO * WO * F);
+    m.setZero();
+    for (int i=0; i<m.size(); i++) m(i)=i;
+    cout << "OLD:" << endl;
+    MatrixN x1=cv.icol2imx(m,N);
+    cout << "NEW:" << endl;
+    MatrixN x2=cv.icol2im(m,N);
+    if (matComp(x1,x2)) {
+        cout << "seems good" << endl;
+    }
 }
 int main() {
     cpInitCompute("Bench");
@@ -228,7 +247,7 @@ int main() {
     }
     #endif
 
-    //colmagic();
+    //icolmagic();
 
     cpExitCompute();
     return ret;

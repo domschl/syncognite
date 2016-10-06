@@ -762,10 +762,24 @@ public:
         return xx;
     }
 
-    MatrixN icol2im(const MatrixN& dy, int N) {
-//        MatrixN iy(F,N*H*W);
+    MatrixN col2imB(const MatrixN& y2c, int N) {
+        //cout << N << "," << F << "," << HO << "," << WO << endl;
+        MatrixN y=y2c.transpose();
+        Eigen::Map<MatrixN>xx0(y.data(),HO*WO,N*F);
+        MatrixN xxt=xx0.transpose();
+        MatrixN xx(N,F*HO*WO);
+//        cout << endl << xxt << endl;
+        for (int i=0; i<F; i++) {
+            xx.block(0,HO*WO*i,N,HO*WO)=xxt.block(N*i,0,N,HO*WO);
+        }
+
+//        cout << "col2im-in :" << endl << y2c << endl << endl;
+//        cout << "col2im-out:" << endl << xx << endl << endl;
+        return xx;
+    }
+
+    MatrixN icol2imx(const MatrixN& dy, int N) {
         MatrixN iy(F,N*HO*WO);
-//        int err=0;
         int p,ox,py,px;
         int fhwo;
         int HWO=WO*HO;
@@ -778,9 +792,60 @@ public:
                 ox=p%FHWO;
                 py=(p/HWO)%N;
                 px=ox%HWO+fhwo;
+/*                if (f>=iy.rows() || x>=iy.cols()) {
+                    cout << "iy:" << f << "," << x << endl;
+                }
+                if (py>=dy.rows() || px>=dy.cols()) {
+                    cout << "dy:" << py << "," << px << endl;
+                }
+*/
                 iy(f,x)=dy(py,px);
             }
         }
+        cout << "icol2imx:" << shape(dy) << shape(iy) << endl;
+        cout << "icol2im-in :" << endl << dy << endl << endl;
+        cout << "icol2im-out:" << endl << iy << endl << endl;
+        return iy;
+    }
+
+    MatrixN icol2im(const MatrixN& dy, int N) {
+        MatrixN iy(F,N*HO*WO);
+        int py=0,px=0;
+        int sx=0,sy=0;
+        int MX=dy.cols();
+        int NX=HO*WO;
+        int c=0;
+
+        for (int i=0; i<dy.size(); i++) {
+/*            if (py>=iy.rows() || px>=iy.cols()) {
+                cout << "Bad index " << i << ":" << py << "," << px << endl;
+                exit(-1);
+            }
+            if (sy>=dy.rows() || sx>=dy.cols()) {
+                cout <<  "Bad s-index " << i << ":" << sy << "," << sx << endl;
+                exit(-1);
+            }
+*/            iy(py,px)=dy(sy,sx);
+            ++sx;
+            if (sx==MX) {
+                sx=0; ++sy;
+            }
+            ++c;
+            ++px;
+            if (c==NX) {
+                c=0;
+                px-=NX;
+                ++py;
+                if (py==F) {
+                    py=0;
+                    px+=NX;
+                }
+            }
+        }
+/*        cout << "icol2im:" << shape(dy) << shape(iy) << endl;
+        cout << "icol2im-in :" << endl << dy << endl << endl;
+        cout << "icol2im-out:" << endl << iy << endl << endl;
+*/
         return iy;
     }
 
