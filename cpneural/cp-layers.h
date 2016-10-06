@@ -552,6 +552,7 @@ private:
         vector<int> kernel=cp.getPar("kernel", vector<int>{});
         if (kernel.size()!=3) {
             retval=false;
+            F=0; HH=0; WW=0;
         } else { // Kernel: F, HH, WW
             F=kernel[0]; HH=kernel[1]; WW=kernel[2];
         }
@@ -570,7 +571,7 @@ private:
         mlverbose = cp.getPar("verbose", false);
         pad = cp.getPar("pad", (int)((HH-1)/2));
         if (pad>=HH || pad>=WW) {
-            cout << "bad  configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
+            cout << "bad configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
             retval=false;
         }
         if ((H + 2 * pad - HH) % stride != 0) {
