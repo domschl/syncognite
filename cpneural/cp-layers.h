@@ -1178,14 +1178,16 @@ public:
     MatrixN nchw2cnhw(const MatrixN &x, const int N) {
         MatrixN xs(C,N*H*W);
         int nhw,chw,h0,h1;
-        for (int n=0; n<N; n++) {  // Uhhh..
-            nhw=n*H*W;
-            for (int c=0; c<C; c++) {
-                chw=c*H*W;
-                for (int h=0; h<H; h++) {
+        int n,c,h,w;
+        int HW=H*W;
+        for (n=0; n<N; n++) {  // Uhhh..
+            nhw=n*HW;
+            for (c=0; c<C; c++) {
+                chw=c*HW;
+                for (h=0; h<H; h++) {
                     h0=nhw+h*W;
                     h1=chw+h*W;
-                    for (int w=0; w<W; w++) {
+                    for (w=0; w<W; w++) {
                         xs(c,h0+w)=x(n,h1+w);
                     }
                 }
@@ -1197,14 +1199,16 @@ public:
     MatrixN cnhw2nchw(const MatrixN& ys, const int N) {
         MatrixN y(N,C*H*W);
         int nhw,chw,h0,h1;
-        for (int n=0; n<N; n++) {  // Uhhh..
-            nhw=n*H*W;
-            for (int c=0; c<C; c++) {
-                chw=c*H*W;
-                for (int h=0; h<H; h++) {
+        int n,c,h,w;
+        int HW=H*W;
+        for (n=0; n<N; n++) {  // Uhhh..
+            nhw=n*HW;
+            for (c=0; c<C; c++) {
+                chw=c*HW;
+                for (h=0; h<H; h++) {
                     h0=nhw+h*W;
                     h1=chw+h*W;
-                    for (int w=0; w<W; w++) {
+                    for (w=0; w<W; w++) {
                         y(n,h1+w)=ys(c,h0+w);
                     }
                 }

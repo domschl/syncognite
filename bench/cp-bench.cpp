@@ -101,8 +101,8 @@ int doBench() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
     int nr=0;
-    int N=200;
-    int M=1000;
+    int N=100;
+    int M=3072;
     int reps=0;
 
     //Eigen::setNbThreads(0);
@@ -118,10 +118,10 @@ int doBench() {
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             CpParams cp;
 
-            if (te==2) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
+/*            if (te==2) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
             else if (te==1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
             else cout  << nr << ".: " << it.first << " N=" << N << endl;
-
+*/
             std::vector<int> inputShape(te);
             for (auto i=0; i< inputShape.size(); i++) inputShape[i]=M;
             int MI=M;
@@ -135,28 +135,29 @@ int doBench() {
                 inputShape[5]=5;
                 cp.setPar("pad",2);
                 cp.setPar("stride",3);
-*/                inputShape[0]=3;
-                inputShape[1]=31;
-                inputShape[2]=31;
-                MI=31*31*3;
+*/
+                inputShape[0]=3;
+                inputShape[1]=32;
+                inputShape[2]=32;
+                MI=32*32*3;
                 N=100;
-                cp.setPar("kernel",vector<int>{25,3,3});
+                cp.setPar("kernel",vector<int>{3,3,3});
                 cp.setPar("pad",1);
                 cp.setPar("stride",1);
                 cp.setPar("verbose",true);
             } else if (it.first=="Pooling") {
                 inputShape[0]=3;
-                inputShape[1]=100;
-                inputShape[2]=100;
-                MI=100*100*3;
+                inputShape[1]=32;
+                inputShape[2]=32;
+                MI=32*32*3;
                 cp.setPar("pad",2);
                 cp.setPar("stride",2);
             } else if (it.first=="SpatialBatchNorm") {
                 inputShape[0]=3;
-                inputShape[1]=100;
-                inputShape[2]=100;
+                inputShape[1]=32;
+                inputShape[2]=32;
                 cp.setPar("batch_norm",N);
-                MI=100*100*3;
+                MI=32*32*3;
             }
             cp.setPar("inputShape",inputShape);
             cp.setPar("train", true);
