@@ -2211,6 +2211,53 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    MatrixN x(3,10);
+    x << -0.4       , -0.36206897, -0.32413793, -0.2862069 , -0.24827586,
+        -0.21034483, -0.17241379, -0.13448276, -0.09655172, -0.05862069,
+        -0.02068966,  0.01724138,  0.05517241,  0.09310345,  0.13103448,
+         0.16896552,  0.20689655,  0.24482759,  0.28275862,  0.32068966,
+         0.35862069,  0.39655172,  0.43448276,  0.47241379,  0.51034483,
+         0.54827586,  0.5862069 ,  0.62413793,  0.66206897,  0.7;
+    MatrixN Wxh(10,4);
+    MatrixN Whh(4,4);
+    Wxh << -0.1       , -0.07435897, -0.04871795, -0.02307692,
+         0.0025641 ,  0.02820513,  0.05384615,  0.07948718,
+         0.10512821,  0.13076923,  0.15641026,  0.18205128,
+         0.20769231,  0.23333333,  0.25897436,  0.28461538,
+         0.31025641,  0.33589744,  0.36153846,  0.38717949,
+         0.41282051,  0.43846154,  0.46410256,  0.48974359,
+         0.51538462,  0.54102564,  0.56666667,  0.59230769,
+         0.61794872,  0.64358974,  0.66923077,  0.69487179,
+         0.72051282,  0.74615385,  0.77179487,  0.7974359 ,
+         0.82307692,  0.84871795,  0.87435897,  0.9;
+    Whh << -0.3       , -0.23333333, -0.16666667, -0.1,
+        -0.03333333,  0.03333333,  0.1       ,  0.16666667,
+         0.23333333,  0.3       ,  0.36666667,  0.43333333,
+         0.5       ,  0.56666667,  0.63333333,  0.7;
+    MatrixN bh(1,4);
+    bh << -2.00000000e-01,   2.77555756e-17,   2.00000000e-01,
+         4.00000000e-01;
+    MatrixN hn(3,4);
+    hn << -0.58172089, -0.50182032, -0.41232771, -0.31410098,
+         0.66854692,  0.79562378,  0.87755553,  0.92795967,
+         0.97934501,  0.99144213,  0.99646691,  0.99854353;
+    MatrixN h(3,4);
+    h << -0.2       , -0.13636364, -0.07272727, -0.00909091,
+        0.05454545,  0.11818182,  0.18181818,  0.24545455,
+        0.30909091,  0.37272727,  0.43636364,  0.5;
+
+    RNN rnn("{inputShape=[3];hidden=4}");
+    *(rnn.params["Wxh"])= Wxh;
+    *(rnn.params["Whh"])= Whh;
+    *(rnn.params["bh"])=bh;
+    t_cppl cache;
+    cppl_set(&cache,"h",new MatrixN(h));
+    MatrixN hn0=rnn.forward_step(x, &cache, 0);
+    cppl_delete(&cache);
+    return matComp(hn,hn0,"RNNForwardStep",eps);
+}
+
 bool registerTest() {
     bool allOk=true;
     cout << "Registered Layers:" << endl;
@@ -2405,7 +2452,7 @@ int doTests() {
     if (!sv.selfTest(xsv, yv, h, eps)) {
         allOk=false;
     }
-
+/*
     //LayerBlock1
     LayerBlock lb("{name='testblock'}");
     cout << "LayerName for lb: " << lb.layerName << endl;
@@ -2430,7 +2477,7 @@ int doTests() {
         allOk=false;
         cout << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-
+*/
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -2537,6 +2584,13 @@ int doTests() {
         allOk=false;
     }
 
+    if (checkRNNStepForward()) {
+        cout << green << "RNNForwardStep with test data: OK." << def << endl;
+    } else {
+        cout << red << "RNNForwardStep with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+/*
     if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
@@ -2544,7 +2598,7 @@ int doTests() {
         allOk=false;
     }
 
-
+*/
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {

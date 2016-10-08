@@ -1563,16 +1563,19 @@ private:
         hidden=cp.getPar("hidden",1024);
         outputShape={hidden};
 
-        cppl_set(&params, "W", new MatrixN(inputShapeFlat,hidden)); // W
-        cppl_set(&params, "b", new MatrixN(1,hidden)); // b
+        cppl_set(&params, "Wxh", new MatrixN(inputShapeFlat,hidden));
+        cppl_set(&params, "Whh", new MatrixN(hidden,hidden));
+        cppl_set(&params, "bh", new MatrixN(1,hidden));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        params["W"]->setRandom();
+        params["Wxh"]->setRandom();
+        params["Whh"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
-        *params["W"] *= xavier;
-        params["b"]->setRandom();
-        *params["b"] *= xavier;
+        *params["Wxh"] *= xavier;
+        *params["Whh"] *= xavier;
+        params["bh"]->setRandom();
+        *params["bh"] *= xavier;
         layerInit=true;
     }
 public:
@@ -1621,7 +1624,20 @@ public:
         ##########################################################################
         return next_h, cache */
         virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
-
+            // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)
+            int N=shape(x)[0];
+            MatrixN *ph;
+            if (pcache==nullptr || pcache->find("h")==pcache->end()) {
+                ph=new MatrixN(N,hidden);
+                ph->setZero();
+                if (pcache!=nullptr) cppl_set(pcache,"h",ph);
+            } else {
+                ph=(*pcache)["h"];
+            }
+            MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
+            *ph=hn;
+            if (pcache==nullptr) free(ph);
+            return hn;
         }
 
     /*ef rnn_forward(x, h0, Wx, Wh, b):
