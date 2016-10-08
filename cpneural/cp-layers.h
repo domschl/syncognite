@@ -1545,6 +1545,188 @@ public:
 
 };
 
+class RNN : public Layer {
+private:
+    int numGpuThreads;
+    int numCpuThreads;
+    int hidden;
+    void setup(const CpParams& cx) {
+        layerName="RNN";
+        inputShapeRang=1;
+        layerType=LayerType::LT_NORMAL;
+        cp=cx;
+        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        int inputShapeFlat=1;
+        for (int j : inputShape) {
+            inputShapeFlat *= j;
+        }
+        hidden=cp.getPar("hidden",1024);
+        outputShape={hidden};
+
+        cppl_set(&params, "W", new MatrixN(inputShapeFlat,hidden)); // W
+        cppl_set(&params, "b", new MatrixN(1,hidden)); // b
+        numGpuThreads=cpGetNumGpuThreads();
+        numCpuThreads=cpGetNumCpuThreads();
+
+        params["W"]->setRandom();
+        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        *params["W"] *= xavier;
+        params["b"]->setRandom();
+        *params["b"] *= xavier;
+        layerInit=true;
+    }
+public:
+    RNN(const CpParams& cx) {
+        setup(cx);
+    }
+    RNN(const string conf) {
+        setup(CpParams(conf));
+    }
+    ~RNN() {
+        cppl_delete(&params);
+    }
+    /*def rnn_step_forward(x, prev_h, Wx, Wh, b):
+        """
+        Run the forward pass for a single timestep of a vanilla RNN that uses a
+        tanh activation function.
+
+        The input data has dimension D, the hidden state has dimension H, and we
+        use a minibatch size of N.
+
+        Inputs:
+        - x: Input data for this timestep, of shape (N, D).
+        - prev_h: Hidden state from previous timestep, of shape (N, H)
+        - Wx: Weight matrix for input-to-hidden connections, of shape (D, H)
+        - Wh: Weight matrix for hidden-to-hidden connections, of shape (H, H)
+        - b: Biases of shape (H,)
+
+        Returns a tuple of:
+        - next_h: Next hidden state, of shape (N, H)
+        - cache: Tuple of values needed for the backward pass.
+        """
+        next_h, cache = None, None
+        ##########################################################################
+        # TODO: Implement a single forward step for the vanilla RNN. Store the next
+        # hidden state and any values you need for the backward pass in the next_h
+        # and cache variables respectively.                                      #
+        ##########################################################################
+        phh = np.dot(prev_h, Wh)
+        phx = np.dot(x, Wx)
+        pshx = phx + b
+        ps = phh + pshx
+        next_h = np.tanh(ps)
+        cache = (next_h, Wx, Wh, prev_h, x)
+        ##########################################################################
+        #                               END OF YOUR CODE                         #
+        ##########################################################################
+        return next_h, cache */
+        virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
+
+        }
+
+    /*ef rnn_forward(x, h0, Wx, Wh, b):
+        """
+        Run a vanilla RNN forward on an entire sequence of data. We assume an input
+        sequence composed of T vectors, each of dimension D. The RNN uses a hidden
+        size of H, and we work over a minibatch containing N sequences. After
+        running the RNN forward, we return the hidden states for all timesteps.
+
+        Inputs:
+        - x: Input data for the entire timeseries, of shape (N, T, D).
+        - h0: Initial hidden state, of shape (N, H)
+        - Wx: Weight matrix for input-to-hidden connections, of shape (D, H)
+        - Wh: Weight matrix for hidden-to-hidden connections, of shape (H, H)
+        - b: Biases of shape (H,)
+
+        Returns a tuple of:
+        - h: Hidden states for the entire timeseries, of shape (N, T, H).
+        - cache: Values needed in the backward pass
+        """
+        h, cache = None, None
+        ##########################################################################
+        # TODO: Implement forward pass for a vanilla RNN running on a sequence of
+        # input data. You should use the rnn_step_forward function that you defined
+        # above.                                                                 #
+        ##########################################################################
+        N, T, D = x.shape
+        H = h0.shape[1]
+
+        cai = []
+        h = np.zeros((N, T, H))
+        ht = h0
+        for i in range(T):
+            xi = x[:, i, :]
+            ht, ci = rnn_step_forward(xi, ht, Wx, Wh, b)
+            h[:, i, :] = ht
+            cai.append(ci)
+        cache = (h, h0, Wx, Wh, x, cai)
+        return h, cache
+*/
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+        if (params["W"]->rows() != x.cols()) {
+            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
+            MatrixN y(0,0);
+            return y;
+        }
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+
+        #ifdef USE_GPU
+        int algo=1;
+        #else
+        int algo=0;
+        #endif
+        MatrixN y(x.rows(), (*params["W"]).cols());
+        if (algo==0 || id>=numGpuThreads) {
+
+            y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
+        } else {
+            #ifdef USE_GPU
+            // cout << "G" << id << "/" << numGpuThreads << " ";
+            MatrixN x1(x.rows(),x.cols()+1);
+            MatrixN xp1(x.rows(),1);
+            xp1.setOnes();
+            x1 << x, xp1;
+            MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
+            Wb<<*params["W"], *params["b"];
+            MatrixN y2;
+            y=matmul(&x1,&Wb,id);
+
+            #endif
+        }
+        return y;
+    //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
+    }
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        #ifdef USE_GPU
+        int algo=1;
+        #else
+        int algo=0;
+        #endif
+        MatrixN x(*(*pcache)["x"]);
+        MatrixN dx(x.rows(),x.cols());
+        MatrixN W(*params["W"]);
+        MatrixN dW(W.rows(),W.cols());
+        if (algo==0 || id>=numGpuThreads) {
+            dx = dchain * (*params["W"]).transpose(); // dx
+            cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
+            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+        } else {
+            #ifdef USE_GPU
+            MatrixN Wt;
+            Wt=W.transpose();
+            MatrixN xt;
+            xt=x.transpose();
+            MatrixN dc=dchain;
+            dx=matmul(&dc,&Wt,id);
+            cppl_set(pgrads, "W", new MatrixN(matmul(&xt,&dc,id)));
+
+            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+            #endif
+        }
+        return dx;
+    }
+};
+
 
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 1)
