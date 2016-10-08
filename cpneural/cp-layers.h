@@ -1608,23 +1608,18 @@ public:
         - cache: Tuple of values needed for the backward pass.
         """
         next_h, cache = None, None
-        ##########################################################################
-        # TODO: Implement a single forward step for the vanilla RNN. Store the next
-        # hidden state and any values you need for the backward pass in the next_h
-        # and cache variables respectively.                                      #
-        ##########################################################################
+
         phh = np.dot(prev_h, Wh)
         phx = np.dot(x, Wx)
         pshx = phx + b
         ps = phh + pshx
         next_h = np.tanh(ps)
         cache = (next_h, Wx, Wh, prev_h, x)
-        ##########################################################################
-        #                               END OF YOUR CODE                         #
-        ##########################################################################
+
         return next_h, cache */
         virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
             // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)
+            if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
             int N=shape(x)[0];
             MatrixN *ph;
             if (pcache==nullptr || pcache->find("h")==pcache->end()) {
@@ -1633,6 +1628,8 @@ public:
                 if (pcache!=nullptr) cppl_set(pcache,"h",ph);
             } else {
                 ph=(*pcache)["h"];
+                if (pcache->find("ho")==pcache->end()) cppl_set(pcache,"ho",new MatrixN(*ph));
+                else cppl_update(pcache,"ho",ph);
             }
             MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
             *ph=hn;
@@ -1640,7 +1637,7 @@ public:
             return hn;
         }
 
-    /*ef rnn_forward(x, h0, Wx, Wh, b):
+    /*def rnn_forward(x, h0, Wx, Wh, b):
         """
         Run a vanilla RNN forward on an entire sequence of data. We assume an input
         sequence composed of T vectors, each of dimension D. The RNN uses a hidden
@@ -1659,11 +1656,7 @@ public:
         - cache: Values needed in the backward pass
         """
         h, cache = None, None
-        ##########################################################################
-        # TODO: Implement forward pass for a vanilla RNN running on a sequence of
-        # input data. You should use the rnn_step_forward function that you defined
-        # above.                                                                 #
-        ##########################################################################
+
         N, T, D = x.shape
         H = h0.shape[1]
 
@@ -1679,8 +1672,8 @@ public:
         return h, cache
 */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
-        if (params["W"]->rows() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
+        if (params["Wxh"]->rows() != x.cols()) {
+            cout << layerName << ": " << "Forward: dimension mismatch in x*Wxh: x:" << shape(x) << " Wxh:" << shape(*params["Wxh"]) << endl;
             MatrixN y(0,0);
             return y;
         }
@@ -1712,6 +1705,156 @@ public:
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
+
+/*
+def rnn_step_backward(dnext_h, cache):
+    """
+    Backward pass for a single timestep of a vanilla RNN.
+
+    Inputs:
+    - dnext_h: Gradient of loss with respect to next hidden state
+    - cache: Cache object from the forward pass
+
+    Returns a tuple of:
+    - dx: Gradients of input data, of shape (N, D)
+    - dprev_h: Gradients of previous hidden state, of shape (N, H)
+    - dWx: Gradients of input-to-hidden weights, of shape (N, H)
+    - dWh: Gradients of hidden-to-hidden weights, of shape (H, H)
+    - db: Gradients of bias vector, of shape (H,)
+    """
+    dx, dprev_h, dWx, dWh, db = None, None, None, None, None
+    ##########################################################################
+    # TODO: Implement the backward pass for a single step of a vanilla RNN.
+    #                                                                        #
+    # HINT: For the tanh function, you can compute the local derivative in
+    # terms of the output value from tanh.                                   #
+    ##########################################################################
+    next_h, Wx, Wh, prev_h, x = cache
+
+    algo = 1
+    if algo == 0:
+        # next_h = np.tanh(ps)
+        # dps = # np.dot((np.ones(next_h.shape) - next_h ** 2), dnext_h.T)
+        dps = (np.ones(next_h.shape) - next_h ** 2) * dnext_h
+        # ps = phh + pshx
+        dphh = dps
+        dpshx = dps
+        # pshx = phx + b
+        dphx = dpshx.T
+        db = np.sum(dpshx, axis=0)
+        # phx = np.dot(x, Wx)
+        dx = np.dot(Wx, dphx).T
+        dWx = np.dot(dphx, x).T
+        # phh = np.dot(prev_h, Wh)
+        dprev_h = np.dot(Wh, dphh.T).T
+        print(prev_h.shape, dprev_h.shape)
+        dWh = np.dot(prev_h.T, dphh)
+    elif algo == 1:
+        # next_h = np.tanh(ps)
+        # dps = # np.dot((np.ones(next_h.shape) - next_h ** 2), dnext_h.T)
+        dps = (np.ones(next_h.shape) - next_h ** 2) * dnext_h
+        dpst = dps.T
+        # ps = phh + pshx
+        # pshx = phx + b
+        db = np.sum(dps, axis=0)
+        # phx = np.dot(x, Wx)
+        dx = np.dot(Wx, dpst).T
+        dWx = np.dot(dpst, x).T
+        # phh = np.dot(prev_h, Wh)
+        dprev_h = np.dot(Wh, dpst).T
+        dWh = np.dot(prev_h.T, dps)
+    ##########################################################################
+    #                               END OF YOUR CODE                         #
+    ##########################################################################
+    return dx, dprev_h, dWx, dWh, db
+*/
+virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
+    if (pcache->find("x") == pcache->end()) {
+        cout << "cache does not contain x -> fatal!" << endl;
+    }
+    MatrixN x(*(*pcache)["x"]);
+    MatrixN dx(x);
+    dx.setZero();
+    MatrixN Wxh(*params["Wxh"]);
+    MatrixN Whh(*params["Whh"]);
+    MatrixN bh(*params["bh"]);
+    MatrixN h(*(*pcache)["h"]);
+    MatrixN ho(*(*pcache)["ho"]);
+
+    MatrixN dWxh(Wxh);
+    dWxh.setZero();
+    MatrixN dWhh(Whh);
+    dWhh.setZero();
+    MatrixN dbh(bh);
+    dbh.setZero();
+    MatrixN dh(h);
+    dh.setZero();
+
+    MatrixN hsq = h.array() * dchain.array();
+    MatrixN hone = MatrixN(h);
+    h.setOnes();
+    MatrixN t1=(hone-hsq).array() * h.array();
+    MatrixN t1t=t1.transpose();
+    dbh=t1.colwise().sum();
+    dx=(Wxh * t1t).transpose();
+    dWxh=(t1t * x).transpose();
+    dh=(Whh * t1t).transpose();
+    dWhh=ho.transpose() * t1;
+
+    (*pgrads)["Wxh"] = new MatrixN(dWxh);
+    (*pgrads)["Whh"] = new MatrixN(dWhh);
+    (*pgrads)["bh"] = new MatrixN(dbh);
+    (*pgrads)["h"] = new MatrixN(dh);
+
+    return dx;
+}
+
+
+/*    """
+    Compute the backward pass for a vanilla RNN over an entire sequence of
+    data.
+
+    Inputs:
+    - dh: Upstream gradients of all hidden states, of shape (N, T, H)
+
+    Returns a tuple of:
+    - dx: Gradient of inputs, of shape (N, T, D)
+    - dh0: Gradient of initial hidden state, of shape (N, H)
+    - dWx: Gradient of input-to-hidden weights, of shape (D, H)
+    - dWh: Gradient of hidden-to-hidden weights, of shape (H, H)
+    - db: Gradient of biases, of shape (H,)
+    """
+    dx, dh0, dWx, dWh, db = None, None, None, None, None
+
+    h, h0, Wx, Wh, x, cai = cache
+    N, T, H = dh.shape
+    _, _, D = x.shape
+    init = 0
+
+    dx = np.zeros((N, T, D))
+    dh0 = np.zeros(dh.shape)
+    # prev_h = h0
+    dph = 0.0
+    for i in reversed(range(T)):
+        dph = dh[:, i, :] + dph
+        # next_h = h[:, i, :]
+        ca = cai[i]
+        dxi, dph, dWxi, dWhi, dbi = rnn_step_backward(dph, ca)
+        dx[:, i, :] = dxi
+        dh0 = dph
+        if init == 0:
+            init = 1
+            dWx = dWxi
+            dWh = dWhi
+            db = dbi
+        else:
+            dph = dh0
+            dWx += dWxi
+            dWh += dWhi
+            db += dbi
+
+    return dx, dh0, dWx, dWh, db
+*/
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         #ifdef USE_GPU
         int algo=1;
