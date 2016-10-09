@@ -2529,6 +2529,8 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     cppl_set(&cache,"h",new MatrixN(h0));
     MatrixN y=rnn.forward(x, &cache);
+    // for (auto ci : cache) cout << ci.first << shape(*(ci.second))<< " ";
+    //cout << endl;
     MatrixN dx0=rnn.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);

@@ -1675,23 +1675,27 @@ public:
         cache = (h, h0, Wx, Wh, x, cai)
         return h, cache
 */
-    MatrixN tensorchunk(const MatrixN& x, int t) {
-        int N=shape(x)[0];
-        MatrixN xi(N,D);
-        int n,d;
-        for (n=0; n<N; n++) {
-            for (d=0; d<D; d++) {
-                xi(n,d) = x(n,t*D+d);
+    MatrixN tensorchunk(const MatrixN& x, vector<int>dims, int b) {
+        int A=dims[0];
+        //int B=dims[1];
+        int C=dims[2];
+        MatrixN xi(A,C);
+        int a,c;
+        for (a=0; a<A; a++) {
+            for (c=0; c<C; c++) {
+                xi(a,c) = x(a,b*C+c);
             }
         }
         return xi;
     }
-    void tensorchunkinsert(MatrixN *ph, MatrixN& ht, int t) {
-        int N=shape(*ph)[0];
-        int n,h;
-        for (n=0; n<N; n++) {
-            for (h=0; h<H; h++) {
-                (*ph)(n,t*H+h) = ht(n,h);
+    void tensorchunkinsert(MatrixN *ph, MatrixN& ht, vector<int>dims, int b) {
+        int A=dims[0];
+        //int B=dims[1];
+        int C=dims[2];
+        int a,c;
+        for (a=0; a<A; a++) {
+            for (c=0; c<C; c++) {
+                (*ph)(a,b*C+c) = ht(a,c);
             }
         }
     }
@@ -1721,10 +1725,10 @@ public:
         string name;
         for (int t=0; t<T; t++) {
             t_cppl cache;
-            xi=tensorchunk(x,t);
+            xi=tensorchunk(x,{N,T,D},t);
             cppl_set(&cache,"h",new MatrixN(ht));
             ht = forward_step(xi,&cache,id);
-            tensorchunkinsert(&h, ht, t);
+            tensorchunkinsert(&h, ht, {N,T,H}, t);
             name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
         }
@@ -1749,38 +1753,20 @@ def rnn_step_backward(dnext_h, cache):
     """
     dx, dprev_h, dWx, dWh, db = None, None, None, None, None
     next_h, Wx, Wh, prev_h, x = cache
-    algo = 1
-    if algo == 0:
-        # next_h = np.tanh(ps)
-        # dps = # np.dot((np.ones(next_h.shape) - next_h ** 2), dnext_h.T)
-        dps = (np.ones(next_h.shape) - next_h ** 2) * dnext_h
-        # ps = phh + pshx
-        dphh = dps
-        dpshx = dps
-        # pshx = phx + b
-        dphx = dpshx.T
-        db = np.sum(dpshx, axis=0)
-        # phx = np.dot(x, Wx)
-        dx = np.dot(Wx, dphx).T
-        dWx = np.dot(dphx, x).T
-        # phh = np.dot(prev_h, Wh)
-        dprev_h = np.dot(Wh, dphh.T).T
-        print(prev_h.shape, dprev_h.shape)
-        dWh = np.dot(prev_h.T, dphh)
-    elif algo == 1:
-        # next_h = np.tanh(ps)
-        # dps = # np.dot((np.ones(next_h.shape) - next_h ** 2), dnext_h.T)
-        dps = (np.ones(next_h.shape) - next_h ** 2) * dnext_h
-        dpst = dps.T
-        # ps = phh + pshx
-        # pshx = phx + b
-        db = np.sum(dps, axis=0)
-        # phx = np.dot(x, Wx)
-        dx = np.dot(Wx, dpst).T
-        dWx = np.dot(dpst, x).T
-        # phh = np.dot(prev_h, Wh)
-        dprev_h = np.dot(Wh, dpst).T
-        dWh = np.dot(prev_h.T, dps)
+
+    # next_h = np.tanh(ps)
+    # dps = # np.dot((np.ones(next_h.shape) - next_h ** 2), dnext_h.T)
+    dps = (np.ones(next_h.shape) - next_h ** 2) * dnext_h
+    dpst = dps.T
+    # ps = phh + pshx
+    # pshx = phx + b
+    db = np.sum(dps, axis=0)
+    # phx = np.dot(x, Wx)
+    dx = np.dot(Wx, dpst).T
+    dWx = np.dot(dpst, x).T
+    # phh = np.dot(prev_h, Wh)
+    dprev_h = np.dot(Wh, dpst).T
+    dWh = np.dot(prev_h.T, dps)
     return dx, dprev_h, dWx, dWh, db
 */
 virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
@@ -1814,7 +1800,9 @@ virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgr
 }
 
 
-/*    """
+/*
+def rnn_backward(dh, cache):
+    """
     Compute the backward pass for a vanilla RNN over an entire sequence of
     data.
 
@@ -1860,7 +1848,46 @@ virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgr
     return dx, dh0, dWx, dWh, db
 */
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        MatrixN dx;
+        MatrixN dWxh,dWhh,dbh;
+        string name;
+        int N=shape(dchain)[0];
+        t_cppl cache;
+        MatrixN dhi,dxi,dphi;
+        MatrixN dx(N,T*D);
+        dx.setZero();
+        for (int t=T-1; t>=0; t--) {
+            cout << "t:" << t << endl;
+            t_cppl grads;
+            if (t==T-1) {
+                dhi=tensorchunk(dchain,{N,T,H},t);
+            } else {
+                dhi=tensorchunk(dchain,{N,T,H},t) + dphi;
+            }
+            // dci <- dchain
+            name="t"+std::to_string(t);
+            mlPop(name,pcache,&cache);
+            cout << "bs" << endl;
+            dxi=backward_step(dhi,&cache,&grads,id);
+            cout << "bsr" << endl;
+            tensorchunkinsert(&dx, dxi, {N,T,D}, t);
+            dphi=*grads["h"];
+            if (t==T-1) {
+                dWxh=*grads["Wxh"];
+                dWhh=*grads["Whh"];
+                dbh=*grads["bh"];
+            } else {
+                dWxh+=*grads["Wxh"];
+                dWhh+=*grads["Whh"];
+                dbh+=*grads["bh"];
+            }
+            cppl_delete(&grads);
+            //cppl_delete(&cache);
+        }
+        (*pgrads)["Wxh"] = new MatrixN(dWxh);
+        (*pgrads)["Whh"] = new MatrixN(dWhh);
+        (*pgrads)["bh"] = new MatrixN(dbh);
+        (*pgrads)["h"] = new MatrixN(dphi);
+
         return dx;
     }
 };
