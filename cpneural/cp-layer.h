@@ -514,6 +514,14 @@ void cppl_update(t_cppl *p, string key, MatrixN *val) {
     }
 }
 
+void cppl_remove(t_cppl *p, string key) {
+    auto it=p->find(key);
+    if (it!=p->end()) {
+        if (it->second != nullptr) delete it->second;
+        p->erase(it);
+    }
+}
+
 typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
 
 class LayerFactory {

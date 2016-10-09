@@ -2543,7 +2543,12 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dh0,*(grads["h"]),"RNNBackward h",eps);
     if (!ret) allOk=false;
-    cppl_delete(&cache);
+
+    //cppl_delete(&cache);
+    //for (auto ci : cache) {
+    //    cout << ci.first << " ";
+    //}
+    //cout << endl;
     cppl_delete(&grads);
     return allOk;
 }

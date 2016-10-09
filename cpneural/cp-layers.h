@@ -225,6 +225,16 @@ void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
     }
 }
 
+// XXX: dubious:
+void mlPopX(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci=src->cbegin(); ci!=src->cend(); ci++) {
+        if (ci->first.substr(0,prefix.size()+1)==prefix+"-") {
+            cppl_set(dst, ci->first.substr(prefix.size()+1), ci->second);
+            src->erase(ci);
+        }
+    }
+}
+
 class AffineRelu : public Layer {
 private:
     int hidden;
@@ -1856,7 +1866,6 @@ def rnn_backward(dh, cache):
         MatrixN dx(N,T*D);
         dx.setZero();
         for (int t=T-1; t>=0; t--) {
-            cout << "t:" << t << endl;
             t_cppl grads;
             if (t==T-1) {
                 dhi=tensorchunk(dchain,{N,T,H},t);
@@ -1866,9 +1875,7 @@ def rnn_backward(dh, cache):
             // dci <- dchain
             name="t"+std::to_string(t);
             mlPop(name,pcache,&cache);
-            cout << "bs" << endl;
             dxi=backward_step(dhi,&cache,&grads,id);
-            cout << "bsr" << endl;
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
             dphi=*grads["h"];
             if (t==T-1) {
@@ -1881,13 +1888,14 @@ def rnn_backward(dh, cache):
                 dbh+=*grads["bh"];
             }
             cppl_delete(&grads);
-            //cppl_delete(&cache);
+            cppl_delete(&cache);
         }
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
         (*pgrads)["h"] = new MatrixN(dphi);
-
+        cppl_remove(pcache, "h");
+        cppl_remove(pcache, "x"); // last cleanup.
         return dx;
     }
 };
