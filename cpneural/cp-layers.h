@@ -1723,14 +1723,7 @@ def rnn_step_backward(dnext_h, cache):
     - db: Gradients of bias vector, of shape (H,)
     """
     dx, dprev_h, dWx, dWh, db = None, None, None, None, None
-    ##########################################################################
-    # TODO: Implement the backward pass for a single step of a vanilla RNN.
-    #                                                                        #
-    # HINT: For the tanh function, you can compute the local derivative in
-    # terms of the output value from tanh.                                   #
-    ##########################################################################
     next_h, Wx, Wh, prev_h, x = cache
-
     algo = 1
     if algo == 0:
         # next_h = np.tanh(ps)
@@ -1763,9 +1756,6 @@ def rnn_step_backward(dnext_h, cache):
         # phh = np.dot(prev_h, Wh)
         dprev_h = np.dot(Wh, dpst).T
         dWh = np.dot(prev_h.T, dps)
-    ##########################################################################
-    #                               END OF YOUR CODE                         #
-    ##########################################################################
     return dx, dprev_h, dWx, dWh, db
 */
 virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
@@ -1773,33 +1763,22 @@ virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgr
         cout << "cache does not contain x -> fatal!" << endl;
     }
     MatrixN x(*(*pcache)["x"]);
-    MatrixN dx(x);
-    dx.setZero();
+    MatrixN h(*(*pcache)["h"]);
+    MatrixN ho(*(*pcache)["ho"]);
     MatrixN Wxh(*params["Wxh"]);
     MatrixN Whh(*params["Whh"]);
     MatrixN bh(*params["bh"]);
-    MatrixN h(*(*pcache)["h"]);
-    MatrixN ho(*(*pcache)["ho"]);
 
-    MatrixN dWxh(Wxh);
-    dWxh.setZero();
-    MatrixN dWhh(Whh);
-    dWhh.setZero();
-    MatrixN dbh(bh);
-    dbh.setZero();
-    MatrixN dh(h);
-    dh.setZero();
-
-    MatrixN hsq = h.array() * dchain.array();
+    MatrixN hsq = h.array() * h.array();
     MatrixN hone = MatrixN(h);
-    h.setOnes();
-    MatrixN t1=(hone-hsq).array() * h.array();
+    hone.setOnes();
+    MatrixN t1=(hone-hsq).array() * dchain.array();
     MatrixN t1t=t1.transpose();
-    dbh=t1.colwise().sum();
-    dx=(Wxh * t1t).transpose();
-    dWxh=(t1t * x).transpose();
-    dh=(Whh * t1t).transpose();
-    dWhh=ho.transpose() * t1;
+    MatrixN dbh=t1.colwise().sum();
+    MatrixN dx=(Wxh * t1t).transpose();
+    MatrixN dWxh=(t1t * x).transpose();
+    MatrixN dh=(Whh * t1t).transpose();
+    MatrixN dWhh=ho.transpose() * t1;
 
     (*pgrads)["Wxh"] = new MatrixN(dWxh);
     (*pgrads)["Whh"] = new MatrixN(dWhh);
