@@ -435,6 +435,9 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
     #ifdef USE_SSE4
     options+="SSE4 ";
     #endif
+    #ifdef USE_FMA
+    options += "FMA ";
+    #endif
     #ifdef USE_OPENMP
     options += "OPENMP ";
     #endif

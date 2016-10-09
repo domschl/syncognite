@@ -2212,7 +2212,7 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
 }
 
 bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
-    MatrixN x(3,10);
+    MatrixN x(3,10);     // N, D, H = 3, 10, 4
     x << -0.4       , -0.36206897, -0.32413793, -0.2862069 , -0.24827586,
         -0.21034483, -0.17241379, -0.13448276, -0.09655172, -0.05862069,
         -0.02068966,  0.01724138,  0.05517241,  0.09310345,  0.13103448,
@@ -2259,7 +2259,7 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 }
 
 bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
-    MatrixN x(4,5);
+    MatrixN x(4,5);     // N, D, H = 4, 5, 6
     x << .12416358,  1.69843114,  0.26088349,  0.61809901,  1.29498102,
          1.04395433,  0.345587  ,  1.82379102,  0.67565083,  1.19980857,
         -0.48936451,  1.3795558 , -0.44039028, -0.98906461,  0.11292283,
@@ -2378,7 +2378,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
 }
 
 bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
-    MatrixN x(2,12);
+    MatrixN x(2,12);   // N, T, D, H = 2, 3, 4, 5
     x << -0.1       , -0.0826087 , -0.06521739, -0.04782609,
          -0.03043478, -0.01304348,  0.00434783,  0.02173913,
           0.03913043,  0.05652174,  0.07391304,  0.09130435,
@@ -2402,7 +2402,7 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN h0(2,5);
     h0 << -0.3       , -0.25555556, -0.21111111, -0.16666667, -0.12222222,
         -0.07777778, -0.03333333,  0.01111111,  0.05555556,  0.1;
-    MatrixN hn(3,4);
+    MatrixN hn(2,15);
     hn << -0.42070749, -0.27279261, -0.11074945,  0.05740409,  0.22236251,
          -0.39525808, -0.22554661, -0.0409454 ,  0.14649412,  0.32397316,
          -0.42305111, -0.24223728, -0.04287027,  0.15997045,  0.35014525,
@@ -2423,7 +2423,7 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 }
 
 bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
-    MatrixN x(2,30);
+    MatrixN x(2,30);   // N, D, T, H = 2, 3, 10, 5
     x << 1.42672007, -0.31937729, -0.86722593,
          -0.3784268 ,  0.87693254,  0.2210269 ,
          -1.08824345, -0.64407614,  1.43759927,
@@ -2521,7 +2521,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -0.05634623,  1.31969603,  0.6188371 , -1.31854328, -1.27689832,
          -1.37433812,  0.19777929, -0.91821752, -0.54890713, -0.72215917,
          -1.38988503, -0.43959209, -0.33943549,  1.15280127, -0.06320341;
-    RNN rnn("{inputShape=[5];hidden=6;T=10}");
+    RNN rnn("{inputShape=[3];hidden=5;T=10}");   //inputShape=D, hidden=H
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -2883,6 +2883,18 @@ int doTests() {
         cout << green << "RNNBackwardStep with test data: OK." << def << endl;
     } else {
         cout << red << "RNNBackwardStep with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+    if (checkRNNForward()) {
+        cout << green << "RNNForward with test data: OK." << def << endl;
+    } else {
+        cout << red << "RNNForward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+    if (checkRNNBackward()) {
+        cout << green << "RNNBackward with test data: OK." << def << endl;
+    } else {
+        cout << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 /*

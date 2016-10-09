@@ -1550,6 +1550,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     int hidden;
+    int T,D,H;
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
@@ -1561,7 +1562,10 @@ private:
             inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",1024);
-        outputShape={hidden};
+        T=cp.getPar("T",3);
+        H=hidden;
+        D=inputShapeFlat;
+        outputShape={T*H};
 
         cppl_set(&params, "Wxh", new MatrixN(inputShapeFlat,hidden));
         cppl_set(&params, "Whh", new MatrixN(hidden,hidden));
@@ -1671,39 +1675,60 @@ public:
         cache = (h, h0, Wx, Wh, x, cai)
         return h, cache
 */
+    MatrixN tensorchunk(const MatrixN& x, int t) {
+        int N=shape(x)[0];
+        MatrixN xi(N,D);
+        int n,d;
+        for (n=0; n<N; n++) {
+            for (d=0; d<D; d++) {
+                xi(n,d) = x(n,t*D+d);
+            }
+        }
+        return xi;
+    }
+    void tensorchunkinsert(MatrixN *ph, MatrixN& ht, int t) {
+        int N=shape(*ph)[0];
+        int n,h;
+        for (n=0; n<N; n++) {
+            for (h=0; h<H; h++) {
+                (*ph)(n,t*H+h) = ht(n,h);
+            }
+        }
+    }
+
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
-        if (params["Wxh"]->rows() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x*Wxh: x:" << shape(x) << " Wxh:" << shape(*params["Wxh"]) << endl;
-            MatrixN y(0,0);
-            return y;
+        if (x.cols() != D*T) {
+            cout << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
+            MatrixN h(0,0);
+            return h;
         }
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-
-        #ifdef USE_GPU
-        int algo=1;
-        #else
-        int algo=0;
-        #endif
-        MatrixN y(x.rows(), (*params["W"]).cols());
-        if (algo==0 || id>=numGpuThreads) {
-
-            y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
-        } else {
-            #ifdef USE_GPU
-            // cout << "G" << id << "/" << numGpuThreads << " ";
-            MatrixN x1(x.rows(),x.cols()+1);
-            MatrixN xp1(x.rows(),1);
-            xp1.setOnes();
-            x1 << x, xp1;
-            MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
-            Wb<<*params["W"], *params["b"];
-            MatrixN y2;
-            y=matmul(&x1,&Wb,id);
-
-            #endif
+        MatrixN h0;
+        if (pcache!=nullptr) {
+            cppl_set(pcache, "x", new MatrixN(x));
+            if (pcache->find("h")==pcache->end()) {
+                cout << layerName << ": you need to provide a h-matrix (NxH) in cache" << endl;
+                MatrixN h(0,0);
+                return h;
+            } else {
+                h0=*(*pcache)["h"];
+            }
         }
-        return y;
-    //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
+        int N=shape(x)[0];
+        MatrixN h(N,T*H);
+        h.setZero();
+        MatrixN ht=h0;
+        MatrixN xi;
+        string name;
+        for (int t=0; t<T; t++) {
+            t_cppl cache;
+            xi=tensorchunk(x,t);
+            cppl_set(&cache,"h",new MatrixN(ht));
+            ht = forward_step(xi,&cache,id);
+            tensorchunkinsert(&h, ht, t);
+            name="t"+std::to_string(t);
+            mlPush(name,&cache,pcache);
+        }
+        return h;
     }
 
 /*
@@ -1835,32 +1860,7 @@ virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgr
     return dx, dh0, dWx, dWh, db
 */
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        #ifdef USE_GPU
-        int algo=1;
-        #else
-        int algo=0;
-        #endif
-        MatrixN x(*(*pcache)["x"]);
-        MatrixN dx(x.rows(),x.cols());
-        MatrixN W(*params["W"]);
-        MatrixN dW(W.rows(),W.cols());
-        if (algo==0 || id>=numGpuThreads) {
-            dx = dchain * (*params["W"]).transpose(); // dx
-            cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-        } else {
-            #ifdef USE_GPU
-            MatrixN Wt;
-            Wt=W.transpose();
-            MatrixN xt;
-            xt=x.transpose();
-            MatrixN dc=dchain;
-            dx=matmul(&dc,&Wt,id);
-            cppl_set(pgrads, "W", new MatrixN(matmul(&xt,&dc,id)));
-
-            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-            #endif
-        }
+        MatrixN dx;
         return dx;
     }
 };
@@ -1875,6 +1875,7 @@ void registerLayers() {
     REGISTER_LAYER("Convolution", Convolution, 3)
     REGISTER_LAYER("Pooling", Pooling, 3)
     REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
+    REGISTER_LAYER("RNN", RNN, 1)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
