@@ -2247,7 +2247,7 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         0.05454545,  0.11818182,  0.18181818,  0.24545455,
         0.30909091,  0.37272727,  0.43636364,  0.5;
 
-    RNN rnn("{inputShape=[10];hidden=4}");
+    RNN rnn("{inputShape=[10];hidden=4;N=3}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
@@ -2352,7 +2352,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.47915608,
          1.30290015, -0.72761588, -0.17990189,  1.2176583 , -0.42103704,
          0.61638331;
-    RNN rnn("{inputShape=[5];hidden=6}");
+    RNN rnn("{inputShape=[5];hidden=6;N=4}");
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -2370,7 +2370,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNStepBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh,*(grads["h"]),"RNNStepBackward h",eps);
+    ret=matComp(dh,*(grads["ho"]),"RNNStepBackward h",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -2411,12 +2411,12 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          -0.27150199, -0.07088804,  0.13562939,  0.33099728,  0.50158768,
          -0.51014825, -0.30524429, -0.06755202,  0.17806392,  0.40333043;
 
-    RNN rnn("{inputShape=[4];hidden=5;T=3}");
+    RNN rnn("{inputShape=[4];hidden=5;T=3;N=2}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
+    *(rnn.params)["ho"]=h0;
     t_cppl cache;
-    cppl_set(&cache,"h",new MatrixN(h0));
     MatrixN hn0=rnn.forward(x, &cache, 0);
     cppl_delete(&cache);
     return matComp(hn,hn0,"RNNForward",eps);
@@ -2521,13 +2521,14 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -0.05634623,  1.31969603,  0.6188371 , -1.31854328, -1.27689832,
          -1.37433812,  0.19777929, -0.91821752, -0.54890713, -0.72215917,
          -1.38988503, -0.43959209, -0.33943549,  1.15280127, -0.06320341;
-    RNN rnn("{inputShape=[3];hidden=5;T=10}");   //inputShape=D, hidden=H
+    RNN rnn("{inputShape=[3];hidden=5;T=10;N=2}");   //inputShape=D, hidden=H
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
+    *(rnn.params["ho"])=h0;
+
     t_cppl cache;
     t_cppl grads;
-    cppl_set(&cache,"h",new MatrixN(h0));
     MatrixN y=rnn.forward(x, &cache);
     // for (auto ci : cache) cout << ci.first << shape(*(ci.second))<< " ";
     //cout << endl;
@@ -2541,7 +2542,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["h"]),"RNNBackward h",eps);
+    ret=matComp(dh0,*(grads["ho"]),"RNNBackward h",eps);
     if (!ret) allOk=false;
 
     //cppl_delete(&cache);
@@ -2686,7 +2687,7 @@ int doTests() {
     }
 
     // SpatialBatchNorm
-    SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;batch_size=20;noVectorizationTests=true}");
+    SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;N=20;noVectorizationTests=true}");
     MatrixN xsbn(20,3*4*4);
     xsbn.setRandom();
     if (!sbn.selfTest(xsbn, yz)) {
@@ -2698,8 +2699,8 @@ int doTests() {
     MatrixN h0(20,6);
     xrnn.setRandom();
     h0.setRandom();
-    RNN rnn("{inputShape=[5];hidden=6;T=7;noVectorizationTests=true}");
-    rnn.h0i=h0;
+    RNN rnn("{inputShape=[5];hidden=6;N=20;T=7;noVectorizationTests=true}");
+    *(rnn.params["ho"])=h0;
     if (!rnn.selfTest(xrnn, yz)) {
         allOk=false;
     }

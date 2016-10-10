@@ -531,7 +531,7 @@ public:
     void registerInstanceCreator(std::string name, Layer*(sub)(const CpParams&), t_layer_props_entry lprops ) {
         auto it=mapl.find(name);
         if (it!=mapl.end()) {
-            cout << "Layer " << name << " is already registered, prevent additional registration." << endl;
+            cout << "Layer " << name << " is already registered, preventing additional registration." << endl;
         } else {
             mapl[name] = sub;
             mapprops[name] = lprops;

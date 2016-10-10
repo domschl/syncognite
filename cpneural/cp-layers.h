@@ -1165,7 +1165,7 @@ private:
         assert (inputShape.size()==3);
         // inputShape: C, H, W
         C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
-        N0=cp.getPar("batch_size",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
+        N0=cp.getPar("N",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
         outputShape={C,H,W};
 
         CpParams cs(cp);
@@ -1636,17 +1636,17 @@ public:
         return next_h, cache */
         virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
             // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)    h(t-1) -> ho,   h(t) -> h
-            if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+            if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
             int N=shape(x)[0];
             MatrixN *ph;
             if (pcache==nullptr || pcache->find("h")==pcache->end()) {
                 ph=new MatrixN(N,hidden);
                 ph->setZero();
-                if (pcache!=nullptr) cppl_set(pcache,"h",ph);
+                if (pcache!=nullptr) cppl_update(pcache,"h",ph);
             } else {
+                if (pcache==nullptr) cout << "pcache must not be null in rnn_step_forward" <<endl;
                 ph=(*pcache)["h"];
-                if (pcache->find("ho")==pcache->end()) cppl_set(pcache,"ho",new MatrixN(*ph));
-                else cppl_update(pcache,"ho",ph);
+                cppl_update(pcache,"ho",ph);
             }
             //cout << shape(*ph) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
             MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
@@ -1723,29 +1723,9 @@ public:
         int N=shape(x)[0];
         MatrixN h0;
         if (pcache!=nullptr) {
-            cppl_set(pcache, "x", new MatrixN(x));
-            if (pcache->find("h")==pcache->end()) {
-                if (shape(h0i)[0]==N && shape(h0i)[1]==H) {
-                    h0=h0i;
-                    cppl_set(pcache,"h",new MatrixN(h0i));
-                    cout << "  hacky init of h0 via params" << endl;
-                } else {
-                    cout << layerName << ": you need to provide a h-matrix (NxH) in cache, (hack: set public h0i)" << endl;
-                    MatrixN h(0,0);
-                    return h;
-                }
-            } else {
-                h0=*(*pcache)["h"];
-            }
-        } else {
-            cout << layerName << " does not support forward calls with nullptr cache / faking init." << endl;
-            if (shape(h0i)[0]==N && shape(h0i)[1]==H) {
-                h0=h0i;
-                cout << "  hacky temp-init of h0 via params" << endl;
-            } else {
-                cout << "no fake data" << endl;
-            }
+            cppl_update(pcache, "x", new MatrixN(x));
         }
+        h0=*params["ho"];
         MatrixN h(N,T*H);
         h.setZero();
         MatrixN ht=h0;
@@ -1754,7 +1734,7 @@ public:
         for (int t=0; t<T; t++) {
             t_cppl cache;
             xi=tensorchunk(x,{N,T,D},t);
-            cppl_set(&cache,"h",new MatrixN(ht));
+            cppl_update(&cache,"h",new MatrixN(ht));
             ht = forward_step(xi,&cache,id);
             tensorchunkinsert(&h, ht, {N,T,H}, t);
             name="t"+std::to_string(t);
@@ -1822,7 +1802,7 @@ virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgr
     (*pgrads)["Wxh"] = new MatrixN(dWxh);
     (*pgrads)["Whh"] = new MatrixN(dWhh);
     (*pgrads)["bh"] = new MatrixN(dbh);
-    (*pgrads)["h"] = new MatrixN(dh);
+    (*pgrads)["ho"] = new MatrixN(dh);
 
     return dx;
 }
@@ -1895,7 +1875,7 @@ def rnn_backward(dh, cache):
             mlPop(name,pcache,&cache);
             dxi=backward_step(dhi,&cache,&grads,id);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
-            dphi=*grads["h"];
+            dphi=*grads["ho"]; // XXX cache-rel?
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];
@@ -1906,14 +1886,13 @@ def rnn_backward(dh, cache):
                 dbh+=*grads["bh"];
             }
             cppl_delete(&grads);
-            cppl_delete(&cache);
+            // cppl_delete(&cache); // XXX uuuhhh
         }
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)["h"] = new MatrixN(dphi);
-        cppl_remove(pcache, "h");
-        cppl_remove(pcache, "x"); // last cleanup.
+        (*pgrads)["ho"] = new MatrixN(dphi);
+        //cppl_remove(pcache, "x"); // last cleanup.
         return dx;
     }
 };
