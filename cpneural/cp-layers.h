@@ -1635,7 +1635,7 @@ public:
 
         return next_h, cache */
         virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
-            // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)
+            // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)    h(t-1) -> ho,   h(t) -> h
             if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
             int N=shape(x)[0];
             MatrixN *ph;
