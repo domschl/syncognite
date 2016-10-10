@@ -158,6 +158,12 @@ int doBench() {
                 inputShape[2]=32;
                 cp.setPar("batch_norm",N);
                 MI=32*32*3;
+            } else if (it.first=="RNN") {
+                inputShape[0]=4;
+                cp.setPar("N",10);
+                cp.setPar("hidden",1024);
+                cp.setPar("T",3);
+                MI=12;
             }
             cp.setPar("inputShape",inputShape);
             cp.setPar("train", true);

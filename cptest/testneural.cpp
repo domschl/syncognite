@@ -2580,7 +2580,7 @@ bool registerTest() {
 }
 
 int tFunc(floatN x, int c) {
-    int y=(int)(((sin(x)+1.0)/2.0)*(floatN)c);
+    int y=(int)(((sin(x/5.0)+1.0)/2.0)*(floatN)c);
     //cout << x << ":" << y << " " << endl;
     return y;
 }
@@ -2622,7 +2622,7 @@ bool trainTest() {
     cout << "Train-test, train-err=" << train_err << endl;
     cout << "       validation-err=" << val_err << endl;
     cout << "       final test-err=" << val_err << endl;
-    if (test_err>0.2 || test_err>0.2 || train_err>0.2) allOk=false;
+    if (test_err>0.2 || val_err>0.2 || train_err>0.2) allOk=false;
     return allOk;
 }
 
@@ -2761,7 +2761,7 @@ int doTests() {
     if (!sv.selfTest(xsv, yv, h, eps)) {
         allOk=false;
     }
-/*
+
     //LayerBlock1
     LayerBlock lb("{name='testblock'}");
     cout << "LayerName for lb: " << lb.layerName << endl;
@@ -2775,9 +2775,9 @@ int doTests() {
     } else {
         cout << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
-    MatrixN xml(30,10);
+    MatrixN xml(5,10);
     xml.setRandom();
-    MatrixN yml(30,1);
+    MatrixN yml(5,1);
     for (unsigned i=0; i<yml.rows(); i++) yml(i,0)=(rand()%10);
 
     h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
@@ -2786,7 +2786,7 @@ int doTests() {
         allOk=false;
         cout << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-*/
+
     cout << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -2917,7 +2917,7 @@ int doTests() {
         cout << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (trainTest()) {
         cout << green << "TrainTest: OK." << def << endl;
     } else {
@@ -2925,7 +2925,7 @@ int doTests() {
         allOk=false;
     }
 
-*/
+
     if (registerTest()) {
         cout << green << "RegisterTest: OK." << def << endl;
     } else {
