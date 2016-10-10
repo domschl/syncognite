@@ -1,4 +1,6 @@
 #include <iostream>
+#include <codecvt>
+#include <locale>
 #include <string>
 
 #include "cp-neural.h"
@@ -26,6 +28,20 @@ int main(int argc, char *argv[]) {
     txtfile.close();
 
     cout << inputfile << ": " << text.size() << endl;
+
+    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    std::u32string utf32str = conv.from_bytes(text);
+    std::map<char32_t,int> freq;
+
+    for (char32_t wc : utf32str) {
+//        freq[text.substr(i,1)]++;
+        freq[wc]++;
+    }
+    cout << "Freq-size:" << freq.size() << endl;
+    for (auto f : freq) {
+        int c=(int)f.first;
+        std::wcout << (wchar_t)f.first << "(" << c << ")" ": " << f.second << endl;
+    }
 
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
