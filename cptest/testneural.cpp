@@ -2693,6 +2693,17 @@ int doTests() {
         allOk=false;
     }
 
+    // RNN
+    MatrixN xrnn(20,5*7);
+    MatrixN h0(20,6);
+    xrnn.setRandom();
+    h0.setRandom();
+    RNN rnn("{inputShape=[5];hidden=6;T=7;noVectorizationTests=true}");
+    rnn.h0i=h0;
+    if (!rnn.selfTest(xrnn, yz)) {
+        allOk=false;
+    }
+
     AffineRelu rx("{inputShape=[2];hidden=3}");
     MatrixN xarl(30,2);
     xarl.setRandom();

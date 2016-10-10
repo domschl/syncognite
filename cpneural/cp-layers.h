@@ -1560,7 +1560,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     int hidden;
-    int T,D,H;
+    int T,D,H,N;
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
@@ -1573,16 +1573,19 @@ private:
         }
         hidden=cp.getPar("hidden",1024);
         T=cp.getPar("T",3);
+        N=cp.getPar("N",1);
         H=hidden;
         D=inputShapeFlat;
         outputShape={T*H};
 
+        cppl_set(&params, "ho", new MatrixN(N,H));
         cppl_set(&params, "Wxh", new MatrixN(inputShapeFlat,hidden));
         cppl_set(&params, "Whh", new MatrixN(hidden,hidden));
         cppl_set(&params, "bh", new MatrixN(1,hidden));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
+        params["ho"]->setZero();
         params["Wxh"]->setRandom();
         params["Whh"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
@@ -1645,6 +1648,7 @@ public:
                 if (pcache->find("ho")==pcache->end()) cppl_set(pcache,"ho",new MatrixN(*ph));
                 else cppl_update(pcache,"ho",ph);
             }
+            //cout << shape(*ph) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
             MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
             *ph=hn;
             if (pcache==nullptr) free(ph);
@@ -1716,18 +1720,32 @@ public:
             MatrixN h(0,0);
             return h;
         }
+        int N=shape(x)[0];
         MatrixN h0;
         if (pcache!=nullptr) {
             cppl_set(pcache, "x", new MatrixN(x));
             if (pcache->find("h")==pcache->end()) {
-                cout << layerName << ": you need to provide a h-matrix (NxH) in cache" << endl;
-                MatrixN h(0,0);
-                return h;
+                if (shape(h0i)[0]==N && shape(h0i)[1]==H) {
+                    h0=h0i;
+                    cppl_set(pcache,"h",new MatrixN(h0i));
+                    cout << "  hacky init of h0 via params" << endl;
+                } else {
+                    cout << layerName << ": you need to provide a h-matrix (NxH) in cache, (hack: set public h0i)" << endl;
+                    MatrixN h(0,0);
+                    return h;
+                }
             } else {
                 h0=*(*pcache)["h"];
             }
+        } else {
+            cout << layerName << " does not support forward calls with nullptr cache / faking init." << endl;
+            if (shape(h0i)[0]==N && shape(h0i)[1]==H) {
+                h0=h0i;
+                cout << "  hacky temp-init of h0 via params" << endl;
+            } else {
+                cout << "no fake data" << endl;
+            }
         }
-        int N=shape(x)[0];
         MatrixN h(N,T*H);
         h.setZero();
         MatrixN ht=h0;
