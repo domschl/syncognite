@@ -2545,7 +2545,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     ret=matComp(dh0,*(grads["ho"]),"RNNBackward h",eps);
     if (!ret) allOk=false;
 
-    //cppl_delete(&cache);
+    cppl_delete(&cache);
     //for (auto ci : cache) {
     //    cout << ci.first << " ";
     //}
@@ -2687,21 +2687,22 @@ int doTests() {
     }
 
     // SpatialBatchNorm
-    SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;N=20;noVectorizationTests=true}");
-    MatrixN xsbn(20,3*4*4);
+    SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;N=2;noVectorizationTests=true}");
+    MatrixN xsbn(2,3*4*4);
     xsbn.setRandom();
     if (!sbn.selfTest(xsbn, yz)) {
         allOk=false;
     }
 
     // RNN
-    MatrixN xrnn(20,5*7);
-    MatrixN h0(20,6);
+    int rnnN=4;
+    MatrixN xrnn(rnnN,5*7);
+    MatrixN h0(rnnN,6);
     xrnn.setRandom();
     h0.setRandom();
-    RNN rnn("{inputShape=[5];hidden=6;N=20;T=7;noVectorizationTests=true}");
+    RNN rnn("{inputShape=[5];hidden=6;N=4;T=7;noVectorizationTests=true}");
     *(rnn.params["ho"])=h0;
-    if (!rnn.selfTest(xrnn, yz)) {
+    if (!rnn.selfTest(xrnn, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
 

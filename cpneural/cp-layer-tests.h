@@ -314,7 +314,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     cout << "  check numerical gradients " << layerName << "..." << endl;
     t_cppl cache2;
     ret=checkGradients(x, y, dchain, &cache2, h, eps, lossFkt);
-    // XXX cppl_delete(&cache2);
+    cppl_delete(&cache2);
     if (!ret) {
         cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
