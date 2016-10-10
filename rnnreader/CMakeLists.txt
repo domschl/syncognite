@@ -1,0 +1,6 @@
+add_executable(rnnreader rnnreader.cpp)
+if (OpenCL_FOUND)
+    target_link_libraries(rnnreader LINK_PUBLIC Threads::Threads ${OpenCL_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+else()
+    target_link_libraries(rnnreader LINK_PUBLIC Threads::Threads ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+endif()
