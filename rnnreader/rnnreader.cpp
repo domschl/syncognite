@@ -1,7 +1,9 @@
 #include <iostream>
 #include <codecvt>
+#include <cstddef>
 #include <locale>
 #include <string>
+#include <iomanip>
 
 #include "cp-neural.h"
 
@@ -14,33 +16,49 @@ int main(int argc, char *argv[]) {
     }
 
     string inputfile=argv[1];
-    std::ifstream txtfile(inputfile);
+    std::wifstream txtfile(inputfile);
     if (!txtfile.is_open()) {
         cout << "Cannot read from: " << inputfile << endl;
         exit(-1);
     }
-    string text;
-    txtfile.seekg(0, std::ios::end);
-    text.reserve(txtfile.tellg());
-    txtfile.seekg(0, std::ios::beg);
-    text.assign((std::istreambuf_iterator<char>(txtfile)),
-                std::istreambuf_iterator<char>());
+
+    //std::wstring text;
+    //txtfile.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t,0x10ffff, std::consume_header>));
+    txtfile.imbue(std::locale("en_US.UTF8"));
+    std::wstring text((std::istreambuf_iterator<wchar_t>(txtfile)),
+                 std::istreambuf_iterator<wchar_t>());
+/*    std::wstringstream wss;
+    cout << txtfile.rdbuf();
+*/    //wss >> text;
+/*    std::wstring text((std::istreambuf_iterator<wchar_t>(txtfile)),
+                std::istreambuf_iterator<wchar_t>());
+*/
+
     txtfile.close();
 
     cout << inputfile << ": " << text.size() << endl;
 
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+    /*std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     std::u32string utf32str = conv.from_bytes(text);
-    std::map<char32_t,int> freq;
+*/
+    std::map<wchar_t,int> freq;
 
-    for (char32_t wc : utf32str) {
+    for (auto wc : text) {
 //        freq[text.substr(i,1)]++;
         freq[wc]++;
     }
+    setenv("LANG","en_US.utf8",1);
+    setlocale(LC_ALL,"en_US.utf8");
+    //std::wcout.imbue(std::locale("en_US.UTF8"));
+    std::locale::global(std::locale("en_US.utf8"));
+    std::wcout.imbue(std::locale("en_US.utf8"));
+    std::wstring test(L"Tibetan: སེམས་ཉིད་རྒྱུད, or german ä.");
+    std::wcout << test << endl;
     cout << "Freq-size:" << freq.size() << endl;
     for (auto f : freq) {
         int c=(int)f.first;
-        std::wcout << (wchar_t)f.first << "(" << c << ")" ": " << f.second << endl;
+        std::wstring wc(1,f.first);
+        std::wcout << wchar_t(f.first) << L"(0x" << std::hex << c << L")" ": " << std::dec <<  f.second << endl;
     }
 
     Color::Modifier red(Color::FG_RED);
