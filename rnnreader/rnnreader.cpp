@@ -1,6 +1,7 @@
 #include <iostream>
-#include <codecvt>
-#include <cstddef>
+#include <fstream>
+//#include <codecvt>
+//#include <cstddef>
 #include <locale>
 #include <string>
 #include <iomanip>
@@ -9,16 +10,29 @@
 
 
 int main(int argc, char *argv[]) {
+    std::setlocale (LC_ALL, "");
+
+/*    std::wstring tib(L"རྒྱུད");
+	wchar_t wc=L'མ';
+	std::wstring t2(L" ");
+	t2[0] = wc;
+
+	std::wcout << "Hello world! རྒྱུད།" << std::endl;
+	std::wcout << tib << std::endl;
+	std::wcout << ">" << wc << "<" << std::endl;
+*/
+    std::wcout << "Hello world! རྒྱུད།" << std::endl;
+
     bool allOk=true;
     if (argc!=2) {
-        cout << "rnnreader <path-to-text-file>" << endl;
+        std::cout << "rnnreader <path-to-text-file>" << endl;
         exit(-1);
     }
 
-    string inputfile=argv[1];
-    std::wifstream txtfile(inputfile);
+    std::string inputfile(argv[1]);
+    std::wifstream txtfile(inputfile, std::ios::binary);
     if (!txtfile.is_open()) {
-        cout << "Cannot read from: " << inputfile << endl;
+        std::cout << "Cannot read from: " << inputfile << endl;
         exit(-1);
     }
 
@@ -36,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     txtfile.close();
 
-    cout << inputfile << ": " << text.size() << endl;
+    std::cout << inputfile << ": " << text.size() << endl;
 
     /*std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
     std::u32string utf32str = conv.from_bytes(text);
@@ -47,18 +61,18 @@ int main(int argc, char *argv[]) {
 //        freq[text.substr(i,1)]++;
         freq[wc]++;
     }
-    setenv("LANG","en_US.utf8",1);
-    setlocale(LC_ALL,"en_US.utf8");
+    //setenv("LANG","en_US.utf8",1);
+    //setlocale(LC_ALL,"en_US.utf8");
     //std::wcout.imbue(std::locale("en_US.UTF8"));
-    std::locale::global(std::locale("en_US.utf8"));
-    std::wcout.imbue(std::locale("en_US.utf8"));
+    //std::locale::global(std::locale("en_US.utf8"));
+    //std::wcout.imbue(std::locale("en_US.utf8"));
     std::wstring test(L"Tibetan: སེམས་ཉིད་རྒྱུད, or german ä.");
-    std::wcout << test << endl;
-    cout << "Freq-size:" << freq.size() << endl;
+    std::wcout << test << std::endl;
+    std::cout << "Freq-size:" << freq.size() << std::endl;
     for (auto f : freq) {
         int c=(int)f.first;
         std::wstring wc(1,f.first);
-        std::wcout << wchar_t(f.first) << L"(0x" << std::hex << c << L")" ": " << std::dec <<  f.second << endl;
+        std::wcout << wc << "|" <<  wchar_t(f.first) << L"(0x" << std::hex << c << L")" ": " << std::dec <<  f.second << endl;
     }
 
     Color::Modifier red(Color::FG_RED);
