@@ -95,7 +95,10 @@ int main(int argc, char *argv[]) {
         cout << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
 
+    std::wstring chunk;
+    chunk = text.substr(0,50);
 
+    std::wcout << chunk << endl;
 
 
     cpExitCompute();
