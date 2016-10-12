@@ -8,71 +8,49 @@
 
 #include "cp-neural.h"
 
+using std::wcout; using std::wstring;
+
+bool readDataFile(string inputfile, wstring& text) {
+    std::wifstream txtfile(inputfile, std::ios::binary);
+    if (!txtfile.is_open()) {
+        return false;
+    }
+    txtfile.imbue(std::locale("en_US.UTF8"));
+    wstring ttext((std::istreambuf_iterator<wchar_t>(txtfile)),
+                 std::istreambuf_iterator<wchar_t>());
+    txtfile.close();
+    text=ttext;
+    return true;
+}
 
 int main(int argc, char *argv[]) {
     std::setlocale (LC_ALL, "");
-
-/*    std::wstring tib(L"རྒྱུད");
-	wchar_t wc=L'མ';
-	std::wstring t2(L" ");
-	t2[0] = wc;
-
-	std::wcout << "Hello world! རྒྱུད།" << std::endl;
-	std::wcout << tib << std::endl;
-	std::wcout << ">" << wc << "<" << std::endl;
-*/
-    std::wcout << "Hello world! རྒྱུད།" << std::endl;
+    wcout << L"Rnn-Readär" << std::endl;
 
     bool allOk=true;
     if (argc!=2) {
-        std::cout << "rnnreader <path-to-text-file>" << endl;
+        wcout << L"rnnreader <path-to-text-file>" << endl;
         exit(-1);
     }
-
     std::string inputfile(argv[1]);
-    std::wifstream txtfile(inputfile, std::ios::binary);
-    if (!txtfile.is_open()) {
-        std::cout << "Cannot read from: " << inputfile << endl;
+    wstring text;
+    if (!readDataFile(inputfile, text)) {
+        cout << "Cannot read from: " << inputfile << endl;
         exit(-1);
     }
 
-    //std::wstring text;
-    //txtfile.imbue(std::locale(std::locale::empty(), new std::codecvt_utf8<wchar_t,0x10ffff, std::consume_header>));
-    txtfile.imbue(std::locale("en_US.UTF8"));
-    std::wstring text((std::istreambuf_iterator<wchar_t>(txtfile)),
-                 std::istreambuf_iterator<wchar_t>());
-/*    std::wstringstream wss;
-    cout << txtfile.rdbuf();
-*/    //wss >> text;
-/*    std::wstring text((std::istreambuf_iterator<wchar_t>(txtfile)),
-                std::istreambuf_iterator<wchar_t>());
-*/
+    cout << inputfile << ": " << text.size() << endl;
 
-    txtfile.close();
-
-    std::cout << inputfile << ": " << text.size() << endl;
-
-    /*std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
-    std::u32string utf32str = conv.from_bytes(text);
-*/
     std::map<wchar_t,int> freq;
 
     for (auto wc : text) {
-//        freq[text.substr(i,1)]++;
         freq[wc]++;
     }
-    //setenv("LANG","en_US.utf8",1);
-    //setlocale(LC_ALL,"en_US.utf8");
-    //std::wcout.imbue(std::locale("en_US.UTF8"));
-    //std::locale::global(std::locale("en_US.utf8"));
-    //std::wcout.imbue(std::locale("en_US.utf8"));
-    std::wstring test(L"Tibetan: སེམས་ཉིད་རྒྱུད, or german ä.");
-    std::wcout << test << std::endl;
-    std::cout << "Freq-size:" << freq.size() << std::endl;
+    cout << "Freq-size:" << freq.size() << std::endl;
     for (auto f : freq) {
         int c=(int)f.first;
-        std::wstring wc(1,f.first);
-        std::wcout << wc << "|" <<  wchar_t(f.first) << L"(0x" << std::hex << c << L")" ": " << std::dec <<  f.second << endl;
+        wstring wc(1,f.first);
+        wcout << wc << "|" <<  wchar_t(f.first) << L"(0x" << std::hex << c << L")" ": " << std::dec <<  f.second << endl;
     }
 
     Color::Modifier red(Color::FG_RED);
@@ -84,8 +62,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader'}");
 
-    lb.addLayer("RNN","rnn1","{inputShape=[10];T=10;N=10}",{"input"});
-    //lb.addLayer("Relu","rl1","",{"af1"});
+    lb.addLayer("RNN","rnn1","{inputShape=[128];T=64;N=128}",{"input"});
     lb.addLayer("Affine","af1","{hidden=10}",{"rnn1"});
     lb.addLayer("Softmax","sm1","",{"af1"});
     if (!lb.checkTopology(true)) {
@@ -95,11 +72,10 @@ int main(int argc, char *argv[]) {
         cout << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
 
-    std::wstring chunk;
-    chunk = text.substr(0,50);
+    wstring chunk;
+    chunk = text.substr(512,128);
 
-    std::wcout << chunk << endl;
-
+    wcout << chunk << endl;
 
     cpExitCompute();
 }
