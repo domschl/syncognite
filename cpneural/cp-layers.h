@@ -64,7 +64,7 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (params["W"]->rows() != x.cols()) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
+            cerr << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
             MatrixN y(0,0);
             return y;
         }
@@ -77,7 +77,7 @@ public:
         #endif
         MatrixN y(x.rows(), (*params["W"]).cols());
         if (algo==0 || id>=numGpuThreads) {
-            // cout << "C" << id << " ";
+            // cerr << "C" << id << " ";
             /*
             y = x * (*params["W"]);
             RowVectorN b = *params["b"];
@@ -86,7 +86,7 @@ public:
             y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         } else {
             #ifdef USE_GPU
-            // cout << "G" << id << "/" << numGpuThreads << " ";
+            // cerr << "G" << id << "/" << numGpuThreads << " ";
             MatrixN x1(x.rows(),x.cols()+1);
             MatrixN xp1(x.rows(),1);
             xp1.setOnes();
@@ -402,7 +402,7 @@ public:
                 cppl_update(pcache, "x2", &x2);
 
                 if (momentum==1.0) {
-                    cout << "ERROR: momentum should never be 1" << endl;
+                    cerr << "ERROR: momentum should never be 1" << endl;
                 }
             }
         } else { // testmode
@@ -414,18 +414,18 @@ public:
         return xout;
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        if (pcache->find("sqse")==pcache->end()) cout << "Bad: no cache entry for sqse!" << endl;
+        if (pcache->find("sqse")==pcache->end()) cerr << "Bad: no cache entry for sqse!" << endl;
         MatrixN sqse=*((*pcache)["sqse"]);
-        if (pcache->find("xme")==pcache->end()) cout << "Bad: no cache entry for xme!" << endl;
+        if (pcache->find("xme")==pcache->end()) cerr << "Bad: no cache entry for xme!" << endl;
         MatrixN xme=*((*pcache)["xme"]);
-        if (pcache->find("x2")==pcache->end()) cout << "Bad: no cache entry for x2!" << endl;
+        if (pcache->find("x2")==pcache->end()) cerr << "Bad: no cache entry for x2!" << endl;
         MatrixN x2=*((*pcache)["x2"]);
-        if (params.find("gamma")==params.end()) cout << "Bad: no params entry for gamma!" << endl;
+        if (params.find("gamma")==params.end()) cerr << "Bad: no params entry for gamma!" << endl;
         MatrixN gamma=*(params["gamma"]);
         MatrixN dbeta=y.colwise().sum();
 
         MatrixN dgamma=(x2.array() * y.array()).colwise().sum();
-        if (shape(gamma) != shape(dgamma)) cout << "bad: dgamma has wrong shape: " << shape(gamma) << shape(dgamma) << endl;
+        if (shape(gamma) != shape(dgamma)) cerr << "bad: dgamma has wrong shape: " << shape(gamma) << shape(dgamma) << endl;
 
         floatN N=y.rows();
         MatrixN d1=MatrixN(y).setOnes();
@@ -435,7 +435,7 @@ public:
         MatrixN dx21 = (xme.array().rowwise() * RowVectorN(iv).array());
         MatrixN dx22 = (y.array() * xme.array()).colwise().sum();
         MatrixN dx2 = dx21.array().rowwise() * RowVectorN(dx22).array();
-        // cout << "d1:" << shape(d1) << ", dx0:" << shape(dx0) << endl;
+        // cerr << "d1:" << shape(d1) << ", dx0:" << shape(dx0) << endl;
         //MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(d1*dx0).array() ;
         MatrixN dx=(dx1 - dx2).array().rowwise() * RowVectorN(dx0).array() ;
         cppl_set(pgrads,"gamma",new MatrixN(dgamma));
@@ -527,7 +527,7 @@ public:
                 if (pcache!=nullptr) cppl_set(pcache, "dropmask", pmask);
                 else delete pmask;
             }
-            //cout << "drop:" << drop << endl << xout << endl;
+            //cerr << "drop:" << drop << endl << xout << endl;
         } else {
             xout = x * drop;
         }
@@ -604,20 +604,20 @@ private:
         mlverbose = cp.getPar("verbose", false);
         pad = cp.getPar("pad", (int)((HH-1)/2));
         if (pad>=HH || pad>=WW) {
-            cout << "bad configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
+            cerr << "bad configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
             retval=false;
         }
         if ((H + 2 * pad - HH) % stride != 0) {
             int r=(H + 2 * pad - HH) % stride;
             if (r>pad) {
-                cout << "H <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
+                cerr << "H <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
                 retval=false;
             }
         }
         if ((W + 2 * pad - WW) % stride != 0) {
             int r=(W + 2 * pad - WW) % stride;
             if (r>pad) {
-                cout << "w <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
+                cerr << "w <-> stride does not fit! r=" << r << ", pad=" << pad << endl;
                 retval=false;
             }
         }
@@ -625,11 +625,11 @@ private:
         WO = 1 + (W + 2 * pad - WW) / stride;
 
         if (HO*stride+HH-stride < H+pad) {
-            cout << "H: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
+            cerr << "H: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
             retval=false;
         }
         if (WO*stride+WW-stride < W+pad) {
-            cout << "W: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
+            cerr << "W: current stride:" << stride << ", pad:" << pad << " combination does not cover input-field" << endl;
             retval=false;
         }
 
@@ -760,14 +760,14 @@ public:
                 xx(n,x)=y2c(py,px);
             }
         }
-        cout << "col2im-in :" << endl << y2c << endl << endl;
-        cout << "col2im-out:" << endl << xx << endl << endl;
-//        cout << "." << endl;
+        cerr << "col2im-in :" << endl << y2c << endl << endl;
+        cerr << "col2im-out:" << endl << xx << endl << endl;
+//        cerr << "." << endl;
         return xx;
     }
 
     MatrixN col2im(const MatrixN& y2c, int N) {
-        //cout << N << "," << F << "," << HO << "," << WO << endl;
+        //cerr << N << "," << F << "," << HO << "," << WO << endl;
         MatrixN xx(N,F*HO*WO);
         int py=0,px=0;
         int sx=0,sy=0;
@@ -796,18 +796,18 @@ public:
     }
 
     MatrixN col2imB(const MatrixN& y2c, int N) {
-        //cout << N << "," << F << "," << HO << "," << WO << endl;
+        //cerr << N << "," << F << "," << HO << "," << WO << endl;
         MatrixN y=y2c.transpose();
         Eigen::Map<MatrixN>xx0(y.data(),HO*WO,N*F);
         MatrixN xxt=xx0.transpose();
         MatrixN xx(N,F*HO*WO);
-//        cout << endl << xxt << endl;
+//        cerr << endl << xxt << endl;
         for (int i=0; i<F; i++) {
             xx.block(0,HO*WO*i,N,HO*WO)=xxt.block(N*i,0,N,HO*WO);
         }
 
-//        cout << "col2im-in :" << endl << y2c << endl << endl;
-//        cout << "col2im-out:" << endl << xx << endl << endl;
+//        cerr << "col2im-in :" << endl << y2c << endl << endl;
+//        cerr << "col2im-out:" << endl << xx << endl << endl;
         return xx;
     }
 
@@ -826,18 +826,18 @@ public:
                 py=(p/HWO)%N;
                 px=ox%HWO+fhwo;
 /*                if (f>=iy.rows() || x>=iy.cols()) {
-                    cout << "iy:" << f << "," << x << endl;
+                    cerr << "iy:" << f << "," << x << endl;
                 }
                 if (py>=dy.rows() || px>=dy.cols()) {
-                    cout << "dy:" << py << "," << px << endl;
+                    cerr << "dy:" << py << "," << px << endl;
                 }
 */
                 iy(f,x)=dy(py,px);
             }
         }
-        cout << "icol2imx:" << shape(dy) << shape(iy) << endl;
-        cout << "icol2im-in :" << endl << dy << endl << endl;
-        cout << "icol2im-out:" << endl << iy << endl << endl;
+        cerr << "icol2imx:" << shape(dy) << shape(iy) << endl;
+        cerr << "icol2im-in :" << endl << dy << endl << endl;
+        cerr << "icol2im-out:" << endl << iy << endl << endl;
         return iy;
     }
 
@@ -851,11 +851,11 @@ public:
 
         for (int i=0; i<dy.size(); i++) {
 /*            if (py>=iy.rows() || px>=iy.cols()) {
-                cout << "Bad index " << i << ":" << py << "," << px << endl;
+                cerr << "Bad index " << i << ":" << py << "," << px << endl;
                 exit(-1);
             }
             if (sy>=dy.rows() || sx>=dy.cols()) {
-                cout <<  "Bad s-index " << i << ":" << sy << "," << sx << endl;
+                cerr <<  "Bad s-index " << i << ":" << sy << "," << sx << endl;
                 exit(-1);
             }
 */            iy(py,px)=dy(sy,sx);
@@ -875,9 +875,9 @@ public:
                 }
             }
         }
-/*        cout << "icol2im:" << shape(dy) << shape(iy) << endl;
-        cout << "icol2im-in :" << endl << dy << endl << endl;
-        cout << "icol2im-out:" << endl << iy << endl << endl;
+/*        cerr << "icol2im:" << shape(dy) << shape(iy) << endl;
+        cerr << "icol2im-in :" << endl << dy << endl << endl;
+        cerr << "icol2im-out:" << endl << iy << endl << endl;
 */
         return iy;
     }
@@ -892,22 +892,22 @@ public:
         int algo=0;
         Timer t;
         if (shape(x)[1]!=(unsigned int)C*W*H) {
-            cout << "ConvFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            cerr << "ConvFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
         }
 
         // x: N, C, H, W;  w: F, C, HH, WW
         if (mlverbose) t.startWall();
         im2col(x, px2c);
-        if (mlverbose) cout << "im2col:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) cerr << "im2col:"<<t.stopWallMicro()<<"µs"<<endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
         if (pcache!=nullptr) cppl_set(pcache, "x2c", px2c);
 
-/*        cout <<"x:"<<shape(x)<<endl;
-        cout <<"px2c:"<<shape(*px2c)<<endl;
-        cout << "W:"<<shape(*params["W"]) << endl;
-        cout << "b:"<<shape(*params["b"]) << endl;
+/*        cerr <<"x:"<<shape(x)<<endl;
+        cerr <<"px2c:"<<shape(*px2c)<<endl;
+        cerr << "W:"<<shape(*params["W"]) << endl;
+        cerr << "b:"<<shape(*params["b"]) << endl;
 */
         if (mlverbose) t.startWall();
         MatrixN y2c;
@@ -921,19 +921,19 @@ public:
         }
         if (mlverbose) {
             y2c=dummy(y2c);
-            cout << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
+            cerr << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
         }
         if (mlverbose) t.startWall();
         MatrixN y=col2im(y2c, N);
-        if (mlverbose) cout << "col2im:"<<t.stopWallMicro()<<"µs" << shape(y2c) << "->" << shape(y)<<endl;
-        // cout <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
+        if (mlverbose) cerr << "col2im:"<<t.stopWallMicro()<<"µs" << shape(y2c) << "->" << shape(y)<<endl;
+        // cerr <<"col2im y2c:"<<shape(y2c)<<"->y:"<<shape(y)<<endl;
         if (pcache==nullptr) delete px2c;
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         if (shape(dchain)[1]!=(unsigned int)F*HO*WO) {
-            cout << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
+            cerr << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
         int algo=0;
@@ -942,28 +942,28 @@ public:
         algo=1;
         #endif
         /*
-        cout << "dchain:" << shape(dchain) << endl;
-        cout << "W:" << shape(*params["W"]) << endl;
-        cout << "x:" << shape(*(*pcache)["x"]) << endl;
-        cout << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
-        cout << "WO:" << WO << "," << "HO:" << HO << endl;
+        cerr << "dchain:" << shape(dchain) << endl;
+        cerr << "W:" << shape(*params["W"]) << endl;
+        cerr << "x:" << shape(*(*pcache)["x"]) << endl;
+        cerr << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
+        cerr << "WO:" << WO << "," << "HO:" << HO << endl;
         */
         if (mlverbose) t.startWall();
         MatrixN dc2=icol2im(dchain,N);
-        if (mlverbose) cout << "icol2im:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) cerr << "icol2im:"<<t.stopWallMicro()<<"µs"<<endl;
 
         MatrixN dx;
         if (algo==0 || id>=numGpuThreads) {
             if (mlverbose) t.startWall();
             MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
-            if (mlverbose) cout << "bw-m1:"<<t.stopWallMicro()<<"µs"<<endl;
+            if (mlverbose) cerr << "bw-m1:"<<t.stopWallMicro()<<"µs"<<endl;
             if (mlverbose) t.startWall();
             dx=iim2col(dx2c.transpose(), N);
-            if (mlverbose) cout << "iim2col:"<<t.stopWallMicro()<<"µs"<<endl;
+            if (mlverbose) cerr << "iim2col:"<<t.stopWallMicro()<<"µs"<<endl;
             if (mlverbose) t.startWall();
             cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
             cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
-            if (mlverbose) cout << "bw-m2:"<<t.stopWallMicro()<<"µs"<<endl;
+            if (mlverbose) cerr << "bw-m2:"<<t.stopWallMicro()<<"µs"<<endl;
         } else {
             MatrixN dc2t;
             dc2t=dc2.transpose();
@@ -1013,7 +1013,7 @@ private:
         C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
         HH=stride; WW=stride;  // XXX: Simplification, our algo doesn't work for HH or WW != stride.
         if (HH!=stride || WW!=stride) {
-            cout << "Implementation only supports stride equal to HH and WW!";
+            cerr << "Implementation only supports stride equal to HH and WW!";
             retval=false;
         }
         // W: F, C, HH, WW
@@ -1043,7 +1043,7 @@ public:
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
         if (shape(x)[1]!=(unsigned int)C*W*H) {
-            cout << "PoolFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            cerr << "PoolFw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
         }
         MatrixN *pmask = new MatrixN(N, C*H*W);
@@ -1089,8 +1089,8 @@ public:
             }
         }
 
-        //cout << "x:" << endl << x << endl;
-        //cout << "mask:" << endl << *pmask << endl;
+        //cerr << "x:" << endl << x << endl;
+        //cerr << "mask:" << endl << *pmask << endl;
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x)); // XXX where do we need x?
         if (pcache!=nullptr) cppl_set(pcache, "mask", pmask);
@@ -1101,7 +1101,7 @@ public:
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         if (shape(dchain)[1]!=(unsigned int)C*HO*WO) {
-            cout << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;
+            cerr << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
         MatrixN dx(N,C*W*H);
@@ -1236,11 +1236,11 @@ public:
         int N=shape(x)[0];
         pbn->cp.setPar("train",cp.getPar("train",false));
         if (shape(x)[1]!=(unsigned int)C*W*H) {
-            cout << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
+            cerr << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
         }
         if (N>N0) {
-            cout << "SpatialBatchNorm Fw: batch_size at forward time" << N << " must be <= batch_size init value:" << N0 << endl;
+            cerr << "SpatialBatchNorm Fw: batch_size at forward time" << N << " must be <= batch_size init value:" << N0 << endl;
             return MatrixN(0,0);
         }
 
@@ -1263,7 +1263,7 @@ public:
         int N=shape(dchain)[0];
         pbn->cp.setPar("train",cp.getPar("train",false));
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
-            cout << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
+            cerr << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
 
@@ -1399,19 +1399,19 @@ public:
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
-            cout << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
-            cout << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
+            cerr << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
+            cerr << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
             if (y(i,0)>=probs.cols()) {
-                cout << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
+                cerr << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
                 return -10000.0;
             }
             floatN pi = probs(i,y(i,0));
-            if (pi==0.0) cout << "Invalid zero log-probability at " << i << endl;
+            if (pi==0.0) cerr << "Invalid zero log-probability at " << i << endl;
             else loss -= log(pi);
         }
         loss /= probs.rows();
@@ -1616,11 +1616,11 @@ public:
             if (pcache!=nullptr) cppl_set(pcache,"h",ph);
             else free(ph);
         } else {
-            if (pcache==nullptr) cout << "pcache must not be null in rnn_step_forward" <<endl;
+            if (pcache==nullptr) cerr << "pcache must not be null in rnn_step_forward" <<endl;
             ph=(*pcache)["h"];
             cppl_set(pcache,"ho",new MatrixN(*ph));
         }
-        //cout << shape(*ph) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
+        //cerr << shape(*ph) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
         MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
         *ph=hn;
         return hn;
@@ -1651,7 +1651,7 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
         if (x.cols() != D*T) {
-            cout << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
+            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
             MatrixN h(0,0);
             return h;
         }
@@ -1679,7 +1679,7 @@ public:
     }
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
         if (pcache->find("x") == pcache->end()) {
-            cout << "cache does not contain x -> fatal!" << endl;
+            cerr << "cache does not contain x -> fatal!" << endl;
         }
         MatrixN x(*(*pcache)["x"]);
         MatrixN h(*(*pcache)["h"]);
@@ -1803,7 +1803,7 @@ public:
     bool removeLayer(const string name) {
         auto fi=layerMap.find(name);
         if (fi == layerMap.end()) {
-            cout << "Cannot remove layer: " << name << ", a layer with this name does not exist in block " << layerName << endl;
+            cerr << "Cannot remove layer: " << name << ", a layer with this name does not exist in block " << layerName << endl;
             return false;
         }
         delete fi->second;
@@ -1812,18 +1812,18 @@ public:
     }
     bool addLayer(const string layerclass, const string name, CpParams& cp, const vector<string> inputLayers) {
         if (layerMap.find(name) != layerMap.end()) {
-            cout << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
+            cerr << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
         }
         if (_syncogniteLayerFactory.mapl.find(layerclass) == _syncogniteLayerFactory.mapl.end() and layerclass!="Input") {
-            cout << "Cannot add layer: " << layerclass << ", layer class is not defined." << endl;
+            cerr << "Cannot add layer: " << layerclass << ", layer class is not defined." << endl;
             return false;
         }
         string firstInput="";  // XXX multiple input layers!
         for (auto li : inputLayers) {
             if (li!="input") {
                 if (layerMap.find(li) == layerMap.end()) {
-                    cout << "Cannot add layer: " << name << ", it depends on an input layer " << li << ", which is not defined." << endl;
+                    cerr << "Cannot add layer: " << name << ", it depends on an input layer " << li << ", which is not defined." << endl;
                     return false;
                 } else {
                     if (firstInput=="") firstInput=li;
@@ -1836,14 +1836,14 @@ public:
         if (firstInput!="" && firstInput!="input") {
             auto lP=layerMap.find(firstInput);
             if (lP==layerMap.end()) {
-                cout << "Can't find input-layer: " << firstInput << " internal error in layer defintion of " << name << endl;
+                cerr << "Can't find input-layer: " << firstInput << " internal error in layer defintion of " << name << endl;
                 return false;
             }
             vector<int> inputShape, prevOutputShape;
             inputShape=cp.getPar("inputShape", vector<int>{});
             prevOutputShape=lP->second->getOutputShape();
             if (prevOutputShape.size()==0) {
-                cout << "Missing outputShape defintion for inputLayer " << firstInput << endl;
+                cerr << "Missing outputShape defintion for inputLayer " << firstInput << endl;
                 return false;
             }
             if (inputShape.size()<prevOutputShape.size()) {
@@ -1857,13 +1857,13 @@ public:
         layerMap[name]=CREATE_LAYER(layerclass, cp)   // Macro!
         Layer *pLayer = layerMap[name];
         if (pLayer->layerInit==false) {
-            cout << "Attempt to add layer " << name << " failed: Bad initialization." << endl;
+            cerr << "Attempt to add layer " << name << " failed: Bad initialization." << endl;
             removeLayer(name);
             return false;
         }
         if (pLayer->layerType==LayerType::LT_LOSS) {
             if (lossLayer!="") {
-                cout << "ERROR: a loss layer with name: " << lossLayer << "has already been defined, cannot add new loss layer: " << name << " to " << layerName << endl;
+                cerr << "ERROR: a loss layer with name: " << lossLayer << "has already been defined, cannot add new loss layer: " << name << " to " << layerName << endl;
                 removeLayer(name);
                 return false;
             }
@@ -1882,20 +1882,20 @@ public:
 
     bool checkTopology(bool verbose=false) {
         if (lossLayer=="") {
-            cout << "No loss layer defined!" << endl;
+            cerr << "No loss layer defined!" << endl;
             return false;
         }
         vector<string> lyr;
         lyr=getLayerFromInput("input");
         if (lyr.size()!=1) {
-            cout << "One (1) layer with name >input< needed, got: " << lyr.size() << endl;
+            cerr << "One (1) layer with name >input< needed, got: " << lyr.size() << endl;
         }
         bool done=false;
         vector<string> lst;
         while (!done) {
             string cl=lyr[0];
             for (auto li : lst) if (li==cl) {
-                cout << "recursion with layer: " << cl << endl;
+                cerr << "recursion with layer: " << cl << endl;
                 return false;
             }
             lst.push_back(cl);
@@ -1903,7 +1903,7 @@ public:
             else {
                 lyr=getLayerFromInput(cl);
                 if (lyr.size()!=1) {
-                    cout << "One (1) layer that uses " << cl << " as input needed, got: " << lyr.size() << endl;
+                    cerr << "One (1) layer that uses " << cl << " as input needed, got: " << lyr.size() << endl;
                     return false;
                 }
             }
@@ -1926,10 +1926,10 @@ public:
                     outputShapeFlat *= j;
                 }
 
-                cout << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
-                cout << " -> " << p->getOutputShape() << "[" << outputShapeFlat << "]" << endl;
+                cerr << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
+                cerr << " -> " << p->getOutputShape() << "[" << outputShapeFlat << "]" << endl;
 
-                if (p->layerInit==false) cout << "  " << name << ": bad initialization!" << endl;
+                if (p->layerInit==false) cerr << "  " << name << ": bad initialization!" << endl;
                 cLay=nLay[0];
                 if (p->layerType==LayerType::LT_LOSS) done=true;
             }
@@ -1959,7 +1959,7 @@ public:
         while (!done) {
             nLay=getLayerFromInput(cLay);
             if (nLay.size()!=1) {
-                cout << "Unexpected topology: "<< nLay.size() << " layer follow layer " << cLay << " 1 expected.";
+                cerr << "Unexpected topology: "<< nLay.size() << " layer follow layer " << cLay << " 1 expected.";
                 return x;
             }
             string name=nLay[0];
@@ -1969,7 +1969,7 @@ public:
             if (bench) t.startWall();
             if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
             else xn=p->forward(x0,y,&cache, id);
-            if (bench) cout << name << "-fw:\t" << t.stopWallMicro() << endl;
+            if (bench) cerr << name << "-fw:\t" << t.stopWallMicro() << endl;
             if (pcache!=nullptr) {
                 mlPush(name, &cache, pcache);
             } else {
@@ -1988,8 +1988,8 @@ public:
                             cont=true;
                         }
                     } else {
-                        cout << "[" << i;
-                        if (std::isnan(xn(i))) cout << "N"; else cout <<"I";
+                        cerr << "[" << i;
+                        if (std::isnan(xn(i))) cerr << "N"; else cerr <<"I";
                         fi=i;
                         cont=false;
                     }
@@ -1997,22 +1997,22 @@ public:
                     inferr=true;
                 } else {
                     if (fi==i-1) {
-                        cout << "]";
+                        cerr << "]";
                         cont=false;
                     } else if (oi==i-1) {
                         cont=false;
-                        cout << ".." << oi;
-                        if (std::isnan(xn(oi))) cout << "N"; else cout <<"I";
-                        cout << "]";
+                        cerr << ".." << oi;
+                        if (std::isnan(xn(oi))) cerr << "N"; else cerr <<"I";
+                        cerr << "]";
                     }
                 }
             }
             if (inferr) {
-                cout << endl << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
-                //cout << "x:" << x0 << endl;
-                cout << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
+                cerr << endl << "Internal error, layer " << name << " resulted in NaN/Inf values! ABORT." << endl;
+                //cerr << "x:" << x0 << endl;
+                cerr << "y=" << name << "(x):" << shape(x0) << "->" << shape(xn) << endl;
                 peekMat("x:", x0);
-                cout << "y=" << name << "(x):";
+                cerr << "y=" << name << "(x):";
                 peekMat("", xn);
                 exit(-1);
             }
@@ -2023,7 +2023,7 @@ public:
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         t_cppl cache;
         if (lossLayer=="") {
-            cout << "Invalid configuration, no loss layer defined!" << endl;
+            cerr << "Invalid configuration, no loss layer defined!" << endl;
             return 1000.0;
         }
         Layer* pl=layerMap[lossLayer];
@@ -2033,7 +2033,7 @@ public:
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
         if (lossLayer=="") {
-            cout << "Invalid configuration, no loss layer defined!" << endl;
+            cerr << "Invalid configuration, no loss layer defined!" << endl;
             return y;
         }
         bool done=false;
@@ -2051,7 +2051,7 @@ public:
             mlPop(cl,pcache,&cache);
             if (bench) t.startWall();
             dxn=pl->backward(dx0, &cache, &grads, id);
-            if (bench) cout << cl << "-bw:\t" << t.stopWallMicro() << endl;
+            if (bench) cerr << cl << "-bw:\t" << t.stopWallMicro() << endl;
             mlPush(cl,&grads,pgrads);
             vector<string> lyr=layerInputs[cl];
             if (lyr[0]=="input") {

@@ -24,7 +24,7 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     cp_cifar10_iter_info *info=(cp_cifar10_iter_info *)opdata;
 
     // Here you can do whatever with the name...
-    cout << name << " ";
+    cerr << name << " ";
 
     // you can use this call to select just the groups
     // H5G_LINK    0  Object is a symbolic link.
@@ -33,34 +33,34 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     // H5G_TYPE    3  Object is a named datatype.
     int obj_type = H5Gget_objtype_by_idx(loc_id, info->index);
     //if(obj_type == H5G_GROUP)
-	   //cout << "        is a group" << endl;
+	   //cerr << "        is a group" << endl;
     if (obj_type == H5G_DATASET) {
         H5::DataSet dataset = cp_cifar10_pfile->openDataSet(name);
         H5::DataSpace filespace = dataset.getSpace();
         int rank = filespace.getSimpleExtentNdims();
-        // cout << "rank: " << rank << endl;
+        // cerr << "rank: " << rank << endl;
         hsize_t dims[10];    // dataset dimensions
         rank = filespace.getSimpleExtentDims( dims );
-        cout << "dataset rank = " << rank << ", dimensions; ";
+        cerr << "dataset rank = " << rank << ", dimensions; ";
         for (int j=0; j<rank; j++) {
-            cout << (unsigned long)(dims[j]);
-            if (j<rank-1) cout << " x ";
+            cerr << (unsigned long)(dims[j]);
+            if (j<rank-1) cerr << " x ";
         }
         H5::DataSpace mspace1(rank, dims);
         auto dataClass = dataset.getTypeClass();
         switch (dataClass) {
             case H5T_FLOAT:
                 if (dataset.getFloatType().getSize()==4) {
-                    cout << " float" << endl;
+                    cerr << " float" << endl;
                 } else if (dataset.getFloatType().getSize()==8) {
-                    cout << " double" << endl;
+                    cerr << " double" << endl;
                 }
                 break;
             case H5T_INTEGER:
-                cout << " int" << endl;
+                cerr << " int" << endl;
                 break;
             default:
-                cout << "dataClass not implemented: " << dataClass << endl;
+                cerr << "dataClass not implemented: " << dataClass << endl;
                 break;
         }
 
@@ -97,7 +97,7 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
                                     (*(cpcifar10Data4[name]))(z,y,x,w)=(floatN)pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w];
                                     (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w)=(floatN)(pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w]) / 256.0 - 0.5;
 /*                                    while (doout>0) {
-                                        cout << "[" << pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w] << " -> " << (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w) << "]  " ;
+                                        cerr << "[" << pi4[z*dims[3]*dims[2]*dims[1] + y*dims[3]*dims[2]+x*dims[3] + w] << " -> " << (*(cpcifar10Data[name]))(z,y*dims[3]*dims[2]+x*dims[3]+w) << "]  " ;
                                         --doout;
                                     }
 */                                }
@@ -108,7 +108,7 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
                 }
                 break;
             default:
-                cout << "NOT YET IMPLEMENTED RANK: " << rank << endl;
+                cerr << "NOT YET IMPLEMENTED RANK: " << rank << endl;
                 exit(-1);
         }
     }
@@ -120,18 +120,18 @@ return 0;
 
 bool  getcifar10Data(string filepath) {
     if (cpcifar10Data.size() > 0) {
-        cout << "cpcifar10Data contains already elements, not reloading." << endl;
+        cerr << "cpcifar10Data contains already elements, not reloading." << endl;
         return true;
     }
     H5::H5File fmn((H5std_string)filepath, H5F_ACC_RDONLY);
     cp_cifar10_pfile=&fmn;
     int nr=fmn.getNumObjs();
-    //cout << nr << endl;
+    //cerr << nr << endl;
     cp_cifar10_iter_info info;
     info.index=0;
-    cout << "Reading: ";
+    cerr << "Reading: ";
     fmn.iterateElems("/", NULL, cp_cifar10_get_all_groups, &info);
-    cout << endl;
+    cerr << endl;
     return true;
 }
 
@@ -174,11 +174,11 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
     lb.addLayer("Affine","af3","{hidden=10}",{"do2"});
     lb.addLayer("Softmax","sm1","",{"af3"});
 
-    if (verbose) cout << "Checking LayerBlock topology..." << endl;
+    if (verbose) cerr << "Checking LayerBlock topology..." << endl;
     if (!lb.checkTopology(verbose)) {
-        if (verbose) cout << "Topology-check for LayerBlock: ERROR." << endl;
+        if (verbose) cerr << "Topology-check for LayerBlock: ERROR." << endl;
     } else {
-        if (verbose) cout << "Topology-check for LayerBLock: ok." << endl;
+        if (verbose) cerr << "Topology-check for LayerBLock: ok." << endl;
     }
 
     floatN cAcc=lb.train(X, y, Xv, yv, "Adam", cpo);
@@ -189,10 +189,10 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
         val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
         test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
 
-        cout << "Final results on CIFAR10 after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
-        cout << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
-        cout << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
-        cout << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
+        cerr << "Final results on CIFAR10 after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
+        cerr << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
+        cerr << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
+        cerr << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
     }
     return cAcc;
 }
@@ -200,15 +200,15 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
 std::vector<string> classes{"airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"};
 
 void checkPrint(MatrixN& X, MatrixN& y, int id) {
-    cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+    cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
     for (int i=0; i<3072; i++) {
-        if (i%32==0) cout<<endl;
-        if (i%(32*32)==0) cout<< "-------------" << endl;
+        if (i%32==0) cerr<<endl;
+        if (i%(32*32)==0) cerr<< "-------------" << endl;
         floatN p=X(id,i);
-        if (p<-0.25) cout << " ";
-        else if (p<0.0) cout << ".";
-        else if (p<0.25) cout << "o";
-        else cout << "#";
+        if (p<-0.25) cerr << " ";
+        else if (p<0.0) cerr << ".";
+        else if (p<0.25) cerr << "o";
+        else cerr << "#";
     }
 }
 
@@ -219,15 +219,15 @@ int main(int argc, char *argv[]) {
     Color::Modifier def(Color::FG_DEFAULT);
 
     if (argc!=2) {
-        cout << "cifar10test <path-cifar10.h5-file>" << endl;
+        cerr << "cifar10test <path-cifar10.h5-file>" << endl;
         exit(-1);
     }
     getcifar10Data(argv[1]);
     for (auto it : cpcifar10Data) {
-        cout << it.first << " " <<  shape(*it.second) << endl;
+        cerr << it.first << " " <<  shape(*it.second) << endl;
     }
     for (auto it : cpcifar10Data4) {
-        cout << it.first << " tensor-4" <<  endl;
+        cerr << it.first << " tensor-4" <<  endl;
     }
 
 
@@ -268,13 +268,13 @@ int main(int argc, char *argv[]) {
                     bReg=reg;
                     bLearn=learn;
                     cmAcc=cAcc;
-                    cout << green << "Best: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+                    cerr << green << "Best: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
                 } else {
-                    cout << red << "      Acc:" << cAcc << ", Reg:" << reg << ", Learn:" << learn << def << endl;
+                    cerr << red << "      Acc:" << cAcc << ", Reg:" << reg << ", Learn:" << learn << def << endl;
                 }
             }
         }
-        cout << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+        cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
         bLearn=1.e-3;
         bReg=1.e-6;
@@ -295,45 +295,45 @@ int main(int argc, char *argv[]) {
  }
 
  /*    int id=15;
-     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
      for (int i=0; i<3072; i++) {
-         if (i%32==0) cout<<endl;
-         if (i%(32*32)==0) cout<< "-------------" << endl;
+         if (i%32==0) cerr<<endl;
+         if (i%(32*32)==0) cerr<< "-------------" << endl;
          floatN p=X(id,i);
-         if (p<0.25) cout << " ";
-         else if (p<0.5) cout << ".";
-         else if (p<0.75) cout << "o";
-         else cout << "#";
+         if (p<0.25) cerr << " ";
+         else if (p<0.5) cerr << ".";
+         else if (p<0.75) cerr << "o";
+         else cerr << "#";
      }
-     cout << endl << "=====================================================" << endl;
+     cerr << endl << "=====================================================" << endl;
 
      id=20;
-     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
      for (int i=0; i<3072; i++) {
-         if (i%32==0) cout<<endl;
-         if (i%(32*32)==0) cout<< "-------------" << endl;
+         if (i%32==0) cerr<<endl;
+         if (i%(32*32)==0) cerr<< "-------------" << endl;
          floatN p=X(id,i);
-         if (p<0.25) cout << " ";
-         else if (p<0.5) cout << ".";
-         else if (p<0.75) cout << "o";
-         else cout << "#";
+         if (p<0.25) cerr << " ";
+         else if (p<0.5) cerr << ".";
+         else if (p<0.75) cerr << "o";
+         else cerr << "#";
      }
-     cout << endl << "=====================================================" << endl;
+     cerr << endl << "=====================================================" << endl;
 
      id=25;
-     cout << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
+     cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;
      for (int i=0; i<3072; i++) {
-         if (i%32==0) cout<<endl;
-         if (i%(32*32)==0) cout<< "-------------" << endl;
+         if (i%32==0) cerr<<endl;
+         if (i%(32*32)==0) cerr<< "-------------" << endl;
          floatN p=X(id,i);
-         if (p<0.25) cout << " ";
-         else if (p<0.5) cout << ".";
-         else if (p<0.75) cout << "o";
-         else cout << "#";
+         if (p<0.25) cerr << " ";
+         else if (p<0.5) cerr << ".";
+         else if (p<0.75) cerr << "o";
+         else cerr << "#";
      }
-     cout << endl << "=====================================================" << endl;
+     cerr << endl << "=====================================================" << endl;
      for (int i=0; i<3072; i++) {
-      cout << X(id,i) << ", ";
+      cerr << X(id,i) << ", ";
      }
-     cout << endl;
+     cerr << endl;
 */

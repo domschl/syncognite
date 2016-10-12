@@ -86,7 +86,7 @@ public:
         MatrixN dv=((*(*pocache)[cname]).array().sqrt() + ep).matrix();
         for (int i=0; i<dv.size(); i++) {
             if (dv(i)>0.0) dv(i)=1.0/dv(i);
-            else cout<<"BAD ALGO!" << endl;
+            else cerr<<"BAD ALGO!" << endl;
         }
         x = x - (lr * dx.array() * dv.array()).matrix();
         return x;
@@ -146,14 +146,14 @@ Optimizer *optimizerFactory(string name, const CpParams& cp) {
     if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(cp);
     if (name=="RmsProp") return (Optimizer *)new RmsProp(cp);
     if (name=="Adam") return (Optimizer *)new Adam(cp);
-    cout << "optimizerFactory called for unknown optimizer " << name << "." << endl;
+    cerr << "optimizerFactory called for unknown optimizer " << name << "." << endl;
     return nullptr;
 }
 /*
 Timer t1;
 double dfus, dbus;
 bool timeit=true;
-// cout << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
+// cerr << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
 if (timeit) {
     t1.startCpu();
 }
@@ -165,7 +165,7 @@ if (timeit) {
     dbus=t1.stopCpuMicro()/(double)dy;
 }
 if (timeit) {
-    cout << "forward pass: " << dfus << "µs, backward pass: " << dbus << "µs." << endl;
+    cerr << "forward pass: " << dfus << "µs, backward pass: " << dbus << "µs." << endl;
     timeit=false;
 }
 
@@ -175,22 +175,22 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     t_cppl cache;
     t_cppl grads;
     //Timer t,tw;
-    //cout << "Context start: " << id << endl;
+    //cerr << "Context start: " << id << endl;
     //t.startCpu();
     //tw.startWall();
     //auto start = std::chrono::steady_clock::now();
     forward(xb, yb, &cache, id);
-    //cout << "fw" << id << endl;
+    //cerr << "fw" << id << endl;
     *ploss=loss(yb, &cache);
     backward(yb, &cache, &grads, id);
-    //cout << "bw" << id << endl;
+    //cerr << "bw" << id << endl;
     cppl_delete(&cache);
     //auto f=t.stopCpuMicro()/1000.0;
     //auto fw=tw.stopWallMicro()/1000.0;
     //auto end = std::chrono::steady_clock::now();
     //auto diff = end - start;
-    //cout << "Thread: " << id << ", cpu-time: " << f << "ms, wall-time: " << fw << "ms, chrono-duration: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << endl;
-    //cout << "Context end: " << id << endl;
+    //cerr << "Thread: " << id << ", cpu-time: " << f << "ms, wall-time: " << fw << "ms, chrono-duration: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << endl;
+    //cerr << "Context end: " << id << endl;
     return grads;
 }
 
@@ -203,7 +203,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     floatN lastAcc;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
-    Color::Modifier gray(Color::FG_LIGHT_GRAY);
+    Color::Modifier gray(Color::FG_LIGHT_BLUE);
     Color::Modifier def(Color::FG_DEFAULT);
 
     float epf=popti->cp.getPar("epochs", (float)1.0); //Default only!
@@ -214,7 +214,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
-    //cout << ep << " " << bs << " " << lr << endl;
+    //cerr << ep << " " << bs << " " << lr << endl;
 
     std::ofstream logfile;
     logfile.open("log.txt");
@@ -234,15 +234,15 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     popti->cp.setPar("learning_rate", lr); // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=(x.rows()+bs-1) / bs;
-    cout << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
-    cout << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
+    cerr << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+    cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
     bool fracend=false;
     for (int e=0; e<ep && !fracend; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) {
-            cout << "Epoch: " << green << e+1 << def << "\r"; // << " learning-rate:" << lr << "\r";
-            std::flush(cout);
+            cerr << "Epoch: " << green << e+1 << def << "\r"; // << " learning-rate:" << lr << "\r";
+            std::flush(cerr);
         }
         tw.startWall();
         int th=0;
@@ -257,9 +257,9 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             if (y0+bs > x.rows()) dy=x.rows()-y0;
             else dy=bs;
             if (y0+dy>x.rows() || dy<=0) {
-                cout << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
+                cerr << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
             }
-            //cout << "[" << y0 << "," << y0+dy-1 << "] ";
+            //cerr << "[" << y0 << "," << y0+dy-1 << "] ";
 
             MatrixN xb(dy,x.cols());
             MatrixN yb(dy,y.cols());
@@ -272,7 +272,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     for (int j=0; j<y.cols(); j++) {
                         yb(in,j) = y(shfl[i],j);
                     }
-/*                    if (shfl[i]>=ack.size()) cout << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
+/*                    if (shfl[i]>=ack.size()) cerr << "UUHH trying to learn non-existant shuffle data-point no: " << shfl[i] << endl;
                     else {
                         ack[shfl[i]]++;
                     }
@@ -282,7 +282,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 xb=x.block(y0,0,dy,x.cols());
                 yb=y.block(y0,0,dy,y.cols());
             /*    for (unsigned int i=y0; i<(unsigned int)(y0+dy); i++) {
-                    if (i>=ack.size()) cout << "UUHH trying to learn non-existant data-point no: " << i << endl;
+                    if (i>=ack.size()) cerr << "UUHH trying to learn non-existant data-point no: " << i << endl;
                     else {
                         ack[i]++;
                     }
@@ -294,7 +294,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
-                //cout << "gradFut size on get-loop: " << gradsFut.size() << endl;
+                //cerr << "gradFut size on get-loop: " << gradsFut.size() << endl;
                 for (auto &it : gradsFut) {
                     --th;
                     t_cppl grd = it.get();
@@ -331,17 +331,17 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     else meanloss=((dv1-1.0)*meanloss+l)/dv1;
                     if (m2loss==0) m2loss=l;
                     else m2loss=((dv2-1.0)*m2loss+l)/dv2;
-                    cout << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << ", " << m2loss << def << "\r";
-                    std::flush(cout);
+                    cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << ", " << m2loss << def << "\r";
+                    std::flush(cerr);
                     logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss << "\t" << m2loss << endl;
                     std::flush(logfile);
                     bold=b;
                 }
-                //cout << "UD" << endl;
+                //cerr << "UD" << endl;
                 if ((float)e+(floatN)b/(floatN)chunks > epf) fracend=true;
             }
         }
-        //cout << "ED" << endl;
+        //cerr << "ED" << endl;
 
         //floatN errtra=test(x,y);
         Timer tt;
@@ -350,7 +350,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
         lastAcc=accval;
-        if (verbose) cout << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
+        if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
         logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << "          " << endl;
@@ -362,7 +362,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         }
 /*        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {
-                cout << "Datapoint: " << i << " should be active once, was active: " << ack[i] << endl;
+                cerr << "Datapoint: " << i << " should be active once, was active: " << ack[i] << endl;
             }
         }
 */    }

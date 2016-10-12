@@ -4,24 +4,24 @@
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
 
-using std::cout; using std::endl;
+using std::cerr; using std::endl;
 using std::setprecision; using std::setw; using std::fixed;
 
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
-        cout << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
+        cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
         return false;
     }
     MatrixN d = m0 - m1;
     floatN dif = d.cwiseProduct(d).sum();
     if (dif < eps) {
-        cout << msg << " err=" << dif << endl;
+        cerr << msg << " err=" << dif << endl;
         return true;
     } else {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-        cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
-        cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
-        cout << "err=" << dif << endl;
+        cerr << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
+        cerr << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
+        cerr << "err=" << dif << endl;
         return false;
     }
 }
@@ -45,8 +45,8 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 
     while (sname.size() < 12) sname += " ";
 
-    cout.precision(3);
-    cout << fixed;
+    cerr.precision(3);
+    cerr << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
     for (int rep=0; rep<reps; rep++) {
@@ -65,7 +65,7 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
             ya=player->forward(x,y,&cache,0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
-        // cout << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
+        // cerr << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
         if (tcus<tf) tf=tcus;
 
 /*        if (name=="BatchNorm") {
@@ -88,9 +88,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 
     tfx= tf / (double)N;
     tbx= tb / (double)N;
-    //cout << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
-    cout << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
-    cout << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
+    //cerr << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
+    cerr << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
+    cerr << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
 
     return true;
 }
@@ -108,7 +108,7 @@ int doBench() {
     //Eigen::setNbThreads(0);
     for (int mrep=0; mrep<4; mrep++) {
     /*    if (mrep > 0) {
-            cout << "Eigen thread count: " << mrep << endl;
+            cerr << "Eigen thread count: " << mrep << endl;
             Eigen::setNbThreads(mrep);
         }
 */        for (auto it : _syncogniteLayerFactory.mapl) {
@@ -118,9 +118,9 @@ int doBench() {
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             CpParams cp;
 
-/*            if (te==2) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
-            else if (te==1) cout << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
-            else cout  << nr << ".: " << it.first << " N=" << N << endl;
+/*            if (te==2) cerr << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
+            else if (te==1) cerr << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
+            else cerr  << nr << ".: " << it.first << " N=" << N << endl;
 */
             std::vector<int> inputShape(te);
             for (auto i=0; i< inputShape.size(); i++) inputShape[i]=M;
@@ -170,17 +170,17 @@ int doBench() {
             Layer *l = CREATE_LAYER(it.first, cp)
             if (reps==0) {
                 //reps=10; // warm-up for first measurement
-                //cout << "Warmup..." << endl;
+                //cerr << "Warmup..." << endl;
                 reps=1;
             }
             else reps=1;
             if (!benchLayer(it.first, l, N, MI, reps)) {
-                cout << "Error" << endl;
+                cerr << "Error" << endl;
                 allOk=false;
             }
             delete l;
         }
-        cout << endl;
+        cerr << endl;
     }
     return allOk;
 }
@@ -195,10 +195,10 @@ void cudaBench() {
     Timer t1;
     t1.startWall();
     c0=a*b;
-    cout << "Eigen: " << t1.stopWallMicro() << endl << endl;
+    cerr << "Eigen: " << t1.stopWallMicro() << endl << endl;
     t1.startWall();
     c1=matmul(&a,&b,1,true);
-    cout << "Cuda : " << t1.stopWallMicro() << endl << endl;
+    cerr << "Cuda : " << t1.stopWallMicro() << endl << endl;
     matComp(c0,c1,"cuda-divergence",0.01);
 }
 #endif
@@ -215,9 +215,9 @@ void colmagic() {
     MatrixN m(rws,HO * WO * F * N / rws);
     m.setZero();
     for (int i=0; i<m.size(); i++) m(i%rws,i/rws)=i;
-    cout << "OLD:" << endl;
+    cerr << "OLD:" << endl;
     cv.col2imx(m,N);
-    cout << "NEW:" << endl;
+    cerr << "NEW:" << endl;
     cv.col2im(m,N);
 }
 
@@ -231,12 +231,12 @@ void icolmagic() {
     MatrixN m(N,HO * WO * F);
     m.setZero();
     for (int i=0; i<m.size(); i++) m(i)=i;
-    cout << "OLD:" << endl;
+    cerr << "OLD:" << endl;
     MatrixN x1=cv.icol2imx(m,N);
-    cout << "NEW:" << endl;
+    cerr << "NEW:" << endl;
     MatrixN x2=cv.icol2im(m,N);
     if (matComp(x1,x2)) {
-        cout << "seems good" << endl;
+        cerr << "seems good" << endl;
     }
 }
 int main() {
@@ -249,7 +249,7 @@ int main() {
 
     #ifdef USE_CUDA
     if (cpGetNumGpuThreads()>0){
-        cout << "Cuda tests:" << endl;
+        cerr << "Cuda tests:" << endl;
         cudaBench();
     }
     #endif

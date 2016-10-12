@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-using std::cout; using std::vector; using std::endl;
+using std::cerr; using std::vector; using std::endl;
 
 enum class MathErr {BAD_DIM, BAD_VAL};
 
@@ -22,7 +22,7 @@ std::ostream & operator<<(std::ostream & os, vector<T> v) {
 template <typename T>
 vector<T> operator+(vector<T> a, vector<T> b) {
     if (a.size()!=b.size()) {
-        cout << "Dimensions not compatible vector sum (" << a.size() << ")+("
+        cerr << "Dimensions not compatible vector sum (" << a.size() << ")+("
              << b.size() << ")" << endl;
         throw MathErr::BAD_DIM;
     }
@@ -35,7 +35,7 @@ vector<T> operator+(vector<T> a, vector<T> b) {
 template <typename T>
 vector<T> operator-(vector<T> a, vector<T> b) {
     if (a.size()!=b.size()) {
-        cout << "Dimensions not compatible vector diff (" << a.size() << ")+("
+        cerr << "Dimensions not compatible vector diff (" << a.size() << ")+("
              << b.size() << ")" << endl;
         throw MathErr::BAD_DIM;
     }
@@ -48,7 +48,7 @@ vector<T> operator-(vector<T> a, vector<T> b) {
 template <typename T>
 vector<T> operator*(vector<T> a, vector<T> b) {
     if (a.size()!=b.size()) {
-        cout << "Dimensions not compatible vector direct product (" << a.size() << ")+("
+        cerr << "Dimensions not compatible vector direct product (" << a.size() << ")+("
              << b.size() << ")" << endl;
         throw MathErr::BAD_DIM;
     }
@@ -61,7 +61,7 @@ vector<T> operator*(vector<T> a, vector<T> b) {
 template <typename T>
 T operator%(vector<T> a, vector<T> b) {
     if (a.size()!=b.size()) {
-        cout << "Dimensions not compatible dot product (" << a.size() << ")+("
+        cerr << "Dimensions not compatible dot product (" << a.size() << ")+("
              << b.size() << ")" << endl;
         throw MathErr::BAD_DIM;
     }

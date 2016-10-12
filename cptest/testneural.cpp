@@ -3,24 +3,24 @@
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
 
-using std::cout; using std::endl;
+using std::cerr; using std::endl;
 
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
-        cout << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
+        cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
         return false;
     }
     MatrixN d = m0 - m1;
     floatN dif = d.cwiseProduct(d).sum();
     if (dif < eps) {
-        cout << msg << " err=" << dif << endl;
+        cerr << msg << " err=" << dif << endl;
         return true;
     } else {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-        cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
-        cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
-        cout << msg << "  ∂:" << endl << (m0-m1).format(CleanFmt) << endl;
-        cout << "err=" << dif << endl;
+        cerr << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
+        cerr << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
+        cerr << msg << "  ∂:" << endl << (m0-m1).format(CleanFmt) << endl;
+        cerr << "err=" << dif << endl;
         return false;
     }
 }
@@ -176,16 +176,16 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
-    cout << "Mean:" << mean << endl;
+    cerr << "Mean:" << mean << endl;
     MatrixN xme = xn0.rowwise() - RowVectorN(mean.row(0));
     MatrixN xmsq = ((xme.array() * xme.array()).colwise().sum()/xn0.rows()).array().sqrt();
-    cout << "StdDev:" << xmsq << endl;
+    cerr << "StdDev:" << xmsq << endl;
 
     if (!matComp(xn,xn0,"BatchNormForward",eps)) {
-        cout << "BatchNorm forward failed" << endl;
+        cerr << "BatchNorm forward failed" << endl;
         allOk=false;
     }  else {
-        cout << "  BatchNorm forward ok." << endl;
+        cerr << "  BatchNorm forward ok." << endl;
     }
 
     MatrixN runmean(1,3);
@@ -193,16 +193,16 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN runvar(1,3);
     runvar << 0.170594  ,  0.09975786,  0.08590872;
     if (!matComp(*(cache["running_mean"]),runmean)) {
-        cout << "BatchNorm running-mean failed" << endl;
+        cerr << "BatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
-        cout << "  BatchNorm running mean ok." << endl;
+        cerr << "  BatchNorm running mean ok." << endl;
     }
     if (!matComp(*(cache["running_var"]),runvar)) {
-        cout << "BatchNorm running-var failed" << endl;
+        cerr << "BatchNorm running-var failed" << endl;
         allOk=false;
     } else {
-        cout << "  BatchNorm running var ok." << endl;
+        cerr << "  BatchNorm running var ok." << endl;
     }
     cppl_delete(&cache);
 
@@ -226,16 +226,16 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2);
     MatrixN mean2=xn20.colwise().mean();
-    cout << "Mean:" << mean2 << endl;
+    cerr << "Mean:" << mean2 << endl;
     MatrixN xme2 = xn20.rowwise() - RowVectorN(mean2.row(0));
     MatrixN xmsq2 = ((xme2.array() * xme2.array()).colwise().sum()/xn20.rows()).array().sqrt();
-    cout << "StdDev:" << xmsq2 << endl;
+    cerr << "StdDev:" << xmsq2 << endl;
 
     if (!matComp(xn2,xn20,"BatchNormForward",eps)) {
-        cout << "BatchNorm with beta/gamma forward failed" << endl;
+        cerr << "BatchNorm with beta/gamma forward failed" << endl;
         allOk=false;
     }  else {
-        cout << "  BatchNorm beta/gamma forward ok." << endl;
+        cerr << "  BatchNorm beta/gamma forward ok." << endl;
     }
 
     MatrixN runmean2(1,3);
@@ -243,16 +243,16 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN runvar2(1,3);
     runvar2 << 0.170594  ,  0.09975786,  0.08590872;
     if (!matComp(*(cache2["running_mean"]),runmean2)) {
-        cout << "BatchNorm running-mean2 failed" << endl;
+        cerr << "BatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
-        cout << "  BatchNorm running mean2 ok." << endl;
+        cerr << "  BatchNorm running mean2 ok." << endl;
     }
     if (!matComp(*(cache2["running_var"]),runvar2)) {
-        cout << "BatchNorm running-var2 failed" << endl;
+        cerr << "BatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {
-        cout << "  BatchNorm running var2 ok." << endl;
+        cerr << "  BatchNorm running var2 ok." << endl;
     }
     cppl_delete(&cache2);
 
@@ -266,21 +266,21 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         xt.setRandom();
         bn3.forward(xt,&cache3);
     }
-    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
-    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
-    cout << "switching test" << endl;
+    cerr << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
+    cerr << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
+    cerr << "switching test" << endl;
     bn3.cp.setPar("train", false);
-    if (bn3.cp.getPar("train", true)) cout << "INTERNAL ERROR: parSet boolean failed!" << endl;
+    if (bn3.cp.getPar("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
     xt.setRandom();
     MatrixN xn30=bn3.forward(xt, &cache3);
     MatrixN mean3=xn30.colwise().mean();
-    cout << "  Mean:" << mean3 << endl;
+    cerr << "  Mean:" << mean3 << endl;
     if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
-    cout << "  StdDev:" << xmsq3 << endl;
+    cerr << "  StdDev:" << xmsq3 << endl;
     if (!matComp(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
         allOk=0;
     }
@@ -356,28 +356,28 @@ bool checkDropout(float eps=3.0e-2) {
     floatN ym=y.mean();
     floatN ytm=yt.mean();
 
-    cout << "Dropout: x-mean:" << xm << endl;
-    cout << "  y-mean:" << ym << endl;
-    cout << "  yt-mean:" << ytm << endl;
-    cout << "  drop:" << dop << endl;
-    cout << "  offs:" << dl << endl;
+    cerr << "Dropout: x-mean:" << xm << endl;
+    cerr << "  y-mean:" << ym << endl;
+    cerr << "  yt-mean:" << ytm << endl;
+    cerr << "  drop:" << dop << endl;
+    cerr << "  offs:" << dl << endl;
 
     floatN err1=std::abs(ytm-ym);
     if (err1 > eps) {
         allOk=false;
-        cout << "Dropout: difference between test-mean:" << ytm << " and train-mean:" << ym << " too high:" << err1 << endl;
+        cerr << "Dropout: difference between test-mean:" << ytm << " and train-mean:" << ym << " too high:" << err1 << endl;
     }
     floatN err2=std::abs(xm-dl);
     if (err2 > eps) {
         allOk=false;
-        cout << "Dropout: difference between x-mean and random-offset too high:"  << err2 << endl;
+        cerr << "Dropout: difference between x-mean and random-offset too high:"  << err2 << endl;
     }
     floatN err3=std::abs(dl*dop-ym);
     if (err3 > eps) {
         allOk=false;
-        cout << "Dropout: difference between y-mean*offset and droprate too high"  << err3 << endl;
+        cerr << "Dropout: difference between y-mean*offset and droprate too high"  << err3 << endl;
     }
-    if (allOk) cout << "Dropout: statistics tests ok, err1:" << err1 << " err2:" << err2 << " err3:" << err3 << endl;
+    if (allOk) cerr << "Dropout: statistics tests ok, err1:" << err1 << " err2:" << err2 << " err3:" << err3 << endl;
     return allOk;
 }
 
@@ -1780,16 +1780,16 @@ bool checkSpatialBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn0=sbn.forward(x, &cache);
     MatrixN mean=xn0.colwise().mean();
-    cout << "Mean:" << mean << endl;
+    cerr << "Mean:" << mean << endl;
     MatrixN xme = xn0.rowwise() - RowVectorN(mean.row(0));
     MatrixN xmsq = ((xme.array() * xme.array()).colwise().sum()/xn0.rows()).array().sqrt();
-    cout << "StdDev:" << xmsq << endl;
+    cerr << "StdDev:" << xmsq << endl;
 
     if (!matComp(xn,xn0,"SpatialBatchNormForward",eps)) {
-        cout << "SpatialBatchNorm forward failed" << endl;
+        cerr << "SpatialBatchNorm forward failed" << endl;
         allOk=false;
     }  else {
-        cout << "  SpatialBatchNorm forward ok." << endl;
+        cerr << "  SpatialBatchNorm forward ok." << endl;
     }
 
     MatrixN runmean(1,3);
@@ -1797,16 +1797,16 @@ bool checkSpatialBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN runvar(1,3);
     runvar << ;
     if (!matComp(*(cache["running_mean"]),runmean)) {
-        cout << "SpatialBatchNorm running-mean failed" << endl;
+        cerr << "SpatialBatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
-        cout << "  SpatialBatchNorm running mean ok." << endl;
+        cerr << "  SpatialBatchNorm running mean ok." << endl;
     }
     if (!matComp(*(cache["running_var"]),runvar)) {
-        cout << "SpatialBatchNorm running-var failed" << endl;
+        cerr << "SpatialBatchNorm running-var failed" << endl;
         allOk=false;
     } else {
-        cout << "  SpatialBatchNorm running var ok." << endl;
+        cerr << "  SpatialBatchNorm running var ok." << endl;
     }
     cppl_delete(&cache);
 
@@ -1821,16 +1821,16 @@ bool checkSpatialBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn20=sbn2.forward(x, &cache2);
     MatrixN mean2=xn20.colwise().mean();
-    cout << "Mean:" << mean2 << endl;
+    cerr << "Mean:" << mean2 << endl;
     MatrixN xme2 = xn20.rowwise() - RowVectorN(mean2.row(0));
     MatrixN xmsq2 = ((xme2.array() * xme2.array()).colwise().sum()/xn20.rows()).array().sqrt();
-    cout << "StdDev:" << xmsq2 << endl;
+    cerr << "StdDev:" << xmsq2 << endl;
 
     if (!matComp(xn2,xn20,"SpatialBatchNormForward",eps)) {
-        cout << "SpatialBatchNorm with beta/gamma forward failed" << endl;
+        cerr << "SpatialBatchNorm with beta/gamma forward failed" << endl;
         allOk=false;
     }  else {
-        cout << "  SpatialBatchNorm beta/gamma forward ok." << endl;
+        cerr << "  SpatialBatchNorm beta/gamma forward ok." << endl;
     }
 
     MatrixN runmean2(1,3);
@@ -1838,16 +1838,16 @@ bool checkSpatialBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN runvar2(1,3);
     runvar2 << ;
     if (!matComp(*(cache2["running_mean"]),runmean2)) {
-        cout << "SpatialBatchNorm running-mean2 failed" << endl;
+        cerr << "SpatialBatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
-        cout << "  SpatialBatchNorm running mean2 ok." << endl;
+        cerr << "  SpatialBatchNorm running mean2 ok." << endl;
     }
     if (!matComp(*(cache2["running_var"]),runvar2)) {
-        cout << "SpatialBatchNorm running-var2 failed" << endl;
+        cerr << "SpatialBatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {
-        cout << "  SpatialBatchNorm running var2 ok." << endl;
+        cerr << "  SpatialBatchNorm running var2 ok." << endl;
     }
     cppl_delete(&cache2);
 
@@ -1861,21 +1861,21 @@ bool checkSpatialBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         xt.setRandom();
         sbn3.forward(xt,&cache3);
     }
-    cout << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
-    cout << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
-    cout << "switching test" << endl;
+    cerr << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
+    cerr << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
+    cerr << "switching test" << endl;
     sbn3.cp.setPar("train", false);
-    if (sbn3.cp.getPar("train", true)) cout << "INTERNAL ERROR: parSet boolean failed!" << endl;
+    if (sbn3.cp.getPar("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
     xt.setRandom();
     MatrixN xn30=sbn3.forward(xt, &cache3);
     MatrixN mean3=xn30.colwise().mean();
-    cout << "  Mean:" << mean3 << endl;
+    cerr << "  Mean:" << mean3 << endl;
     if (!matComp(*(bn3.params["beta"]), mean3, "SpatialBatchnorm train/test sequence: mean", 0.1)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
-    cout << "  StdDev:" << xmsq3 << endl;
+    cerr << "  StdDev:" << xmsq3 << endl;
     if (!matComp(*(bn3.params["gamma"]), xmsq3, "SpatialBatchnorm train/test sequence: stdderi", 0.1)) {
         allOk=0;
     }
@@ -2029,10 +2029,10 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
-        cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        cerr << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
     } else {
-        cout << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+        cerr << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
     //MatrixN dchain=x;
     //dchain.setOnes();
@@ -2104,10 +2104,10 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
-        cout << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        cerr << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
     } else {
-        cout << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+        cerr << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
     MatrixN dx0=sv.backward(y, &cache, &grads);
     ret=matComp(dx,dx0,"Softmax dx",eps);
@@ -2185,18 +2185,18 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
-        cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
+        cerr << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
     } else {
-        cout << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
+        cerr << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
     MatrixN dx0=tln.backward(yc,&cache,&grads);
 
-    cout << "Got grads: ";
+    cerr << "Got grads: ";
     for (auto gi : grads) {
-        cout << gi.first << " ";
+        cerr << gi.first << " ";
     }
-    cout << endl;
+    cerr << endl;
     ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
     if (!ret) allOk=false;
     ret=matComp(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps);
@@ -2530,8 +2530,8 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     t_cppl grads;
     MatrixN y=rnn.forward(x, &cache);
-    // for (auto ci : cache) cout << ci.first << shape(*(ci.second))<< " ";
-    //cout << endl;
+    // for (auto ci : cache) cerr << ci.first << shape(*(ci.second))<< " ";
+    //cerr << endl;
     MatrixN dx0=rnn.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);
@@ -2547,9 +2547,9 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
     cppl_delete(&cache);
     //for (auto ci : cache) {
-    //    cout << ci.first << " ";
+    //    cerr << ci.first << " ";
     //}
-    //cout << endl;
+    //cerr << endl;
     cppl_delete(&grads);
     return allOk;
 }
@@ -2557,20 +2557,20 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
 bool registerTest() {
     bool allOk=true;
-    cout << "Registered Layers:" << endl;
+    cerr << "Registered Layers:" << endl;
     int nr=1;
     for (auto it : _syncogniteLayerFactory.mapl) {
-        cout << nr << ".: " << it.first << " ";
+        cerr << nr << ".: " << it.first << " ";
         t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
         CpParams cp;
         cp.setPar("inputShape",std::vector<int>(te));
         Layer *l = CREATE_LAYER(it.first, cp)
         if (l->layerType == LT_NORMAL) {
-            cout << "normal layer" << endl;
+            cerr << "normal layer" << endl;
         } else if (l->layerType==LT_LOSS) {
-            cout << "loss-layer (final)" << endl;
+            cerr << "loss-layer (final)" << endl;
         } else {
-            cout << "unspecified layer -- ERROR!" << endl;
+            cerr << "unspecified layer -- ERROR!" << endl;
             allOk=false;
         }
         delete l;
@@ -2581,7 +2581,7 @@ bool registerTest() {
 
 int tFunc(floatN x, int c) {
     int y=(int)(((sin(x/5.0)+1.0)/2.0)*(floatN)c);
-    //cout << x << ":" << y << " " << endl;
+    //cerr << x << ":" << y << " " << endl;
     return y;
 }
 
@@ -2619,18 +2619,18 @@ bool trainTest() {
     val_err=tln.test(Xv, yv);
     test_err=tln.test(Xt, yt);
 
-    cout << "Train-test, train-err=" << train_err << endl;
-    cout << "       validation-err=" << val_err << endl;
-    cout << "       final test-err=" << val_err << endl;
+    cerr << "Train-test, train-err=" << train_err << endl;
+    cerr << "       validation-err=" << val_err << endl;
+    cerr << "       final test-err=" << val_err << endl;
     if (test_err>0.2 || val_err>0.2 || train_err>0.2) allOk=false;
     return allOk;
 }
 
 int doTests() {
     MatrixN yz=MatrixN(0,0);
-    cout << "=== 0.: Init: registering layers" << endl;
+    cerr << "=== 0.: Init: registering layers" << endl;
     registerLayers();
-    cout << "=== 1.: Numerical gradient tests" << endl;
+    cerr << "=== 1.: Numerical gradient tests" << endl;
     bool allOk=true;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
@@ -2729,7 +2729,7 @@ int doTests() {
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     if (!tl.selfTest(xtl,y2, h, eps)) {
         allOk=false;
-        cout << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
+        cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
 
     // Softmax
@@ -2764,16 +2764,16 @@ int doTests() {
 
     //LayerBlock1
     LayerBlock lb("{name='testblock'}");
-    cout << "LayerName for lb: " << lb.layerName << endl;
+    cerr << "LayerName for lb: " << lb.layerName << endl;
     lb.addLayer("Affine","af1","{inputShape=[10]}",{"input"});
     lb.addLayer("Relu","rl1","",{"af1"});
     lb.addLayer("Affine","af2","{hidden=10}",{"rl1"});
     lb.addLayer("Softmax","sm1","",{"af2"});
     if (!lb.checkTopology(true)) {
         allOk=false;
-        cout << red << "Topology-check for LayerBlock: ERROR." << def << endl;
+        cerr << red << "Topology-check for LayerBlock: ERROR." << def << endl;
     } else {
-        cout << green << "Topology-check for LayerBlock: ok." << def << endl;
+        cerr << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
     MatrixN xml(5,10);
     xml.setRandom();
@@ -2784,159 +2784,159 @@ int doTests() {
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     if (!lb.selfTest(xml,yml, h, eps)) {
         allOk=false;
-        cout << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
+        cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
 
-    cout << "=== 2.: Test-data tests" << endl;
+    cerr << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
-        cout << green << "AffineForward (Affine) with test data: OK." << def << endl;
+        cerr << green << "AffineForward (Affine) with test data: OK." << def << endl;
     } else {
-        cout << red << "AffineForward (Affine) with test data: ERROR." << def << endl;
+        cerr << red << "AffineForward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkAffineBackward()) {
-        cout << green << "AffineBackward (Affine) with test data: OK." << def << endl;
+        cerr << green << "AffineBackward (Affine) with test data: OK." << def << endl;
     } else {
-        cout << red << "AffineBackward (Affine) with test data: ERROR." << def << endl;
+        cerr << red << "AffineBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkReluForward()) {
-        cout << green << "ReluForward with test data: OK." << def << endl;
+        cerr << green << "ReluForward with test data: OK." << def << endl;
     } else {
-        cout << red << "ReluForward with test data: ERROR." << def << endl;
+        cerr << red << "ReluForward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkReluBackward()) {
-        cout << green << "ReluBackward (Affine) with test data: OK." << def << endl;
+        cerr << green << "ReluBackward (Affine) with test data: OK." << def << endl;
     } else {
-        cout << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
+        cerr << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkBatchNormForward()) {
-        cout << green << "BatchNormForward with test data: OK." << def << endl;
+        cerr << green << "BatchNormForward with test data: OK." << def << endl;
     } else {
-        cout << red << "BatchNormForward with test data: ERROR." << def << endl;
+        cerr << red << "BatchNormForward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkBatchNormBackward()) {
-        cout << green << "BatchNormBackward with test data: OK." << def << endl;
+        cerr << green << "BatchNormBackward with test data: OK." << def << endl;
     } else {
-        cout << red << "BatchNormBackward with test data: ERROR." << def << endl;
+        cerr << red << "BatchNormBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkDropout()) {
-        cout << green << "Dropout with test data: OK." << def << endl;
+        cerr << green << "Dropout with test data: OK." << def << endl;
     } else {
-        cout << red << "Dropout with test data: ERROR." << def << endl;
+        cerr << red << "Dropout with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkConvolutionForward()) {
-        cout << green << "ConvolutionForward (Convolution) with test data: OK." << def << endl;
+        cerr << green << "ConvolutionForward (Convolution) with test data: OK." << def << endl;
     } else {
-        cout << red << "ConvolutionForward (Convolution) with test data: ERROR." << def << endl;
+        cerr << red << "ConvolutionForward (Convolution) with test data: ERROR." << def << endl;
         allOk=false;
         exit(-1);
     }
     if (checkConvolutionBackward()) {
-        cout << green << "ConvolutionBackward (Convolution) with test data: OK." << def << endl;
+        cerr << green << "ConvolutionBackward (Convolution) with test data: OK." << def << endl;
     } else {
-        cout << red << "ConvolutionBackward (Convolution) with test data: ERROR." << def << endl;
+        cerr << red << "ConvolutionBackward (Convolution) with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkPoolingForward()) {
-        cout << green << "PoolingForward with test data: OK." << def << endl;
+        cerr << green << "PoolingForward with test data: OK." << def << endl;
     } else {
-        cout << red << "PoolingForward with test data: ERROR." << def << endl;
+        cerr << red << "PoolingForward with test data: ERROR." << def << endl;
         allOk=false;
         exit(-1);
     }
     if (checkPoolingBackward()) {
-        cout << green << "PoolingBackward with test data: OK." << def << endl;
+        cerr << green << "PoolingBackward with test data: OK." << def << endl;
     } else {
-        cout << red << "PoolingBackward with test data: ERROR." << def << endl;
+        cerr << red << "PoolingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkAffineRelu()) {
-        cout << green << "AffineRelu with test data: OK." << def << endl;
+        cerr << green << "AffineRelu with test data: OK." << def << endl;
     } else {
-        cout << red << "AffineRelu with test data: ERROR." << def << endl;
+        cerr << red << "AffineRelu with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkSoftmax()) {
-        cout << green << "Softmax with test data: OK." << def << endl;
+        cerr << green << "Softmax with test data: OK." << def << endl;
     } else {
-        cout << red << "Softmax with test data: ERROR." << def << endl;
+        cerr << red << "Softmax with test data: ERROR." << def << endl;
         allOk=false;
     }
     if (checkSvm()) {
-        cout << green << "Svm with test data: OK." << def << endl;
+        cerr << green << "Svm with test data: OK." << def << endl;
     } else {
-        cout << red << "Svm with test data: ERROR." << def << endl;
+        cerr << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkTwoLayer()) {
-        cout << green << "TwoLayerNet with test data: OK." << def << endl;
+        cerr << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {
-        cout << red << "TwoLayerNet with test data: ERROR." << def << endl;
+        cerr << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (checkRNNStepForward()) {
-        cout << green << "RNNForwardStep with test data: OK." << def << endl;
+        cerr << green << "RNNForwardStep with test data: OK." << def << endl;
     } else {
-        cout << red << "RNNForwardStep with test data: ERROR." << def << endl;
+        cerr << red << "RNNForwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
     if (checkRNNStepBackward()) {
-        cout << green << "RNNBackwardStep with test data: OK." << def << endl;
+        cerr << green << "RNNBackwardStep with test data: OK." << def << endl;
     } else {
-        cout << red << "RNNBackwardStep with test data: ERROR." << def << endl;
+        cerr << red << "RNNBackwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
     if (checkRNNForward()) {
-        cout << green << "RNNForward with test data: OK." << def << endl;
+        cerr << green << "RNNForward with test data: OK." << def << endl;
     } else {
-        cout << red << "RNNForward with test data: ERROR." << def << endl;
+        cerr << red << "RNNForward with test data: ERROR." << def << endl;
         allOk=false;
     }
     if (checkRNNBackward()) {
-        cout << green << "RNNBackward with test data: OK." << def << endl;
+        cerr << green << "RNNBackward with test data: OK." << def << endl;
     } else {
-        cout << red << "RNNBackward with test data: ERROR." << def << endl;
+        cerr << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 
     if (trainTest()) {
-        cout << green << "TrainTest: OK." << def << endl;
+        cerr << green << "TrainTest: OK." << def << endl;
     } else {
-        cout << red << "TrainTest: ERROR." << def << endl;
+        cerr << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
 
 
     if (registerTest()) {
-        cout << green << "RegisterTest: OK." << def << endl;
+        cerr << green << "RegisterTest: OK." << def << endl;
     } else {
-        cout << red << "RegisterTest: ERROR." << def << endl;
+        cerr << red << "RegisterTest: ERROR." << def << endl;
         allOk=false;
     }
 
     if (allOk) {
-        cout << green << "All tests ok." << def << endl;
+        cerr << green << "All tests ok." << def << endl;
     } else {
-        cout << red << "Tests failed." << def << endl;
+        cerr << red << "Tests failed." << def << endl;
     }
 
     return 0;

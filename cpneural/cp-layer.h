@@ -18,7 +18,7 @@
 #include "cp-timer.h"
 
 using Eigen::IOFormat;
-using std::cout; using std::endl;
+using std::endl; using std::cerr;
 using std::vector; using std::string; using std::map;
 
 //#define USE_DOUBLE
@@ -112,34 +112,34 @@ vector<unsigned int> shape(const MatrixN& m) {
 
 bool matCompare(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
-        cout << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
+        cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
         return false;
     }
     MatrixN d = m0 - m1;
     floatN dif = d.cwiseProduct(d).sum();
     if (dif < eps) {
-        if (msg!="") cout << msg << " err=" << dif << endl;
+        if (msg!="") cerr << msg << " err=" << dif << endl;
         return true;
     } else {
         if (msg!="") {
             //IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
-            //cout << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
-            //cout << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
-            cout << "err=" << dif << endl;
+            //cerr << msg << " m0:" << endl << m0.format(CleanFmt) << endl;
+            //cerr << msg << " m1:" << endl << m1.format(CleanFmt) << endl;
+            cerr << "err=" << dif << endl;
         }
         return false;
     }
 }
 
 void peekMat(const string label, const MatrixN& m) {
-    cout << label << " ";
-    if (m.size()<10) cout << m << endl;
+    cerr << label << " ";
+    if (m.size()<10) cerr << m << endl;
     else {
         for (int j=0; j<m.size(); j++) {
-            if (j<4 || m.size()-j < 4) cout << m(j) << " ";
-            else if (j==4) cout << " ... ";
+            if (j<4 || m.size()-j < 4) cerr << m(j) << " ";
+            else if (j==4) cerr << " ... ";
         }
-        cout << endl;
+        cerr << endl;
     }
 }
 #ifdef USE_CUDA
@@ -156,9 +156,9 @@ long maxCuScratch=0;
 void checkScratch(long n, bool verbose=false) {
     if (n > maxCuScratch) {
         maxCuScratch=n;
-        if (verbose) cout << "maxCuScratch:" << maxCuScratch << endl;
+        if (verbose) cerr << "maxCuScratch:" << maxCuScratch << endl;
         if (maxCuScratch > CUDA_SCRATCH_SIZE) {
-            cout << "Internal error, CUDA_SCRATCH_SIZE exceeded: " << maxCuScratch << " > " << CUDA_SCRATCH_SIZE << endl;
+            cerr << "Internal error, CUDA_SCRATCH_SIZE exceeded: " << maxCuScratch << " > " << CUDA_SCRATCH_SIZE << endl;
             exit(-1);
         }
     }
@@ -179,7 +179,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     if (a->rows() + a->cols() + b->cols()<CUDA_THRESHOLD) {
         if (verbose) t.startWall();
         MatrixN y= *a * (*b);
-        if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+        if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
         return y;
     } else {
 
@@ -190,12 +190,12 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
         if (verbose) t.startWall();
         MatrixN c(a->rows(), b->cols());
         float *ca, *cb, *cc;
-        //cout << shape(*a) << " x " << shape(*b) << endl;
+        //cerr << shape(*a) << " x " << shape(*b) << endl;
         //t.startWall();
 /*        cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
         cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
         cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
-*/      //  cout << "  cAlloc:" << t.stopWallMicro() << endl;
+*/      //  cerr << "  cAlloc:" << t.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
         checkScratch(a->rows() * (a->cols()) * sizeof(float), verbose);
@@ -205,60 +205,60 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
         cudaError_t cudaStat;
         cudaStat=cudaMemcpy(cuScratch1[contextId],a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
         if (cudaStat != cudaSuccess) {
-            cout << "cudaMemcpy1 failed: " << cudaStat << endl;
+            cerr << "cudaMemcpy1 failed: " << cudaStat << endl;
             exit(-1);
         }
         int sz=b->rows()*(b->cols())*sizeof(float);
         cudaStat=cudaMemcpy(cuScratch2[contextId],b->data(),sz,cudaMemcpyHostToDevice);
         if (cudaStat != cudaSuccess) {
-            cout << "cudaMemcpy2 failed:" << cudaStat << "Size: " << sz << endl;
+            cerr << "cudaMemcpy2 failed:" << cudaStat << "Size: " << sz << endl;
             switch (cudaStat) {
                 case cudaErrorInvalidValue:
-                    cout << "InvVal";
+                    cerr << "InvVal";
                     break;
                 case cudaErrorInvalidPitchValue:
-                    cout << "InvPitch";
+                    cerr << "InvPitch";
                     break;
                 case cudaErrorInvalidDevicePointer:
-                    cout << "InvDevPtr";
+                    cerr << "InvDevPtr";
                     break;
                 case cudaErrorInvalidMemcpyDirection:
-                    cout << "InvDir";
+                    cerr << "InvDir";
                     break;
                 default:
-                    cout << "Undocumented error";
+                    cerr << "Undocumented error";
                     break;
             }
-            cout << endl;
+            cerr << endl;
             exit(-1);
         }
-        if (verbose) cout << "  cMemcpy:" << t1.stopWallMicro() << endl;
+        if (verbose) cerr << "  cMemcpy:" << t1.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
         if (cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
                     cuScratch1[contextId], a->rows(), cuScratch2[contextId], b->rows(), &beta,
                     cuScratch3[contextId], c.rows()) != CUBLAS_STATUS_SUCCESS) {
-            cout << "cublasSgemm failed!" << endl;
+            cerr << "cublasSgemm failed!" << endl;
             exit(-1);
 
         }
-        if (verbose) cout << "  cMathML:" << t1.stopWallMicro() << endl;
+        if (verbose) cerr << "  cMathML:" << t1.stopWallMicro() << endl;
 
         if (verbose) t1.startWall();
         cudaStat=cudaMemcpy(c.data(),cuScratch3[contextId],a->rows()*b->cols()*sizeof(float),cudaMemcpyDeviceToHost);
         if (cudaStat != cudaSuccess) {
-            cout << "cudaMemcpy3 failed:" << cudaStat << endl;
+            cerr << "cudaMemcpy3 failed:" << cudaStat << endl;
             exit(-1);
         }
-        if (verbose) cout << "  cMemcp2:" << t1.stopWallMicro() << endl;
+        if (verbose) cerr << "  cMemcp2:" << t1.stopWallMicro() << endl;
 
         //t.startWall();
 /*        cudaFree(ca);
         cudaFree(cb);
         cudaFree(cc);
-*/       // cout << "  cFree:" << t.stopWallMicro() << endl;
+*/       // cerr << "  cFree:" << t.stopWallMicro() << endl;
 
-        if (verbose) cout << "Cuda matmul " << shape(*a) << shape(*b) << ": " << t.stopWallMicro() << endl;
+        if (verbose) cerr << "Cuda matmul " << shape(*a) << shape(*b) << ": " << t.stopWallMicro() << endl;
         #else
         #error "USE_DOUBLE not supported with USE_CUDA"
         #endif
@@ -271,7 +271,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     if (a->rows()+a->cols()+b->cols() < VIENNACL_THRESHOLD) {
         t.startWall();
         MatrixN y= *a* (*b);
-        if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+        if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
         return y;
     } else {
         viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(contextId)));
@@ -287,7 +287,7 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
     #else
     t.startWall();
     MatrixN y= *a* (*b);
-    if (verbose) cout << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+    if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
     return y;
     #endif
     #endif
@@ -307,20 +307,20 @@ bool threadContextInit(unsigned int numThreads) {
     viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
     std::vector<viennacl::ocl::device> const & devices = pf.devices();
     int nrDevs = pf.devices().size();
-    cout << nrDevs << " devices found." << endl;
+    cerr << nrDevs << " devices found." << endl;
     for (unsigned int i=0; i<numThreads; i++) {
         viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
-        cout << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
+        cerr << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
     }
     // Set context to 0 for main program, 1-numThreads for threads
     //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
-    //cout << "Contexts created, got context 0 for main program." << endl;
+    //cerr << "Contexts created, got context 0 for main program." << endl;
     #else
     #ifdef USE_CUDA
     cuHandles=(cublasContext **)malloc(sizeof(cublasHandle_t) * cpNumGpuThreads);
     for (int i=0; i<cpNumGpuThreads; i++) {
         cublasCreate(&(cuHandles[i]));
-        cout << "Context " << i << " on: cublas" << endl;
+        cerr << "Context " << i << " on: cublas" << endl;
         //cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
         //cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
         //cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
@@ -329,15 +329,15 @@ bool threadContextInit(unsigned int numThreads) {
         // cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
         // cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocDefault);
         if (cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cout << "cudaMallocHost failed!" << endl;
+            cerr << "cudaMallocHost failed!" << endl;
             exit(-1);
         }
         if (cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cout << "cudaMallocHost failed!" << endl;
+            cerr << "cudaMallocHost failed!" << endl;
             exit(-1);
         }
         if (cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cout << "cudaMallocHost failed!" << endl;
+            cerr << "cudaMallocHost failed!" << endl;
             exit(-1);
         }
     }
@@ -387,7 +387,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
         cp.setString(conf);
         cfile.close();
     } else {
-        cout << "New configureation, '" << conffile << "' not found." << endl;
+        cerr << "New configureation, '" << conffile << "' not found." << endl;
     }
     // omp_set_num_threads(n)
     // Eigen::setNbThreads(n);
@@ -450,10 +450,10 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
         c2file << line << endl;
         c2file.close();
     }
-    cout << "Compile-time options: " << options << endl;
-    cout << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
-    cout << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
-    cout << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
+    cerr << "Compile-time options: " << options << endl;
+    cerr << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
+    cerr << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
+    cerr << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
     return true;
 }
 
@@ -499,7 +499,7 @@ void cppl_delete(t_cppl *p) {
 void cppl_set(t_cppl *p, string key, MatrixN *val) {
     auto it=p->find(key);
     if (it != p->end()) {
-        cout << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
+        cerr << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
         delete it->second;
     }
     (*p)[key]=val;
@@ -531,7 +531,7 @@ public:
     void registerInstanceCreator(std::string name, Layer*(sub)(const CpParams&), t_layer_props_entry lprops ) {
         auto it=mapl.find(name);
         if (it!=mapl.end()) {
-            cout << "Layer " << name << " is already registered, preventing additional registration." << endl;
+            cerr << "Layer " << name << " is already registered, preventing additional registration." << endl;
         } else {
             mapl[name] = sub;
             mapprops[name] = lprops;
@@ -571,14 +571,14 @@ public:
         for (auto it : params) {
             string key = it.first;
             if (pgrads->find(key)==pgrads->end()) {
-                cout << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
-                cout << "Grads-vars: ";
-                for (auto gi : *pgrads) cout << gi.first << " ";
-                cout << endl;
-                cout << "Params-vars: ";
-                for (auto pi : params) cout << pi.first << " ";
-                cout << endl;
-                cout << "Irrecoverable internal error, ABORT";
+                cerr << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
+                cerr << "Grads-vars: ";
+                for (auto gi : *pgrads) cerr << gi.first << " ";
+                cerr << endl;
+                cerr << "Params-vars: ";
+                for (auto pi : params) cerr << pi.first << " ";
+                cerr << endl;
+                cerr << "Irrecoverable internal error, ABORT";
                 exit(-1);
             } else {
                 *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
@@ -603,7 +603,7 @@ public:
             yb=y.block(x0,0,dl,y.cols());
             MatrixN yt=forward(xb, yb, nullptr, 0);
             if (yt.rows() != yb.rows()) {
-                cout << "test: incompatible row count!" << endl;
+                cerr << "test: incompatible row count!" << endl;
                 return -1000.0;
             }
             for (int i=0; i<yt.rows(); i++) {
@@ -616,7 +616,7 @@ public:
                     }
                 }
                 if (ji==(-1)) {
-                    cout << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                    cerr << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
                     return -1000.0;
                 }
                 if (ji==yb(i,0)) ++co;

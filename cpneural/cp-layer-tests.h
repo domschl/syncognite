@@ -37,11 +37,11 @@ bool Layer::checkForward(const MatrixN& x, const MatrixN& y, floatN eps=CP_DEFAU
     MatrixN d = yic - yt;
     floatN dif = d.cwiseProduct(d).sum();
 
-    if (dif < eps) {cout << "Forward vectorizer OK, err=" << dif << endl;}
+    if (dif < eps) {cerr << "Forward vectorizer OK, err=" << dif << endl;}
     else {
-        cout << "Forward vectorizer Error, err=" << dif << endl;
-        cout << "yic:" << yic.format(CleanFmt) << endl;
-        cout << "yt:" << yt.format(CleanFmt) << endl;
+        cerr << "Forward vectorizer Error, err=" << dif << endl;
+        cerr << "yic:" << yic.format(CleanFmt) << endl;
+        cerr << "yt:" << yt.format(CleanFmt) << endl;
         allOk=false;
     }
     return allOk;
@@ -62,17 +62,17 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         forward(x, y, &cache, 0);
         dyc=y;
     } else {
-        cout << "BAD LAYER TYPE!" << layerType << endl;
+        cerr << "BAD LAYER TYPE!" << layerType << endl;
         return false;
     }
     if (dyc.rows() != x.rows()) {
-        cout << "internal error: y:" << shape(dyc) << " x:" << shape(x) << " - unequal number of rows!" << endl;
+        cerr << "internal error: y:" << shape(dyc) << " x:" << shape(x) << " - unequal number of rows!" << endl;
         return false;
     }
     MatrixN dx = x;
     dx.setZero();
 
-    if (cache.find("x")==cache.end()) cout << "WARNING: x is not in cache!" << endl;
+    if (cache.find("x")==cache.end()) cerr << "WARNING: x is not in cache!" << endl;
 
     MatrixN dxc = backward(dyc, &cache, &grads, 0);
 
@@ -108,11 +108,11 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
-    if (dif < eps) {cout << "Backward vectorizer dx OK, err=" << dif << endl;}
+    if (dif < eps) {cerr << "Backward vectorizer dx OK, err=" << dif << endl;}
     else {
-        cout << "Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
-        cout << "dxc:" << endl << dxc.format(CleanFmt) << endl;
-        cout << "Backward vectorizer dx Error, err=" << dif << endl;
+        cerr << "Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
+        cerr << "dxc:" << endl << dxc.format(CleanFmt) << endl;
+        cerr << "Backward vectorizer dx Error, err=" << dif << endl;
         allOk=false;
     }
 
@@ -120,11 +120,11 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         MatrixN d = *grads[it.first] - *rgrads[it.first];
         floatN dif = d.cwiseProduct(d).sum();
         if (dif < eps) {
-            cout << "Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
+            cerr << "Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
         } else {
-            cout << "d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
-            cout << "d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
-            cout << "Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
+            cerr << "d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
+            cerr << "d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
+            cerr << "Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
             allOk=false;
         }
     }
@@ -135,7 +135,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
 }
 
 MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
-    cout << "  checking numerical gradient for " << var << "..." << endl;
+    cerr << "  checking numerical gradient for " << var << "..." << endl;
     MatrixN *pm;
     MatrixN x;
     if (pcache->find("x")==pcache->end()) { // XXX that is quite a mess!
@@ -184,7 +184,7 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, string var, 
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad(pm->rows(), pm->cols());
-    //cout << var << "/dx-shape:" << shape(grad) << endl;
+    //cerr << var << "/dx-shape:" << shape(grad) << endl;
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
@@ -265,13 +265,13 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         MatrixN d = *(grads[it.first]) - *(numGrads[it.first]);
         floatN df = (d.cwiseProduct(d)).sum();
         if (df < eps) {
-            cout << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
+            cerr << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
         } else {
-            cout << "eps:" << eps << " h:" << h << endl;
-            cout << "∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
-            cout << "∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
-            cout << "  ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
-            cout << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
+            cerr << "eps:" << eps << " h:" << h << endl;
+            cerr << "∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
+            cerr << "∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
+            cerr << "  ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
+            cerr << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
             allOk=false;
         }
     }
@@ -290,42 +290,42 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     Color::Modifier def(Color::FG_DEFAULT);
 
     if (!cp.getPar("noVectorizationTests", false)) {
-        cout << "  check forward vectorizer " << layerName << "..." << endl;
+        cerr << "  check forward vectorizer " << layerName << "..." << endl;
         ret=checkForward(x, y, eps);
         if (!ret) {
-            cout << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
+            cerr << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
             return ret;
         } else {
-            cout << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
+            cerr << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
         }
 
-        cout << "  check backward vectorizer " << layerName << "..." << endl;
+        cerr << "  check backward vectorizer " << layerName << "..." << endl;
         t_cppl cache;
         ret=checkBackward(x, y, &cache, eps);
         cppl_delete(&cache);
         if (!ret) {
-            cout << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
+            cerr << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
             allOk=false; //return ret;
         } else {
-            cout << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
+            cerr << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
         }
     }
 
-    cout << "  check numerical gradients " << layerName << "..." << endl;
+    cerr << "  check numerical gradients " << layerName << "..." << endl;
     t_cppl cache2;
     ret=checkGradients(x, y, dchain, &cache2, h, eps, lossFkt);
     cppl_delete(&cache2);
     if (!ret) {
-        cout << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
+        cerr << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
     } else {
-        cout << layerName << ": " << green << "Gradient numerical test OK!" << def << endl;
+        cerr << layerName << ": " << green << "Gradient numerical test OK!" << def << endl;
     }
 
     if (allOk) {
-        cout << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
+        cerr << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
     } else {
-        cout << layerName << ": " << red << "checkLayer: tests ended with error!" << def << endl;
+        cerr << layerName << ": " << red << "checkLayer: tests ended with error!" << def << endl;
     }
     return allOk;
 }
@@ -334,7 +334,7 @@ bool Layer::selfTest(const MatrixN& x, const MatrixN& y, floatN h=CP_DEFAULT_NUM
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
-    cout << "SelfTest for: " << layerName << " -----------------" << endl;
+    cerr << "SelfTest for: " << layerName << " -----------------" << endl;
     MatrixN yf = forward(x, &cache, 0);
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;

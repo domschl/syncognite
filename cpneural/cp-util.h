@@ -9,7 +9,7 @@
 #include <map>
 #include <sstream>
 
-using std::string; using std::map; using std::vector; using std::cout; using std::endl;
+using std::string; using std::map; using std::vector; using std::cerr; using std::endl;
 
 namespace Color {
     enum Code {
@@ -155,7 +155,7 @@ public:
                             try {
                                 vf.push_back((T)stod(af));
                             } catch (...) {
-                                cout << "EXCEPTION in CpParams 3" << endl;
+                                cerr << "EXCEPTION in CpParams 3" << endl;
                             }
                         }
                         setPar(p1,vf);
@@ -165,7 +165,7 @@ public:
                             try {
                                 vi.push_back(stoi(ai));
                             } catch (...) {
-                                cout << "EXCEPTION in CpParams 4" << endl;
+                                cerr << "EXCEPTION in CpParams 4" << endl;
                             }
                         }
                         setPar(p1,vi);
@@ -182,13 +182,13 @@ public:
                     try {
                         setPar(p1,stof(p2));
                     } catch (...) {
-                        cout << "EXCEPTION in CpParams 1" << endl;
+                        cerr << "EXCEPTION in CpParams 1" << endl;
                     }
                 } else { //assume int
                     try {
                         setPar(p1,stoi(p2));
                     } catch (...) {
-                        cout << "EXCEPTION in CpParams 2" << endl;
+                        cerr << "EXCEPTION in CpParams 2" << endl;
                     }
                 }
             }

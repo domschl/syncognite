@@ -20,7 +20,7 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     cp_mnist_iter_info *info=(cp_mnist_iter_info *)opdata;
 
     // Here you can do whatever with the name...
-    cout << name << " ";
+    cerr << name << " ";
 
     // you can use this call to select just the groups
     // H5G_LINK    0  Object is a symbolic link.
@@ -29,9 +29,9 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     // H5G_TYPE    3  Object is a named datatype.
     int obj_type = H5Gget_objtype_by_idx(loc_id, info->index);
     //if(obj_type == H5G_GROUP)
-	   //cout << "        is a group" << endl;
+	   //cerr << "        is a group" << endl;
     if (obj_type == H5G_DATASET) {
-        // cout << " is a dataset" << endl;
+        // cerr << " is a dataset" << endl;
         H5::DataSet dataset = cp_Mnist_pfile->openDataSet(name);
         /*
          * Get filespace for rank and dimension
@@ -41,18 +41,18 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
          * Get number of dimensions in the file dataspace
          */
         int rank = filespace.getSimpleExtentNdims();
-        // cout << "rank: " << rank << endl;
+        // cerr << "rank: " << rank << endl;
         /*
          * Get and print the dimension sizes of the file dataspace
          */
         hsize_t dims[2];    // dataset dimensions
         rank = filespace.getSimpleExtentDims( dims );
-        // cout << "dataset rank = " << rank << ", dimensions; ";
+        // cerr << "dataset rank = " << rank << ", dimensions; ";
         // for (int j=0; j<rank; j++) {
-        //    cout << (unsigned long)(dims[j]);
-        //    if (j<rank-1) cout << " x ";
+        //    cerr << (unsigned long)(dims[j]);
+        //    if (j<rank-1) cerr << " x ";
         //}
-        //cout << endl;
+        //cerr << endl;
         if (rank==1) dims[1]=1;
         cpMnistData[name] = new MatrixN(dims[0],dims[1]);
         MatrixN *pM = cpMnistData[name];
@@ -116,29 +116,29 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
 
 bool  getMnistData(string filepath) {
     if (cpMnistData.size() > 0) {
-        cout << "cpMnistData contains already elements, not reloading." << endl;
+        cerr << "cpMnistData contains already elements, not reloading." << endl;
         return true;
     }
     H5::H5File fmn((H5std_string)filepath, H5F_ACC_RDONLY);
     cp_Mnist_pfile=&fmn;
     int nr=fmn.getNumObjs();
-    //cout << nr << endl;
+    //cerr << nr << endl;
     cp_mnist_iter_info info;
     info.index=0;
-    cout << "Reading: ";
+    cerr << "Reading: ";
     fmn.iterateElems("/", NULL, cp_mnist_get_all_groups, &info);
-    cout << endl;
+    cerr << endl;
     return true;
 }
 
  int main(int argc, char *argv[]) {
      if (argc!=2) {
-         cout << "mnisttest <path-mnist.h5-file>" << endl;
+         cerr << "mnisttest <path-mnist.h5-file>" << endl;
          exit(-1);
      }
      getMnistData(argv[1]);
      for (auto it : cpMnistData) {
-         cout << it.first << " " << shape(*(it.second)) << endl;
+         cerr << it.first << " " << shape(*(it.second)) << endl;
      }
 
      cpInitCompute("Mnist");
@@ -185,12 +185,12 @@ bool  getMnistData(string filepath) {
      lb.addLayer("Softmax","sm1","",{"af3"});
 
      bool verbose=true;
-     if (verbose) cout << "Checking multi-layer topology..." << endl;
+     if (verbose) cerr << "Checking multi-layer topology..." << endl;
      if (!lb.checkTopology(verbose)) {
-         cout << "Topology-check for MultiLayer: ERROR." << endl;
+         cerr << "Topology-check for MultiLayer: ERROR." << endl;
          exit(-1);
      } else {
-         if (verbose) cout << "Topology-check for MultiLayer: ok." << endl;
+         if (verbose) cerr << "Topology-check for MultiLayer: ok." << endl;
      }
 
      CpParams cpo("{verbose=true;lr_decay=0.95;epsilon=1e-8}");
@@ -206,10 +206,10 @@ bool  getMnistData(string filepath) {
      val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
      test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
 
-     cout << "Final results on MNIST after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
-     cout << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
-     cout << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
-     cout << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
+     cerr << "Final results on MNIST after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
+     cerr << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
+     cerr << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
+     cerr << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
 
      for (auto it : cpMnistData) {
           free(it.second);
@@ -222,16 +222,16 @@ bool  getMnistData(string filepath) {
  /*
  vector<int> ins{0,4,16,25,108, 256,777};
  for (auto in : ins) {
-     cout << "-------------------------" << endl;
-     cout << "Index: " << in << endl;
+     cerr << "-------------------------" << endl;
+     cerr << "Index: " << in << endl;
      for (int cy=0; cy<28; cy++) {
          for (int cx=0; cx<28; cx++) {
              floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
-             if (pt<0.5) cout << " ";
-             else cout << "*";
+             if (pt<0.5) cerr << " ";
+             else cerr << "*";
          }
-         cout << endl;
+         cerr << endl;
      }
-     cout << (*cpMnistData["t_test"])(in,0) << endl;
+     cerr << (*cpMnistData["t_test"])(in,0) << endl;
  }
  */
