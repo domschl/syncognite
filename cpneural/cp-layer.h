@@ -1,25 +1,7 @@
 #ifndef _CP_LAYER_H
 #define _CP_LAYER_H
 
-#include <iostream>
-#include <fstream>
-#include <cctype>
-#include <string>
-#include <algorithm>
-#include <sstream>
-#include <vector>
-#include <thread>
-#include <map>
-//#include <mutex>
-#include <Eigen/Dense>
-
-#include "cp-math.h"
-#include "cp-util.h"
-#include "cp-timer.h"
-
-using Eigen::IOFormat;
-using std::endl; using std::cerr;
-using std::vector; using std::string; using std::map;
+#include "cp-neural.h"
 
 //#define USE_DOUBLE
 #ifndef USE_DOUBLE

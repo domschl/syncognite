@@ -1,13 +1,7 @@
 #ifndef _CP_LAYER_TESTS_H
 #define _CP_LAYER_TESTS_H
 
-#include <iostream>
-#include <string>
-#include <vector>
-
-#include "cp-layer.h"
-#include "cp-math.h"
-#include "cp-util.h"
+#include "cp-neural.h"
 
 bool Layer::checkForward(const MatrixN& x, const MatrixN& y, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;

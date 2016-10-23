@@ -1,16 +1,7 @@
 #ifndef _CP_OPTIM_H
 #define _CP_OPTIM_H
 
-#include <future>
-#include <list>
-#include <set>
-#include <chrono>
-#include <iomanip>
-#include "cp-layer.h"
-#include "cp-timer.h"
-#include "cp-layers.h"
-#include "cp-util.h"
-
+#include "cp-neural.h"
 
 class Sdg : public Optimizer {
     floatN lr;

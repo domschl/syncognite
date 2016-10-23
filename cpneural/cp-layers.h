@@ -1,10 +1,7 @@
 #ifndef _CP_LAYERS_H
 #define _CP_LAYERS_H
 
-#include "cp-math.h"
-#include "cp-layer.h"
-#include "cp-timer.h"
-#include <time.h>
+#include "cp-neural.h"
 
 class Nonlinearities {
 public:
