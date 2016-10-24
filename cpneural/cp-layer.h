@@ -504,6 +504,33 @@ void cppl_remove(t_cppl *p, string key) {
     }
 }
 
+void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
+    if (dst!=nullptr) {
+        for (auto pi : *src) {
+            cppl_set(dst, prefix+"-"+pi.first, pi.second);
+        }
+    } else {
+        cppl_delete(src);
+    }
+}
+
+void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci : *src) {
+        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
+    }
+}
+
+// XXX: dubious:
+void mlPopX(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci=src->cbegin(); ci!=src->cend(); ci++) {
+        if (ci->first.substr(0,prefix.size()+1)==prefix+"-") {
+            cppl_set(dst, ci->first.substr(prefix.size()+1), ci->second);
+            src->erase(ci);
+        }
+    }
+}
+
+
 typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
 
 class LayerFactory {
