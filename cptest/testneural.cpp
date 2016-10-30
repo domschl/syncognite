@@ -145,6 +145,22 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    MatrixN x(3,4);
+    x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
+         -0.13636364, -0.04545455,  0.04545455,  0.13636364,
+          0.22727273,  0.31818182,  0.40909091,  0.5;
+
+    MatrixN y(3,4);
+    y << 0.        ,  0.        ,  0.        ,  0.        ,
+         0.        ,  0.        ,  0.04545455,  0.13636364,
+         0.22727273,  0.31818182,  0.40909091,  0.5;
+
+    Nonlinearity  nlr(CpParams("{inputShape=[4],nonlinearity='relu'}"));
+    MatrixN y0=nlr.forward(x, nullptr);
+    return matComp(y,y0,"NonlinearityForward",eps);
+}
+
 bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     bool allOk=true;
@@ -2650,6 +2666,18 @@ int doTests() {
         allOk=false;
     }
 
+    vector<string> nls={"relu","sigmoid","tanh"};
+    for (string nlsi : nls) {
+        CpParams cp("{inputShape=[20]}");
+        cp.setPar("nonlinearitytype", nlsi);
+        Nonlinearity nlr(cp);
+        MatrixN xnl(10,20);
+        xnl.setRandom();
+        if (!nlr.selfTest(xnl,yz)) {
+            allOk=false;
+        }
+    }
+
     // Batchnorm - still some strangities:
     BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
     MatrixN xbr(20,10);
@@ -2814,6 +2842,13 @@ int doTests() {
         cerr << green << "ReluBackward (Affine) with test data: OK." << def << endl;
     } else {
         cerr << red << "ReluBackward (Affine) with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkNonlinearityForward()) {
+        cerr << green << "NonlinearityForward with test data: OK." << def << endl;
+    } else {
+        cerr << red << "NonlinearityForward with test data: ERROR." << def << endl;
         allOk=false;
     }
 

@@ -16,31 +16,13 @@
 #include "layers/cpl-twolayernet.h"
 #include "layers/cpl-rnn.h"
 #include "layers/cpl-wordembedding.h"
-
-
-class Nonlinearities {
-public:
-    MatrixN sigmoid(MatrixN& m) {
-        ArrayN ar = m.array();
-        return (1/(1+(ar.maxCoeff() - ar).exp())).matrix();
-    }
-    MatrixN tanh(MatrixN& m) {
-        ArrayN ar = m.array();
-        return (ar.tanh()).matrix();
-    }
-    MatrixN Relu(MatrixN& m) {
-        ArrayN ar = m.array();
-        return (ar.max(0)).matrix();
-    }
-};
-
-
-
+#include "layers/cpl-nonlinearity.h"
 
 
 void registerLayers() {
     REGISTER_LAYER("Affine", Affine, 1)
     REGISTER_LAYER("Relu", Relu, 1)
+    REGISTER_LAYER("Nonlinearity", Nonlinearity, 1)
     REGISTER_LAYER("AffineRelu", AffineRelu, 1)
     REGISTER_LAYER("BatchNorm", BatchNorm, 1)
     REGISTER_LAYER("Dropout", Dropout, 1)
