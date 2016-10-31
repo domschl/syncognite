@@ -37,8 +37,12 @@ private:
 public:
     MatrixN Sigmoid(const MatrixN& m) {
         MatrixN mn(m);
-        //mn.colwise() -=  mn.rowwise().maxCoeff();
-        return (1.0/(1.0+(mn.array() * -1.0).exp())).matrix();
+        MatrixN y;
+        // Standard sigmoid is not numerically stable (large -x instable)
+        //y=(1.0/(1.0+(mn.array() * -1.0).exp()));
+        // Alternative via tanh is stable and doesn't need case distinctions for large + - inf values of x.
+        y=((mn.array()/2.0).tanh()-1.0)/2.0+1.0;
+        return y;
     }
     MatrixN dSigmoid(const MatrixN& y) {
         return (y.array()*(y.array()-1.0) * -1.0).matrix();
