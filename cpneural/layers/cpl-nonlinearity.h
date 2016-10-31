@@ -36,17 +36,18 @@ private:
     }
 public:
     MatrixN Sigmoid(const MatrixN& m) {
-        ArrayN ar = m.rowwise().maxCoeff()-m;
-        return (1/(1+ar.exp())).matrix();
+        MatrixN mn(m);
+        //mn.colwise() -=  mn.rowwise().maxCoeff();
+        return (1.0/(1.0+(mn.array() * -1.0).exp())).matrix();
     }
     MatrixN dSigmoid(const MatrixN& y) {
-        return (y.array()*(1.0-y.array())).matrix();
+        return (y.array()*(y.array()-1.0) * -1.0).matrix();
     }
     MatrixN Tanh(const MatrixN& m) {
         return (m.array().tanh()).matrix();
     }
     MatrixN dTanh(const MatrixN& y) {
-        return (1.0-y.array()*y.array()).matrix(); 
+        return (1.0-y.array()*y.array()).matrix();
     }
     MatrixN Relu(const MatrixN& m) {
         return (m.array().max(0)).matrix();
