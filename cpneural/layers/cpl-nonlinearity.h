@@ -25,14 +25,14 @@ private:
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        string nonlintypestr=cp.getPar("nonlinearitytype", (string)"relu");
+        string nonlintypestr=cp.getPar("type", (string)"relu");
         layerName="Nonlinearity-"+nonlintypestr;
         if (nonlintypestr=="relu") nonlintype=Nonlin::NL_RELU;
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
         else if (nonlintypestr=="tanh") nonlintype=Nonlin::NL_TANH;
         outputShape=inputShape;
         if (nonlintype!=Nonlin::NL_INVALID) layerInit=true;
-        else cerr << "Invalid type for nonlinearitytype: " << nonlintypestr << endl;
+        else cerr << "Invalid type for nonlinearity: " << nonlintypestr << endl;
     }
 public:
     MatrixN Sigmoid(const MatrixN& m) {
