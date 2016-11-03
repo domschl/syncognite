@@ -2675,6 +2675,90 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    MatrixN x(2,12);   // N, T, D, H = 2, 3, 4, 5
+    x << ;
+    MatrixN Wxh(4,5);
+    MatrixN Whh(5,5);
+    Wxh << ;
+    Whh << ;
+    MatrixN bh(1,5);
+    bh << ;
+    MatrixN h0(2,5);
+    h0 << ;
+    MatrixN hn(2,15);
+    hn << ;
+
+    WordEmbedding we("{inputShape=[4];hidden=5;T=3;N=2}");
+    *(we.params["Wxh"])= Wxh;
+    *(we.params["Whh"])= Whh;
+    *(we.params["bh"])=bh;
+    *(we.params)["ho"]=h0;
+    t_cppl cache;
+    MatrixN hn0=we.forward(x, &cache, 0);
+    cppl_delete(&cache);
+    return matComp(hn,hn0,"WordEmbeddingForward",eps);
+}
+
+
+bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    MatrixN x(2,30);   // N, D, T, H = 2, 3, 10, 5
+    x << ;
+    MatrixN Wxh(3,5);
+    Wxh << ;
+    MatrixN Whh(5,5);
+    Whh << ;
+    MatrixN bh(1,5);
+    bh <<  ;
+    MatrixN h0(2,5);
+    h0 << ;
+
+    MatrixN dx(2,30);
+    dx << ;
+    MatrixN dWxh(3,5);
+    dWxh << ;
+    MatrixN dWhh(5,5);
+    dWhh << ;
+    MatrixN dbh(1,5);
+    dbh << ;
+    MatrixN dh0(2,5);
+    dh0 << ;
+
+    MatrixN dchain(2,50);
+    dchain << ;
+    WordEmbedding we("{inputShape=[3];hidden=5;T=10;N=2}");   //inputShape=D, hidden=H
+    *(we.params["Wxh"])=Wxh;
+    *(we.params["Whh"])=Whh;
+    *(we.params["bh"])=bh;
+    *(we.params["ho"])=h0;
+
+    t_cppl cache;
+    t_cppl grads;
+    MatrixN y=we.forward(x, &cache);
+    // for (auto ci : cache) cerr << ci.first << shape(*(ci.second))<< " ";
+    //cerr << endl;
+    MatrixN dx0=we.backward(dchain, &cache, &grads);
+    bool allOk=true;
+    bool ret=matComp(dx,dx0,"WordEmbeddingBackward dx",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dWxh,*(grads["Wxh"]),"WordEmbeddingBackward dWxh",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dWhh,*(grads["Whh"]),"WordEmbeddingBackward dWhh",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dbh,*(grads["bh"]),"WordEmbeddingBackward bh",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dh0,*(grads["ho"]),"WordEmbeddingBackward h",eps);
+    if (!ret) allOk=false;
+
+    cppl_delete(&cache);
+    //for (auto ci : cache) {
+    //    cerr << ci.first << " ";
+    //}
+    //cerr << endl;
+    cppl_delete(&grads);
+    return allOk;
+}
+
 
 bool registerTest() {
     bool allOk=true;
@@ -2836,6 +2920,18 @@ int doTests() {
     RNN rnn("{inputShape=[5];hidden=6;N=4;T=7;noVectorizationTests=true}");
     *(rnn.params["ho"])=h0;
     if (!rnn.selfTest(xrnn, yz, 1e-2, 1e-3)) {
+        allOk=false;
+    }
+
+    // WordEmbedding  XXX not implemented!
+    int weN=4;
+    MatrixN xwe(weN,5*7);
+    MatrixN h0(weN,6);
+    xwe.setRandom();
+    h0.setRandom();
+    WordEmbedding we("{inputShape=[5];hidden=6;N=4;T=7;noVectorizationTests=true}");
+    *(we.params["ho"])=h0;
+    if (!we.selfTest(xwe, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
 

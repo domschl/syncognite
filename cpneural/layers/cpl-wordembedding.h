@@ -102,7 +102,7 @@ public:
                 xv(n*T+t,vi)=wVect(x(n,t),vi);
             }
         }
-        MatrixN y;
+        MatrixN y = xv * W;
 
         return y;
     }
