@@ -2926,11 +2926,11 @@ int doTests() {
     // WordEmbedding  XXX not implemented!
     int weN=4;
     MatrixN xwe(weN,5*7);
-    MatrixN h0(weN,6);
+    MatrixN h1(weN,6);
     xwe.setRandom();
-    h0.setRandom();
+    h1.setRandom();
     WordEmbedding we("{inputShape=[5];hidden=6;N=4;T=7;noVectorizationTests=true}");
-    *(we.params["ho"])=h0;
+    *(we.params["ho"])=h1;
     if (!we.selfTest(xwe, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
