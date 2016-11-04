@@ -100,10 +100,19 @@ public:
             for (int t=0; t<T; t++) {
                 for (int vi=0; vi<V; vi++)
                 xv(n*T+t,vi)=wVect(x(n,t),vi);
+                // xv(t*N+n,vi)=wVect(x(n,t),vi);
             }
         }
-        MatrixN y = xv * W;
-
+        if (pcache != nullptr) cppl_set(pcache, "xv", new MatrixN(xv));
+        MatrixN y0 = xv * W;
+        MatrixN y(N,D*T);
+        for (int n=0; n<N; n++) {
+            for (int d=0; d<D; d++) {
+                for (int t=0; t<T; t++) {
+                    y(n,d+t*D) = y0(n*T+t,d);
+                }
+            }
+        }
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
@@ -112,6 +121,32 @@ public:
         int N=shape(dchain)[0];
         MatrixN dx(N,T*D);
         dx.setZero();
+        MatrixN xv=*(*pcache)["xv"];
+        // p2 = dout.reshape(-1, dout.shape[2])
+        // p1 = xoh.reshape(-1, xoh.shape[2])
+        //dW = np.dot(p1.T, p2)
+        cerr << "N:" << N << ", T:" << T << ", V:" << V << ", D:" << D << endl;
+        cerr << "dW:" << shape(dW) << ", xv:" << shape(xv) << ", dchain:" << shape(dchain) << endl;
+        MatrixN dct(V,N*T);
+        MatrixN xvt(N*T,D);
+
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    dct(d,n*T+t) = (dchain(n,t*D+d));
+                }
+            }
+        }
+
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int v=0; v<V; v++) {
+                    xv(d,n*T+t) = (dchain(n,t*D+d));
+                }
+            }
+        }
+
+        dW = dct * xvt;
         cppl_set(pgrads, "W", new MatrixN(dW));
         return dx;
     }
