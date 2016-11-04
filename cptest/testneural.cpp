@@ -3466,14 +3466,14 @@ int doTests() {
         allOk=false;
     }
 
-    // WordEmbedding  XXX not implemented!
-    int weN=4;
-    MatrixN xwe(weN,5*7);
-    MatrixN h1(weN,6);
+    // WordEmbedding
+    int weN=4, weT=3, weV=10, weD=8;
+    MatrixN xwe(weN,weT);
+    MatrixN weW(weV,weD);
     xwe.setRandom();
-    h1.setRandom();
-    WordEmbedding we("{inputShape=[5];hidden=6;N=4;T=7;noVectorizationTests=true}");
-    *(we.params["ho"])=h1;
+    weW.setRandom();
+    WordEmbedding we("{inputShape=[3];V=10;D=8}");
+    *(we.params["W"])=weW;
     if (!we.selfTest(xwe, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
@@ -3701,6 +3701,19 @@ int doTests() {
         cerr << green << "RNNBackward with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNBackward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkWordEmbeddingForward()) {
+        cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
+    } else {
+        cerr << red << "WordEmbeddingForward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+    if (checkWordEmbeddingBackward()) {
+        cerr << green << "WordEmbeddingBackward with test data: OK." << def << endl;
+    } else {
+        cerr << red << "WordEmbeddingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
 

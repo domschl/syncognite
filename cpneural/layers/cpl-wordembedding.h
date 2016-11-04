@@ -107,11 +107,12 @@ public:
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        MatrixN dWxh,dWhh,dbh;
-        string name;
+        MatrixN dW(*params["W"]);
+        dW.setZero();
         int N=shape(dchain)[0];
         MatrixN dx(N,T*D);
         dx.setZero();
+        cppl_set(pgrads, "W", new MatrixN(dW));
         return dx;
     }
 };
