@@ -249,7 +249,8 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         yt=forward(x, pcache, 0);
         dx=backward(dchain, pcache, &grads, 0);
     }
-    grads["x"]=new MatrixN(dx);
+    if (dx.rows()>0 && dx.cols()>0)  // Some layers (e.g. WordEmbeddings have no dx!)
+        grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
     calcNumGrads(x, dchain, pcache, &grads, &numGrads, h, lossFkt);

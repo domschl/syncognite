@@ -16,6 +16,7 @@
 #include "layers/cpl-twolayernet.h"
 #include "layers/cpl-rnn.h"
 #include "layers/cpl-wordembedding.h"
+#include "layers/cpl-temporalaffine.h"
 #include "layers/cpl-nonlinearity.h"
 
 
@@ -31,6 +32,7 @@ void registerLayers() {
     REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("RNN", RNN, 1)
     REGISTER_LAYER("WordEmbedding", WordEmbedding, 1)
+    REGISTER_LAYER("TemporalAffine", TemporalAffine, 1)
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)

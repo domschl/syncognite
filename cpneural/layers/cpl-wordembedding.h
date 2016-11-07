@@ -119,17 +119,14 @@ public:
         MatrixN dW(*params["W"]);
         dW.setZero();
         int N=shape(dchain)[0];
-        MatrixN dx(N,T*D);
-        dx.setZero();
+        MatrixN dx;
         MatrixN xv=*(*pcache)["xv"];
         // p2 = dout.reshape(-1, dout.shape[2])
         // p1 = xoh.reshape(-1, xoh.shape[2])
         //dW = np.dot(p1.T, p2)
-        cerr << "N:" << N << ", T:" << T << ", V:" << V << ", D:" << D << endl;
-        cerr << "dW:" << shape(dW) << ", xv:" << shape(xv) << ", dchain:" << shape(dchain) << endl;
-        MatrixN dct(V,N*T);
-        MatrixN xvt(N*T,D);
-
+        //cerr << "N:" << N << ", T:" << T << ", V:" << V << ", D:" << D << endl;
+        //cerr << "dW:" << shape(dW) << ", xv:" << shape(xv) << ", dchain:" << shape(dchain) << endl;
+        MatrixN dct(D,N*T);
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {
@@ -137,18 +134,9 @@ public:
                 }
             }
         }
-
-        for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
-                for (int v=0; v<V; v++) {
-                    xv(d,n*T+t) = (dchain(n,t*D+d));
-                }
-            }
-        }
-
-        dW = dct * xvt;
+        dW = (dct * xv).transpose();
         cppl_set(pgrads, "W", new MatrixN(dW));
-        return dx;
+        return dx; //Matrix of size(0,0): there is no dx, since x is discrete integers (word-indices)
     }
 };
 
