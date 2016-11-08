@@ -100,13 +100,15 @@ int main(int argc, char *argv[]) {
     cp1.setPar("inputShape",vector<int>{VS});
     cp1.setPar("T",T);
     cp1.setPar("N",BS);
-    cp1.setPar("hidden",H);
+    cp1.setPar("H",H);
     lb.addLayer("RNN","rnn1",cp1,{"input"});
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H});
-    cp2.setPar("hidden",VS);
-    lb.addLayer("Affine","af1",cp2,{"rnn1"});
+    cp2.setPar("T",T);
+    cp2.setPar("D",H);
+    cp2.setPar("M",VS);
+    lb.addLayer("TemporalAffine","af1",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{VS});

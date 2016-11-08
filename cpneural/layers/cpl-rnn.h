@@ -8,7 +8,6 @@ class RNN : public Layer {
 private:
     int numGpuThreads;
     int numCpuThreads;
-    int hidden;
     int T,D,H,N;
     void setup(const CpParams& cx) {
         layerName="RNN";
@@ -20,24 +19,23 @@ private:
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        hidden=cp.getPar("hidden",1024);
+        H=cp.getPar("H",1024);
         T=cp.getPar("T",3);
         N=cp.getPar("N",1);
-        H=hidden;
         D=inputShapeFlat;
         outputShape={T*H};
 
         cppl_set(&params, "ho", new MatrixN(N,H));
-        cppl_set(&params, "Wxh", new MatrixN(inputShapeFlat,hidden));
-        cppl_set(&params, "Whh", new MatrixN(hidden,hidden));
-        cppl_set(&params, "bh", new MatrixN(1,hidden));
+        cppl_set(&params, "Wxh", new MatrixN(inputShapeFlat,H));
+        cppl_set(&params, "Whh", new MatrixN(H,H));
+        cppl_set(&params, "bh", new MatrixN(1,H));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         params["ho"]->setZero();
         params["Wxh"]->setRandom();
         params["Whh"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+H)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["Wxh"] *= xavier;
         *params["Whh"] *= xavier;
         params["bh"]->setRandom();
@@ -60,7 +58,7 @@ public:
         int N=shape(x)[0];
         MatrixN *ph;
         if (pcache==nullptr || pcache->find("h")==pcache->end()) {
-            ph=new MatrixN(N,hidden);
+            ph=new MatrixN(N,H);
             ph->setZero();
             if (pcache!=nullptr) cppl_set(pcache,"h",ph);
             else free(ph);
