@@ -5,9 +5,10 @@
 
 class  TemporalAffine : public Layer {
 private:
-    int hidden;
+    int T,D,M;
     void setup(const CpParams& cx) {
-        layerName=" TemporalAffine";
+        int allOk=true;
+        layerName="TemporalAffine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         cp=cx;
@@ -16,18 +17,25 @@ private:
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        hidden=cp.getPar("hidden",1024);
-        outputShape={hidden};
+        T=cp.getPar("T",128);
+        D=cp.getPar("D",128);
+        M=cp.getPar("M",128);
 
-        cppl_set(&params, "W", new MatrixN(inputShapeFlat,hidden)); // W
-        cppl_set(&params, "b", new MatrixN(1,hidden)); // b
+        if (T*D != inputShapeFlat) {
+            cerr << "Invalid initialization of TemporalAffine inputShape " << inputShapeFlat << " != D*T D=" << D << ", T=" << T << endl;
+            allOk=false;
+        }
+        outputShape={T*M};
+
+        cppl_set(&params, "W", new MatrixN(D,M)); // W
+        cppl_set(&params, "b", new MatrixN(1,M)); // b
 
         params["W"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+M)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
-        layerInit=true;
+        layerInit=allOk;
     }
 public:
      TemporalAffine(const CpParams& cx) {
@@ -39,26 +47,88 @@ public:
     ~ TemporalAffine() {
         cppl_delete(&params);
     }
+    /*
+    Forward pass for a temporal affine layer. The input is a set of D-dimensional
+    vectors arranged into a minibatch of N timeseries, each of length T. We use
+    an affine function to transform each of those vectors into a new vector of
+    dimension M.
+
+    Inputs:
+    - x: Input data of shape (N, {T * D})
+    - w: Weights of shape (D, M)
+    - b: Biases of shape (M,)
+
+    Returns a tuple of:
+    - out: Output data of shape (N, {T * M})
+    - cache: Values needed for the backward pass
+    """
+    */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
-        if (params["W"]->rows() != x.cols()) {
-            cerr << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
+        if (x.cols() != T*D) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x*W: x(cols):" << x.cols() << " T*D:" << T*D << endl;
             MatrixN y(0,0);
             return y;
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-
-        MatrixN y(x.rows(), (*params["W"]).cols());
-        y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
+        int N=x.rows();
+        // x: [N, (T * D)] -> [(N * T), D]
+        MatrixN xt(N*T, D);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    xt(n*T+t,d)=x(n,t*D+d);
+                }
+            }
+        }
+        if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
+        MatrixN yt=(xt * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
+        // cerr << "N:" << N << ", y:" << shape(y) << endl;
+        MatrixN y(N,T*M);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int m=0; m<M; m++) {
+                    y(n,t*M+m)=yt(n*T+t,m);
+                }
+            }
+        }
         return y;
     }
+    /*
+    """
+    Backward pass for temporal affine layer.
+
+    Input:
+    - dout: Upstream gradients of shape (N, T, M)
+    - cache: Values from forward pass
+
+    Returns a tuple of:
+    - dx: Gradient of input, of shape (N, T, D)
+    - dw: Gradient of weights, of shape (D, M)
+    - db: Gradient of biases, of shape (M,)
+    """
+    */
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        MatrixN x(*(*pcache)["x"]);
-        MatrixN dx(x.rows(),x.cols());
-        MatrixN W(*params["W"]);
-        MatrixN dW(W.rows(),W.cols());
-        dx = dchain * (*params["W"]).transpose(); // dx
-        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
+        int N=dchain.rows();
+        MatrixN dchaint(N*T,M);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int m=0; m<M; m++) {
+                    dchaint(n*T+t,m)=dchain(n,t*M+m);
+                }
+            }
+        }
+
+        MatrixN dxt = dchaint * (*params["W"]).transpose(); // dx
+        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["xt"]).transpose() * dchaint)); //dW
+        cppl_set(pgrads, "b", new MatrixN(dchaint.colwise().sum())); //db
+        MatrixN dx(N, T*D);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    dx(n,t*D+d)=dxt(n*T+t,d);
+                }
+            }
+        }
         return dx;
     }
 };
