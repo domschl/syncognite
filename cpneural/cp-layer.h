@@ -124,6 +124,31 @@ void peekMat(const string label, const MatrixN& m) {
         cerr << endl;
     }
 }
+
+MatrixN xavierInit(const MatrixN &w) {
+    floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows()));
+    MatrixN wo(w);
+    wo.setRandom(); // [-1,1]
+    wo *= xavier/2.0;  // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+    /*
+#include <Eigen/Sparse>
+#include <iostream>
+#include <random>
+
+using namespace Eigen;
+
+int main() {
+  std::default_random_engine generator;
+  std::poisson_distribution<int> distribution(4.1);
+  auto poisson = [&] (int) {return distribution(generator);};
+
+  RowVectorXi v = RowVectorXi::NullaryExpr(10, poisson );
+  std::cout << v << "\n";
+  */
+    MatrixN wort = wo.householderQr().householderQ();
+    return wort;
+}
+
 #ifdef USE_CUDA
 #define MAX_GPUTHREADS 64
 cublasHandle_t *cuHandles;
