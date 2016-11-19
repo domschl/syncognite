@@ -125,12 +125,39 @@ void peekMat(const string label, const MatrixN& m) {
     }
 }
 
-MatrixN xavierInit(const MatrixN &w) {
+enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL};
+
+MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD) {
     floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows()));
+    float mean=0.0;
+    float std=xavier / 2.0;
     MatrixN wo(w);
-    wo.setRandom(); // [-1,1]
-    wo *= xavier/2.0;  // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+    std::default_random_engine rde;
+    std::normal_distribution<float> distn(mean, std);
+    switch (xavMode) {
+        case XavierMode::XAV_NORMAL:
+            for (int i=0; i<wo.size(); i++) wo(i)=distn(rde);
+        break;
+        case XavierMode::XAV_ORTHONORMAL:
+            for (int i=0; i<wo.size(); i++) wo(i)=distn(rde);
+            wo = w.householderQr().householderQ();
+        break;
+        case XavierMode::XAV_STANDARD:
+        default:
+            wo.setRandom(); // [-1,1]
+            wo *= xavier/2.0;  // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+        break;
+    }
     /*
+    std::default_random_engine rde;
+    float mean=0.0;
+    float std=0.1;
+    std::normal_distribution<float> distn(mean, std);
+
+    for (int i=0; i<10; i++) cout << distn(rde) << ", ";
+    cout << endl;
+
+
 #include <Eigen/Sparse>
 #include <iostream>
 #include <random>
@@ -145,8 +172,7 @@ int main() {
   RowVectorXi v = RowVectorXi::NullaryExpr(10, poisson );
   std::cout << v << "\n";
   */
-    MatrixN wort = wo.householderQr().householderQ();
-    return wort;
+    return wo;
 }
 
 #ifdef USE_CUDA
