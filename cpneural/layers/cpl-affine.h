@@ -34,8 +34,8 @@ private:
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
-        layerInit=true;
         */
+        layerInit=true;
     }
 public:
     Affine(const CpParams& cx) {
