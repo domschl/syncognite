@@ -52,8 +52,13 @@ private:
 
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
-        cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
-        cppl_set(&params, "b", new MatrixN(F,1));
+        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(F,C*HH*WW),inittype))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(F,1),inittype))); // b
+
+        //cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
+        //cppl_set(&params, "b", new MatrixN(F,1));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -92,12 +97,14 @@ private:
 
         outputShape={F,WO,HO};
 
+        /*
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(C*H*W + F*HO*WO)) / 10.0;
         *params["W"] = *params["W"] * xavier;
 
         params["b"]->setRandom();
         *params["b"] = *params["b"] * xavier;
+        */
         layerInit=retval;
     }
 public:

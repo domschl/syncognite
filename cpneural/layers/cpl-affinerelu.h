@@ -17,9 +17,12 @@ private:
             inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",1024);
+        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+
         outputShape={hidden};
         CpParams ca;
         ca.setPar("inputShape", vector<int>{inputShapeFlat});
+        ca.setPar("init",inittype);
         ca.setPar("hidden", hidden);
         af=new Affine(ca);
         mlPush("af", &(af->params), &params);

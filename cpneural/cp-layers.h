@@ -42,6 +42,7 @@ void registerLayers() {
 class LayerBlock : public Layer {
 private:
     bool bench;
+    string inittype;
     void setup(const CpParams& cx) {
         cp=cx;
         layerName=cp.getPar("name",(string)"block");
@@ -49,6 +50,7 @@ private:
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
         trainMode = cp.getPar("train", false);
+        string inittype=cp.getPar("init", (string)"standard");
         checked=false;
     }
 public:
@@ -128,6 +130,9 @@ public:
             }
             cp.setPar("inputShape",inputShape);
         }
+
+        cp.setPar("init",cp.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
+
         layerMap[name]=CREATE_LAYER(layerclass, cp)   // Macro!
         Layer *pLayer = layerMap[name];
         if (pLayer->layerInit==false) {
