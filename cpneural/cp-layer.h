@@ -127,11 +127,23 @@ void peekMat(const string label, const MatrixN& m) {
 
 enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL};
 
+XavierMode xavierInitType(string stype) {
+    XavierMode type=XavierMode::XAV_STANDARD;
+    string ltype(stype);
+    std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+
+    if (ltype=="standard") type=XavierMode::XAV_STANDARD;
+    else if (ltype=="normal") type=XavierMode::XAV_NORMAL;
+    else if (ltype=="orthonormal") type=XavierMode::XAV_ORTHONORMAL;
+    return type;
+}
+
 MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD) {
     floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows()));
     float mean=0.0;
     float std=xavier / 2.0;
     MatrixN wo(w);
+    MatrixN wot(w);
     std::default_random_engine rde;
     std::normal_distribution<float> distn(mean, std);
     switch (xavMode) {
@@ -139,8 +151,8 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
             for (int i=0; i<wo.size(); i++) wo(i)=distn(rde);
         break;
         case XavierMode::XAV_ORTHONORMAL:
-            for (int i=0; i<wo.size(); i++) wo(i)=distn(rde);
-            wo = w.householderQr().householderQ();
+            for (int i=0; i<wot.size(); i++) wot(i)=distn(rde);
+            wo = wot.householderQr().householderQ();
         break;
         case XavierMode::XAV_STANDARD:
         default:

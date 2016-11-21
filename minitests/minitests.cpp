@@ -26,6 +26,21 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
 }
 
 int doTests() {
+    MatrixN w(10,10);
+    MatrixN wx;
+    cerr << "-------------Standard-init" << endl;
+    wx=xavierInit(w,XavierMode::XAV_STANDARD);
+    cerr << wx << endl;
+    cerr << "-------------Normal-init" << endl;
+    wx=xavierInit(w,XavierMode::XAV_NORMAL);
+    cerr << wx << endl;
+    cerr << "-------------Orthonormal-init" << endl;
+    wx=xavierInit(w,XavierMode::XAV_ORTHONORMAL);
+    cerr << wx << endl;
+
+    cerr << "-------------Orthonormal-init (check multi)" << endl;
+    MatrixN o=wx * wx.transpose();
+    cerr << o << endl;
 
     return 0;
 }
