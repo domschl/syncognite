@@ -125,7 +125,7 @@ void peekMat(const string label, const MatrixN& m) {
     }
 }
 
-enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL};
+enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL, XAV_ORTHOGONAL};
 
 XavierMode xavierInitType(string stype) {
     XavierMode type=XavierMode::XAV_STANDARD;
@@ -135,6 +135,7 @@ XavierMode xavierInitType(string stype) {
     if (ltype=="standard") type=XavierMode::XAV_STANDARD;
     else if (ltype=="normal") type=XavierMode::XAV_NORMAL;
     else if (ltype=="orthonormal") type=XavierMode::XAV_ORTHONORMAL;
+    else if (ltype=="orthogonal") type=XavierMode::XAV_ORTHOGONAL;
     return type;
 }
 
@@ -152,7 +153,20 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
         break;
         case XavierMode::XAV_ORTHONORMAL:
             for (int i=0; i<wot.size(); i++) wot(i)=distn(rde);
-            wo = wot.householderQr().householderQ();
+            if (wot.rows() == wot.cols()) {
+                wo = wot.householderQr().householderQ();
+            } else {
+                wo=wot;  // we can only orthonormalize square matrices!
+            }
+        break;
+        case XavierMode::XAV_ORTHOGONAL:
+            for (int i=0; i<wot.size(); i++) wot(i)=distn(rde);
+            if (wot.rows() == wot.cols()) {
+                wo = wot.householderQr().householderQ();
+                wo *= xavier; // orthogonal instead of orthonormal!
+            } else {
+                wo=wot;  // we can only orthonormalize square matrices!
+            }
         break;
         case XavierMode::XAV_STANDARD:
         default:

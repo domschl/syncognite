@@ -19,19 +19,23 @@ private:
             inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",1024);
+        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
         outputShape={hidden};
 
-        cppl_set(&params, "W", new MatrixN(inputShapeFlat,hidden)); // W
-        cppl_set(&params, "b", new MatrixN(1,hidden)); // b
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(inputShapeFlat,hidden),inittype))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,hidden),inittype))); // b
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
+
+        /*
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+hidden)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
         layerInit=true;
+        */
     }
 public:
     Affine(const CpParams& cx) {

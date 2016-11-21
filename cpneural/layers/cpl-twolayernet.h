@@ -19,6 +19,7 @@ private:
             inputShapeFlat *= j;
         }
         hidden=cp.getPar("hidden",vector<int>{1024,1024});
+        string inittype=cp.getPar("init",(string)"standard");
 
         if (hidden.size()!=2) retval=false;
 
@@ -27,9 +28,11 @@ private:
         CpParams c1,c2,c3,c4;
         c1.setPar("inputShape",vector<int>{inputShapeFlat});
         c1.setPar("hidden",hidden[0]);
+        c1.setPar("init",inittype);
         c2.setPar("inputShape",vector<int>{hidden[0]});
         c3.setPar("inputShape",vector<int>{hidden[0]});
         c3.setPar("hidden",hidden[1]);
+        c3.setPar("init",inittype);
         c4.setPar("inputShape",vector<int>{hidden[1]});
         af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);
