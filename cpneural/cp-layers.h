@@ -50,7 +50,7 @@ private:
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
         trainMode = cp.getPar("train", false);
-        string inittype=cp.getPar("init", (string)"standard");
+        inittype=cp.getPar("init", (string)"standard");
         checked=false;
     }
 public:
@@ -86,7 +86,7 @@ public:
         layerMap.erase(fi);
         return true;
     }
-    bool addLayer(const string layerclass, const string name, CpParams& cp, const vector<string> inputLayers) {
+    bool addLayer(const string layerclass, const string name, CpParams& cpl, const vector<string> inputLayers) {
         if (layerMap.find(name) != layerMap.end()) {
             cerr << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
@@ -116,7 +116,7 @@ public:
                 return false;
             }
             vector<int> inputShape, prevOutputShape;
-            inputShape=cp.getPar("inputShape", vector<int>{});
+            inputShape=cpl.getPar("inputShape", vector<int>{});
             prevOutputShape=lP->second->getOutputShape();
             if (prevOutputShape.size()==0) {
                 cerr << "Missing outputShape defintion for inputLayer " << firstInput << endl;
@@ -128,12 +128,12 @@ public:
             for (unsigned int i=0; i<prevOutputShape.size(); i++) {
                 inputShape[i]=prevOutputShape[i];
             }
-            cp.setPar("inputShape",inputShape);
+            cpl.setPar("inputShape",inputShape);
         }
 
-        cp.setPar("init",cp.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
+        cpl.setPar("init",cpl.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
 
-        layerMap[name]=CREATE_LAYER(layerclass, cp)   // Macro!
+        layerMap[name]=CREATE_LAYER(layerclass, cpl)   // Macro!
         Layer *pLayer = layerMap[name];
         if (pLayer->layerInit==false) {
             cerr << "Attempt to add layer " << name << " failed: Bad initialization." << endl;
@@ -155,8 +155,8 @@ public:
         return true;
     }
     bool addLayer(string layerclass, string name, string params, vector<string> inputLayers) {
-        CpParams cp(params);
-        return addLayer(layerclass, name, cp, inputLayers);
+        CpParams cpl(params);
+        return addLayer(layerclass, name, cpl, inputLayers);
     }
 
     bool checkTopology(bool verbose=false) {
@@ -204,6 +204,7 @@ public:
                 for (int j : p->getOutputShape()) {
                     outputShapeFlat *= j;
                 }
+                // string intype=p->cp.getPar("init",(string)"not defined");
 
                 cerr << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
                 cerr << " -> " << p->getOutputShape() << "[" << outputShapeFlat << "]" << endl;
