@@ -20,6 +20,7 @@ private:
         T=cp.getPar("T",128);
         D=cp.getPar("D",128);
         M=cp.getPar("M",128);
+        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
 
         if (T*D != inputShapeFlat) {
             cerr << "Invalid initialization of TemporalAffine inputShape " << inputShapeFlat << " != D*T D=" << D << ", T=" << T << endl;
@@ -27,14 +28,16 @@ private:
         }
         outputShape={T*M};
 
-        cppl_set(&params, "W", new MatrixN(D,M)); // W
-        cppl_set(&params, "b", new MatrixN(1,M)); // b
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(D,M),inittype))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,M),inittype))); // b
 
+/*
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+M)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
         params["b"]->setRandom();
         *params["b"] *= xavier;
+        */
         layerInit=allOk;
     }
 public:

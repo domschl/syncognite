@@ -36,8 +36,9 @@ private:
         V=cp.getPar("V",1024);
         D=cp.getPar("D",128);
         outputShape={T*D};
+        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
 
-        cppl_set(&params, "W", new MatrixN(V,D));
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(V,D),inittype)));
         wVect=MatrixN(V,V);
         wVect.setIdentity(); // Simple one-hot word vectors.
         // cppl_set(&params, "V", new MatrixN(wVect));   // XXX: we are implying to learn a better word vector repr. That was not done in CS231
@@ -45,9 +46,11 @@ private:
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
+        /*
         params["W"]->setRandom();
         floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+D)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         *params["W"] *= xavier;
+        */
         layerInit=true;
     }
 public:
