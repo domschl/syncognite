@@ -3330,7 +3330,7 @@ bool checkTemporalAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          -2.55074087, -1.08604371,  5.00076914, -2.57243587, -3.92256111,
           0.6055915 , -4.37403498,  1.98858468,  3.0787865 , -4.12378799;
 
-     TemporalAffine pe("{inputShape=[12];T=3;D=4;M=5}");  // 12=T*D
+     TemporalAffine pe("{inputShape=[4,3];M=5}");  // T=3;D=4; 12=T*D
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr);
@@ -3363,7 +3363,7 @@ bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -2.55074087, -1.08604371,  5.00076914, -2.57243587, -3.92256111,
           0.6055915 , -4.37403498,  1.98858468,  3.0787865 , -4.12378799;
 
-     TemporalAffine pe("{inputShape=[12];T=3;D=4;M=5}");  // 12=T*D, M=5
+     TemporalAffine pe("{inputShape=[4,3];M=5}");  // T=3;D=4;12=T*D, M=5
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -3585,7 +3585,7 @@ int doTests() {
 
     // N=10; T=5; D=6; M=7
     // TemporalAffine pct(CpParams("{inputShape=[30];T=5;D=6;M=7;noVectorizationTests=true}")); // 30=T*D
-    TemporalAffine pct(CpParams("{inputShape=[30];T=5;D=6;M=7}")); // 30=T*D
+    TemporalAffine pct(CpParams("{inputShape=[6,5];M=7}")); // T=5;D=6;30=T*D
     MatrixN xtt(10,30);
     xtt.setRandom();
     if (!pct.selfTest(xtt,yz)) {

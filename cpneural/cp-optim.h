@@ -362,4 +362,9 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     return lastAcc;
 }
 
+/*floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+                string optimizer, const CpParams& cp) {
+    return train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+                    string optimizer, const CpParams& cp, nullptr);
+    }*/
 #endif

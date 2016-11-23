@@ -17,16 +17,12 @@ private:
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        T=cp.getPar("T",128);
-        D=cp.getPar("D",128);
+        D=inputShape[0]; // cp.getPar("D",128);
+        T=inputShape[1]; // cp.getPar("T",128);
         M=cp.getPar("M",128);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
 
-        if (T*D != inputShapeFlat) {
-            cerr << "Invalid initialization of TemporalAffine inputShape " << inputShapeFlat << " != D*T D=" << D << ", T=" << T << endl;
-            allOk=false;
-        }
-        outputShape={T*M};
+        outputShape={M,T};
 
         cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(D,M),inittype))); // W
         cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,M),inittype))); // b
