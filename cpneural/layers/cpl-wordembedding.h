@@ -35,7 +35,7 @@ private:
         T=inputShape[0];
         V=cp.getPar("V",1024);
         D=cp.getPar("D",128);
-        outputShape={T*D};
+        outputShape={D,T};
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
 
         cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(V,D),inittype)));

@@ -2368,7 +2368,7 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         0.05454545,  0.11818182,  0.18181818,  0.24545455,
         0.30909091,  0.37272727,  0.43636364,  0.5;
 
-    RNN rnn("{inputShape=[10];H=4;N=3}");
+    RNN rnn("{inputShape=[10,1];H=4;N=3}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
@@ -2473,7 +2473,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.47915608,
          1.30290015, -0.72761588, -0.17990189,  1.2176583 , -0.42103704,
          0.61638331;
-    RNN rnn("{inputShape=[5];H=6;N=4}");
+    RNN rnn("{inputShape=[5,1];H=6;N=4}");
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -2532,7 +2532,8 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          -0.27150199, -0.07088804,  0.13562939,  0.33099728,  0.50158768,
          -0.51014825, -0.30524429, -0.06755202,  0.17806392,  0.40333043;
 
-    RNN rnn("{inputShape=[4];H=5;T=3;N=2}");
+//                        D,T
+    RNN rnn("{inputShape=[4,3];H=5;N=2}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
@@ -2642,7 +2643,8 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -0.05634623,  1.31969603,  0.6188371 , -1.31854328, -1.27689832,
          -1.37433812,  0.19777929, -0.91821752, -0.54890713, -0.72215917,
          -1.38988503, -0.43959209, -0.33943549,  1.15280127, -0.06320341;
-    RNN rnn("{inputShape=[3];H=5;T=10;N=2}");   //inputShape=D, hidden=H
+//                        D,T
+    RNN rnn("{inputShape=[3,10];H=5;N=2}");   //inputShape=D, hidden=H
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -3562,7 +3564,8 @@ int doTests() {
     MatrixN h0(rnnN,6);
     xrnn.setRandom();
     h0.setRandom();
-    RNN rnn("{inputShape=[5];H=6;N=4;T=7;noVectorizationTests=true}");
+    //                    D,T
+    RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true}");
     *(rnn.params["ho"])=h0;
     if (!rnn.selfTest(xrnn, yz, 1e-2, 1e-3)) {
         allOk=false;
