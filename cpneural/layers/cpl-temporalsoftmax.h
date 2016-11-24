@@ -67,12 +67,13 @@ public:
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         int N=x.rows();
-        // x: [N, (D * T)] -> [(N * D), T]
-        MatrixN xt(N*D, T);
+
+        // x: [N, (T * D)] -> [(N * T), D]
+        MatrixN xt(N*T, D);
         for (int n=0; n<N; n++) {
-            for (int d=0; d<D; d++) {
-                for (int t=0; t<T; t++) {
-                    xt(n*D+d,t)=x(n,d*T+t);
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    xt(n*T+t,d)=x(n,t*D+d);
                 }
             }
         }
