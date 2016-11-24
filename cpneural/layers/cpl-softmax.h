@@ -16,7 +16,7 @@ private:
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        outputShape={inputShapeFlat};
+        outputShape={1};
         layerInit=true;
     }
 public:
