@@ -49,7 +49,7 @@ public:
     which elements should contribute to the loss.
 
     Inputs:
-    - x: Input scores, of shape (N, T, V)
+    - x: Input scores, of shape (N, (T, V))
     - y: Ground-truth indices, of shape (N, T) where each element is in the range
          0 <= y[i, t] < V
     - mask: Boolean array of shape (N, T) where mask[i, t] tells whether or not
@@ -106,12 +106,12 @@ public:
     }
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
-        if (y.rows() != probs.rows() || y.cols() != 1) {
+/*        if (y.rows() != probs.rows() || y.cols() != 1) {
             cerr << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
             cerr << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
-        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+*/        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (unsigned int i=0; i<probs.rows(); i++) {
             if (y(i,0)>=probs.cols()) {
