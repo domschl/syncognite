@@ -88,10 +88,10 @@ public:
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
             xne.row(i) = xne.row(i) / xnes(i);
         }
-        //MatrixN probs = xne;
+        MatrixN probs = xne;
         //if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
-        MatrixN probst=xne;
+        /*MatrixN probst=xne;
 
         MatrixN probs(N,T*D);
         for (int n=0; n<N; n++) {
@@ -101,6 +101,7 @@ public:
                 }
             }
         }
+        */
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
@@ -113,16 +114,14 @@ public:
         }
 */        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
-        for (unsigned int i=0; i<probs.rows(); i++) {
-            if (y(i,0)>=probs.cols()) {
-                cerr << "internal error: y(" << i << ",0) >= " << probs.cols() << endl;
-                return -10000.0;
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                floatN pi = probs(i,y(n,t));
+                if (pi==0.0) cerr << "Invalid zero log-probability at " << i << endl;
+                else loss -= log(pi);
             }
-            floatN pi = probs(i,y(i,0));
-            if (pi==0.0) cerr << "Invalid zero log-probability at " << i << endl;
-            else loss -= log(pi);
         }
-        loss /= probs.rows();
+        loss /= probs.rows();  // XXX should be N, not (N*T)
         return loss;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
