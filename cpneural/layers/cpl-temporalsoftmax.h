@@ -5,11 +5,11 @@
 
 class  TemporalSoftmax : public Layer {
 private:
-    int T,D,M;
+    int T,D; //,V;
     void setup(const CpParams& cx) {
         int allOk=true;
         layerName="TemporalSoftmax";
-        inputShapeRang=1;
+        inputShapeRang=2;
         layerType=LayerType::LT_LOSS;
         cp=cx;
         vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
@@ -19,7 +19,7 @@ private:
         }
         D=inputShape[0]; // cp.getPar("D",128);
         T=inputShape[1]; // cp.getPar("T",128);
-
+        //V=cp.getPar("V",10);
         outputShape={T};
 
         layerInit=allOk;
@@ -60,14 +60,25 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
-        if (x.cols() != T*D) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x*W: x(cols):" << x.cols() << " T*D:" << T*D << endl;
+        if (x.cols() != D) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(cols):" << x.cols() << " D:" << D << endl;
             MatrixN probs(0,0);
             return probs;
         }
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        int N=x.rows();
+        int NT=x.rows();
+        int N=NT/T;
+        if (N*T != x.rows()) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(rows):" << x.rows() << " N*T:" << N*T << endl;
+            MatrixN probs(0,0);
+            return probs;
+        }
+        if (y.cols()!=T || y.rows()!=N) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in y: " << shape(y) << " N,T:" << N << "," << T << endl;
+            MatrixN probs(0,0);
+            return probs;
+        }
 
+        /*
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt(N*T, D);
         for (int n=0; n<N; n++) {
@@ -77,9 +88,13 @@ public:
                 }
             }
         }
+        */
+        MatrixN xt(x);
 
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(xt));
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+
         VectorN mxc = xt.rowwise().maxCoeff();
         MatrixN xn = xt;
         xn.colwise() -=  mxc;
@@ -89,63 +104,64 @@ public:
             xne.row(i) = xne.row(i) / xnes(i);
         }
         MatrixN probs = xne;
-        //if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
-
-        /*MatrixN probst=xne;
-
-        MatrixN probs(N,T*D);
-        for (int n=0; n<N; n++) {
-            for (int d=0; d<D; d++) {
-                for (int t=0; t<T; t++) {
-                    probs(n,d*T+t)=probst(n*D+d,t);
-                }
-            }
-        }
-        */
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
+    /*
+    N, T, V = x.shape
+    x_flat = x.reshape(N * T, V)
+    y_flat = y.reshape(N * T)
+    mask_flat = mask.reshape(N * T)
+    probs = np.exp(x_flat - np.max(x_flat, axis=1, keepdims=True))
+    probs /= np.sum(probs, axis=1, keepdims=True)
+    loss = -np.sum(mask_flat * np.log(probs[np.arange(N * T), y_flat])) / N
+    dx_flat = probs.copy()
+    dx_flat[np.arange(N * T), y_flat] -= 1
+    dx_flat /= N
+    dx_flat *= mask_flat[:, None]
+    if verbose:
+        print('dx_flat: ', dx_flat.shape)
+    dx = dx_flat.reshape(N, T, V)
+    return loss, dx
+    */
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
-/*        if (y.rows() != probs.rows() || y.cols() != 1) {
+        MatrixN mask;
+        int N=probs.rows()/T;
+        if (pcache->find("mask")==pcache->end()) {
+            mask=MatrixN(N,T);
+            mask.setOnes();
+        } else {
+            mask=*((*pcache)["mask"]);
+        }
+        /*
+            if (y.rows() != probs.rows() || y.cols() != 1) {
             cerr << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
             cerr << shape(probs) << " y:" << shape(y) << " y.cols=" << y.cols() << "(should be 1)" << endl;
             return 1000.0;
         }
-*/        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        */
+        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         floatN loss=0.0;
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
-                floatN pi = probs(i,y(n,t));
-                if (pi==0.0) cerr << "Invalid zero log-probability at " << i << endl;
-                else loss -= log(pi);
+                floatN pi = probs(n*T+t,y(n,t));
+                if (pi==0.0) {
+                    cerr << "Invalid zero log-probability at n=" << n << "t=" << t << endl;
+                    loss += 10000.0;
+                }
+                else {
+                    // cerr << "[" << pi << "," << mask(n,t) << "]";
+                    loss -= log(pi) * mask(n,t);
+                }
             }
         }
-        loss /= probs.rows();  // XXX should be N, not (N*T)
+        loss /= N; // probs.rows();
         return loss;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        int N=dchain.rows();
-        MatrixN dchaint(N*T,M);
-        for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
-                for (int m=0; m<M; m++) {
-                    dchaint(n*T+t,m)=dchain(n,t*M+m);
-                }
-            }
-        }
+        MatrixN dx;
 
-        MatrixN dxt = dchaint * (*params["W"]).transpose(); // dx
-        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["xt"]).transpose() * dchaint)); //dW
-        cppl_set(pgrads, "b", new MatrixN(dchaint.colwise().sum())); //db
-        MatrixN dx(N, T*D);
-        for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
-                for (int d=0; d<D; d++) {
-                    dx(n,t*D+d)=dxt(n*T+t,d);
-                }
-            }
-        }
         return dx;
     }
 };
