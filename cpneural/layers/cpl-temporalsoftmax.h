@@ -131,7 +131,10 @@ public:
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
         MatrixN probs=*((*pcache)["probs"]);
         MatrixN mask;
-        int N=probs.rows()/T;
+        // XXX: int N=probs.rows()/T;
+
+        int N=y.rows();
+
         if (pcache->find("mask")==pcache->end()) {
             mask=MatrixN(N,T);
             mask.setOnes();
@@ -163,9 +166,41 @@ public:
         loss /= N; // probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
-        MatrixN dx;
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+        MatrixN probs=*((*pcache)["probs"]);
+        MatrixN mask;
+        // int N=probs.rows()/T;
+        int N=y.rows();
 
+        if (pcache->find("mask")==pcache->end()) {
+            mask=MatrixN(N,T);
+            mask.setOnes();
+        } else {
+            mask=*((*pcache)["mask"]);
+        }
+
+        MatrixN dx(probs);
+
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                dx(n*T+t,y(n,t)) -= 1.0;
+            }
+        }
+        
+        dx /= N;  // dx.rows();
+        //dx = dx.array() * mask.array();
+/*
+dx_flat = probs.copy()
+dx_flat[np.arange(N * T), y_flat] -= 1
+dx_flat /= N
+dx_flat *= mask_flat[:, None]
+
+if verbose:
+    print('dx_flat: ', dx_flat.shape)
+
+dx = dx_flat.reshape(N, T, V)
+
+*/
         return dx;
     }
 };

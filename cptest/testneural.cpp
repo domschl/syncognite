@@ -251,6 +251,22 @@ int doTests() {
         allOk=false;
     }
 
+    // Temporal Softmax
+    int tsmN=10, tsmC=4, Ttm=4;
+    CpParams tc1;
+    tc1.setPar("inputShape",vector<int>{smC,Ttm});
+    tc1.setPar("noVectorizationTests", (bool)true);
+    TemporalSoftmax tmx(tc1);
+    MatrixN txmx(tsmN*Ttm,tsmC);
+    txmx.setRandom();
+    MatrixN ty(tsmN,Ttm);
+    for (unsigned i=0; i<ty.size(); i++) ty(i,0)=(rand()%tsmC);
+    h=1e-2; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-4; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!tmx.selfTest(txmx, ty, h, eps)) {
+        allOk=false;
+    }
+
     // SVM
     int svN=10, svC=5;
     CpParams c2;
