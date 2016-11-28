@@ -78,6 +78,10 @@ public:
             return probs;
         }
 
+// XXX: It is not clear if we want to allow [N, (T*D)] or [(N*T), D] as input
+//      (or both)
+
+
         /*
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt(N*T, D);

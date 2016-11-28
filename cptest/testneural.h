@@ -3,7 +3,6 @@
 
 #include <cp-neural.h>
 
-//bool matComp(MatrixN& m0, MatrixN& m1, string msg, floatN eps);
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 
 #include "layertests/cplt-affine.h"

@@ -4,7 +4,7 @@
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
-//bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
+
 bool matComp(MatrixN& m0, MatrixN& m1, string msg, floatN eps) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
         cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
