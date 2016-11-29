@@ -85,12 +85,14 @@ public:
             MatrixN probs(0,0);
             return probs;
         }
+/*
         if (y.cols()!=T || y.rows()!=N) {
             cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in y: " << shape(y) << " N,T:" << N << "," << T << endl;
             MatrixN probs(0,0);
             return probs;
         }
 
+*/
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
