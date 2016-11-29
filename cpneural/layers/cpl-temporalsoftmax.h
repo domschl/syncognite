@@ -60,16 +60,14 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
-        int N=y.rows();
-        MatrixN xt(N*T,D);
-
         if (x.cols() != D*T) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << xt.cols() << " D*T:" << D*T << endl;
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*T:" << D*T << endl;
             MatrixN probs(0,0);
             return probs;
         }
+        int N=x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
-        xt=MatrixN(N*T, D);
+        MatrixN xt=MatrixN(N*T, D);
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {

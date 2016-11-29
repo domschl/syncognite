@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=32;
+    int T=1; //32;
     int N=txt.text.size()-T+1;
 
     MatrixN Xr(N,T);
