@@ -49,7 +49,7 @@ public:
     which elements should contribute to the loss.
 
     Inputs:
-    - x: Input scores, of shape (N, (T, V))
+    - x: Input scores, of shape ((N, T), V)  // XXX ? (NT - V) vs (N - TV)
     - y: Ground-truth indices, of shape (N, T) where each element is in the range
          0 <= y[i, t] < V
     - mask: Boolean array of shape (N, T) where mask[i, t] tells whether or not
@@ -60,13 +60,27 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
-        if (x.cols() != D) {
+        int N=y.rows();
+        MatrixN xt(N*T,D);
+
+        if (x.cols() == D*T) {
+            // x: [N, (T * D)] -> [(N * T), D]
+            xt=MatrixN(N*T, D);
+            for (int n=0; n<N; n++) {
+                for (int t=0; t<T; t++) {
+                    for (int d=0; d<D; d++) {
+                        xt(n*T+t,d)=x(n,t*D+d);
+                    }
+                }
+            }
+        } else {
+            xt=x;
+        }
+        if (xt.cols() != D) {
             cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(cols):" << x.cols() << " D:" << D << endl;
             MatrixN probs(0,0);
             return probs;
         }
-        int NT=x.rows();
-        int N=NT/T;
         if (N*T != x.rows()) {
             cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(rows):" << x.rows() << " N*T:" << N*T << endl;
             MatrixN probs(0,0);
@@ -77,23 +91,6 @@ public:
             MatrixN probs(0,0);
             return probs;
         }
-
-// XXX: It is not clear if we want to allow [N, (T*D)] or [(N*T), D] as input
-//      (or both)
-
-
-        /*
-        // x: [N, (T * D)] -> [(N * T), D]
-        MatrixN xt(N*T, D);
-        for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
-                for (int d=0; d<D; d++) {
-                    xt(n*T+t,d)=x(n,t*D+d);
-                }
-            }
-        }
-        */
-        MatrixN xt(x);
 
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
@@ -186,7 +183,7 @@ public:
                 dx(n*T+t,y(n,t)) -= 1.0;
             }
         }
-        
+
         dx /= N;  // dx.rows();
         //dx = dx.array() * mask.array();
 /*
