@@ -126,6 +126,10 @@ public:
                 if ((*params["Wxh"])(i) < -1.0 * maxCut) (*params["Wxh"])(i)=-1.0*maxCut;
                 if ((*params["Wxh"])(i) > maxCut) (*params["Wxh"])(i)=maxCut;
             }
+            for (int i=0; i<(*params["bh"]).size(); i++) {
+                if ((*params["bh"])(i) < -1.0 * maxCut) (*params["bh"])(i)=-1.0*maxCut;
+                if ((*params["bh"])(i) > maxCut) (*params["bh"])(i)=maxCut;
+            }
         }
 
         h0=*params["ho"];
