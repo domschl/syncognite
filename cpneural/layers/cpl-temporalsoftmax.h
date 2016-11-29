@@ -186,7 +186,7 @@ public:
                 dx(n*T+t,y(n,t)) -= 1.0;
             }
         }
-        
+
         dx /= N;  // dx.rows();
         //dx = dx.array() * mask.array();
 /*
