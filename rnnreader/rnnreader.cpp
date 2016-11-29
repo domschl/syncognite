@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
     MatrixN yr(N,T);
 
     wstring chunk,chunky;
-    for (int i=0; i<N-1; i++) {
-        chunk=txt.text.substr(i,T);
-        chunky=txt.text.substr(i+1,T);
+    for (int i=0; i<N-T; i++) {
         for (int t=0; t<T; t++) {
+            chunk=txt.text.substr(i+t,T);
+            chunky=txt.text.substr(i+t+1,T);
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
         }
@@ -163,8 +163,8 @@ int main(int argc, char *argv[]) {
     lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
 
     CpParams cp11;
-    cp11.setPar("inputShape",vector<int>{VS});
-    lb.addLayer("Softmax","sm1",cp11,{"af1"});
+    cp11.setPar("inputShape",vector<int>{VS,T});
+    lb.addLayer("TemporalSoftmax","sm1",cp11,{"af1"});
 
     if (!lb.checkTopology(true)) {
         allOk=false;
