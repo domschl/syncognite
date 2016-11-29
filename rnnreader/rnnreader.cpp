@@ -118,12 +118,20 @@ int main(int argc, char *argv[]) {
     Xt=Xr.block(1100000,0,100000,T);
     yt=yr.block(1100000,0,100000,T);
 */
+/*
     X=Xr.block(0,0,100000,T);
     y=yr.block(0,0,100000,T);
     Xv=Xr.block(100000,0,10000,T);
     yv=yr.block(100000,0,10000,T);
     Xt=Xr.block(110000,0,10000,T);
     yt=yr.block(110000,0,10000,T);
+*/
+    X=Xr.block(0,0,10000,T);
+    y=yr.block(0,0,10000,T);
+    Xv=Xr.block(10000,0,1000,T);
+    yv=yr.block(10000,0,1000,T);
+    Xt=Xr.block(11000,0,1000,T);
+    yt=yr.block(11000,0,1000,T);
 
     cpInitCompute("Rnnreader");
     registerLayers();
@@ -189,20 +197,29 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    cpo.setPar("epochs",(floatN)5.0);
+    cpo.setPar("epochs",(floatN)2.0);
     cpo.setPar("batch_size",BS);
 
-    MatrixN xg(1,1);
+    MatrixN xg(1,T);
     wstring sg;
     for (int i=0; i<100; i++) {
         /*floatN cAcc=*/lb.train(X, y, Xv, yv, "Adam", cpo);
-        wstring instr=L"Er sagte";
+        wstring instr=L"Er sagte ";
+        for (int i=0; i<xg.size(); i++) {
+            if (i<instr.size()) {
+                xg(i)=txt.w2v[instr[i]];
+            } else {
+                xg(i)=txt.w2v[L' '];
+            }
+        }
+        /*
         for (auto wc : instr) {
             sg[0]=wc;
             xg(0,0)=txt.w2v[sg[0]];
             MatrixN z(0,0);
             MatrixN yg=lb.forward(xg,z,nullptr);
         }
+        */
         for (int g=0; g<100; g++) {
             xg(0,0)=txt.w2v[sg[0]];
             MatrixN z(0,0);
