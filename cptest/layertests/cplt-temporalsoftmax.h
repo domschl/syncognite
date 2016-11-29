@@ -4,7 +4,7 @@
 #include "../testneural.h"
 
 float getTemporalSMLoss(int N, int T, int V, float p) {
-    MatrixN x(N*T,V);
+    MatrixN x(N,V*T);
     cerr << "gtsml (1)" << endl;
     x.setRandom();
     x = (x.array()+1.0) * 0.005;
