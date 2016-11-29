@@ -107,7 +107,17 @@ public:
         }
         MatrixN probs = xne;
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
-        return probs;
+
+        // probst: [(N * T), D] -> [N, (T * D)] 
+        MatrixN probst=MatrixN(N,T*D);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    probst(n,t*D+d)=probs(n*T+t,d);
+                }
+            }
+        }
+        return probst;
     }
     /*
     N, T, V = x.shape

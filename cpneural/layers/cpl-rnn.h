@@ -9,7 +9,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     int T,D,H,N;
-    float maxCut=0.0;
+    float maxClip=0.0;
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
@@ -24,7 +24,7 @@ private:
         // T=cp.getPar("T",3);
         N=cp.getPar("N",1);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        maxCut=cp.getPar("maxcut",(float)0.0);
+        maxClip=cp.getPar("clip",(float)0.0);
         // D=inputShapeFlat;
         D=inputShape[0];
         T=inputShape[1];
@@ -117,21 +117,21 @@ public:
             if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         }
 
-        if (maxCut != 0.0) {
+        if (maxClip != 0.0) {
             for (int i=0; i<(*params["Whh"]).size(); i++) {
-                if ((*params["Whh"])(i) < -1.0 * maxCut) (*params["Whh"])(i)=-1.0*maxCut;
-                if ((*params["Whh"])(i) > maxCut) (*params["Whh"])(i)=maxCut;
+                if ((*params["Whh"])(i) < -1.0 * maxClip) (*params["Whh"])(i)=-1.0*maxClip;
+                if ((*params["Whh"])(i) > maxClip) (*params["Whh"])(i)=maxClip;
             }
             for (int i=0; i<(*params["Wxh"]).size(); i++) {
-                if ((*params["Wxh"])(i) < -1.0 * maxCut) (*params["Wxh"])(i)=-1.0*maxCut;
-                if ((*params["Wxh"])(i) > maxCut) (*params["Wxh"])(i)=maxCut;
+                if ((*params["Wxh"])(i) < -1.0 * maxClip) (*params["Wxh"])(i)=-1.0*maxClip;
+                if ((*params["Wxh"])(i) > maxClip) (*params["Wxh"])(i)=maxClip;
             }
             for (int i=0; i<(*params["bh"]).size(); i++) {
-                if ((*params["bh"])(i) < -1.0 * maxCut) (*params["bh"])(i)=-1.0*maxCut;
-                if ((*params["bh"])(i) > maxCut) (*params["bh"])(i)=maxCut;
+                if ((*params["bh"])(i) < -1.0 * maxClip) (*params["bh"])(i)=-1.0*maxClip;
+                if ((*params["bh"])(i) > maxClip) (*params["bh"])(i)=maxClip;
             }
         }
-
+        
         h0=*params["ho"];
         MatrixN h(N,T*H);
         h.setZero();
@@ -175,6 +175,29 @@ public:
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
         (*pgrads)["ho"] = new MatrixN(dh);
+
+        if (maxClip != 0.0) {
+            for (int i=0; i<dx.size(); i++) {
+                if (dx(i) < -1.0 * maxClip) dx(i)=-1.0*maxClip;
+                if (dx(i) > maxClip) dx(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["Wxh"]).size(); i++) {
+                if ((*(*pgrads)["Wxh"])(i) < -1.0 * maxClip) (*(*pgrads)["Wxh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["Wxh"])(i) > maxClip) (*(*pgrads)["Wxh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["Whh"]).size(); i++) {
+                if ((*(*pgrads)["Whh"])(i) < -1.0 * maxClip) (*(*pgrads)["Whh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["Whh"])(i) > maxClip) (*(*pgrads)["Whh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["bh"]).size(); i++) {
+                if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["ho"]).size(); i++) {
+                if ((*(*pgrads)["ho"])(i) < -1.0 * maxClip) (*(*pgrads)["ho"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["ho"])(i) > maxClip) (*(*pgrads)["ho"])(i)=maxClip;
+            }
+        }
 
         return dx;
     }

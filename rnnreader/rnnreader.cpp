@@ -89,16 +89,16 @@ int main(int argc, char *argv[]) {
     Color::Modifier def(Color::FG_DEFAULT);
 
     int T=32;
-    int N=txt.text.size()-T+1;
+    int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
 
     wstring chunk,chunky;
-    for (int i=0; i<N-T; i++) {
+    for (int i=0; i<N; i++) {
+        chunk=txt.text.substr(i,T);
+        chunky=txt.text.substr(i+1,T);
         for (int t=0; t<T; t++) {
-            chunk=txt.text.substr(i+t,T);
-            chunky=txt.text.substr(i+t+1,T);
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
         }
@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
     Xt=Xr.block(110000,0,10000,T);
     yt=yr.block(110000,0,10000,T);
 */
+
     X=Xr.block(0,0,10000,T);
     y=yr.block(0,0,10000,T);
     Xv=Xr.block(10000,0,1000,T);
@@ -136,11 +137,12 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal'}");
+    LayerBlock lb("{name='rnnreader';init='orthonormal'}");
     int VS=txt.vocsize();
-    int H=1024;
+    int H=128;
     int D=16;
     int BS=128;
+    float clip=2.0;
 
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
@@ -153,21 +155,23 @@ int main(int argc, char *argv[]) {
     //cp1.setPar("T",T);
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
-    cp1.setPar("maxcut",(float)5.0);
+    cp1.setPar("clip",clip);
     lb.addLayer("RNN","rnn1",cp1,{"WE0"});
-/*
+
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
     //cp1.setPar("T",T);
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
+    cp2.setPar("clip",clip);
     lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
-
+/*
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     //cp1.setPar("T",T);
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
+    cp3.setPar("clip",clip);
     lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
 */
     CpParams cp10;
@@ -175,7 +179,7 @@ int main(int argc, char *argv[]) {
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn2"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -201,6 +205,7 @@ int main(int argc, char *argv[]) {
     cpo.setPar("batch_size",BS);
 
     MatrixN xg(1,T);
+    MatrixN xg2(1,T);
     wstring sg;
     for (int i=0; i<100; i++) {
         /*floatN cAcc=*/lb.train(X, y, Xv, yv, "Adam", cpo);
@@ -220,25 +225,28 @@ int main(int argc, char *argv[]) {
             MatrixN yg=lb.forward(xg,z,nullptr);
         }
         */
-        for (int g=0; g<100; g++) {
-            xg(0,0)=txt.w2v[sg[0]];
+        //xg(0,0)=txt.w2v[sg[0]];
+        for (int g=0; g<50; g++) {
+            //wcout << g << L">";
             MatrixN z(0,0);
             MatrixN yg=lb.forward(xg,z,nullptr);
-            float mx=-1000.0;
-            int ind=-1;
-            for (int j=0; j<yg.cols(); j++) {
-                if (yg(0,j)>mx) {
-                    mx=yg(0,j);
-                    ind=j;
+            for (int t=0; t<T; t++) {
+                float mx=-1000.0;
+                int ind=-1;
+                for (int d=0; d<VS; d++) {
+                    if (yg(0,t*D+d)>mx) {
+                        mx=yg(0,t*D+d);
+                        ind=d;
+                    }
                 }
+                wchar_t cw=txt.v2w[ind];
+                if (t==0) wcout << cw;
+                xg2(0,t)=ind;
             }
-            if (ind==-1) {
-                cerr << "Unexpected ind:" << ind << endl;
-                exit(-1);
-            }
-            wchar_t cw=txt.v2w[ind];
-            wcout << cw;
-            sg[0]=cw;
+            //wcout << L"<" << endl;
+            for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+            xg(0,0)=xg2(0,0);
+            //xg=xg2;
         }
         wcout << endl;
     }
