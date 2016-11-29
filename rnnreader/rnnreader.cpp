@@ -118,12 +118,12 @@ int main(int argc, char *argv[]) {
     Xt=Xr.block(1100000,0,100000,T);
     yt=yr.block(1100000,0,100000,T);
 */
-    X=Xr.block(0,0,10000,T);
-    y=yr.block(0,0,10000,T);
-    Xv=Xr.block(11000,0,1000,T);
-    yv=yr.block(12000,0,1000,T);
-    Xt=Xr.block(12000,0,1000,T);
-    yt=yr.block(12000,0,1000,T);
+    X=Xr.block(0,0,100000,T);
+    y=yr.block(0,0,100000,T);
+    Xv=Xr.block(100000,0,10000,T);
+    yv=yr.block(100000,0,10000,T);
+    Xt=Xr.block(110000,0,10000,T);
+    yt=yr.block(110000,0,10000,T);
 
     cpInitCompute("Rnnreader");
     registerLayers();
@@ -189,7 +189,7 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    cpo.setPar("epochs",(floatN)1.0);
+    cpo.setPar("epochs",(floatN)5.0);
     cpo.setPar("batch_size",BS);
 
     MatrixN xg(1,1);
