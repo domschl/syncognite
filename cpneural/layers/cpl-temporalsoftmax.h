@@ -63,31 +63,32 @@ public:
         int N=y.rows();
         MatrixN xt(N*T,D);
 
-        if (x.cols() == D*T) {
-            // x: [N, (T * D)] -> [(N * T), D]
-            xt=MatrixN(N*T, D);
-            for (int n=0; n<N; n++) {
-                for (int t=0; t<T; t++) {
-                    for (int d=0; d<D; d++) {
-                        xt(n*T+t,d)=x(n,t*D+d);
-                    }
-                }
-            }
-        } else {
-            xt=x;
-        }
-        if (xt.cols() != D) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(cols):" << x.cols() << " D:" << D << endl;
+        if (x.cols() != D*T) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << xt.cols() << " D*T:" << D*T << endl;
             MatrixN probs(0,0);
             return probs;
         }
-        if (N*T != x.rows()) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x(rows):" << x.rows() << " N*T:" << N*T << endl;
+        // x: [N, (T * D)] -> [(N * T), D]
+        xt=MatrixN(N*T, D);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    xt(n*T+t,d)=x(n,t*D+d);
+                }
+            }
+        }
+        if (xt.cols() != D) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(cols):" << xt.cols() << " D:" << D << endl;
+            MatrixN probs(0,0);
+            return probs;
+        }
+        if (N*T != xt.rows()) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(rows):" << xt.rows() << " N*T:" << N*T << endl;
             MatrixN probs(0,0);
             return probs;
         }
         if (y.cols()!=T || y.rows()!=N) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in y: " << shape(y) << " N,T:" << N << "," << T << endl;
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in y: " << shape(y) << " N,T:" << N << "," << T << endl;
             MatrixN probs(0,0);
             return probs;
         }
@@ -185,20 +186,18 @@ public:
         }
 
         dx /= N;  // dx.rows();
-        //dx = dx.array() * mask.array();
-/*
-dx_flat = probs.copy()
-dx_flat[np.arange(N * T), y_flat] -= 1
-dx_flat /= N
-dx_flat *= mask_flat[:, None]
 
-if verbose:
-    print('dx_flat: ', dx_flat.shape)
+        // dx: [(N * T), D)] -> [N, (T, D)]
+        MatrixN dxr(N, T*D);
+        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    dxr(n,t*D+d)=dx(n*T+t,d);
+                }
+            }
+        }
 
-dx = dx_flat.reshape(N, T, V)
-
-*/
-        return dx;
+        return dxr;
     }
 };
 

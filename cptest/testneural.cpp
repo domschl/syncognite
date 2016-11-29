@@ -257,7 +257,7 @@ int doTests() {
     tc1.setPar("inputShape",vector<int>{smC,Ttm});
     tc1.setPar("noVectorizationTests", (bool)true);
     TemporalSoftmax tmx(tc1);
-    MatrixN txmx(tsmN*Ttm,tsmC);
+    MatrixN txmx(tsmN,tsmC*Ttm);
     txmx.setRandom();
     MatrixN ty(tsmN,Ttm);
     for (unsigned i=0; i<ty.size(); i++) ty(i,0)=(rand()%tsmC);

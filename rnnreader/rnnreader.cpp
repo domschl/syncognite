@@ -111,18 +111,24 @@ int main(int argc, char *argv[]) {
     MatrixN Xt(100000,T);
     MatrixN yt(100000,T);
 
-    X=Xr.block(0,0,1000000,T);
+/*    X=Xr.block(0,0,1000000,T);
     y=yr.block(0,0,1000000,T);
     Xv=Xr.block(1000000,0,100000,T);
     yv=yr.block(1000000,0,100000,T);
     Xt=Xr.block(1100000,0,100000,T);
     yt=yr.block(1100000,0,100000,T);
+*/
+    X=Xr.block(0,0,10000,T);
+    y=yr.block(0,0,10000,T);
+    Xv=Xr.block(11000,0,1000,T);
+    yv=yr.block(12000,0,1000,T);
+    Xt=Xr.block(12000,0,1000,T);
+    yt=yr.block(12000,0,1000,T);
 
     cpInitCompute("Rnnreader");
     registerLayers();
 
     LayerBlock lb("{name='rnnreader';init='normal'}");
-
     int VS=txt.vocsize();
     int H=1024;
     int D=16;
