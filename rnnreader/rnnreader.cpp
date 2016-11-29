@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
     //cp1.setPar("T",T);
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
+    cp1.setPar("maxcut",(float)5.0);
     lb.addLayer("RNN","rnn1",cp1,{"WE0"});
 /*
     CpParams cp2;

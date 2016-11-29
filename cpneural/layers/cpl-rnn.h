@@ -9,6 +9,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     int T,D,H,N;
+    float maxCut=0.0;
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
@@ -23,6 +24,7 @@ private:
         // T=cp.getPar("T",3);
         N=cp.getPar("N",1);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        maxCut=cp.getPar("maxcut",(float)0.0);
         // D=inputShapeFlat;
         D=inputShape[0];
         T=inputShape[1];
@@ -114,6 +116,18 @@ public:
         if (pcache!=nullptr) {
             if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         }
+
+        if (maxCut != 0.0) {
+            for (int i=0; i<(*params["Whh"]).size(); i++) {
+                if ((*params["Whh"])(i) < -1.0 * maxCut) (*params["Whh"])(i)=-1.0*maxCut;
+                if ((*params["Whh"])(i) > maxCut) (*params["Whh"])(i)=maxCut;
+            }
+            for (int i=0; i<(*params["Wxh"]).size(); i++) {
+                if ((*params["Wxh"])(i) < -1.0 * maxCut) (*params["Wxh"])(i)=-1.0*maxCut;
+                if ((*params["Wxh"])(i) > maxCut) (*params["Wxh"])(i)=maxCut;
+            }
+        }
+
         h0=*params["ho"];
         MatrixN h(N,T*H);
         h.setZero();
