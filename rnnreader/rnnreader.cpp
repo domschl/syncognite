@@ -88,37 +88,46 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=32;
+    int T=1;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
 
     wstring chunk,chunky;
+    int n;
     for (int i=0; i<N-T-1; i+=T) {
         chunk=txt.text.substr(i,T);
         chunky=txt.text.substr(i+1,T);
         for (int t=0; t<T; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
+            ++n;
         }
     }
 
-    MatrixN X(1000000,T);
-    MatrixN y(1000000,T);
-    MatrixN Xv(100000,T);
-    MatrixN yv(100000,T);
-    MatrixN Xt(100000,T);
-    MatrixN yt(100000,T);
+    int maxN = 500000;
+    if (n>maxN) n=maxN;
+    int n1=n*0.9;
+    int dn=(n-n1)/2;
 
-/*    X=Xr.block(0,0,1000000,T);
-    y=yr.block(0,0,1000000,T);
-    Xv=Xr.block(1000000,0,100000,T);
-    yv=yr.block(1000000,0,100000,T);
-    Xt=Xr.block(1100000,0,100000,T);
-    yt=yr.block(1100000,0,100000,T);
+    cerr << n1 << " datasets" << endl;
+
+/*    MatrixN X(n1,T);
+    MatrixN y(n1,T);
+    MatrixN Xv(dn,T);
+    MatrixN yv(dn,T);
+    MatrixN Xt(dn,T);
+    MatrixN yt(dn,T);
 */
+    MatrixN X=Xr.block(0,0,n1,T);
+    MatrixN y=yr.block(0,0,n1,T);
+    MatrixN Xv=Xr.block(n1,0,dn,T);
+    MatrixN yv=yr.block(n1,0,dn,T);
+    MatrixN Xt=Xr.block(n1+dn,0,dn,T);
+    MatrixN yt=yr.block(n1+dn,0,dn,T);
 /*
+
     X=Xr.block(0,0,100000,T);
     y=yr.block(0,0,100000,T);
     Xv=Xr.block(100000,0,10000,T);
@@ -126,21 +135,21 @@ int main(int argc, char *argv[]) {
     Xt=Xr.block(110000,0,10000,T);
     yt=yr.block(110000,0,10000,T);
 */
-
+/*
     X=Xr.block(0,0,10000,T);
     y=yr.block(0,0,10000,T);
     Xv=Xr.block(10000,0,1000,T);
     yv=yr.block(10000,0,1000,T);
     Xt=Xr.block(11000,0,1000,T);
     yt=yr.block(11000,0,1000,T);
-
+*/
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.01}");
+    LayerBlock lb("{name='rnnreader';init='orthonormal';initfactor=0.001}");
     int VS=txt.vocsize();
     int H=128;
-    int D=64;
+    int D=128;
     int BS=64;
     float clip=5.0;
 
@@ -152,29 +161,25 @@ int main(int argc, char *argv[]) {
 
     CpParams cp1;
     cp1.setPar("inputShape",vector<int>{D,T});
-    //cp1.setPar("T",T);
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
-    // cp1.setPar("clip",clip);
+    cp1.setPar("clip",clip);
     lb.addLayer("RNN","rnn1",cp1,{"WE0"});
-    /*
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
-    //cp1.setPar("T",T);
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    //lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
-    //cp1.setPar("T",T);
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
-*/
+    //lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     //cp10.setPar("T",T);
@@ -198,32 +203,37 @@ int main(int argc, char *argv[]) {
     wcout << chunk << endl;
 */
     CpParams cpo("{verbose=true;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)4e-2); //2.2e-2);
-    cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)1e-7);
+    cpo.setPar("learning_rate", (floatN)1e-7); //2.2e-2);
+    cpo.setPar("lr_decay", (floatN)0.95);
+    //cpo.setPar("regularization", (floatN)1.);
 
     floatN dep=1.0;
     floatN sep=0.0;
     cpo.setPar("epochs",(floatN)dep);
     cpo.setPar("batch_size",BS);
 
-    int TF=T;
-    MatrixN xg(1,TF);
-    MatrixN xg2(1,TF);
+    MatrixN xg(1,T);
+    MatrixN xg2(1,T);
     wstring sg;
-    for (int i=0; i<100; i++) {
+    for (int i=0; i<10000; i++) {
 
         cpo.setPar("startepoch", (floatN)sep);
         cpo.setPar("maxthreads", (int)1); // RNN can't cope with threads.
 
-        Layer *prnn=lb.layerMap["rnn1"];
-        prnn->params["ho"]->setZero();
-
+        Layer *prnn1=lb.layerMap["rnn1"];
+        prnn1->params["ho"]->setZero();
+        /*Layer *prnn2=lb.layerMap["rnn2"];
+        prnn2->params["ho"]->setZero();
+        Layer *prnn3=lb.layerMap["rnn3"];
+        prnn3->params["ho"]->setZero();
+*/
         floatN cAcc=lb.train(X, y, Xv, yv, "Adam", cpo);
         sep+=dep;
 
-        wstring instr=L"Er sagte daß er das nicht gerne hören würde, es aber keine Rollen spielen würde.";
-        for (int i=0; i<TF; i++) {
+        int pos=rand() % 1000 + 5000;
+        wstring instr=txt.text.substr(pos,T);
+
+        for (int i=0; i<T; i++) {
             if (i<instr.size()) {
                 xg(0,i)=txt.w2v[instr[i]];
             } else {
@@ -239,38 +249,43 @@ int main(int argc, char *argv[]) {
         }
         */
         //xg(0,0)=txt.w2v[sg[0]];
-        for (int g=0; g<2; g++) {
-            wcout << g << L">";
-            MatrixN z(0,0);
+        for (int rep=0; rep<3; rep++) {
+            //Layer *prnn=lb.layerMap["rnn1"];
+            //prnn->params["ho"]->setZero();
+            for (int g=0; g<200; g++) {
+                //wcout << g << L">";
+                MatrixN z(0,0);
 
-            Layer *prnn=lb.layerMap["rnn1"];
-            prnn->params["ho"]->setZero();
 
-            MatrixN yg=lb.forward(xg,z,nullptr);
-            for (int t=0; t<TF; t++) {
-                float mx=-1000.0;
-                int ind=-1;
-                for (int d=0; d<VS; d++) {
-                    floatN p=yg(0,t*D+d);
-                    floatN pr=p*((floatN)(rand()%10000)/100000.0+0.9);
-                    if (pr>mx) {
-                        mx=pr; // yg(0,t*D+d);
-                        ind=d;
+                //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
+                //wcout << L"<" << endl << L">";
+
+                MatrixN yg=lb.forward(xg,z,nullptr);
+                for (int t=0; t<T; t++) {
+                    float mx=-1000.0;
+                    int ind=-1;
+                    for (int d=0; d<VS; d++) {
+                        floatN p=yg(0,t*D+d);
+                        floatN pr=p*((floatN)(rand()%100)/5000.0+0.98);
+                        if (pr>mx) {
+                            mx=pr; // yg(0,t*D+d);
+                            ind=d;
+                        }
                     }
+                    wchar_t cw=txt.v2w[ind];
+                    //if (t==0) wcout << L"[" << cw << L"<";
+                    //wcout << L"<" << cw << L">";
+                    wcout << cw;
+                    xg2(0,t)=ind;
                 }
-                wchar_t cw=txt.v2w[ind];
-                //if (t==0) wcout << L"[" << cw << L"<";
-                wcout << cw;
-                xg2(0,t)=ind;
+                //wcout << L"<" << endl;
+                for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+                xg(0,0)=xg2(0,0);
+                //xg=xg2;
             }
-            wcout << L"<" << endl;
-            for (int t=TF-1; t>0; t--) xg(0,t)=xg(0,t-1);
-            xg(0,0)=xg2(0,0);
-            //xg=xg2;
+            wcout << endl;
         }
-        //wcout << endl;
     }
-
     /*
     floatN train_err, val_err, test_err;
     bool evalFinal=true;
