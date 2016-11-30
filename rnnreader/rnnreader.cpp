@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     int H=128;
     int D=128;
     int BS=128;
-    float clip=2.0;
+    float clip=5.0;
 
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
     CpParams cpo("{verbose=false;epsion=1e-8}");
     cpo.setPar("learning_rate", (floatN)4e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)1e-2);
+    cpo.setPar("regularization", (floatN)1e-5);
 
     cpo.setPar("epochs",(floatN)4.0);
     cpo.setPar("batch_size",BS);
