@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     LayerBlock lb("{name='rnnreader';init='orthonormal'}");
     int VS=txt.vocsize();
     int H=128;
-    int D=16;
+    int D=128;
     int BS=128;
     float clip=2.0;
 
