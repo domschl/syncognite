@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal';initfactor=(floatN)0.001}");
+    LayerBlock lb("{name='rnnreader';init='normal';initfactor=(floatN)0.1}");
     int VS=txt.vocsize();
     int H=128;
     int D=128;
@@ -196,16 +196,17 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=false;epsion=1e-8}");
-    cpo.setPar("learning_rate", (floatN)4e-2); //2.2e-2);
+    CpParams cpo("{verbose=false;epsilon=1e-8}");
+    cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);
 
-    cpo.setPar("epochs",(floatN)4.0);
+    cpo.setPar("epochs",(floatN)2.0);
     cpo.setPar("batch_size",BS);
 
-    MatrixN xg(1,T);
-    MatrixN xg2(1,T);
+    int TF=T;
+    MatrixN xg(1,TF);
+    MatrixN xg2(1,TF);
     wstring sg;
     for (int i=0; i<100; i++) {
         /*floatN cAcc=*/lb.train(X, y, Xv, yv, "Adam", cpo);
@@ -230,7 +231,7 @@ int main(int argc, char *argv[]) {
             //wcout << g << L">";
             MatrixN z(0,0);
             MatrixN yg=lb.forward(xg,z,nullptr);
-            for (int t=0; t<T; t++) {
+            for (int t=0; t<TF; t++) {
                 float mx=-1000.0;
                 int ind=-1;
                 for (int d=0; d<VS; d++) {
@@ -244,7 +245,7 @@ int main(int argc, char *argv[]) {
                 xg2(0,t)=ind;
             }
             //wcout << L"<" << endl;
-            for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+            for (int t=TF-1; t>0; t--) xg(0,t)=xg(0,t-1);
             xg(0,0)=xg2(0,0);
             //xg=xg2;
         }
