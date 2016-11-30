@@ -8,6 +8,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     int hidden;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         layerName="Affine";
         inputShapeRang=1;
@@ -20,10 +21,11 @@ private:
         }
         hidden=cp.getPar("hidden",1024);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
         outputShape={hidden};
 
-        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(inputShapeFlat,hidden),inittype))); // W
-        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,hidden),inittype))); // b
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(inputShapeFlat,hidden),inittype,initfactor))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,hidden),inittype,initfactor))); // b
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 

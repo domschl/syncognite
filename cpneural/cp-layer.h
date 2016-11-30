@@ -139,8 +139,8 @@ XavierMode xavierInitType(string stype) {
     return type;
 }
 
-MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD) {
-    floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows()));
+MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD, floatN initfactor=1.0) {
+    floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows())) * initfactor;
     float mean=0.0;
     float std=xavier / 2.0;
     MatrixN wo(w);
