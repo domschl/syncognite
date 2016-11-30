@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='orthonormal'}");
+    LayerBlock lb("{name='rnnreader';init='normal'}");
     int VS=txt.vocsize();
     int H=128;
     int D=128;
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
     CpParams cpo("{verbose=false;epsion=1e-8}");
     cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
-    // cpo.setPar("regularization", (floatN)1e-7);
+    cpo.setPar("regularization", (floatN)1e-4);
 
     cpo.setPar("epochs",(floatN)4.0);
     cpo.setPar("batch_size",BS);
