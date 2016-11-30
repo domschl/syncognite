@@ -196,12 +196,12 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=true;epsion=1e-8}");
-    cpo.setPar("learning_rate", (floatN)2e-2); //2.2e-2);
+    CpParams cpo("{verbose=false;epsion=1e-8}");
+    cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)1e-5);
+    // cpo.setPar("regularization", (floatN)1e-7);
 
-    cpo.setPar("epochs",(floatN)2.0);
+    cpo.setPar("epochs",(floatN)4.0);
     cpo.setPar("batch_size",BS);
 
     MatrixN xg(1,T);
