@@ -11,6 +11,7 @@ private:
     floatN initfactor;
     int T,D,H,N;
     float maxClip=0.0;
+    bool nohupdate;
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
@@ -27,6 +28,7 @@ private:
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
         initfactor=cp.getPar("initfactor",(floatN)1.0);
         maxClip=cp.getPar("clip",(float)0.0);
+        nohupdate=cp.getPar("nohupdate",(bool)false);  // true for auto-diff tests
         // D=inputShapeFlat;
         D=inputShape[0];
         T=inputShape[1];
@@ -119,6 +121,8 @@ public:
             if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         }
 
+        if (id>0) cerr << "WARNING: rnn layer is not thread-safe, thread id>0! (set optimizer parameter maxthreads=1)" << endl;
+/*
         if (maxClip != 0.0) {
             for (int i=0; i<(*params["Whh"]).size(); i++) {
                 if ((*params["Whh"])(i) < -1.0 * maxClip) (*params["Whh"])(i)=-1.0*maxClip;
@@ -134,7 +138,7 @@ public:
             }
         }
 
-        h0=*params["ho"];
+*/        h0=*params["ho"];
         MatrixN h(N,T*H);
         h.setZero();
         MatrixN ht=h0;
@@ -149,6 +153,8 @@ public:
             name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
         }
+        // If we update ho, auto-differenciation wont work.
+        if (!nohupdate) *params["ho"]=ht; // XXX WARNING: this makes the whole thing not thread-safe and state-dependant!
         return h;
     }
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {

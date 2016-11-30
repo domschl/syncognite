@@ -5,7 +5,6 @@
 
 float getTemporalSMLoss(int N, int T, int V, float p) {
     MatrixN x(N,V*T);
-    cerr << "gtsml (1)" << endl;
     x.setRandom();
     x = (x.array()+1.0) * 0.005;
     MatrixN y(N,T);
@@ -15,19 +14,15 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
         if (rand()%1000 < p*1000.0) mask(i)=1.0;
         else mask(i)=0.0;
     }
-    cerr << "gtsml (2)" << endl;
     CpParams cp;
     cp.setPar("inputShape",vector<int>{V,T});
     TemporalSoftmax tsm(cp);
     t_cppl cache;
     cppl_set(&cache,"mask",new MatrixN(mask));
-    cerr << "gtsml (3)" << endl;
     tsm.forward(x,y,&cache);
     float loss;
-    cerr << "gtsml (4)" << endl;
     loss=tsm.loss(y,&cache);
     cppl_delete(&cache);
-    cerr << "gtsml (5e)" << endl;
     return loss;
 }
 

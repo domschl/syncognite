@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     MatrixN yr(N,T);
 
     wstring chunk,chunky;
-    for (int i=0; i<N; i++) {
+    for (int i=0; i<N-T-1; i+=T) {
         chunk=txt.text.substr(i,T);
         chunky=txt.text.substr(i+1,T);
         for (int t=0; t<T; t++) {
@@ -137,11 +137,11 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal';initfactor=(floatN)0.1}");
+    LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.01}");
     int VS=txt.vocsize();
     int H=128;
-    int D=128;
-    int BS=128;
+    int D=64;
+    int BS=64;
     float clip=5.0;
 
     CpParams cp0;
@@ -155,8 +155,9 @@ int main(int argc, char *argv[]) {
     //cp1.setPar("T",T);
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
-    cp1.setPar("clip",clip);
+    // cp1.setPar("clip",clip);
     lb.addLayer("RNN","rnn1",cp1,{"WE0"});
+    /*
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
@@ -165,7 +166,7 @@ int main(int argc, char *argv[]) {
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
     lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
-/*
+
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     //cp1.setPar("T",T);
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn2"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -196,12 +197,14 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
+    CpParams cpo("{verbose=true;epsilon=1e-8}");
+    cpo.setPar("learning_rate", (floatN)4e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)1e-5);
+    cpo.setPar("regularization", (floatN)1e-7);
 
-    cpo.setPar("epochs",(floatN)2.0);
+    floatN dep=1.0;
+    floatN sep=0.0;
+    cpo.setPar("epochs",(floatN)dep);
     cpo.setPar("batch_size",BS);
 
     int TF=T;
@@ -209,13 +212,22 @@ int main(int argc, char *argv[]) {
     MatrixN xg2(1,TF);
     wstring sg;
     for (int i=0; i<100; i++) {
-        /*floatN cAcc=*/lb.train(X, y, Xv, yv, "Adam", cpo);
-        wstring instr=L"Er sagte ";
-        for (int i=0; i<xg.size(); i++) {
+
+        cpo.setPar("startepoch", (floatN)sep);
+        cpo.setPar("maxthreads", (int)1); // RNN can't cope with threads.
+
+        Layer *prnn=lb.layerMap["rnn1"];
+        prnn->params["ho"]->setZero();
+
+        floatN cAcc=lb.train(X, y, Xv, yv, "Adam", cpo);
+        sep+=dep;
+
+        wstring instr=L"Er sagte daß er das nicht gerne hören würde, es aber keine Rollen spielen würde.";
+        for (int i=0; i<TF; i++) {
             if (i<instr.size()) {
-                xg(i)=txt.w2v[instr[i]];
+                xg(0,i)=txt.w2v[instr[i]];
             } else {
-                xg(i)=txt.w2v[L' '];
+                xg(0,i)=txt.w2v[L' '];
             }
         }
         /*
@@ -227,29 +239,36 @@ int main(int argc, char *argv[]) {
         }
         */
         //xg(0,0)=txt.w2v[sg[0]];
-        for (int g=0; g<50; g++) {
-            //wcout << g << L">";
+        for (int g=0; g<2; g++) {
+            wcout << g << L">";
             MatrixN z(0,0);
+
+            Layer *prnn=lb.layerMap["rnn1"];
+            prnn->params["ho"]->setZero();
+
             MatrixN yg=lb.forward(xg,z,nullptr);
             for (int t=0; t<TF; t++) {
                 float mx=-1000.0;
                 int ind=-1;
                 for (int d=0; d<VS; d++) {
-                    if (yg(0,t*D+d)>mx) {
-                        mx=yg(0,t*D+d);
+                    floatN p=yg(0,t*D+d);
+                    floatN pr=p*((floatN)(rand()%10000)/100000.0+0.9);
+                    if (pr>mx) {
+                        mx=pr; // yg(0,t*D+d);
                         ind=d;
                     }
                 }
                 wchar_t cw=txt.v2w[ind];
-                if (t==0) wcout << cw;
+                //if (t==0) wcout << L"[" << cw << L"<";
+                wcout << cw;
                 xg2(0,t)=ind;
             }
-            //wcout << L"<" << endl;
+            wcout << L"<" << endl;
             for (int t=TF-1; t>0; t--) xg(0,t)=xg(0,t-1);
             xg(0,0)=xg2(0,0);
             //xg=xg2;
         }
-        wcout << endl;
+        //wcout << endl;
     }
 
     /*

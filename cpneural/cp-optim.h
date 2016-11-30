@@ -199,17 +199,27 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
 
     float epf=popti->cp.getPar("epochs", (float)1.0); //Default only!
     int ep=(int)ceil(epf);
+    float sepf=popti->cp.getPar("startepoch", (float)0.0);
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
-    int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
 
+    int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
+    int maxThreads=popti->cp.getPar("maxthreads",(int)0);
+    if (maxThreads!=0) {
+        if (nt>maxThreads) nt=maxThreads;
+    }
+
     std::ofstream logfile;
-    logfile.open("log.txt");
-    logfile << "# Epoche\tLoss\tAccuracy" << endl;
+    if (sepf>0.0) {
+        logfile.open("log.txt", std::ios_base::app);
+    } else {
+        logfile.open("log.txt");
+        logfile << "# Epoche\tLoss\tAccuracy" << endl;
+    }
     std::flush(logfile);
     vector<unsigned int> ack(x.rows());
     vector<unsigned int> shfl(x.rows());
@@ -228,7 +238,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     cerr << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
     bool fracend=false;
-    for (int e=0; e<ep && !fracend; e++) {
+    for (int e=sepf; e<sepf+ep && !fracend; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());
         for (unsigned int i=0; i<ack.size(); i++) ack[i]=0;
         if (verbose) {
@@ -329,7 +339,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                     bold=b;
                 }
                 //cerr << "UD" << endl;
-                if ((float)e+(floatN)b/(floatN)chunks > epf) fracend=true;
+                if ((float)e+(floatN)b/(floatN)chunks > epf+sepf) fracend=true;
             }
         }
         //cerr << "ED" << endl;

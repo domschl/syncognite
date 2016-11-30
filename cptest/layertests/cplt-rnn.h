@@ -326,6 +326,8 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=rnn.forward(x, &cache);
     // for (auto ci : cache) cerr << ci.first << shape(*(ci.second))<< " ";
     //cerr << endl;
+    *(rnn.params["ho"])=h0; // reset to original value...
+    
     MatrixN dx0=rnn.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);
