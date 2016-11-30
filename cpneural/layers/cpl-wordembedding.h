@@ -103,9 +103,9 @@ public:
         MatrixN xv(N*T,V);
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
-                for (int vi=0; vi<V; vi++)
-                xv(n*T+t,vi)=wVect(x(n,t),vi);
-                // xv(t*N+n,vi)=wVect(x(n,t),vi);
+                for (int vi=0; vi<V; vi++) {
+                    xv(n*T+t,vi)=wVect(x(n,t),vi);
+                }
             }
         }
         if (pcache != nullptr) cppl_set(pcache, "xv", new MatrixN(xv));
