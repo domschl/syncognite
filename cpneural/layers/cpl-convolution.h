@@ -26,6 +26,7 @@ private:
     int HO, WO;
     int pad, stride;
     bool mlverbose;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         layerName="Convolution";
         inputShapeRang=3;
@@ -53,9 +54,10 @@ private:
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
 
-        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(F,C*HH*WW),inittype))); // W
-        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(F,1),inittype))); // b
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(F,C*HH*WW),inittype,initfactor))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(F,1),inittype,initfactor))); // b
 
         //cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
         //cppl_set(&params, "b", new MatrixN(F,1));

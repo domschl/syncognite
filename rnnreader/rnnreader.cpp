@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal'}");
+    LayerBlock lb("{name='rnnreader';init='normal';initfactor=(floatN)0.001}");
     int VS=txt.vocsize();
     int H=128;
     int D=128;

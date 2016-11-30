@@ -45,6 +45,7 @@ class LayerBlock : public Layer {
 private:
     bool bench;
     string inittype;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         cp=cx;
         layerName=cp.getPar("name",(string)"block");
@@ -53,6 +54,7 @@ private:
         layerType=LayerType::LT_NORMAL;
         trainMode = cp.getPar("train", false);
         inittype=cp.getPar("init", (string)"standard");
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
         checked=false;
     }
 public:
@@ -134,6 +136,7 @@ public:
         }
 
         cpl.setPar("init",cpl.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
+        cpl.setPar("initfactor",cpl.getPar("initfactor", initfactor));
 
         layerMap[name]=CREATE_LAYER(layerclass, cpl)   // Macro!
         Layer *pLayer = layerMap[name];

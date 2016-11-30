@@ -8,6 +8,7 @@ class RNN : public Layer {
 private:
     int numGpuThreads;
     int numCpuThreads;
+    floatN initfactor;
     int T,D,H,N;
     float maxClip=0.0;
     void setup(const CpParams& cx) {
@@ -24,6 +25,7 @@ private:
         // T=cp.getPar("T",3);
         N=cp.getPar("N",1);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
         maxClip=cp.getPar("clip",(float)0.0);
         // D=inputShapeFlat;
         D=inputShape[0];
@@ -32,9 +34,9 @@ private:
         outputShape={H,T};
 
         cppl_set(&params, "ho", new MatrixN(N,H));
-        cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,H),inittype)));
-        cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,H),inittype)));
-        cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,H),inittype)));
+        cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,H),inittype,initfactor)));
+        cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,H),inittype,initfactor)));
+        cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,H),inittype,initfactor)));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -131,7 +133,7 @@ public:
                 if ((*params["bh"])(i) > maxClip) (*params["bh"])(i)=maxClip;
             }
         }
-        
+
         h0=*params["ho"];
         MatrixN h(N,T*H);
         h.setZero();

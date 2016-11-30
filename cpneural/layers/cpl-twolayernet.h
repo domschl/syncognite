@@ -7,6 +7,7 @@
 class TwoLayerNet : public Layer {
 private:
     vector<int> hidden;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         bool retval=true;
         layerName="TwoLayerNet";
@@ -29,10 +30,12 @@ private:
         c1.setPar("inputShape",vector<int>{inputShapeFlat});
         c1.setPar("hidden",hidden[0]);
         c1.setPar("init",inittype);
+        c1.setPar("initfactor",initfactor);
         c2.setPar("inputShape",vector<int>{hidden[0]});
         c3.setPar("inputShape",vector<int>{hidden[0]});
         c3.setPar("hidden",hidden[1]);
         c3.setPar("init",inittype);
+        c3.setPar("initfactor",initfactor);
         c4.setPar("inputShape",vector<int>{hidden[1]});
         af1=new Affine(c1);
         mlPush("af1", &(af1->params), &params);

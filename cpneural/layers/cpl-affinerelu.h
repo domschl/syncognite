@@ -6,6 +6,7 @@
 class AffineRelu : public Layer {
 private:
     int hidden;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
@@ -18,11 +19,13 @@ private:
         }
         hidden=cp.getPar("hidden",1024);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
 
         outputShape={hidden};
         CpParams ca;
         ca.setPar("inputShape", vector<int>{inputShapeFlat});
         ca.setPar("init",inittype);
+        ca.setPar("initfactor",initfactor);
         ca.setPar("hidden", hidden);
         af=new Affine(ca);
         mlPush("af", &(af->params), &params);

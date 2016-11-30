@@ -6,6 +6,7 @@
 class  TemporalAffine : public Layer {
 private:
     int T,D,M;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         int allOk=true;
         layerName="TemporalAffine";
@@ -21,11 +22,12 @@ private:
         T=inputShape[1]; // cp.getPar("T",128);
         M=cp.getPar("M",128);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
 
         outputShape={M,T};
 
-        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(D,M),inittype))); // W
-        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,M),inittype))); // b
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(D,M),inittype,initfactor))); // W
+        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,M),inittype,initfactor))); // b
 
 /*
         params["W"]->setRandom();

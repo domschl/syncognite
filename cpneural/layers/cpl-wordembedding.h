@@ -22,6 +22,7 @@ private:
     int numCpuThreads;
     int T,D,V;
     MatrixN wVect;
+    floatN initfactor;
     void setup(const CpParams& cx) {
         layerName="WordEmbedding";
         inputShapeRang=1;
@@ -37,8 +38,9 @@ private:
         D=cp.getPar("D",128);
         outputShape={D,T};
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
+        initfactor=cp.getPar("initfactor",(floatN)1.0);
 
-        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(V,D),inittype)));
+        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(V,D),inittype,initfactor)));
         wVect=MatrixN(V,V);
         wVect.setIdentity(); // Simple one-hot word vectors.
         // cppl_set(&params, "V", new MatrixN(wVect));   // XXX: we are implying to learn a better word vector repr. That was not done in CS231
