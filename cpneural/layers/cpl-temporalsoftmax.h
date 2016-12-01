@@ -108,7 +108,7 @@ public:
         MatrixN probs = xne;
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
-        // probst: [(N * T), D] -> [N, (T * D)] 
+        // probst: [(N * T), D] -> [N, (T * D)]
         MatrixN probst=MatrixN(N,T*D);
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
@@ -202,11 +202,19 @@ public:
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {
-                    dxr(n,t*D+d)=dx(n*T+t,d);
+                    dxr(n,t*D+d)=dx(n*T+t,d) * mask(n,t);
                 }
             }
         }
 
+/*        for (int n=0; n<N; n++) {
+            for (int t=0; t<T; t++) {
+                for (int d=0; d<D; d++) {
+                    if (mask(n,t)==0.0) dxr(n,t*D+d)=0.0;
+                }
+            }
+        }
+*/
         return dxr;
     }
 };

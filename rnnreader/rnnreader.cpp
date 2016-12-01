@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
     MatrixN yr(N,T);
 
     wstring chunk,chunky;
-    int n;
+    int n=0;
     for (int i=0; i<N-T-1; i+=T) {
         chunk=txt.text.substr(i,T);
         chunky=txt.text.substr(i+1,T);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
     wcout << chunk << endl;
 */
     CpParams cpo("{verbose=true;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-7); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-4); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 

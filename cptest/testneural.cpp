@@ -488,6 +488,14 @@ int doTests() {
         allOk=false;
     }
 
+    if (checkTemporalSoftmax()) {
+        cerr << green << "TemporalSoftmax with test data: OK." << def << endl;
+    } else {
+        cerr << red << "TemporalSoftmax with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+
 /*    if (trainTest()) {
         cerr << green << "TrainTest: OK." << def << endl;
     } else {
