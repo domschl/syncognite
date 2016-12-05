@@ -202,8 +202,8 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    // CpParams cpo("{verbose=true;epsilon=1e-8}");
-    CpParams cpo("{verbose=false;epsilon=1e-8}");
+    CpParams cpo("{verbose=true;epsilon=1e-8}");
+    // CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
@@ -297,9 +297,10 @@ int main(int argc, char *argv[]) {
                     xg2(0,t)=ind;
                 }
                 //wcout << L"<" << endl;
-                for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+                /*for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
                 xg(0,0)=xg2(0,0);
-                //xg=xg2;
+                *///
+                xg=xg2;
             }
             wcout << endl;
         }
