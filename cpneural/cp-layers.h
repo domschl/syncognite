@@ -239,8 +239,8 @@ public:
         MatrixN xn;
         Timer t;
         trainMode = cp.getPar("train", false);
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_update(pcache, "y", new MatrixN(y));
         while (!done) {
             nLay=getLayerFromInput(cLay);
             if (nLay.size()!=1) {
@@ -249,8 +249,10 @@ public:
             }
             string name=nLay[0];
             Layer *p = layerMap[name];
+            p->cp.setPar("T-Steps",cp.getPar("T-Steps",0));
             t_cppl cache;
             //cache.clear();
+            if (pcache!=nullptr) mlPop(name,pcache,&cache);
             if (bench) t.startWall();
             if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
             else xn=p->forward(x0,y,&cache, id);

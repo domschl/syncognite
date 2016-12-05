@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=4;
+    int T=32;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -148,10 +148,10 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
-    int H=128;
+    int H=64;
     int D=128;
-    int BS=128;
-    float clip=10.0;
+    int BS=32;
+    float clip=5.0;
 
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
@@ -171,21 +171,21 @@ int main(int argc, char *argv[]) {
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    //lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+    //lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -244,7 +244,8 @@ int main(int argc, char *argv[]) {
         }
         */
         //xg(0,0)=txt.w2v[sg[0]];
-        Layer *prnn;
+        lb.cp.setPar("T-Steps",1);
+/*        Layer *prnn;
         prnn=lb.layerMap["WE0"];
         prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn1"];
@@ -257,9 +258,16 @@ int main(int argc, char *argv[]) {
         prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["sm1"];
         prnn->cp.setPar("T-Steps",1);
-
+*/
         int TT=1;
         for (int rep=0; rep<3; rep++) {
+            t_cppl cache{};
+            cppl_set(&cache,"rnn1-ho",new MatrixN(1,TT));
+            cache["rnn1-ho"]->setZero();
+            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
+            cache["rnn2-ho"]->setZero();
+            cppl_set(&cache,"rnn3-ho",new MatrixN(1,TT));
+            cache["rnn3-ho"]->setZero();*/
             cerr << "------------" << rep << "--------------------------" << endl;
             for (int g=0; g<200; g++) {
                 //wcout << g << L">";
@@ -268,7 +276,7 @@ int main(int argc, char *argv[]) {
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
                 //wcout << L"<" << endl << L">";
-                MatrixN probst=lb.forward(xg,z,nullptr);
+                MatrixN probst=lb.forward(xg,z,&cache);
                 MatrixN probsd=MatrixN(N*TT,VS);
                 for (int n=0; n<1; n++) {
                     for (int t=0; t<TT; t++) {
@@ -313,8 +321,12 @@ int main(int argc, char *argv[]) {
 
                 //xg=xg2;
             }
+            cppl_delete(&cache);
+            //cache.clear();
             wcout << endl;
         }
+        lb.cp.setPar("T-Steps",T);
+    /*
         prnn=lb.layerMap["WE0"];
         prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn1"];
@@ -327,7 +339,7 @@ int main(int argc, char *argv[]) {
         prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["sm1"];
         prnn->cp.setPar("T-Steps",T);
-
+*/
     }
     /*
     floatN train_err, val_err, test_err;

@@ -142,7 +142,11 @@ public:
         }
 
 */
-        h0=*params["ho"];
+        if (pcache!=nullptr && pcache->find("ho")!=pcache->end()) {
+            h0=*((*pcache)["ho"]);
+        } else {
+            h0=*params["ho"];
+        }
         MatrixN h(N,TT*H);
         h.setZero();
         MatrixN ht=h0;
@@ -158,7 +162,11 @@ public:
             mlPush(name,&cache,pcache);
         }
         // If we update ho, auto-differenciation wont work.
-        if (!nohupdate) *params["ho"]=ht; // XXX WARNING: this makes the whole thing not thread-safe and state-dependant!
+        if (pcache!=nullptr && pcache->find("ho")!=pcache->end()) {
+            *(*pcache)["ho"]=ht;
+        } else {
+            if (!nohupdate) *params["ho"]=ht; // XXX WARNING: this makes the whole thing not thread-safe and state-dependant!
+        }
         return h;
     }
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
