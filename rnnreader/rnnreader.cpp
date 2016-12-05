@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=16;
+    int T=4;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -146,12 +146,12 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='orthonormal';initfactor=0.001}");
+    LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
-    int H=96;
+    int H=128;
     int D=128;
-    int BS=64;
-    float clip=5.0;
+    int BS=128;
+    float clip=10.0;
 
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
 */
     CpParams cpo("{verbose=true;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
@@ -234,7 +234,7 @@ int main(int argc, char *argv[]) {
         int pos=rand() % 1000 + 5000;
         wstring instr=txt.text.substr(pos,T);
 
-        xg(0,0)='a'+rand()%20;
+        xg(0,0)='A'+rand()%20;
         /*
         for (auto wc : instr) {
             sg[0]=wc;
@@ -245,6 +245,8 @@ int main(int argc, char *argv[]) {
         */
         //xg(0,0)=txt.w2v[sg[0]];
         Layer *prnn;
+        prnn=lb.layerMap["WE0"];
+        prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn1"];
         prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn2"];
@@ -298,7 +300,8 @@ int main(int argc, char *argv[]) {
                     wchar_t cw=txt.v2w[ind];
                     //if (t==0) wcout << L"[" << cw << L"<";
                     //wcout << L"<" << cw << L">";
-                    if (t==0) wcout << cw;
+                    if (t==0) wcout << cw;  //  << L"(" << ind << L")";
+                    // if (ind==0) cerr << "probs: " << probs << endl;
                     xg2(0,t)=ind;
                 }
                 //wcout << L"<" << endl;
@@ -312,6 +315,8 @@ int main(int argc, char *argv[]) {
             }
             wcout << endl;
         }
+        prnn=lb.layerMap["WE0"];
+        prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn1"];
         prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn2"];

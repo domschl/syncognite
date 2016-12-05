@@ -84,7 +84,7 @@ int randomChoice(vector<T> data, vector<T> probabilities) {
         cumul += probabilities[i];
         accProbs[i]=cumul;
     }
-    T dice=(T)(rand()%10000)/10000.0;
+    T dice=(T)(std::rand()%10000)/10000.0;
     for (int i=0; i<data.size(); i++) {
         if (accProbs[i] > dice) return i;
     }
