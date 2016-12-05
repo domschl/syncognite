@@ -298,8 +298,10 @@ int main(int argc, char *argv[]) {
                 }
                 //wcout << L"<" << endl;
 
-                for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+                //for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
+                for (int t=0; t< T-1; t++) xg(0,t)=xg(0,t+1);
                 xg(0,0)=xg2(0,0);
+                
 
                 //xg=xg2;
             }
