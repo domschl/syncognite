@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=2;
+    int T=24;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -261,13 +261,21 @@ int main(int argc, char *argv[]) {
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
                 //wcout << L"<" << endl << L">";
+                MatrixN probst=lb.forward(xg,z,nullptr);
+                MatrixN probsd=MatrixN(N*T,VS);
+                for (int n=0; n<1; n++) {
+                    for (int t=0; t<T; t++) {
+                        for (int d=0; d<VS; d++) {
+                            probsd(n*T+t,d)=probst(n,t*VS+d);
+                        }
+                    }
+                }
 
-                MatrixN yg=lb.forward(xg,z,nullptr);
                 for (int t=0; t<T; t++) {
-                    vector<floatN> probs(D);
-                    vector<floatN> index(D);
-                    for (int d=0; d<D; d++) {
-                        probs[d]=yg(0,t*D+d);
+                    vector<floatN> probs(VS);
+                    vector<floatN> index(VS);
+                    for (int d=0; d<VS; d++) {
+                        probs[d]=probsd(0*T+t,d);
                         index[d]=d;
                     }
                     int ind=(int)index[randomChoice(index, probs)];
