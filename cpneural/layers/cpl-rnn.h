@@ -110,8 +110,11 @@ public:
         }
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
-        if (x.cols() != D*T) {
-            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
+        int TT=cp.getPar("T-Steps",0);
+        if (TT==0) TT=T;
+
+        if (x.cols() != D*TT) {
+            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*TT:" << D*TT << ", D:" << D << ", TT:" << TT << ", H:" << H << endl;
             MatrixN h(0,0);
             return h;
         }
@@ -138,18 +141,19 @@ public:
             }
         }
 
-*/        h0=*params["ho"];
-        MatrixN h(N,T*H);
+*/
+        h0=*params["ho"];
+        MatrixN h(N,TT*H);
         h.setZero();
         MatrixN ht=h0;
         MatrixN xi;
         string name;
-        for (int t=0; t<T; t++) {
+        for (int t=0; t<TT; t++) {
             t_cppl cache{};
-            xi=tensorchunk(x,{N,T,D},t);
+            xi=tensorchunk(x,{N,TT,D},t);
             cppl_set(&cache,"h",new MatrixN(ht));
             ht = forward_step(xi,&cache,id);
-            tensorchunkinsert(&h, ht, {N,T,H}, t);
+            tensorchunkinsert(&h, ht, {N,TT,H}, t);
             name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
         }

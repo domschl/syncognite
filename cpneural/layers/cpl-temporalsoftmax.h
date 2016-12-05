@@ -60,18 +60,21 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
-        if (x.cols() != D*T) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*T:" << D*T << endl;
+        int TT=cp.getPar("T-Steps",0);
+        if (TT==0) TT=T;
+
+        if (x.cols() != D*TT) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*TT:" << D*TT << endl;
             MatrixN probs(0,0);
             return probs;
         }
         int N=x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
-        MatrixN xt=MatrixN(N*T, D);
+        MatrixN xt=MatrixN(N*TT, D);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
+            for (int t=0; t<TT; t++) {
                 for (int d=0; d<D; d++) {
-                    xt(n*T+t,d)=x(n,t*D+d);
+                    xt(n*TT+t,d)=x(n,t*D+d);
                 }
             }
         }
@@ -80,8 +83,8 @@ public:
             MatrixN probs(0,0);
             return probs;
         }
-        if (N*T != xt.rows()) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(rows):" << xt.rows() << " N*T:" << N*T << endl;
+        if (N*TT != xt.rows()) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(rows):" << xt.rows() << " N*TT:" << N*TT << endl;
             MatrixN probs(0,0);
             return probs;
         }
@@ -134,11 +137,11 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
         // probst: [(N * T), D] -> [N, (T * D)]
-        MatrixN probst=MatrixN(N,T*D);
+        MatrixN probst=MatrixN(N,TT*D);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
+            for (int t=0; t<TT; t++) {
                 for (int d=0; d<D; d++) {
-                    probst(n,t*D+d)=probs(n*T+t,d);
+                    probst(n,t*D+d)=probs(n*TT+t,d);
                 }
             }
         }
