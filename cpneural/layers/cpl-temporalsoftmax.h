@@ -207,14 +207,6 @@ public:
             }
         }
 
-/*        for (int n=0; n<N; n++) {
-            for (int t=0; t<T; t++) {
-                for (int d=0; d<D; d++) {
-                    if (mask(n,t)==0.0) dxr(n,t*D+d)=0.0;
-                }
-            }
-        }
-*/
         return dxr;
     }
 };

@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=1;
+    int T=32;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    int maxN = 500000;
+    int maxN = 50000;
     if (n>maxN) n=maxN;
     int n1=n*0.9;
     int dn=(n-n1)/2;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
     wcout << chunk << endl;
 */
     CpParams cpo("{verbose=true;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-4); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
