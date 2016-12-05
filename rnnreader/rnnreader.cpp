@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
 */
     CpParams cpo("{verbose=true;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
@@ -221,8 +221,8 @@ int main(int argc, char *argv[]) {
         cpo.setPar("startepoch", (floatN)sep);
         cpo.setPar("maxthreads", (int)1); // RNN can't cope with threads.
 
-        Layer *prnn1=lb.layerMap["rnn1"];
-        prnn1->params["ho"]->setZero();
+        //Layer *prnn1=lb.layerMap["rnn1"];
+        //prnn1->params["ho"]->setZero();
         /*Layer *prnn2=lb.layerMap["rnn2"];
         prnn2->params["ho"]->setZero();
         Layer *prnn3=lb.layerMap["rnn3"];
@@ -262,9 +262,9 @@ int main(int argc, char *argv[]) {
         int TT=1;
         for (int rep=0; rep<3; rep++) {
             t_cppl cache{};
-            cppl_set(&cache,"rnn1-ho",new MatrixN(1,TT));
+/*            cppl_set(&cache,"rnn1-ho",new MatrixN(1,TT));
             cache["rnn1-ho"]->setZero();
-            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
+*/            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
             cache["rnn2-ho"]->setZero();
             cppl_set(&cache,"rnn3-ho",new MatrixN(1,TT));
             cache["rnn3-ho"]->setZero();*/
@@ -276,7 +276,7 @@ int main(int argc, char *argv[]) {
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
                 //wcout << L"<" << endl << L">";
-                MatrixN probst=lb.forward(xg,z,&cache);
+                MatrixN probst=lb.forward(xg,z,nullptr); //&cach  e);
                 MatrixN probsd=MatrixN(N*TT,VS);
                 for (int n=0; n<1; n++) {
                     for (int t=0; t<TT; t++) {
