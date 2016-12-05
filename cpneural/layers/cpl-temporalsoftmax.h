@@ -102,10 +102,35 @@ public:
         xn.colwise() -=  mxc;
         MatrixN xne = xn.array().exp().matrix();
         VectorN xnes = xne.rowwise().sum();
+
+        // Consistency checking, can be removed later
+        if (xnes.size() != xne.rows()) {
+            cerr << "Internal error when creating temporal softmax normalization" << endl;
+        }
+        // End checking
+
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
             xne.row(i) = xne.row(i) / xnes(i);
         }
         MatrixN probs = xne;
+
+        // Consistency checking, can be removed later
+        if (xnes.size() != xne.rows()) {
+            cerr << "Internal error when creating temporal softmax normalization" << endl;
+        }
+        for (int n=0; n< probs.rows(); n++) {
+            floatN sum=0.0;
+            for (int j=0; j<probs.cols(); j++) {
+                sum+=probs(n,j);
+            }
+            if (std::abs(sum-1.0)>1e-4) {
+                cerr << "Un-normalized probablity detected in probs(" << n << ", " << ",:), sum=" << sum << endl;
+            }
+        }
+        // End checking
+
+
+
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
         // probst: [(N * T), D] -> [N, (T * D)]

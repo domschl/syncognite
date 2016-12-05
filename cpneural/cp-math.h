@@ -72,4 +72,24 @@ T operator%(vector<T> a, vector<T> b) {
     return s;
 }
 
+template <typename T>
+int randomChoice(vector<T> data, vector<T> probabilities) {
+    vector<T>accProbs(probabilities);
+    if (data.size() != probabilities.size()) {
+        cerr  << "Data size " << data.size() << " != probabilities size " << probabilities.size() << endl;
+        return -1;
+    }
+    T cumul=(T)0.0;
+    for (int i=0; i<data.size(); i++) {
+        cumul += probabilities[i];
+        accProbs[i]=cumul;
+    }
+    T dice=(T)(rand()%10000)/10000.0;
+    for (int i=0; i<data.size(); i++) {
+        if (accProbs[i] > dice) return i;
+    }
+    cerr << "Your probablity distribution wasn't a probablity (sum dist !=1): " << cumul << endl;
+    cerr << probabilities << endl;
+    return data.size()-1;
+}
 #endif

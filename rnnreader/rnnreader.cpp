@@ -9,7 +9,7 @@
 #include "cp-neural.h"
 
 using std::wcout; using std::wstring;
-using std::cerr;
+using std::cerr; using std::vector;
 
 class Text {
 private:
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=32;
+    int T=1;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='orthonormal';initfactor=0.001}");
     int VS=txt.vocsize();
-    int H=128;
+    int H=512;
     int D=128;
     int BS=64;
     float clip=5.0;
@@ -171,21 +171,21 @@ int main(int argc, char *argv[]) {
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    //lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-    //lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -202,7 +202,8 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=true;epsilon=1e-8}");
+    // CpParams cpo("{verbose=true;epsilon=1e-8}");
+    CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
@@ -252,6 +253,7 @@ int main(int argc, char *argv[]) {
         for (int rep=0; rep<3; rep++) {
             //Layer *prnn=lb.layerMap["rnn1"];
             //prnn->params["ho"]->setZero();
+            cerr << "------------" << rep << "--------------------------" << endl;
             for (int g=0; g<200; g++) {
                 //wcout << g << L">";
                 MatrixN z(0,0);
@@ -262,7 +264,14 @@ int main(int argc, char *argv[]) {
 
                 MatrixN yg=lb.forward(xg,z,nullptr);
                 for (int t=0; t<T; t++) {
-                    float mx=-1000.0;
+                    vector<floatN> probs(D);
+                    vector<floatN> index(D);
+                    for (int d=0; d<D; d++) {
+                        probs[d]=yg(0,t*D+d);
+                        index[d]=d;
+                    }
+                    int ind=(int)index[randomChoice(index, probs)];
+/*                    float mx=-1000.0;
                     int ind=-1;
                     for (int d=0; d<VS; d++) {
                         floatN p=yg(0,t*D+d);
@@ -272,6 +281,7 @@ int main(int argc, char *argv[]) {
                             ind=d;
                         }
                     }
+*/
                     wchar_t cw=txt.v2w[ind];
                     //if (t==0) wcout << L"[" << cw << L"<";
                     //wcout << L"<" << cw << L">";
