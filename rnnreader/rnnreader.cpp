@@ -262,9 +262,9 @@ int main(int argc, char *argv[]) {
         int TT=1;
         for (int rep=0; rep<3; rep++) {
             t_cppl cache{};
-/*            cppl_set(&cache,"rnn1-ho",new MatrixN(1,TT));
-            cache["rnn1-ho"]->setZero();
-*/            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
+            MatrixN rnn1_ho = MatrixN(1,TT);
+            rnn1_ho.setZero();
+            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
             cache["rnn2-ho"]->setZero();
             cppl_set(&cache,"rnn3-ho",new MatrixN(1,TT));
             cache["rnn3-ho"]->setZero();*/
@@ -272,6 +272,8 @@ int main(int argc, char *argv[]) {
             for (int g=0; g<200; g++) {
                 //wcout << g << L">";
                 MatrixN z(0,0);
+                cppl_set(&cache,"rnn1-ho",new MatrixN(rnn1_ho));
+                cache["rnn1-ho"]->setZero();
 
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
@@ -318,10 +320,10 @@ int main(int argc, char *argv[]) {
                 //for (int t=0; t< T-1; t++) xg(0,t)=xg(0,t+1);
                 xg(0,0)=xg2(0,0);
 
-
+                rnn1_ho=*(cache["rnn1-ho"]);
                 //xg=xg2;
+                cppl_delete(&cache);
             }
-            cppl_delete(&cache);
             //cache.clear();
             wcout << endl;
         }

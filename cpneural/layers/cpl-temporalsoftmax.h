@@ -96,9 +96,9 @@ public:
         }
 
 */
-        if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
-        if (pcache!=nullptr) cppl_update(pcache, "xt", new MatrixN(xt));
-        if (pcache!=nullptr) cppl_update(pcache, "y", new MatrixN(y));
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
+        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
 
         VectorN mxc = xt.rowwise().maxCoeff();
         MatrixN xn = xt;
@@ -134,7 +134,7 @@ public:
 
 
 
-        if (pcache!=nullptr) cppl_update(pcache, "probs", new MatrixN(probs));
+        if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
         // probst: [(N * T), D] -> [N, (T * D)]
         MatrixN probst=MatrixN(N,TT*D);

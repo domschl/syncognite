@@ -73,7 +73,7 @@ public:
             MatrixN y(0,0);
             return y;
         }
-        if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
+        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         int N=x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt(N*TT, D);
@@ -84,7 +84,7 @@ public:
                 }
             }
         }
-        if (pcache!=nullptr) cppl_update(pcache, "xt", new MatrixN(xt));
+        if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
         MatrixN yt=(xt * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
         // cerr << "N:" << N << ", y:" << shape(y) << endl;
         MatrixN y(N,TT*M);

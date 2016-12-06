@@ -111,7 +111,7 @@ public:
                 }
             }
         }
-        if (pcache != nullptr) cppl_update(pcache, "xv", new MatrixN(xv));
+        if (pcache != nullptr) cppl_set(pcache, "xv", new MatrixN(xv));
         MatrixN y0 = xv * W;
         MatrixN y(N,D*TT);
         for (int n=0; n<N; n++) {
