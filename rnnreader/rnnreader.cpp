@@ -171,21 +171,21 @@ int main(int argc, char *argv[]) {
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    //lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-    //lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -264,6 +264,10 @@ int main(int argc, char *argv[]) {
             t_cppl cache{};
             MatrixN rnn1_ho = MatrixN(1,TT);
             rnn1_ho.setZero();
+            MatrixN rnn2_ho = MatrixN(1,TT);
+            rnn2_ho.setZero();
+            MatrixN rnn3_ho = MatrixN(1,TT);
+            rnn3_ho.setZero();
             /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
             cache["rnn2-ho"]->setZero();
             cppl_set(&cache,"rnn3-ho",new MatrixN(1,TT));
@@ -274,6 +278,10 @@ int main(int argc, char *argv[]) {
                 MatrixN z(0,0);
                 cppl_set(&cache,"rnn1-ho",new MatrixN(rnn1_ho));
                 cache["rnn1-ho"]->setZero();
+                cppl_set(&cache,"rnn2-ho",new MatrixN(rnn1_ho));
+                cache["rnn2-ho"]->setZero();
+                cppl_set(&cache,"rnn3-ho",new MatrixN(rnn1_ho));
+                cache["rnn3-ho"]->setZero();
 
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
@@ -321,6 +329,8 @@ int main(int argc, char *argv[]) {
                 xg(0,0)=xg2(0,0);
 
                 rnn1_ho=*(cache["rnn1-ho"]);
+                rnn2_ho=*(cache["rnn2-ho"]);
+                rnn3_ho=*(cache["rnn3-ho"]);
                 //xg=xg2;
                 cppl_delete(&cache);
             }
