@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
-    int H=64;
+    int H=256;
     int D=128;
     int BS=32;
     float clip=5.0;
@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=true;epsilon=1e-8}");
+    CpParams cpo("{verbose=false;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
