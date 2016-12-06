@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=1;
+    int T=50;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
-    int H=256;
+    int H=1024;
     int D=128;
     int BS=32;
     float clip=5.0;
