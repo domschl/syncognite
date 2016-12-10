@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
     LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
     int H=1024;
-    int D=128;
+    int D=16;
     int BS=32;
     float clip=5.0;
 
@@ -157,6 +157,7 @@ int main(int argc, char *argv[]) {
     cp0.setPar("inputShape",vector<int>{T});
     cp0.setPar("V",VS);
     cp0.setPar("D",D);
+    cp0.setPar("init",(string)"orthonormal");
     lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
     CpParams cp1;
