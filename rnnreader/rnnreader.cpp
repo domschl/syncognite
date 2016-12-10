@@ -172,21 +172,21 @@ int main(int argc, char *argv[]) {
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+//    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+//    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     //cp10.setPar("T",T);
     //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
