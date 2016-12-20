@@ -142,8 +142,8 @@ public:
         }
 
 */
-        if (pcache!=nullptr && pcache->find("ho")!=pcache->end()) {
-            h0=*((*pcache)["ho"]);
+        if (pcache!=nullptr && pcache->find("hoi")!=pcache->end()) {
+            h0=*((*pcache)["hoi"]);
         } else {
             h0=*params["ho"];
         }

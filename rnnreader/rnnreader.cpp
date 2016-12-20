@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=50;
+    int T=20;
     int N=txt.text.size()-T-1;
 
     MatrixN Xr(N,T);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
     int VS=txt.vocsize();
-    int H=1024;
+    int H=48;
     int D=16;
     int BS=32;
     float clip=5.0;
@@ -157,6 +157,7 @@ int main(int argc, char *argv[]) {
     cp0.setPar("inputShape",vector<int>{T});
     cp0.setPar("V",VS);
     cp0.setPar("D",D);
+    cp0.setPar("clip",clip);
     cp0.setPar("init",(string)"orthonormal");
     lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
@@ -165,6 +166,7 @@ int main(int argc, char *argv[]) {
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
     cp1.setPar("clip",clip);
+    cp1.setPar("initfactor","0.01");
     lb.addLayer("RNN","rnn1",cp1,{"WE0"});
 
     CpParams cp2;
@@ -203,9 +205,9 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=false;epsilon=1e-8}");
+    CpParams cpo("{verbose=true;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-2); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
@@ -262,7 +264,6 @@ int main(int argc, char *argv[]) {
 */
         int TT=1;
         for (int rep=0; rep<3; rep++) {
-            t_cppl cache{};
             MatrixN rnn1_ho = MatrixN(1,TT);
             rnn1_ho.setZero();
             MatrixN rnn2_ho = MatrixN(1,TT);
@@ -275,19 +276,16 @@ int main(int argc, char *argv[]) {
             cache["rnn3-ho"]->setZero();*/
             cerr << "------------" << rep << "--------------------------" << endl;
             for (int g=0; g<200; g++) {
+                t_cppl cache{};
                 //wcout << g << L">";
                 MatrixN z(0,0);
-                cppl_set(&cache,"rnn1-ho",new MatrixN(rnn1_ho));
-                cache["rnn1-ho"]->setZero();
-                cppl_set(&cache,"rnn2-ho",new MatrixN(rnn1_ho));
-                cache["rnn2-ho"]->setZero();
-                cppl_set(&cache,"rnn3-ho",new MatrixN(rnn1_ho));
-                cache["rnn3-ho"]->setZero();
-
+                cppl_set(&cache,"rnn1-hoi",new MatrixN(rnn1_ho));
+                //cppl_set(&cache,"rnn2-hoi",new MatrixN(rnn2_ho));
+                //cppl_set(&cache,"rnn3-hoi",new MatrixN(rnn3_ho));
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
                 //wcout << L"<" << endl << L">";
-                MatrixN probst=lb.forward(xg,z,nullptr); //&cach  e);
+                MatrixN probst=lb.forward(xg,z,&cache); //&cach  e);
                 MatrixN probsd=MatrixN(N*TT,VS);
                 for (int n=0; n<1; n++) {
                     for (int t=0; t<TT; t++) {
@@ -330,8 +328,8 @@ int main(int argc, char *argv[]) {
                 xg(0,0)=xg2(0,0);
 
                 rnn1_ho=*(cache["rnn1-ho"]);
-                rnn2_ho=*(cache["rnn2-ho"]);
-                rnn3_ho=*(cache["rnn3-ho"]);
+                //rnn2_ho=*(cache["rnn2-ho"]);
+                //rnn3_ho=*(cache["rnn3-ho"]);
                 //xg=xg2;
                 cppl_delete(&cache);
             }

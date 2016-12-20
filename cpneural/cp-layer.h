@@ -593,7 +593,10 @@ void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
 
 void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
     for (auto ci : *src) {
-        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
+        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") {
+            cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
+            //src->erase(ci.first); // XXX for rnn-ho inits! DANGEROUS!
+        }
     }
 }
 
