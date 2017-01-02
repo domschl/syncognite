@@ -29,13 +29,7 @@ using Eigen::IOFormat;
 
 #include "cp-math.h"
 #include "cp-util.h"
-#include "cp-tools.h"
 #include "cp-timer.h"
-#include "cp-layer.h"
-#include "cp-layers.h"
-#include "cp-layer-tests.h"
-#include "cp-optim.h"
-
 
 //#define USE_DOUBLE
 #ifndef USE_DOUBLE
@@ -67,6 +61,9 @@ using floatN=float;
 #define CP_DEFAULT_NUM_H ((float)1.e-4)
 #define CP_DEFAULT_NUM_EPS ((float)1.e-3)
 #endif
+
+using CpParams=ParamParser<floatN>;
+typedef t_param_parser<MatrixN *> t_cppl;
 
 #if defined (USE_VIENNACL) || (USE_CUDA)
 #define USE_GPU
@@ -103,5 +100,11 @@ using floatN=float;
 #include <cuda_runtime_api.h>
 #include <cublas_v2.h>
 #endif
+
+#include "cp-tools.h"
+#include "cp-layer.h"
+#include "cp-layers.h"
+#include "cp-layer-tests.h"
+#include "cp-optim.h"
 
 #endif

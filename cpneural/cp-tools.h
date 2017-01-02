@@ -4,6 +4,80 @@
 
 #include "cp-neural.h"
 
+// for cpInitCompute():
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
+
+//void cppl_delete(t_cppl p);
+void cppl_delete(t_cppl *p) {
+    int nr=0;
+    if (p->size()==0) {
+        return;
+    }
+    for (auto it : *p) {
+        if (it.second != nullptr) delete it.second;
+        (*p)[it.first]=nullptr;
+        ++nr;
+    }
+    p->erase(p->begin(),p->end());
+}
+
+void cppl_set(t_cppl *p, string key, MatrixN *val) {
+    auto it=p->find(key);
+    if (it != p->end()) {
+        cerr << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
+        delete it->second;
+    }
+    (*p)[key]=val;
+}
+
+void cppl_update(t_cppl *p, string key, MatrixN *val) {
+    if (p->find(key)==p->end()) {
+        MatrixN *pm=new MatrixN(*val);
+        cppl_set(p, key, pm);
+    } else {
+        *((*p)[key])=*val;
+    }
+}
+
+void cppl_remove(t_cppl *p, string key) {
+    auto it=p->find(key);
+    if (it!=p->end()) {
+        if (it->second != nullptr) delete it->second;
+        p->erase(it);
+    }
+}
+
+void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
+    if (dst!=nullptr) {
+        for (auto pi : *src) {
+            cppl_set(dst, prefix+"-"+pi.first, pi.second);
+        }
+    } else {
+        cppl_delete(src);
+    }
+}
+
+void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci : *src) {
+        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") {
+            cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
+            //src->erase(ci.first); // XXX for rnn-ho inits! DANGEROUS!
+        }
+    }
+}
+
+// XXX: dubious:
+void mlPopX(string prefix, t_cppl *src, t_cppl *dst) {
+    for (auto ci=src->cbegin(); ci!=src->cend(); ci++) {
+        if (ci->first.substr(0,prefix.size()+1)==prefix+"-") {
+            cppl_set(dst, ci->first.substr(prefix.size()+1), ci->second);
+            src->erase(ci); // Did not work
+        }
+    }
+}
+
 vector<unsigned int> shape(const MatrixN& m) {
     vector<unsigned int> s(2);
     s[0]=(unsigned int)(m.rows());
@@ -177,9 +251,9 @@ MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
         return y;
     } else {
         viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(contextId)));
-        viennacl::matrix<float>vi_b(b.rows(), b.cols(), ctx);
-        viennacl::matrix<float>vi_a(a.rows(), a.cols(), ctx);
-        viennacl::matrix<float>vi_y(a.rows(), b.cols(), ctx);
+        viennacl::matrix<float>vi_b(b->rows(), b->cols(), ctx);
+        viennacl::matrix<float>vi_a(a->rows(), a->cols(), ctx);
+        viennacl::matrix<float>vi_y(a->rows(), b->cols(), ctx);
         viennacl::copy(b, vi_b);
         viennacl::copy(a, vi_a);
         vi_y = viennacl::linalg::prod(vi_a, vi_b);

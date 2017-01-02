@@ -3,15 +3,6 @@
 
 #include "cp-neural.h"
 
-// for cpInitCompute():
-#include <unistd.h>
-#include <sys/types.h>
-#include <pwd.h>
-
-using CpParams=ParamParser<floatN>;
-typedef t_param_parser<MatrixN *> t_cppl;
-
-
 enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL, XAV_ORTHOGONAL};
 
 XavierMode xavierInitType(string stype) {
@@ -88,76 +79,6 @@ Layer* createLayerInstance(const CpParams& cp) {
     return new T(cp);
 }
 
-//void cppl_delete(t_cppl p);
-void cppl_delete(t_cppl *p) {
-    int nr=0;
-    if (p->size()==0) {
-        return;
-    }
-    for (auto it : *p) {
-        if (it.second != nullptr) delete it.second;
-        (*p)[it.first]=nullptr;
-        ++nr;
-    }
-    p->erase(p->begin(),p->end());
-}
-
-void cppl_set(t_cppl *p, string key, MatrixN *val) {
-    auto it=p->find(key);
-    if (it != p->end()) {
-        cerr << "MEM! Override condition for " << key << " update prevented, freeing previous pointer..." << endl;
-        delete it->second;
-    }
-    (*p)[key]=val;
-}
-
-void cppl_update(t_cppl *p, string key, MatrixN *val) {
-    if (p->find(key)==p->end()) {
-        MatrixN *pm=new MatrixN(*val);
-        cppl_set(p, key, pm);
-    } else {
-        *((*p)[key])=*val;
-    }
-}
-
-void cppl_remove(t_cppl *p, string key) {
-    auto it=p->find(key);
-    if (it!=p->end()) {
-        if (it->second != nullptr) delete it->second;
-        p->erase(it);
-    }
-}
-
-void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
-    if (dst!=nullptr) {
-        for (auto pi : *src) {
-            cppl_set(dst, prefix+"-"+pi.first, pi.second);
-        }
-    } else {
-        cppl_delete(src);
-    }
-}
-
-void mlPop(string prefix, t_cppl *src, t_cppl *dst) {
-    for (auto ci : *src) {
-        if (ci.first.substr(0,prefix.size()+1)==prefix+"-") {
-            cppl_set(dst, ci.first.substr(prefix.size()+1), ci.second);
-            //src->erase(ci.first); // XXX for rnn-ho inits! DANGEROUS!
-        }
-    }
-}
-
-// XXX: dubious:
-void mlPopX(string prefix, t_cppl *src, t_cppl *dst) {
-    for (auto ci=src->cbegin(); ci!=src->cend(); ci++) {
-        if (ci->first.substr(0,prefix.size()+1)==prefix+"-") {
-            cppl_set(dst, ci->first.substr(prefix.size()+1), ci->second);
-            src->erase(ci); // Did not work
-        }
-    }
-}
-
-
 typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
 
 class LayerFactory {
@@ -196,17 +117,19 @@ public:
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual vector<int> getOutputShape() { return outputShape;}
-    virtual void genZeroStates(t_ccpl *states) { return; }
+    virtual void genZeroStates(t_cppl *states) { return; }
     virtual MatrixN forward(const MatrixN& x, t_cppl* cache, t_cppl* states, int id) { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {return false;}
+    virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
+
+
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
                         string optimizer, const CpParams& cp);
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
-    floatN test(const MatrixN& x, const MatrixN& y, int batchsize=100);
+    floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
     bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
-    virtual void setFlag(string name, bool val) {return;}
 
 private:
     bool checkForward(const MatrixN& x, floatN eps);

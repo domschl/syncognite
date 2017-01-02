@@ -140,27 +140,6 @@ Optimizer *optimizerFactory(string name, const CpParams& cp) {
     cerr << "optimizerFactory called for unknown optimizer " << name << "." << endl;
     return nullptr;
 }
-/*
-Timer t1;
-double dfus, dbus;
-bool timeit=true;
-// cerr << "chunk: " << b << " x:" << shape(xb) << " y:" << shape(yb) << endl;
-if (timeit) {
-    t1.startCpu();
-}
-if (timeit) {
-    dfus=t1.stopCpuMicro()/(double)dy;
-    t1.startCpu();
-}
-if (timeit) {
-    dbus=t1.stopCpuMicro()/(double)dy;
-}
-if (timeit) {
-    cerr << "forward pass: " << dfus << "µs, backward pass: " << dbus << "µs." << endl;
-    timeit=false;
-}
-
-*/
 
 virtual bool Layer::update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
     /*for (int i=0; i<params.size(); i++) {
@@ -220,10 +199,6 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100)  {
     }
     floatN err=1.0-(floatN)co/(floatN)y.rows();
     return err;
-}
-
-virtual void setFlag(string name, bool val) {
-    cp.setPar(name,val);
 }
 
 t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
