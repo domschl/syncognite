@@ -162,6 +162,70 @@ if (timeit) {
 
 */
 
+virtual bool Layer::update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
+    /*for (int i=0; i<params.size(); i++) {
+        *params[i] = popti->update(*params[i],*grads[i]);
+    }*/
+    for (auto it : params) {
+        string key = it.first;
+        if (pgrads->find(key)==pgrads->end()) {
+            cerr << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
+            cerr << "Grads-vars: ";
+            for (auto gi : *pgrads) cerr << gi.first << " ";
+            cerr << endl;
+            cerr << "Params-vars: ";
+            for (auto pi : params) cerr << pi.first << " ";
+            cerr << endl;
+            cerr << "Irrecoverable internal error, ABORT";
+            exit(-1);
+        } else {
+            *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
+        }
+    }
+    return true;
+}
+
+floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100)  {
+    setFlag("train",false);
+    int bs=batchsize;
+    int N=shape(x)[0];
+    MatrixN xb,yb;
+    int co=0;
+    for (int ck=0; ck<(N+bs-1)/bs; ck++) {
+        int x0=ck*bs;
+        int dl=bs;
+        if (x0+dl>N) dl=N-x0;
+        xb=x.block(x0,0,dl,x.cols());
+        yb=y.block(x0,0,dl,y.cols());
+        MatrixN yt=forward(xb, yb, nullptr, 0);
+        if (yt.rows() != yb.rows()) {
+            cerr << "test: incompatible row count!" << endl;
+            return -1000.0;
+        }
+        for (int i=0; i<yt.rows(); i++) {
+            int ji=-1;
+            floatN pr=-10000;
+            for (int j=0; j<yt.cols(); j++) {
+                if (yt(i,j)>pr) {
+                    pr=yt(i,j);
+                    ji=j;
+                }
+            }
+            if (ji==(-1)) {
+                cerr << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                return -1000.0;
+            }
+            if (ji==yb(i,0)) ++co;
+        }
+    }
+    floatN err=1.0-(floatN)co/(floatN)y.rows();
+    return err;
+}
+
+virtual void setFlag(string name, bool val) {
+    cp.setPar(name,val);
+}
+
 t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
     t_cppl cache;
     t_cppl grads;

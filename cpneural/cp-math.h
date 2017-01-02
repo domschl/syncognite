@@ -92,4 +92,5 @@ int randomChoice(vector<T> data, vector<T> probabilities) {
     cerr << probabilities << endl;
     return data.size()-1;
 }
+
 #endif
