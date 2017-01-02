@@ -120,10 +120,9 @@ public:
     virtual void genZeroStates(t_cppl *states) { return; }
     virtual MatrixN forward(const MatrixN& x, t_cppl* cache, t_cppl* states, int id) { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
+    virtual floatN loss(t_cppl* pcache, t_cppl* state) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {return false;}
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
-
 
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
                         string optimizer, const CpParams& cp);
