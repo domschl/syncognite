@@ -529,7 +529,12 @@ public:
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
 
-enum LayerType { LT_UNDEFINED, LT_NORMAL, LT_LOSS};
+enum LayerType {
+    LT_UNDEFINED = 0,
+    LT_NORMAL = 1,
+    LT_EXTERNALSTATE = 2,
+    LT_LOSS = 4
+};
 
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
@@ -649,10 +654,11 @@ public:
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual vector<int> getOutputShape() { return outputShape;}
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* states, t_cppl* cache, int id) { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    virtual void genZeroStates(t_ccpl *states) { return; }
+    // virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
+    // virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id)  { MatrixN d(0,0); return d;}
+    virtual MatrixN forward(const MatrixN& x, t_cppl* cache, t_cppl* states, int id) { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
     virtual floatN loss(const MatrixN& y, t_cppl* pcache) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         /*for (int i=0; i<params.size(); i++) {
