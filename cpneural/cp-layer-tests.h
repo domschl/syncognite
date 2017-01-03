@@ -3,23 +3,30 @@
 
 #include "cp-neural.h"
 
-bool Layer::checkForward(const MatrixN& x, const MatrixN& y, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
     MatrixN yt;
-    if (layerType==LayerType::LT_LOSS) {
-        yt=forward(x, y, nullptr, 0);
-    } else {
-        yt=forward(x, nullptr, 0);
+    MatrixN y;
+
+    yt=forward(x, pcache, pstates, 0);
+    if (layerType & LayerType::LT_LOSS) {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        y = *((*pstates)["y"]);
     }
     MatrixN yic(0, yt.cols());
     for (unsigned int i=0; i<x.rows(); i++) {
         MatrixN xi=x.row(i);
         MatrixN yi;
-        if (layerType==LayerType::LT_LOSS) {
+        if (layerType & LayerType::LT_LOSS) {
             MatrixN yii=y.row(i);
-            yi = forward(xi, yii, nullptr, 0);
+            t_cppl sti{};
+            cppl_set(&sti, "y", new MatrixN(yii));
+            yi = forward(xi, nullptr, &sti, 0);
+            cppl_delete(&sti);
         } else {
-            yi = forward(xi, nullptr, 0);
+            yi = forward(xi, nullptr, pstates, 0);
         }
         MatrixN yn(yi.rows() + yic.rows(),yi.cols());
         yn << yic, yi;
@@ -41,7 +48,7 @@ bool Layer::checkForward(const MatrixN& x, const MatrixN& y, floatN eps=CP_DEFAU
     return allOk;
 }
 
-bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
@@ -49,12 +56,17 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     t_cppl rgrads;
 
     MatrixN dyc;
-    if (layerType==LayerType::LT_NORMAL) {
-        dyc = forward(x, &cache, 0);
+    MatrixN y;
+    if (layerType & LayerType::LT_NORMAL) {
+        dyc = forward(x, &cache, pstates, 0);
         dyc.setRandom();
-    } else if (layerType==LayerType::LT_LOSS) {
-        forward(x, y, &cache, 0);
-        dyc=y;
+    } else if (layerType & LayerType::LT_LOSS) {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        y = *((*pstates)["y"]);
+        forward(x, &cache, pstates, 0);
+        dyc=y; // XXX: no!
     } else {
         cerr << "BAD LAYER TYPE!" << layerType << endl;
         return false;
@@ -68,7 +80,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
 
     if (cache.find("x")==cache.end()) cerr << "WARNING: x is not in cache!" << endl;
 
-    MatrixN dxc = backward(dyc, &cache, &grads, 0);
+    MatrixN dxc = backward(dyc, &cache, pstates, &grads, 0);
 
     for (auto it : grads) {
         cppl_set(&rgrads, it.first, new MatrixN(*grads[it.first])); // grads[it.first].rows(),grads[it.first].cols());
@@ -80,21 +92,21 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
         t_cppl gdi;
         MatrixN xi=x.row(i);
         MatrixN dyi2;
-        if (layerType==LayerType::LT_LOSS) {
-            dyi2 = forward(xi, dyc.row(i), &chi, 0);
-        } else {
-            dyi2 = forward(xi, &chi, 0);
-        }
+
+        dyi2 = forward(xi, &chi, pstates, 0);
         MatrixN dyi = dyc.row(i);
-        MatrixN dyt = backward(dyi, &chi, &gdi, 0);
+        t_cppl sti{}; // XXX: init with pstates? // XXX: RNN h!
+        cppl_set(&sti, "y", new MatrixN(dyi));
+        MatrixN dyt = backward(dyi, &chi, &sti, &gdi, 0);
         dx.row(i) = dyt.row(0);
         for (auto it : grads) {
             *rgrads[it.first] += *gdi[it.first];
         }
         cppl_delete(&gdi);
         cppl_delete(&chi);
+        cppl_delete(&sti);
     }
-    if (layerType==LayerType::LT_LOSS) {
+    if (layerType & LayerType::LT_LOSS) {
         dx /= x.rows(); // XXX is this sound for all types of loss-layers?
         for (auto it : grads) { // XXX this is beyound soundness...
              *(grads[it.first]) *= x.rows();
@@ -128,7 +140,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, fl
     return allOk;
 }
 
-MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
     cerr << "  checking numerical gradient for " << var << "..." << endl;
     MatrixN *pm;
     MatrixN x;
@@ -147,16 +159,16 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
         if (var=="x") {
             pxold = x(i);
             x(i) = x(i) - h;
-            y0 = forward(x, nullptr, 0);
+            y0 = forward(x, nullptr, pstates, 0);
             x(i) = pxold + h;
-            y1 = forward(x, nullptr,0 );
+            y1 = forward(x, nullptr, pstates, 0 );
             x(i) = pxold;
         } else {
             pxold = (*(params[var]))(i);
             (*(params[var]))(i) = (*(params[var]))(i) - h;
-            y0 = forward(x, nullptr, 0);
+            y0 = forward(x, nullptr, pstates, 0);
             (*(params[var]))(i) = pxold + h;
-            y1 = forward(x, nullptr, 0);
+            y1 = forward(x, nullptr, pstates, 0);
             (*(params[var]))(i) = pxold;
         }
         MatrixN dy=y1-y0;
@@ -169,12 +181,12 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
 
     MatrixN x=*((*pcache)["x"]);
     //MatrixN x=xorg;
-    MatrixN y=*((*pcache)["y"]);
+    MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad(pm->rows(), pm->cols());
@@ -275,7 +287,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     return allOk;
 }
 
-bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
+bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -325,22 +337,27 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     return allOk;
 }
 
-bool Layer::selfTest(const MatrixN& x, const MatrixN& y, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
     cerr << "SelfTest for: " << layerName << " -----------------" << endl;
-    MatrixN yf = forward(x, &cache, 0);
+    MatrixN yf = forward(x, &cache, pstates, 0);
+
     if (layerType == LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType == LayerType::LT_LOSS) {
         //cppl_set(&cache, "probs", new MatrixN(yf));
         //cppl_set(&cache, "y", new MatrixN(y));
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(x, y, dchain, &cache, h , eps, lossFkt);
+    ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt);
     cppl_delete(&cache);
     return ret;
 }
