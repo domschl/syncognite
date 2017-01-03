@@ -59,7 +59,7 @@ public:
     - loss: Scalar giving loss
     - dx: Gradient of loss with respect to scores x.
     */
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
 
@@ -164,7 +164,11 @@ public:
     dx = dx_flat.reshape(N, T, V)
     return loss, dx
     */
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         MatrixN probs=*((*pcache)["probs"]);
         MatrixN mask;
         // XXX: int N=probs.rows()/T;
@@ -202,7 +206,7 @@ public:
         loss /= N; // probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN probs=*((*pcache)["probs"]);
         MatrixN mask;
         // int N=probs.rows()/T;

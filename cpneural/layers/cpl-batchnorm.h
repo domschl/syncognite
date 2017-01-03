@@ -43,7 +43,7 @@ public:
     ~BatchNorm() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         MatrixN *prm, *prv;
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
@@ -105,7 +105,7 @@ public:
         }
         return xout;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         if (pcache->find("sqse")==pcache->end()) cerr << "Bad: no cache entry for sqse!" << endl;
         MatrixN sqse=*((*pcache)["sqse"]);
         if (pcache->find("xme")==pcache->end()) cerr << "Bad: no cache entry for xme!" << endl;

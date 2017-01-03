@@ -54,7 +54,7 @@ public:
 
       return z;
     } */
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         drop = cp.getPar("drop", (floatN)0.5);
         if (drop==1.0) return x;
@@ -89,7 +89,7 @@ public:
         }
         return xout;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN dx;
         trainMode = cp.getPar("train", false);
         if (trainMode && drop!=1.0) {

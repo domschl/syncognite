@@ -63,7 +63,7 @@ public:
         cppl_delete(&params);
     }
 
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         auto N=shape(x)[0];
         if (shape(x)[1]!=(unsigned int)C*W*H) {
@@ -122,7 +122,7 @@ public:
         if (pcache==nullptr) delete pmask;
         return y;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         if (shape(dchain)[1]!=(unsigned int)C*HO*WO) {
             cerr << "PoolBw: Invalid input data dchain: expected C*HO*WO=" << C*HO*WO << ", got: " << shape(dchain)[1] << endl;

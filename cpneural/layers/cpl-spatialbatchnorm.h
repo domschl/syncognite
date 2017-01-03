@@ -97,7 +97,7 @@ public:
         return y;
     }
 
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         int N=shape(x)[0];
         pbn->cp.setPar("train",cp.getPar("train",false));
@@ -116,16 +116,16 @@ public:
         MatrixN ys;
         if (pcache != nullptr) {
             t_cppl tcachebn;
-            ys=pbn->forward(xs, &tcachebn, id);
+            ys=pbn->forward(xs, &tcachebn, pstates, id);
             mlPush("bn", &tcachebn, pcache);
         } else {
-            ys=pbn->forward(xs, nullptr, id);
+            ys=pbn->forward(xs, nullptr, pstates, id);
         }
 
         MatrixN y=cnhw2nchw(ys, N);
         return y;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
         pbn->cp.setPar("train",cp.getPar("train",false));
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
@@ -137,7 +137,7 @@ public:
         t_cppl tcachebn;
         t_cppl tgradsbn;
         mlPop("bn",pcache,&tcachebn);
-        MatrixN dxc=pbn->backward(dcn,&tcachebn,&tgradsbn,id);
+        MatrixN dxc=pbn->backward(dcn,&tcachebn,pstates,&tgradsbn,id);
         mlPush("bn",&tgradsbn,pgrads);
 
         MatrixN dx=cnhw2nchw(dxc,N);

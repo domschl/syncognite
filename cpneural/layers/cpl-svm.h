@@ -30,7 +30,11 @@ public:
     ~Svm() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates int id=0) override {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN correctClassScores(x.rows());
@@ -50,12 +54,12 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "margins", new MatrixN(margins));
         return margins;
     }
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         MatrixN margins=*((*pcache)["margins"]);
         floatN loss = margins.sum() / margins.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN margins=*((*pcache)["margins"]);
         MatrixN x=*((*pcache)["x"]);
         VectorN numPos(x.rows());

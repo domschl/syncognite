@@ -74,7 +74,7 @@ public:
     ~Nonlinearity() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl *pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN y=x;
         switch (nonlintype) {
@@ -95,7 +95,7 @@ public:
         }
         return y;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, int id=0) override {
         MatrixN dxc;
         MatrixN x,y;
         switch (nonlintype) {

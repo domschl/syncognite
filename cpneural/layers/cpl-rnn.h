@@ -15,7 +15,7 @@ private:
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
-        layerType=LayerType::LT_NORMAL;
+        layerType=LayerType::LT_NORMAL & LayerType::LT_EXTERNALSTATE;
         cp=cx;
         vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
         int inputShapeFlat=1;
@@ -65,7 +65,13 @@ public:
     ~RNN() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, int id=0) {
+    virtual void genZeroStates(t_cppl* pstates) {
+        MatrixN *ph= new MatrixN(N,H);   // XXX: N?
+        ph->setZero();
+        cppl_set(&params, "H", ph);
+    }
+
+    virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)    h(t-1) -> ho,   h(t) -> h
         if (pcache!=nullptr) if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         int N=shape(x)[0];
@@ -109,7 +115,7 @@ public:
             }
         }
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
 
@@ -125,27 +131,10 @@ public:
         }
 
         if (id>0) cerr << "WARNING: rnn layer is not thread-safe, thread id>0! (set optimizer parameter maxthreads=1)" << endl;
-/*
-        if (maxClip != 0.0) {
-            for (int i=0; i<(*params["Whh"]).size(); i++) {
-                if ((*params["Whh"])(i) < -1.0 * maxClip) (*params["Whh"])(i)=-1.0*maxClip;
-                if ((*params["Whh"])(i) > maxClip) (*params["Whh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*params["Wxh"]).size(); i++) {
-                if ((*params["Wxh"])(i) < -1.0 * maxClip) (*params["Wxh"])(i)=-1.0*maxClip;
-                if ((*params["Wxh"])(i) > maxClip) (*params["Wxh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*params["bh"]).size(); i++) {
-                if ((*params["bh"])(i) < -1.0 * maxClip) (*params["bh"])(i)=-1.0*maxClip;
-                if ((*params["bh"])(i) > maxClip) (*params["bh"])(i)=maxClip;
-            }
-        }
-
-*/
         if (pcache!=nullptr && pcache->find("hoi")!=pcache->end()) {
-            h0=*((*pcache)["hoi"]);
+            h0=*((*pcache)["hoi"]); // XXX: UUUUHHH!
         } else {
-            h0=*params["ho"];
+            h0=*params["ho"];  // XXX: REALLY not!
         }
         MatrixN h(N,TT*H);
         h.setZero();
@@ -154,9 +143,11 @@ public:
         string name;
         for (int t=0; t<TT; t++) {
             t_cppl cache{};
+            t_cppl states{}; // XXX  NEEDS TO BE FILLED!
             xi=tensorchunk(x,{N,TT,D},t);
-            cppl_set(&cache,"h",new MatrixN(ht));
-            ht = forward_step(xi,&cache,id);
+            cppl_set(&cache,"h",new MatrixN(ht)); // XXX: THIS NEEDS TO BE IN STATES!
+            /// XXX: HERE IT GOES! cppl_set(&states,)
+            ht = forward_step(xi,&cache,&states, id);
             tensorchunkinsert(&h, ht, {N,TT,H}, t);
             name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
@@ -169,11 +160,12 @@ public:
         }
         return h;
     }
-    virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) {
+    virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
         if (pcache->find("x") == pcache->end()) {
             cerr << "cache does not contain x -> fatal!" << endl;
         }
         MatrixN x(*(*pcache)["x"]);
+        // XXX: TODO: STATES benutzen!
         MatrixN h(*(*pcache)["h"]);
         MatrixN ho(*(*pcache)["ho"]);
         MatrixN Wxh(*params["Wxh"]);
@@ -221,7 +213,7 @@ public:
 
         return dx;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id=0) override {
         MatrixN dWxh,dWhh,dbh;
         string name;
         int N=shape(dchain)[0];
@@ -231,6 +223,7 @@ public:
         for (int t=T-1; t>=0; t--) {
             t_cppl cache{};
             t_cppl grads{};
+            t_cppl states{}; // XXX: INIT!
             if (t==T-1) {
                 dhi=tensorchunk(dchain,{N,T,H},t);
             } else {
@@ -239,9 +232,9 @@ public:
             // dci <- dchain
             name="t"+std::to_string(t);
             mlPop(name,pcache,&cache);
-            dxi=backward_step(dhi,&cache,&grads,id);
+            dxi=backward_step(dhi,&cache,&states, &grads,id);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
-            dphi=*grads["ho"]; // XXX cache-rel?
+            dphi=*grads["ho"]; // XXX cache-rel? -> STATES!
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];

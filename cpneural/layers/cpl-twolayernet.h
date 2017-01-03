@@ -68,51 +68,55 @@ public:
         delete sm;
         sm=nullptr;
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         t_cppl c1;
-        MatrixN y0=af1->forward(x,&c1, id);
+        MatrixN y0=af1->forward(x,&c1, pstates, id);
         mlPush("af1",&c1,pcache);
         t_cppl c2;
-        MatrixN y1=rl->forward(y0,&c2, id);
+        MatrixN y1=rl->forward(y0,&c2, pstates, id);
         mlPush("rl",&c2,pcache);
         t_cppl c3;
-        MatrixN yo=af2->forward(y1,&c3, id);
+        MatrixN yo=af2->forward(y1,&c3, pstates, id);
         mlPush("af2",&c3,pcache);
         t_cppl c4;
-        MatrixN yu=sm->forward(yo,y,&c4, id);
+        MatrixN yu=sm->forward(yo,&c4, pstates, id);
         mlPush("sm",&c4,pcache);
         return yo;
     }
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         t_cppl c4;
         mlPop("sm",pcache,&c4);
         return sm->loss(y, &c4);
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         t_cppl c4;
         t_cppl g4;
         mlPop("sm",pcache,&c4);
-        MatrixN dx3=sm->backward(y, &c4, &g4, id);
+        MatrixN dx3=sm->backward(y, &c4, pstates, &g4, id);
         mlPush("sm",&g4,pgrads);
 
         t_cppl c3;
         t_cppl g3;
         mlPop("af2",pcache,&c3);
-        MatrixN dx2=af2->backward(dx3,&c3,&g3, id);
+        MatrixN dx2=af2->backward(dx3,&c3,pstates, &g3, id);
         mlPush("af2", &g3, pgrads);
 
         t_cppl c2;
         t_cppl g2;
         mlPop("rl",pcache,&c2);
-        MatrixN dx1=rl->backward(dx2, &c2, &g2, id);
+        MatrixN dx1=rl->backward(dx2, &c2, pstates, &g2, id);
         mlPush("rl", &g2, pgrads);
 
         t_cppl c1;
         t_cppl g1;
         mlPop("af1",pcache,&c1);
-        MatrixN dx=af1->backward(dx1, &c1, &g1, id);
+        MatrixN dx=af1->backward(dx1, &c1, pstates, &g1, id);
         mlPush("af1", &g1, pgrads);
 
         return dx;

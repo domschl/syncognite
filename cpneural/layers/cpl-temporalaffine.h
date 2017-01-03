@@ -64,7 +64,7 @@ public:
     - cache: Values needed for the backward pass
     """
     */
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
 
@@ -111,7 +111,7 @@ public:
     - db: Gradient of biases, of shape (M,)
     """
     */
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         int N=dchain.rows();
         MatrixN dchaint(N*T,M);
         for (int n=0; n<N; n++) {

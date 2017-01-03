@@ -29,9 +29,13 @@ public:
     ~Softmax() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
         xn.colwise() -=  mxc;
@@ -44,7 +48,11 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
             cerr << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
@@ -65,7 +73,11 @@ public:
         loss /= probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         MatrixN probs=*((*pcache)["probs"]);
 
         MatrixN dx=probs;

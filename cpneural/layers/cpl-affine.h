@@ -49,7 +49,7 @@ public:
     ~Affine() {
         cppl_delete(&params);
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (params["W"]->rows() != x.cols()) {
             cerr << layerName << ": " << "Forward: dimension mismatch in x*W: x:" << shape(x) << " W:" << shape(*params["W"]) << endl;
             MatrixN y(0,0);
@@ -98,7 +98,7 @@ public:
         return y;
     //return (x* *params["W"]).rowwise() + RowVectorN(*params["b"]);
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         #ifdef USE_GPU
         int algo=1;
         #else

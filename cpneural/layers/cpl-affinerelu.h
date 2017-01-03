@@ -50,26 +50,26 @@ public:
         delete rl;
         rl=nullptr;
     }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         t_cppl tcacheaf;
-        MatrixN y0=af->forward(x, &tcacheaf, id);
+        MatrixN y0=af->forward(x, &tcacheaf, nullptr, id);
         mlPush("af", &tcacheaf, pcache);
         t_cppl tcachere;
-        MatrixN y=rl->forward(y0, &tcachere, id);
+        MatrixN y=rl->forward(y0, &tcachere, nullptr, id);
         mlPush("re", &tcachere, pcache);
         return y;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, int id=0) override {
         t_cppl tcachere;
         t_cppl tgradsre;
         mlPop("re",pcache,&tcachere);
-        MatrixN dx0=rl->backward(dchain, &tcachere, &tgradsre, id);
+        MatrixN dx0=rl->backward(dchain, &tcachere, nullptr, &tgradsre, id);
         mlPush("re",&tgradsre,pgrads);
         t_cppl tcacheaf;
         t_cppl tgradsaf;
         mlPop("af",pcache,&tcacheaf);
-        MatrixN dx=af->backward(dx0, &tcacheaf, &tgradsaf, id);
+        MatrixN dx=af->backward(dx0, &tcacheaf, nullptr, &tgradsaf, id);
         mlPush("af",&tgradsaf,pgrads);
         return dx;
     }

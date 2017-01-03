@@ -117,10 +117,10 @@ public:
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual vector<int> getOutputShape() { return outputShape;}
-    virtual void genZeroStates(t_cppl *states) { return; }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* cache, t_cppl* states, int id) { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
-    virtual floatN loss(t_cppl* pcache, t_cppl* state) { return 1001.0; }
+    virtual void genZeroStates(t_cppl* pstates) { return; }
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id) { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {return false;}
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
 
