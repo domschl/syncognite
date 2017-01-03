@@ -227,20 +227,20 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
     return grad;
 }
 
-bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
+bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
     for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
-            g = calcNumGrad(x, dchain, pcache, it.first, h);
+            g = calcNumGrad(x, dchain, pcache, pstates, it.first, h);
         } else {
-            g = calcNumGradLoss(x, pcache, it.first, h);
+            g = calcNumGradLoss(x, pcache, pstates, it.first, h);
         }
         cppl_set(pnumGrads, it.first, new MatrixN(g));
     }
     return true;
 }
 
-bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
+bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);

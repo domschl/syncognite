@@ -59,10 +59,13 @@ public:
     - loss: Scalar giving loss
     - dx: Gradient of loss with respect to scores x.
     */
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, t_cppl* pstates, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
-
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         if (x.cols() != D*TT) {
             cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*TT:" << D*TT << endl;
             MatrixN probs(0,0);
@@ -206,12 +209,15 @@ public:
         loss /= N; // probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN probs=*((*pcache)["probs"]);
         MatrixN mask;
         // int N=probs.rows()/T;
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         int N=y.rows();
-
         if (pcache->find("mask")==pcache->end()) {
             mask=MatrixN(N,T);
             mask.setOnes();

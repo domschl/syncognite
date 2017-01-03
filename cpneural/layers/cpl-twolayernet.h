@@ -92,7 +92,7 @@ public:
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         t_cppl c4;
         mlPop("sm",pcache,&c4);
-        return sm->loss(y, &c4);
+        return sm->loss(&c4, pstates);
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         t_cppl c4;

@@ -119,7 +119,7 @@ public:
     virtual vector<int> getOutputShape() { return outputShape;}
     virtual void genZeroStates(t_cppl* pstates) { return; }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id) { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {return false;}
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
@@ -131,14 +131,13 @@ public:
     bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
 
 private:
-    bool checkForward(const MatrixN& x, floatN eps);
-    bool checkForward(const MatrixN& x, const MatrixN &y, floatN eps);
-    bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, floatN eps);
-    bool calcNumGrads(const MatrixN& xorg, const MatrixN& dchain, t_cppl *pcache, t_cppl *pgrads, t_cppl* pnumGrads, floatN h, bool lossFkt);
-    MatrixN calcNumGrad(const MatrixN& x, const MatrixN& dchain, t_cppl* pcachem, string var, floatN h);
-    MatrixN calcNumGradLoss(const MatrixN& x, t_cppl* pcache, string var, floatN h);
-    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, floatN h, floatN eps, bool lossFkt);
-    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *cache, floatN h, floatN eps, bool lossFkt);
+    bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps);
+    bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, t_cppl* pstates, floatN eps);
+    MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h);
+    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h);
+    bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt);
+    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt);
+    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt);
 };
 
 #endif

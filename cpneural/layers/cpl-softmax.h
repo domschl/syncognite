@@ -73,7 +73,7 @@ public:
         loss /= probs.rows();
         return loss;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         if (pstates->find("y") == pcache->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
