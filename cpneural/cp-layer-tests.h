@@ -10,7 +10,7 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
 
     yt=forward(x, pcache, pstates, 0);
     if (layerType & LayerType::LT_LOSS) {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
@@ -48,7 +48,7 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
     return allOk;
 }
 
-bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
@@ -61,7 +61,7 @@ bool Layer::checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, t_
         dyc = forward(x, &cache, pstates, 0);
         dyc.setRandom();
     } else if (layerType & LayerType::LT_LOSS) {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
@@ -200,23 +200,23 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
         if (var=="x") {
             pxold = x(i);
             x(i) = x(i) - h;
-            y0 = forward(x, y, &cache, 0);
-            sy0 = loss(y, &cache);
+            y0 = forward(x, &cache, pstates, 0);
+            sy0 = loss(&cache, pstates);
             cppl_delete(&cache);
             x(i) = pxold + h;
-            y1 = forward(x, y, &cache, 0);
-            sy1 = loss(y, &cache);
+            y1 = forward(x, &cache, pstates, 0);
+            sy1 = loss(&cache, pstates);
             cppl_delete(&cache);
             x(i) = pxold;
         } else {
             pxold = (*pm)(i);
             (*pm)(i) = (*pm)(i) - h;
-            y0 = forward(x, y, &cache, 0);
-            sy0 = loss(y, &cache);
+            y0 = forward(x, &cache, pstates, 0);
+            sy0 = loss(&cache, pstates);
             cppl_delete(&cache);
             (*pm)(i) = pxold + h;
-            y1 = forward(x, y, &cache, 0);
-            sy1 = loss(y, &cache);
+            y1 = forward(x, &cache, pstates, 0);
+            sy1 = loss(&cache, pstates);
             cppl_delete(&cache);
             (*pm)(i) = pxold;
         }
@@ -254,18 +254,18 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     MatrixN dx;
     MatrixN yt;
     if (lossFkt) {
-        yt=forward(x, y, pcache, 0);
-        loss(y,pcache);
-        dx=backward(y, pcache, &grads, 0);
+        yt=forward(x, pcache, pstates, 0);
+        loss(pcache, pstates);
+        dx=backward(y, pcache, pstates, &grads, 0);
     } else {
-        yt=forward(x, pcache, 0);
-        dx=backward(dchain, pcache, &grads, 0);
+        yt=forward(x, pcache, pstates, 0);
+        dx=backward(dchain, pcache, pstates, &grads, 0);
     }
     if (dx.rows()>0 && dx.cols()>0)  // Some layers (e.g. WordEmbeddings have no dx!)
         grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
-    calcNumGrads(x, dchain, pcache, &grads, &numGrads, h, lossFkt);
+    calcNumGrads(x, dchain, pcache, pstates, &grads, &numGrads, h, lossFkt);
 
     for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -288,6 +288,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
 }
 
 bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
+    // XXX: y parameter?
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -298,7 +299,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
 
     if (!cp.getPar("noVectorizationTests", false)) {
         cerr << "  check forward vectorizer " << layerName << "..." << endl;
-        ret=checkForward(x, y, eps);
+        ret=checkForward(x, nullptr, pstates, eps);
         if (!ret) {
             cerr << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
             return ret;
@@ -308,7 +309,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
 
         cerr << "  check backward vectorizer " << layerName << "..." << endl;
         t_cppl cache;
-        ret=checkBackward(x, y, &cache, eps);
+        ret=checkBackward(x, &cache, pstates, eps);
         cppl_delete(&cache);
         if (!ret) {
             cerr << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
@@ -320,7 +321,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
 
     cerr << "  check numerical gradients " << layerName << "..." << endl;
     t_cppl cache2;
-    ret=checkGradients(x, y, dchain, &cache2, h, eps, lossFkt);
+    ret=checkGradients(x, y, dchain, &cache2, pstates, h, eps, lossFkt);
     cppl_delete(&cache2);
     if (!ret) {
         cerr << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
@@ -341,19 +342,20 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
+    MatrixN y;
     cerr << "SelfTest for: " << layerName << " -----------------" << endl;
     MatrixN yf = forward(x, &cache, pstates, 0);
 
-    if (layerType == LayerType::LT_NORMAL) {
+    if (layerType & LayerType::LT_NORMAL) {
         dchain = yf;
         dchain.setRandom();
-    } else if (layerType == LayerType::LT_LOSS) {
+    } else if (layerType & LayerType::LT_LOSS) {
         //cppl_set(&cache, "probs", new MatrixN(yf));
         //cppl_set(&cache, "y", new MatrixN(y));
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
-        MatrixN y = *((*pstates)["y"]);
+        y = *((*pstates)["y"]);
         dchain = y;
         lossFkt=true;
     }

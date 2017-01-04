@@ -69,7 +69,7 @@ public:
         sm=nullptr;
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);

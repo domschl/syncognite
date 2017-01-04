@@ -31,7 +31,7 @@ public:
         cppl_delete(&params);
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
@@ -62,7 +62,7 @@ public:
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN margins=*((*pcache)["margins"]);
         MatrixN x=*((*pcache)["x"]);
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);

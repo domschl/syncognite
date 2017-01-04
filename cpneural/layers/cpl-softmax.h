@@ -32,7 +32,7 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
@@ -49,7 +49,7 @@ public:
         return probs;
     }
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
@@ -74,7 +74,7 @@ public:
         return loss;
     }
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);

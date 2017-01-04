@@ -62,7 +62,7 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
@@ -168,7 +168,7 @@ public:
     return loss, dx
     */
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
@@ -213,7 +213,7 @@ public:
         MatrixN probs=*((*pcache)["probs"]);
         MatrixN mask;
         // int N=probs.rows()/T;
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);

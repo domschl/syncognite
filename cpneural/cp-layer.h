@@ -134,11 +134,11 @@ public:
                         string optimizer, const CpParams& cp);
     t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
-    bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
+    bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
 
 private:
     bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps);
-    bool checkBackward(const MatrixN& x, const MatrixN& y, t_cppl *pcache, t_cppl* pstates, floatN eps);
+    bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps);
     MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h);
     MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h);
     bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt);

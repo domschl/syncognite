@@ -240,7 +240,7 @@ public:
         Timer t;
         trainMode = cp.getPar("train", false);
         if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
-        if (pstates->find("y") == pcache->end()) {
+        if (pstates->find("y") == pstates->end()) {
             cerr << "pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
