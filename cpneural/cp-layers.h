@@ -145,13 +145,13 @@ public:
             removeLayer(name);
             return false;
         }
-        if (pLayer->layerType==LayerType::LT_LOSS) {
+        if (pLayer->layerType & LayerType::LT_LOSS) {
             if (lossLayer!="") {
                 cerr << "ERROR: a loss layer with name: " << lossLayer << "has already been defined, cannot add new loss layer: " << name << " to " << layerName << endl;
                 removeLayer(name);
                 return false;
             }
-            layerType=LayerType::LT_LOSS;
+            layerType = layerType & LayerType::LT_LOSS;
             lossLayer=name;
         }
         layerInputs[name]=inputLayers;
@@ -216,7 +216,7 @@ public:
 
                 if (p->layerInit==false) cerr << "  " << name << ": bad initialization!" << endl;
                 cLay=nLay[0];
-                if (p->layerType==LayerType::LT_LOSS) done=true;
+                if (p->layerType & LayerType::LT_LOSS) done=true;
             }
         }
         checked=true;
@@ -231,7 +231,7 @@ public:
         }
         return lys;
     }
-    virtual MatrixN forward(const MatrixN& x, const MatrixN& y, t_cppl* pcache, int id=0) override {
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         string cLay="input";
         vector<string> nLay;
         bool done=false;
@@ -240,6 +240,10 @@ public:
         Timer t;
         trainMode = cp.getPar("train", false);
         if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
+        if (pstates->find("y") == pcache->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
+        MatrixN y = *((*pstates)["y"]);
         if (pcache!=nullptr) cppl_update(pcache, "y", new MatrixN(y));
         while (!done) {
             nLay=getLayerFromInput(cLay);
@@ -254,15 +258,14 @@ public:
             //cache.clear();
             if (pcache!=nullptr) mlPop(name,pcache,&cache);
             if (bench) t.startWall();
-            if (p->layerType==LayerType::LT_NORMAL) xn=p->forward(x0,&cache, id);
-            else xn=p->forward(x0,y,&cache, id);
+            xn=p->forward(x0,&cache, pcache, id);
             if (bench) cerr << name << "-fw:\t" << t.stopWallMicro() << endl;
             if (pcache!=nullptr) {
                 mlPush(name, &cache, pcache);
             } else {
                 cppl_delete(&cache);
             }
-            if (p->layerType==LayerType::LT_LOSS) done=true;
+            if (p->layerType & LayerType::LT_LOSS) done=true;
             cLay=name;
             int oi=-10;
             int fi=-10;
@@ -307,7 +310,7 @@ public:
         }
         return xn;
     }
-    virtual floatN loss(const MatrixN& y, t_cppl* pcache) override {
+    virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         t_cppl cache;
         if (lossLayer=="") {
             cerr << "Invalid configuration, no loss layer defined!" << endl;
@@ -315,19 +318,19 @@ public:
         }
         Layer* pl=layerMap[lossLayer];
         mlPop(lossLayer, pcache, &cache);
-        floatN ls=pl->loss(y, &cache);
+        floatN ls=pl->loss(&cache, pstates);
         return ls;
     }
-    virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         if (lossLayer=="") {
             cerr << "Invalid configuration, no loss layer defined!" << endl;
-            return y;
+            return dy;
         }
         bool done=false;
         Timer t;
         MatrixN dxn;
         string cl=lossLayer;
-        MatrixN dx0=y;
+        MatrixN dx0=dy;
         trainMode = cp.getPar("train", false);
         while (!done) {
             t_cppl cache;
@@ -337,7 +340,7 @@ public:
             Layer *pl=layerMap[cl];
             mlPop(cl,pcache,&cache);
             if (bench) t.startWall();
-            dxn=pl->backward(dx0, &cache, &grads, id);
+            dxn=pl->backward(dx0, &cache, pstates, &grads, id);
             if (bench) cerr << cl << "-bw:\t" << t.stopWallMicro() << endl;
             mlPush(cl,&grads,pgrads);
             vector<string> lyr=layerInputs[cl];

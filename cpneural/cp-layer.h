@@ -68,6 +68,12 @@ enum LayerType {
     LT_EXTERNALSTATE = 2,
     LT_LOSS = 4
 };
+inline LayerType operator&(LayerType a, LayerType b) {
+    return static_cast<LayerType>(static_cast<int>(a) & static_cast<int>(b));
+}
+bool layerHasType(LayerType lt, LayerType lt2) {
+    return ((lt & lt2) == lt2);
+}
 
 typedef int t_layer_props_entry;
 typedef std::map<string, t_layer_props_entry> t_layer_props;
