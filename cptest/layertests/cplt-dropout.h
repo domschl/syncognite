@@ -5,6 +5,7 @@
 
 bool checkDropout(float eps=3.0e-2) {
     bool allOk=true;
+    t_cppl states;
     MatrixN x(500,500);
     x.setRandom();
     floatN dl=10.0;
@@ -13,9 +14,9 @@ bool checkDropout(float eps=3.0e-2) {
 
     Dropout dp("{inputShape=[500];train=true}");
     dp.cp.setPar("drop",dop);
-    MatrixN y=dp.forward(x, nullptr);
+    MatrixN y=dp.forward(x, nullptr, &states);
     dp.cp.setPar("train",false);
-    MatrixN yt=dp.forward(x, nullptr);
+    MatrixN yt=dp.forward(x, nullptr, &states);
 
     floatN xm=x.mean();
     floatN ym=y.mean();

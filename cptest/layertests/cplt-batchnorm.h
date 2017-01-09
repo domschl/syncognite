@@ -5,6 +5,7 @@
 
 bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
+    t_cppl states;
     bool allOk=true;
     MatrixN x(10,3);
     x << -1.76682167,  0.76232051, -1.31336665,
@@ -32,7 +33,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
     BatchNorm bn("{inputShape=[3];train=true}");
     //bn.setPar("trainMode", true);
-    MatrixN xn0=bn.forward(x, &cache);
+    MatrixN xn0=bn.forward(x, &cache, &states);
     MatrixN mean=xn0.colwise().mean();
     cerr << "Mean:" << mean << endl;
     MatrixN xme = xn0.rowwise() - RowVectorN(mean.row(0));
@@ -82,7 +83,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
     //bn.setPar("trainMode", true);
-    MatrixN xn20=bn2.forward(x, &cache2);
+    MatrixN xn20=bn2.forward(x, &cache2, &states);
     MatrixN mean2=xn20.colwise().mean();
     cerr << "Mean:" << mean2 << endl;
     MatrixN xme2 = xn20.rowwise() - RowVectorN(mean2.row(0));
@@ -122,7 +123,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
         xt.setRandom();
-        bn3.forward(xt,&cache3);
+        bn3.forward(xt,&cache3, &states);
     }
     cerr << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
     cerr << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
@@ -130,7 +131,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     bn3.cp.setPar("train", false);
     if (bn3.cp.getPar("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
     xt.setRandom();
-    MatrixN xn30=bn3.forward(xt, &cache3);
+    MatrixN xn30=bn3.forward(xt, &cache3, &states);
     MatrixN mean3=xn30.colwise().mean();
     cerr << "  Mean:" << mean3 << endl;
     if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
@@ -149,6 +150,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
 bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
+    t_cppl states;
     MatrixN x(4,5);
     x << 15.70035538,  10.9836183 ,  12.60007796,   8.40461897, 6.73940903,
          18.85269464,  17.58441018,  14.44920968,   7.33474882, 11.35816205,
@@ -181,8 +183,8 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
     t_cppl cache;
     t_cppl grads;
-    MatrixN y=bn.forward(x, &cache);
-    MatrixN dx0=bn.backward(dchain, &cache, &grads);
+    MatrixN y=bn.forward(x, &cache, &states);
+    MatrixN dx0=bn.backward(dchain, &cache, &states, &grads);
 
     bool ret=matComp(dx,dx0,"BatchNormBackward dx",eps);
     if (!ret) allOk=false;
