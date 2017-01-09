@@ -120,6 +120,8 @@ public:
     CpParams cp;
     t_cppl params;
     bool layerInit;
+    std::mutex lossQueueMutex;
+    std::queue<floatN> lossQueue;
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual vector<int> getOutputShape() { return outputShape;}
@@ -151,7 +153,7 @@ public:
 
     floatN train(const MatrixN& x, t_cppl* pastes, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const CpParams& cp);
-    t_cppl workerThread(const MatrixN& xb, t_cppl* pstates, floatN *pl, int id);
+    t_cppl workerThread(const MatrixN& xb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
 

@@ -167,10 +167,12 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
             (*pstates)["y"] = py;
             return -1000.0;
         }
+        cerr << "yt:" << yt << endl;
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
             for (int j=0; j<yt.cols(); j++) {
+                cerr << i << "," << j << ":" << yt(i,j) << endl;
                 if (yt(i,j)>pr) {
                     pr=yt(i,j);
                     ji=j;
@@ -189,7 +191,7 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     return err;
 }
 
-t_cppl Layer::workerThread(const MatrixN& xb, t_cppl* pstates, floatN *ploss, int id) {
+t_cppl Layer::workerThread(const MatrixN& xb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
     //Timer t,tw;
@@ -203,7 +205,10 @@ t_cppl Layer::workerThread(const MatrixN& xb, t_cppl* pstates, floatN *ploss, in
     MatrixN yb = *((*pstates)["y"]);
     forward(xb, &cache, pstates, id);
     //cerr << "fw" << id << endl;
-    *ploss=loss(&cache, pstates);
+    floatN thisloss=loss(&cache, pstates);
+    lossQueueMutex.lock();
+    lossQueue.push(thisloss);
+    lossQueueMutex.unlock();
     backward(yb, &cache, pstates, &grads, id);
     //cerr << "bw" << id << endl;
     cppl_delete(&cache);
@@ -265,10 +270,10 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     vector<unsigned int> shfl(x.rows());
     for (unsigned int i=0; i<shfl.size(); i++) shfl[i]=i;
 
-    floatN l=0.0;
     floatN meanloss=0.0;
     floatN m2loss=0.0;
     floatN meanacc=0.0;
+    floatN lastloss=0.0;
     //bs=bs/nt;
     lr=lr/nt;
     Timer tw;
@@ -304,6 +309,8 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 
             MatrixN xb(dy,x.cols());
             MatrixN yb(dy,y.cols());
+            xb.setZero();
+            yb.setZero();
             if (bShuffle) {
                 for (int i=y0; i<y0+dy; i++) {
                     int in=i-y0;
@@ -331,12 +338,15 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             }
             ++th;
 
+            cerr << xb << endl;
+            cerr << yb << endl;
+
             t_cppl states;
             for (auto st : *pstates) {
                 states[st.first] = st.second;
             }
             states["y"] = &yb;
-            gradsFut.push_back(std::async(std::launch::async, [this, xb, &states, &l, bi]{ return this->workerThread(xb, &states, &l, bi); }));
+            gradsFut.push_back(std::async(std::launch::async, [this, xb, &states, bi]{ return this->workerThread(xb, &states, bi); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
@@ -364,22 +374,32 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 update(popti, &sgrad, "", &optiCache);
                 cppl_delete(&sgrad);
                 gradsFut.clear();
+
+                float dv1=10.0;
+                float dv2=50.0;
+
+                lossQueueMutex.lock();
+                while (!lossQueue.empty()) {
+                    lastloss=lossQueue.front();
+                    lossQueue.pop();
+                    cerr << "lossQueue pop" << endl;
+                    if (meanloss==0) meanloss=lastloss;
+                    else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
+                    if (m2loss==0) m2loss=lastloss;
+                    else m2loss=((dv2-1.0)*m2loss+lastloss)/dv2;
+                }
+                lossQueueMutex.unlock();
+
                 if (verbose && b-bold>=5) {
                     floatN twt=tw.stopWallMicro();
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
                     floatN eta=twt/1000000.0-ett;
                     floatN chtr=twt/1000.0/(floatN)(b*bs);
-                    float dv1=10.0;
                     if (e+5.0<dv1) dv1=e+5.0;
-                    float dv2=50.0;
                     if (e+20.0<dv2) dv2=e+20.0;
-                    if (meanloss==0) meanloss=l;
-                    else meanloss=((dv1-1.0)*meanloss+l)/dv1;
-                    if (m2loss==0) m2loss=l;
-                    else m2loss=((dv2-1.0)*m2loss+l)/dv2;
                     cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << ", " << m2loss << def << "\r";
                     std::flush(cerr);
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << l << "\t" << meanloss << "\t" << m2loss << endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << "\t" << lastloss << meanloss << "\t" << m2loss << endl;
                     std::flush(logfile);
                     bold=b;
                 }
@@ -399,7 +419,13 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
-        logfile << e+1.0 << "\t" << l << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << "          " << endl;
+        cerr << e;
+        cerr << lastloss;
+        cerr << meanloss;
+        cerr << m2loss;
+        cerr << accval;
+        cerr << meanacc;
+        logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << "          " << endl;
         std::flush(logfile);
         setFlag("train",true);
         if (lr_decay!=1.0) {

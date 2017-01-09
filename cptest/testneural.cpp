@@ -49,16 +49,20 @@ bool registerTest() {
     return allOk;
 }
 
-int tFunc(floatN x, int c) {
-    int y=(int)(((sin(x/5.0)+1.0)/2.0)*(floatN)c);
-    //cerr << x << ":" << y << " " << endl;
+int tFunc(VectorN x, int c) {
+    floatN s=0.0;
+    for (unsigned j=0; j<x.cols(); j++) {
+        s += x(j);
+    }
+    int y=(int)(((sin(s)+1.0)/2.0)*(floatN)c);
     return y;
 }
 
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
-    int N=500,NV=50,NT=50,I=5,H=10,C=4;
+    // int N=500,NV=50,NT=50,I=5,H=10,C=4;
+    int N=1,NV=1,NT=1,I=5,H=10,C=4;
     cp.setPar("inputShape",vector<int>{I});
     cp.setPar("hidden",vector<int>{H,C});
     cp.setPar("init","normal");
@@ -68,24 +72,27 @@ bool trainTest() {
     MatrixN X(N,I);   // XXX: 1-I never used by tfunc...
     X.setRandom();
     MatrixN y(N,1);
-    for (unsigned i=0; i<y.rows(); i++) y(i,0)=tFunc(X(i,0),C);
+    for (unsigned i=0; i<y.rows(); i++) {
+        VectorN s=X.row(i);
+        y(i,0)=tFunc(s,C);
+    }
 
     MatrixN Xv(NV,I);
     Xv.setRandom();
     MatrixN yv(NV,1);
-    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=tFunc(Xv(i,0),C);
+    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=tFunc(Xv.row(i),C);
 
     MatrixN Xt(NT,I);
     Xt.setRandom();
     MatrixN yt(NT,1);
-    for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
+    for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt.row(i),C);
 
     CpParams cpo("{verbose=false;epochs=80.0;batch_size=20;learning_rate=5e-3;"\
                 "lr_decay=1.0;epsilon=1e-8;regularization=1e-3;maxthreads=4}");
 
     floatN train_err,test_err,val_err;
 
-    t_cppl states, statesv, statest;
+    t_cppl states{}, statesv{}, statest{};
     states["y"] = &y;
     statesv["y"] = &yv;
     statest["y"] = &yt;

@@ -32,7 +32,7 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN ych=x;
         for (unsigned int i=0; i<ych.size(); i++) {
-            if (x(i)<0.0) {
+            if (ych(i)<0.0) {
                 ych(i)=0.0;
             }
         }

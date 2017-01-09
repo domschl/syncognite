@@ -12,6 +12,8 @@
 #include <vector>
 #include <map>
 #include <thread>
+#include <mutex>
+#include <queue>
 #include <future>
 #include <list>
 #include <set>

@@ -90,6 +90,9 @@ public:
         return yo;
     }
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
+        if (pstates->find("y") == pstates->end()) {
+            cerr << "pstates does not contain y -> fatal!" << endl;
+        }
         t_cppl c4;
         mlPop("sm",pcache,&c4);
         return sm->loss(&c4, pstates);
