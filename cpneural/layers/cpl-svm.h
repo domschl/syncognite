@@ -36,7 +36,7 @@ public:
         }
         MatrixN y = *((*pstates)["y"]);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        // if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         VectorN correctClassScores(x.rows());
         for (unsigned int i=0; i<x.rows(); i++) {
             correctClassScores(i)=x(i,(int)y(i));

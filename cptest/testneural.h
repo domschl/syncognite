@@ -11,12 +11,12 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 #include "layertests/cplt-affinerelu.h"
 #include "layertests/cplt-batchnorm.h"
 #include "layertests/cplt-dropout.h"
-/*
 #include "layertests/cplt-convolution.h"
 #include "layertests/cplt-pooling.h"
 #include "layertests/cplt-spatialbatchnorm.h"
 #include "layertests/cplt-svm.h"
 #include "layertests/cplt-softmax.h"
+/*
 #include "layertests/cplt-twolayernet.h"
 #include "layertests/cplt-rnn.h"
 #include "layertests/cplt-wordembedding.h"

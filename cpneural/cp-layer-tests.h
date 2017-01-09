@@ -93,10 +93,10 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
         MatrixN xi=x.row(i);
         MatrixN dyi2;
 
-        dyi2 = forward(xi, &chi, pstates, 0);
         MatrixN dyi = dyc.row(i);
         t_cppl sti{}; // XXX: init with pstates? // XXX: RNN h!
         cppl_set(&sti, "y", new MatrixN(dyi));
+        dyi2 = forward(xi, &chi, &sti, 0);
         MatrixN dyt = backward(dyi, &chi, &sti, &gdi, 0);
         dx.row(i) = dyt.row(0);
         for (auto it : grads) {
@@ -186,7 +186,8 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
 
     MatrixN x=*((*pcache)["x"]);
     //MatrixN x=xorg;
-    MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
+    // MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
+    MatrixN y=*((*pstates)["y"]);  // XXX: pstates?
     if (var=="x") pm=&x;
     else pm = params[var];
     MatrixN grad(pm->rows(), pm->cols());

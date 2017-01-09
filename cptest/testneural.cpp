@@ -166,14 +166,13 @@ int doTests() {
         allOk=false;
     }
 
-/*
     // Convolution
     //Convolution cv("{inputShape=[3,4,4,16,3,3];stride=1;pad=0}");
     //MatrixN xcv(20,48);
     Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
     MatrixN xcv(2,75);
     xcv.setRandom();
-    if (!cv.selfTest(xcv, yz, 1e-2, 1e-3)) {
+    if (!cv.selfTest(xcv, &s1, 1e-2, 1e-3)) {
         allOk=false;
     }
 
@@ -181,7 +180,7 @@ int doTests() {
     Pooling pl("{inputShape=[3,4,4];stride=2}");
     MatrixN xpl(20,48);
     xpl.setRandom();
-    if (!pl.selfTest(xpl, yz)) {
+    if (!pl.selfTest(xpl, &s1)) {
         allOk=false;
     }
 
@@ -189,10 +188,45 @@ int doTests() {
     SpatialBatchNorm sbn("{inputShape=[3,4,4];train=true;N=2;noVectorizationTests=true}");
     MatrixN xsbn(2,3*4*4);
     xsbn.setRandom();
-    if (!sbn.selfTest(xsbn, yz)) {
+    if (!sbn.selfTest(xsbn, &s1)) {
         allOk=false;
     }
 
+    // SVM
+    int svN=10, svC=5;
+    CpParams c2;
+    c2.setPar("inputShape",vector<int>{svC});
+    Svm sv(c2);
+    t_cppl svmstates;
+    MatrixN xsv(svN,svC);
+    xsv.setRandom();
+    MatrixN yv(svN,1);
+    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=(rand()%svC);
+    svmstates["y"] = &yv;
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!sv.selfTest(xsv, &svmstates, h, eps)) {
+        allOk=false;
+    }
+
+    // Softmax
+    int smN=10, smC=4;
+    CpParams c1;
+    c1.setPar("inputShape",vector<int>{smC});
+    Softmax mx(c1);
+    t_cppl smstates;
+    MatrixN xmx(smN,smC);
+    xmx.setRandom();
+    MatrixN y(smN,1);
+    for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
+    smstates["y"] = &y;
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    if (!mx.selfTest(xmx, &smstates, h, eps)) {
+        allOk=false;
+    }
+
+/*
     // RNN
     int rnnN=4;
     MatrixN xrnn(rnnN,5*7);
@@ -244,21 +278,6 @@ int doTests() {
         cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
 
-    // Softmax
-    int smN=10, smC=4;
-    CpParams c1;
-    c1.setPar("inputShape",vector<int>{smC});
-    Softmax mx(c1);
-    MatrixN xmx(smN,smC);
-    xmx.setRandom();
-    MatrixN y(smN,1);
-    for (unsigned i=0; i<y.rows(); i++) y(i,0)=(rand()%smC);
-    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
-    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!mx.selfTest(xmx, y, h, eps)) {
-        allOk=false;
-    }
-
     // Temporal Softmax
     int tsmN=10, tsmC=4, Ttm=4;
     CpParams tc1;
@@ -272,21 +291,6 @@ int doTests() {
     h=1e-2; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
     eps=1e-4; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     if (!tmx.selfTest(txmx, ty, h, eps)) {
-        allOk=false;
-    }
-
-    // SVM
-    int svN=10, svC=5;
-    CpParams c2;
-    c2.setPar("inputShape",vector<int>{svC});
-    Svm sv(c2);
-    MatrixN xsv(svN,svC);
-    xsv.setRandom();
-    MatrixN yv(svN,1);
-    for (unsigned i=0; i<yv.rows(); i++) yv(i,0)=(rand()%svC);
-    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
-    eps=1e-6; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!sv.selfTest(xsv, yv, h, eps)) {
         allOk=false;
     }
 
@@ -387,7 +391,6 @@ int doTests() {
         allOk=false;
     }
 
-/*
     if (checkConvolutionForward()) {
         cerr << green << "ConvolutionForward (Convolution) with test data: OK." << def << endl;
     } else {
@@ -428,7 +431,7 @@ int doTests() {
         cerr << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkTwoLayer()) {
         cerr << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {

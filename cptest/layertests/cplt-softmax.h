@@ -45,10 +45,12 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     Softmax sm("{inputShape=[5]}");
     t_cppl cache;
     t_cppl grads;
-    MatrixN probs0=sm.forward(x, y, &cache);
+    t_cppl states;
+    states["y"] = &y;
+    MatrixN probs0=sm.forward(x, &cache, &states);
     bool ret=matComp(probs,probs0,"Softmax probabilities",eps);
     if (!ret) allOk=false;
-    floatN loss0=sm.loss(y, &cache);
+    floatN loss0=sm.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -59,7 +61,7 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     }
     //MatrixN dchain=x;
     //dchain.setOnes();
-    MatrixN dx0=sm.backward(y, &cache, &grads);
+    MatrixN dx0=sm.backward(y, &cache, &states, &grads);
     ret=matComp(dx,dx0,"Softmax dx",eps);
     if (!ret) allOk=false;
     cppl_delete(&grads);

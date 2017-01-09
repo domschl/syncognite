@@ -4,6 +4,7 @@
 #include "../testneural.h"
 
 bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(2,3*4*4); // 2x3x4x4 NxCxHxW
     x << -0.3       , -0.29263158, -0.28526316, -0.27789474,
           -0.27052632, -0.26315789, -0.25578947, -0.24842105,
@@ -50,12 +51,13 @@ bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.38526316,  0.4;
          // inputShape: C, H, W; kernel: F, HH=stride, WW=stride
     Pooling pl("{inputShape=[3,4,4];stride=2}");
-    MatrixN y0=pl.forward(x, nullptr);
+    MatrixN y0=pl.forward(x, nullptr, &states);
 
     return matComp(y,y0,"PoolingForward",eps);
 }
 
 bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(3, 2*8*8);
     x << -0.20821944,  0.76470027, -0.42823441,  0.23081636, -0.7821132 ,
           -0.19361657, -0.25946762, -1.01735498,
@@ -299,8 +301,8 @@ bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
     Pooling pl("{inputShape=[2,8,8];stride=2}");
     t_cppl cache;
     t_cppl grads;
-    MatrixN y=pl.forward(x, &cache);
-    MatrixN dx0=pl.backward(dchain, &cache, &grads);
+    MatrixN y=pl.forward(x, &cache, &states);
+    MatrixN dx0=pl.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"PoolingBackward dx",eps);
     if (!ret) allOk=false;

@@ -5,6 +5,7 @@
 
 bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN x(2,48); // 2x3x4x4 NxCxHxW
+    t_cppl states;
     x << -0.1       , -0.09368421, -0.08736842, -0.08105263,
           -0.07473684, -0.06842105, -0.06210526, -0.05578947,
           -0.04947368, -0.04315789, -0.03684211, -0.03052632,
@@ -105,12 +106,13 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
     Convolution cv("{inputShape=[3,4,4];kernel=[3,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
-    MatrixN y0=cv.forward(x, nullptr);
+    MatrixN y0=cv.forward(x, nullptr, &states);
 
     return matComp(y,y0,"ConvolutionForward",eps);
 }
 
 bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(7,108); // 2x3x4x4 NxCxHxW
     x << -1.00000000e-01,  -9.92052980e-02,  -9.84105960e-02,
            -9.76158940e-02,  -9.68211921e-02,  -9.60264901e-02,
@@ -625,12 +627,13 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     Convolution cv("{inputShape=[3,6,6];kernel=[5,4,4];stride=2;pad=1}");
     *(cv.params["W"])= W;
     *(cv.params["b"])=b;
-    MatrixN y0=cv.forward(x, nullptr);
+    MatrixN y0=cv.forward(x, nullptr, &states);
 
     return matComp(y,y0,"ConvolutionForward",eps);
 }
 
 bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(4, 75);
     x << 4.06278962e-01,  -7.20029839e-01,  -8.77595062e-01,
            -5.69242505e-01,  -8.21071312e-02,
@@ -1012,8 +1015,8 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
     *(cv.params["b"])=b;
     t_cppl cache;
     t_cppl grads;
-    MatrixN y=cv.forward(x, &cache);
-    MatrixN dx0=cv.backward(dchain, &cache, &grads);
+    MatrixN y=cv.forward(x, &cache, &states);
+    MatrixN dx0=cv.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"ConvolutionBackward dx",eps);
     if (!ret) allOk=false;

@@ -55,10 +55,12 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
     Svm sv("{inputShape=[5]}");
     t_cppl cache;
     t_cppl grads;
-    MatrixN margins0=sv.forward(x, y, &cache);
+    t_cppl states;
+    states["y"] = &y;
+    MatrixN margins0=sv.forward(x, &cache, &states);
     bool ret=matComp(margins,margins0,"Svm probabilities",eps);
     if (!ret) allOk=false;
-    floatN loss0=sv.loss(y, &cache);
+    floatN loss0=sv.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -67,7 +69,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
     } else {
         cerr << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
-    MatrixN dx0=sv.backward(y, &cache, &grads);
+    MatrixN dx0=sv.backward(y, &cache, &states, &grads);
     ret=matComp(dx,dx0,"Softmax dx",eps);
     if (!ret) allOk=false;
     cppl_delete(&grads);
