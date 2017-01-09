@@ -7,7 +7,9 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 
 #include "layertests/cplt-affine.h"
 #include "layertests/cplt-relu.h"
+#include "layertests/cplt-nonlinearity.h"
 #include "layertests/cplt-affinerelu.h"
+/*
 #include "layertests/cplt-batchnorm.h"
 #include "layertests/cplt-dropout.h"
 #include "layertests/cplt-convolution.h"
@@ -20,8 +22,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 #include "layertests/cplt-wordembedding.h"
 #include "layertests/cplt-temporalaffine.h"
 #include "layertests/cplt-temporalsoftmax.h"
-#include "layertests/cplt-nonlinearity.h"
-
+*/
 using std::cerr; using std::endl;
 
 

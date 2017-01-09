@@ -4,6 +4,7 @@
 #include "../testneural.h"
 
 bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     bool allOk=true;
     MatrixN x(3,4);
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
@@ -16,7 +17,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
     Nonlinearity  nlr("{inputShape=[4];type='relu'}");
-    MatrixN y0=nlr.forward(x, nullptr);
+    MatrixN y0=nlr.forward(x, nullptr, &states);
     if (!matComp(y,y0,"NonlinearityForwardRelu",eps)) allOk=false;
 
     x << -0.5,        -0.40909091, -0.31818182, -0.22727273,
@@ -28,7 +29,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.55657487,  0.57888108,  0.60086988,  0.62245933;
 
     Nonlinearity  nlr2("{inputShape=[4];type='sigmoid'}");
-    y0=nlr2.forward(x, nullptr);
+    y0=nlr2.forward(x, nullptr, &states);
     if (!matComp(y,y0,"NonlinearityForwardSigmoid",eps)) allOk=false;
 
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
@@ -40,13 +41,14 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
           0.22343882,  0.30786199,  0.38770051,  0.46211716;
 
     Nonlinearity  nlr3(CpParams("{inputShape=[4];type='tanh'}"));
-    y0=nlr3.forward(x, nullptr);
+    y0=nlr3.forward(x, nullptr, &states);
     if (!matComp(y,y0,"NonlinearityForwardTanh",eps)) allOk=false;
 
     return allOk;
 }
 
 bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(4,4);
     x << -0.56204781, -0.30204112,  0.7685022 , -0.74405281,
          -1.46482614, -0.3824993 ,  0.23478267,  0.81716411,
@@ -65,8 +67,8 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
     Nonlinearity nl("{inputShape=[4];type='relu'}");
     t_cppl cache;
     t_cppl grads;
-    MatrixN y=nl.forward(x, &cache);
-    MatrixN dx0=nl.backward(dchain, &cache, &grads);
+    MatrixN y=nl.forward(x, &cache, &states);
+    MatrixN dx0=nl.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"NonlinearityBackward (relu) dx",eps);
     if (!ret) allOk=false;
@@ -89,8 +91,8 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
         -2.03870191,  0.84601717,  1.57136025, -1.61173135;
 
     Nonlinearity nl2("{inputShape=[4];type='sigmoid'}");
-    y=nl2.forward(x, &cache);
-    dx0=nl2.backward(dchain, &cache, &grads);
+    y=nl2.forward(x, &cache, &states);
+    dx0=nl2.backward(dchain, &cache, &states, &grads);
     ret=matComp(dx,dx0,"NonlinearityBackward (sigmoid) dx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
@@ -113,8 +115,8 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -1.11987843, -0.69806274, -0.37361077, -0.3332982;
 
     Nonlinearity nl3("{inputShape=[4];type='tanh'}");
-    y=nl3.forward(x, &cache);
-    dx0=nl3.backward(dchain, &cache, &grads);
+    y=nl3.forward(x, &cache, &states);
+    dx0=nl3.backward(dchain, &cache, &states, &grads);
     ret=matComp(dx,dx0,"NonlinearityBackward (tanh) dx",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);

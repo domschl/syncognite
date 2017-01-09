@@ -127,13 +127,32 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id) { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) { return 1001.0; }
-    virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {return false;}
+    virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
+        for (auto it : params) {
+            string key = it.first;
+            if (pgrads->find(key)==pgrads->end()) {
+                cerr << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
+                cerr << "Grads-vars: ";
+                for (auto gi : *pgrads) cerr << gi.first << " ";
+                cerr << endl;
+                cerr << "Params-vars: ";
+                for (auto pi : params) cerr << pi.first << " ";
+                cerr << endl;
+                cerr << "Irrecoverable internal error, ABORT";
+                exit(-1);
+            } else {
+                *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
+            }
+        }
+        return true;
+    }
+
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
 
-    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+    floatN train(const MatrixN& x, t_cppl* pastes, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const CpParams& cp);
-    t_cppl workerThread(const MatrixN& xb, const MatrixN& yb, floatN *pl, int id);
-    floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
+    t_cppl workerThread(const MatrixN& xb, t_cppl* pstates, floatN *pl, int id);
+    floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
 
 private:

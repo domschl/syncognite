@@ -141,44 +141,30 @@ Optimizer *optimizerFactory(string name, const CpParams& cp) {
     return nullptr;
 }
 
-virtual bool Layer::update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
-    /*for (int i=0; i<params.size(); i++) {
-        *params[i] = popti->update(*params[i],*grads[i]);
-    }*/
-    for (auto it : params) {
-        string key = it.first;
-        if (pgrads->find(key)==pgrads->end()) {
-            cerr << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
-            cerr << "Grads-vars: ";
-            for (auto gi : *pgrads) cerr << gi.first << " ";
-            cerr << endl;
-            cerr << "Params-vars: ";
-            for (auto pi : params) cerr << pi.first << " ";
-            cerr << endl;
-            cerr << "Irrecoverable internal error, ABORT";
-            exit(-1);
-        } else {
-            *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
-        }
-    }
-    return true;
-}
-
-floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100)  {
+floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     setFlag("train",false);
     int bs=batchsize;
     int N=shape(x)[0];
     MatrixN xb,yb;
     int co=0;
+
+    if (pstates->find("y") == pstates->end()) {
+        cerr << "pstates does not contain y -> fatal!" << endl;
+    }
+    MatrixN y = *((*pstates)["y"]);
+    MatrixN *py = (*pstates)["y"];
+
     for (int ck=0; ck<(N+bs-1)/bs; ck++) {
         int x0=ck*bs;
         int dl=bs;
         if (x0+dl>N) dl=N-x0;
         xb=x.block(x0,0,dl,x.cols());
         yb=y.block(x0,0,dl,y.cols());
-        MatrixN yt=forward(xb, yb, nullptr, 0);
+        (*pstates)["y"]=&yb;
+        MatrixN yt=forward(xb, nullptr, pstates, 0);
         if (yt.rows() != yb.rows()) {
             cerr << "test: incompatible row count!" << endl;
+            (*pstates)["y"] = py;
             return -1000.0;
         }
         for (int i=0; i<yt.rows(); i++) {
@@ -192,16 +178,18 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100)  {
             }
             if (ji==(-1)) {
                 cerr << "Internal: at " << layerName << "could not identify max-index for y-row-" << i << ": " << yt.row(i) << endl;
+                (*pstates)["y"] = py;
                 return -1000.0;
             }
             if (ji==yb(i,0)) ++co;
         }
     }
     floatN err=1.0-(floatN)co/(floatN)y.rows();
+    (*pstates)["y"] = py;
     return err;
 }
 
-t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, int id) {
+t_cppl Layer::workerThread(const MatrixN& xb, t_cppl* pstates, floatN *ploss, int id) {
     t_cppl cache;
     t_cppl grads;
     //Timer t,tw;
@@ -209,10 +197,14 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     //t.startCpu();
     //tw.startWall();
     //auto start = std::chrono::steady_clock::now();
-    forward(xb, yb, &cache, id);
+    if (pstates->find("y") == pstates->end()) {
+        cerr << "pstates does not contain y -> fatal!" << endl;
+    }
+    MatrixN yb = *((*pstates)["y"]);
+    forward(xb, &cache, pstates, id);
     //cerr << "fw" << id << endl;
-    *ploss=loss(yb, &cache);
-    backward(yb, &cache, &grads, id);
+    *ploss=loss(&cache, pstates);
+    backward(yb, &cache, pstates, &grads, id);
     //cerr << "bw" << id << endl;
     cppl_delete(&cache);
     //auto f=t.stopCpuMicro()/1000.0;
@@ -224,7 +216,7 @@ t_cppl Layer::workerThread(const MatrixN& xb, const MatrixN& yb, floatN *ploss, 
     return grads;
 }
 
-floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
+floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
                 string optimizer, const CpParams& cp) {
     Optimizer* popti=optimizerFactory(optimizer, cp);
     t_cppl optiCache;
@@ -235,6 +227,15 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier gray(Color::FG_LIGHT_BLUE);
     Color::Modifier def(Color::FG_DEFAULT);
+
+    if (pstates->find("y") == pstates->end()) {
+        cerr << "pstates does not contain y -> fatal!" << endl;
+    }
+    MatrixN y = *((*pstates)["y"]);
+    if (pstatesv->find("y") == pstatesv->end()) {
+        cerr << "pstatesv does not contain y -> fatal!" << endl;
+    }
+    MatrixN yv = *((*pstatesv)["y"]);
 
     float epf=popti->cp.getPar("epochs", (float)1.0); //Default only!
     int ep=(int)ceil(epf);
@@ -330,7 +331,12 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
             }
             ++th;
 
-            gradsFut.push_back(std::async(std::launch::async, [this, xb, yb, &l, bi]{ return this->workerThread(xb, yb, &l, bi); }));
+            t_cppl states;
+            for (auto st : *pstates) {
+                states[st.first] = st.second;
+            }
+            states["y"] = &yb;
+            gradsFut.push_back(std::async(std::launch::async, [this, xb, &states, &l, bi]{ return this->workerThread(xb, &states, &l, bi); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
@@ -386,7 +392,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
         //floatN errtra=test(x,y);
         Timer tt;
         tt.startWall();
-        floatN errval=test(xv,yv,bs);
+        floatN errval=test(xv,pstatesv,bs);
         floatN ttst=tt.stopWallMicro();
         floatN accval=1.0-errval;
         lastAcc=accval;

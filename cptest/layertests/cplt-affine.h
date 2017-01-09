@@ -4,6 +4,7 @@
 #include "../testneural.h"
 
 bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(2,4);
     x << -0.1       , -0.01428571,  0.07142857,  0.15714286,
           0.24285714,  0.32857143,  0.41428571,  0.5;
@@ -22,11 +23,12 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
      Affine pe("{inputShape=[4];hidden=3}");
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
-    MatrixN y0=pe.forward(x, nullptr);
+    MatrixN y0=pe.forward(x, nullptr, &states);
     return matComp(y,y0,"AffineForward",eps);
 }
 
 bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
+    t_cppl states;
     MatrixN x(2,4);
     x << 1.31745392, -0.61371249,  0.45447287, -0.27054087,
          0.10106874,  1.00650622,  0.47243961, -0.42940807;
@@ -55,8 +57,8 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     *(pe.params["b"])=b;
     t_cppl cache;
     t_cppl grads;
-    MatrixN y=pe.forward(x, &cache);
-    MatrixN dx0=pe.backward(dchain, &cache, &grads);
+    MatrixN y=pe.forward(x, &cache, &states);
+    MatrixN dx0=pe.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
     if (!ret) allOk=false;

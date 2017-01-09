@@ -5,6 +5,7 @@
 
 bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;
+    t_cppl states;
     MatrixN x(2,4);
     x << -2.44826954,  0.81707546,  1.31506197, -0.0965869,
          -1.58810595,  0.61785734, -0.44616526, -0.82397868;
@@ -24,7 +25,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     *(arl.params["af-W"])=W;
     *(arl.params["af-b"])=b;
-    MatrixN y0=arl.forward(x, &cache);
+    MatrixN y0=arl.forward(x, &cache, &states);
     bool ret=matComp(y,y0,"AffineRelu",eps);
     if (!ret) allOk=false;
 
@@ -42,7 +43,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     dchain << -1.08201385, -0.34514762,  0.8563332 ,  0.7021515 , -2.02372516,
               -0.26158065, -2.43253431,  0.33677677, -0.17383908,  0.53332595;
 
-    MatrixN dx0=arl.backward(dchain, &cache, &grads);
+    MatrixN dx0=arl.backward(dchain, &cache, &states, &grads);
 
     ret=matComp(dx,dx0,"AffineRelu dx",eps);
     if (!ret) allOk=false;
