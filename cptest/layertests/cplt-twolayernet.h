@@ -6,6 +6,7 @@
 bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
     int N=3, D=5, H=4, C=2;
+    t_cppl states;
     MatrixN x(N,D);
     x << -5.5       , -3.35714286, -1.21428571,  0.92857143,  3.07142857,
          -4.78571429, -2.64285714, -0.5       ,  1.64285714,  3.78571429,
@@ -45,7 +46,8 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
 
     t_cppl cache;
     t_cppl grads;
-    MatrixN sc0=tln.forward(x,yc,&cache);
+    states["y"] = &yc;
+    MatrixN sc0=tln.forward(x,&cache,&states);
     bool ret=matComp(sc,sc0,"TwoLayerNetScores",eps);
     if (!ret) allOk=false;
 
@@ -67,7 +69,7 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
 
     // XXX reg parameter
     floatN reg=0.0;
-    floatN ls = tln.loss(yc,&cache);
+    floatN ls = tln.loss(&cache, &states);
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
@@ -76,7 +78,7 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
         cerr << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
-    MatrixN dx0=tln.backward(yc,&cache,&grads);
+    MatrixN dx0=tln.backward(yc,&cache,&states, &grads);
 
     cerr << "Got grads: ";
     for (auto gi : grads) {

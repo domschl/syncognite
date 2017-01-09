@@ -55,7 +55,6 @@ int tFunc(floatN x, int c) {
     return y;
 }
 
-/*
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
@@ -66,7 +65,7 @@ bool trainTest() {
     cp.setPar("initfactor",(floatN)0.1);
     TwoLayerNet tln(cp);
 
-    MatrixN X(N,I);
+    MatrixN X(N,I);   // XXX: 1-I never used by tfunc...
     X.setRandom();
     MatrixN y(N,1);
     for (unsigned i=0; i<y.rows(); i++) y(i,0)=tFunc(X(i,0),C);
@@ -86,11 +85,15 @@ bool trainTest() {
 
     floatN train_err,test_err,val_err;
 
-    tln.train(X, y, Xv, yv, "Adam", cpo);
+    t_cppl states, statesv, statest;
+    states["y"] = &y;
+    statesv["y"] = &yv;
+    statest["y"] = &yt;
+    tln.train(X, &states, Xv, &statesv, "Adam", cpo);
     //tln.train(X, y, Xv, yv, "Sdg", cpo);
-    train_err=tln.test(X, y);
-    val_err=tln.test(Xv, yv);
-    test_err=tln.test(Xt, yt);
+    train_err=tln.test(X, &states);
+    val_err=tln.test(Xv, &statesv);
+    test_err=tln.test(Xt, &statest);
 
     cerr << "Train-test, train-err=" << train_err << endl;
     cerr << "       validation-err=" << val_err << endl;
@@ -98,7 +101,7 @@ bool trainTest() {
     if (test_err>0.2 || val_err>0.2 || train_err>0.2 || test_err < -10.0 || val_err < -10.0 || train_err < -10.0) allOk=false;
     return allOk;
 }
-*/
+
 int doTests() {
     MatrixN yz=MatrixN(0,0);
     t_cppl s1;
@@ -431,14 +434,14 @@ int doTests() {
         cerr << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkTwoLayer()) {
         cerr << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {
         cerr << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkRNNStepForward()) {
         cerr << green << "RNNForwardStep with test data: OK." << def << endl;
     } else {
@@ -506,14 +509,14 @@ int doTests() {
     }
 
 */
-/*    if (trainTest()) {
+    if (trainTest()) {
         cerr << green << "TrainTest: OK." << def << endl;
     } else {
         cerr << red << "TrainTest: ERROR." << def << endl;
         allOk=false;
     }
 
-*/
+
 
 /*
     if (registerTest()) {
