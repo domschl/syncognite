@@ -49,7 +49,7 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
         case XavierMode::XAV_STANDARD:
         default:
             wo.setRandom(); // [-1,1]
-            wo *= xavier/2.0;  // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
+            wo = wo * xavier/2.0;  // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
         break;
     }
     return wo;

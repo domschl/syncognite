@@ -247,20 +247,20 @@ int main(int argc, char *argv[]) {
         }
         */
         //xg(0,0)=txt.w2v[sg[0]];
-        lb.cp.setPar("T-Steps",1);
+        // lb.cp.setPar("T-Steps",1);
 /*        Layer *prnn;
         prnn=lb.layerMap["WE0"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn1"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn2"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["rnn3"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["af1"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
         prnn=lb.layerMap["sm1"];
-        prnn->cp.setPar("T-Steps",1);
+        // prnn->cp.setPar("T-Steps",1);
 */
         int TT=1;
         for (int rep=0; rep<3; rep++) {
@@ -339,17 +339,17 @@ int main(int argc, char *argv[]) {
         lb.cp.setPar("T-Steps",T);
     /*
         prnn=lb.layerMap["WE0"];
-        prnn->cp.setPar("T-Steps",T);
+        // prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn1"];
-        prnn->cp.setPar("T-Steps",T);
+        // kprnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn2"];
-        prnn->cp.setPar("T-Steps",T);
+        // prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["rnn3"];
-        prnn->cp.setPar("T-Steps",T);
+        // prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["af1"];
-        prnn->cp.setPar("T-Steps",T);
+        // prnn->cp.setPar("T-Steps",T);
         prnn=lb.layerMap["sm1"];
-        prnn->cp.setPar("T-Steps",T);
+        // prnn->cp.setPar("T-Steps",T);
 */
     }
     /*

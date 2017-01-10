@@ -149,7 +149,7 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     int co=0;
 
     if (pstates->find("y") == pstates->end()) {
-        cerr << "pstates does not contain y -> fatal!" << endl;
+        cerr << "Layer::test: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN y = *((*pstates)["y"]);
     MatrixN *py = (*pstates)["y"];
@@ -196,34 +196,22 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
-void statePr(string s) {
-    cerr << s << endl;
-    std::flush(cerr);
-}
-
 t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
-    string ns="<"+std::to_string(id)+">:";
-    statePr(ns+"Enter");
     if (pstates->find("y") == pstates->end()) {
-        cerr << "pstates does not contain y -> fatal!" << endl;
+        cerr << "workerThread: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN yb=*((*pstates)["y"]);
-    statePr(ns+"Forward");
     forward(*pxb, &cache, pstates, id);
-    statePr(ns+"Loss");
     floatN thisloss=loss(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
-    statePr(ns+"Backward");
     backward(yb, &cache, pstates, &grads, id);
-    statePr(ns+"Delete");
     cppl_delete(&cache);
     cppl_delete(pstates);
     free(pxb);
-    statePr(ns+"Exit");
     return grads;
 }
 
@@ -243,7 +231,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     Color::Modifier def(Color::FG_DEFAULT);
 
     if (pstates->find("y") == pstates->end()) {
-        cerr << "pstates does not contain y -> fatal!" << endl;
+        cerr << "Layer::train: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN y = *((*pstates)["y"]);
     if (pstatesv->find("y") == pstatesv->end()) {
@@ -283,6 +271,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN m2loss=0.0;
     floatN meanacc=0.0;
     floatN lastloss=0.0;
+    floatN accval=0.0;
     //bs=bs/nt;
     lr=lr/nt;
     Timer tw;
@@ -390,7 +379,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 while (!lossQueue.empty()) {
                     lastloss=lossQueue.front();
                     lossQueue.pop();
-                    // cerr << "lossQueue pop" << endl;
+                    //cerr << "lossQueue pop: " << lastloss << endl;
                     if (meanloss==0) meanloss=lastloss;
                     else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
                     if (m2loss==0) m2loss=lastloss;
@@ -407,7 +396,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     if (e+20.0<dv2) dv2=e+20.0;
                     cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << ", " << m2loss << def << "\r";
                     std::flush(cerr);
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << "\t" << lastloss << meanloss << "\t" << m2loss << endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << meanloss << "\t" << m2loss << accval << meanacc << endl;
                     std::flush(logfile);
                     bold=b;
                 }
@@ -422,12 +411,12 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         tt.startWall();
         floatN errval=test(xv,pstatesv,bs);
         floatN ttst=tt.stopWallMicro();
-        floatN accval=1.0-errval;
+        accval=1.0-errval;
         lastAcc=accval;
         if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
-        logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << "          " << endl;
+        logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
         std::flush(logfile);
         setFlag("train",true);
         if (lr_decay!=1.0) {

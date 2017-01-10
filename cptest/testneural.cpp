@@ -62,10 +62,10 @@ bool trainTest() {
     bool allOk=true;
     CpParams cp;
     // int N=500,NV=50,NT=50,I=5,H=10,C=4;
-    int N=1,NV=1,NT=1,I=5,H=10,C=4;
+    int N=400,NV=40,NT=40,I=5,H=10,C=4;
     cp.setPar("inputShape",vector<int>{I});
     cp.setPar("hidden",vector<int>{H,C});
-    cp.setPar("init","normal");
+    cp.setPar("init","standard");
     cp.setPar("initfactor",(floatN)0.1);
     TwoLayerNet tln(cp);
 
@@ -236,6 +236,25 @@ int doTests() {
         allOk=false;
     }
 
+    // TwoLayerNet
+    int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
+    CpParams tcp;
+    tcp.setPar("inputShape",vector<int>{ntl1});
+    tcp.setPar("hidden",vector<int>{ntl2,ntl3});
+    tcp.setPar("init", (string)"standard");
+    TwoLayerNet tl(tcp);
+    MatrixN xtl(ntlN,ntl1);
+    xtl.setRandom();
+    MatrixN y2(ntlN,1);
+    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
+    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
+    eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
+    t_cppl tlstates;
+    tlstates["y"]=&y2;
+    if (!tl.selfTest(xtl,&tlstates, h, eps)) {
+        allOk=false;
+        cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
+    }
 /*
     // RNN
     int rnnN=4;
@@ -271,22 +290,7 @@ int doTests() {
         allOk=false;
     }
 
-    // TwoLayerNet
-    int ntl1=4, ntl2=5, ntl3=6, ntlN=30;
-    CpParams tcp;
-    tcp.setPar("inputShape",vector<int>{ntl1});
-    tcp.setPar("hidden",vector<int>{ntl2,ntl3});
-    TwoLayerNet tl(tcp);
-    MatrixN xtl(ntlN,ntl1);
-    xtl.setRandom();
-    MatrixN y2(ntlN,1);
-    for (unsigned i=0; i<y2.rows(); i++) y2(i,0)=(rand()%ntl3);
-    h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
-    eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!tl.selfTest(xtl,y2, h, eps)) {
-        allOk=false;
-        cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
-    }
+
 
     // Temporal Softmax
     int tsmN=10, tsmC=4, Ttm=4;
@@ -428,20 +432,18 @@ int doTests() {
         cerr << red << "PoolingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-
-    if (checkSoftmax()) {
-        cerr << green << "Softmax with test data: OK." << def << endl;
-    } else {
-        cerr << red << "Softmax with test data: ERROR." << def << endl;
-        allOk=false;
-    }
     if (checkSvm()) {
         cerr << green << "Svm with test data: OK." << def << endl;
     } else {
         cerr << red << "Svm with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+    if (checkSoftmax()) {
+        cerr << green << "Softmax with test data: OK." << def << endl;
+    } else {
+        cerr << red << "Softmax with test data: ERROR." << def << endl;
+        allOk=false;
+    }
     if (checkTwoLayer()) {
         cerr << green << "TwoLayerNet with test data: OK." << def << endl;
     } else {

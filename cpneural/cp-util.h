@@ -250,7 +250,7 @@ public:
         if (sparams.find(par)!=sparams.end()) return true;
         return false;
     }
-    void erase(string par) {
+    void nerase(string par) {
         if (fparams.find(par)!=fparams.end()) fparams.erase(par);
         if (iparams.find(par)!=iparams.end()) iparams.erase(par);
         if (viparams.find(par)!=viparams.end()) viparams.erase(par);
@@ -304,28 +304,28 @@ public:
         return sparams[par];
     }
     void setPar(string par, int val) {
-        erase(par);
+        nerase(par);
         iparams[par]=val;
     }
     void setPar(string par, vector<int> val) {
-        erase(par);
+        nerase(par);
         viparams[par]=val;
     }
     void setPar(string par, vector<T> val) {
-        erase(par);
+        nerase(par);
         vfparams[par]=val;
     }
     void setPar(string par, T val) {
-        erase(par);
+        nerase(par);
         fparams[par]=val;
     }
     void setPar(string par, bool val) {
-        erase(par);
+        nerase(par);
         bparams[par]=val;
     }
     // Traveler beware: cast argument to (string), if using string-constants, otherwise it's taken for int-array!
     void setPar(string par, string val) {
-        erase(par);
+        nerase(par);
         // XXX: encode escape stuff:   ;{}
         sparams[par]=val;
     }

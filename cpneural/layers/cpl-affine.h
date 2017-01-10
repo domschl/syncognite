@@ -24,8 +24,10 @@ private:
         initfactor=cp.getPar("initfactor",(floatN)1.0);
         outputShape={hidden};
 
-        cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(inputShapeFlat,hidden),inittype,initfactor))); // W
-        cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(1,hidden),inittype,initfactor))); // b
+        MatrixN W = xavierInit(MatrixN(inputShapeFlat,hidden),inittype,initfactor);
+        MatrixN b = xavierInit(MatrixN(1,hidden),inittype,initfactor);
+        cppl_set(&params, "W", new MatrixN(W)); // W
+        cppl_set(&params, "b", new MatrixN(b)); // b
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -62,7 +64,8 @@ public:
         #else
         int algo=0;
         #endif
-        MatrixN y(x.rows(), (*params["W"]).cols());
+        MatrixN y; // (x.rows(), params["W"]->cols());
+        // y.setZero();
         if (algo==0 || id>=numGpuThreads) {
             // cerr << "C" << id << " ";
             /*
@@ -70,7 +73,15 @@ public:
             RowVectorN b = *params["b"];
             y.rowwise() += b;
             */
-            y=(x * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
+            //cerr << "X:" << shape(x) << " W:" << shape(*(params["W"])) << " b:" << shape(*(params["b"])) << endl;
+            //cerr << "x:" << x << endl;
+            //cerr << "w:" << *(params["W"]) << endl;
+            //cerr << "b:" << *(params["b"]) << endl;
+            y=(x * (*(params["W"]))).rowwise() + RowVectorN(*params["b"]);
+
+            //cerr << "AFy:" << shape(y) << endl << y << endl;
+            //std::flush(cerr);
+
         } else {
             #ifdef USE_GPU
             // cerr << "G" << id << "/" << numGpuThreads << " ";

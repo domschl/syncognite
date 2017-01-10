@@ -65,7 +65,8 @@ public:
     """
     */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        int TT=cp.getPar("T-Steps",0);
+        int TT=T;
+        // not thread-safe:  int TT=cp.getPar("T-Steps",0);
         if (TT==0) TT=T;
 
         if (x.cols() != TT*D) {

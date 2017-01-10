@@ -33,7 +33,8 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "SM-fw: pstates does not contain y -> fatal!" << endl;
+            exit(-1);
         }
         MatrixN y = *((*pstates)["y"]);
         VectorN mxc = x.rowwise().maxCoeff();
@@ -42,6 +43,10 @@ public:
         MatrixN xne = xn.array().exp().matrix();
         VectorN xnes = xne.rowwise().sum();
         for (unsigned int i=0; i<xne.rows(); i++) { // XXX broadcasting?
+            if (xnes(i)==0.0) {
+                cerr << "zero-divider in softmax: " << i;
+                exit(-1);
+            }
             xne.row(i) = xne.row(i) / xnes(i);
         }
         MatrixN probs = xne;
@@ -50,9 +55,12 @@ public:
     }
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "SM-loss: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
+        if (pcache->find("probs")==pcache->end()) {
+            cerr << "SM-loss: probs unknown, not in cache -> fatal!" << endl;
+        }
         MatrixN probs=*((*pcache)["probs"]);
         if (y.rows() != probs.rows() || y.cols() != 1) {
             cerr << layerName << ": "  << "Loss, dimension mismatch in Softmax(x), Probs: ";
@@ -75,7 +83,7 @@ public:
     }
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "SM-bw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         MatrixN probs=*((*pcache)["probs"]);

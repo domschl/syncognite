@@ -39,8 +39,10 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
     double tcus, tcusn, tfn, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
+    t_cppl states;
     string sname;
 
+    states["y"] = &y;
     sname=name;
 
     while (sname.size() < 12) sname += " ";
@@ -60,9 +62,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
         */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            ya=player->forward(x,&cache,0);
+            ya=player->forward(x,&cache,&states,0);
         } else {
-            ya=player->forward(x,y,&cache,0);
+            ya=player->forward(x,&cache,&states,0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         // cerr << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
@@ -74,9 +76,9 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 */
         tcpu.startCpu();
         if (player->layerType==LayerType::LT_NORMAL) {
-            player->backward(ya,&cache, &grads, 0);
+            player->backward(ya,&cache, &states, &grads, 0);
         } else {
-            player->backward(y,&cache, &grads, 0);
+            player->backward(y,&cache, &states, &grads, 0);
         }
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tb) tb=tcus;

@@ -22,8 +22,10 @@ private:
         hidden=cp.getPar("hidden",vector<int>{1024,1024});
         string inittype=cp.getPar("init",(string)"standard");
 
-        if (hidden.size()!=2) retval=false;
-
+        if (hidden.size()!=2) {
+            retval=false;
+            cerr << "TwoLayer: bad hidden-vector init! size=" << hidden.size() << "!=2" << endl;
+        }
         outputShape={hidden[1]};
 
         CpParams c1,c2,c3,c4;
@@ -70,11 +72,12 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "TLN-fw: pstates does not contain y -> fatal!" << endl;
+            exit(-1);
         }
-        MatrixN y = *((*pstates)["y"]);
-        if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        MatrixN y(*((*pstates)["y"]));
+        //if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
+        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         t_cppl c1;
         MatrixN y0=af1->forward(x,&c1, pstates, id);
         mlPush("af1",&c1,pcache);
@@ -91,7 +94,8 @@ public:
     }
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << endl << endl << "TLN-loss: pstates does not contain y -> fatal!" << endl << endl;
+            exit(-1);
         }
         t_cppl c4;
         mlPop("sm",pcache,&c4);

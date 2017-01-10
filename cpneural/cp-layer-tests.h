@@ -11,7 +11,7 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
     yt=forward(x, pcache, pstates, 0);
     if (layerType & LayerType::LT_LOSS) {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "checkForward: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
     }
@@ -62,7 +62,7 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
         dyc.setRandom();
     } else if (layerType & LayerType::LT_LOSS) {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "checkBackward: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
         forward(x, &cache, pstates, 0);
@@ -183,9 +183,12 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
 
 MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
-
-    MatrixN x=*((*pcache)["x"]);
-    //MatrixN x=xorg;
+    /*if (pcache->find("x") == pcache->end()) {
+        cerr << "FATAL: calcNumGradLoss needs cache-member x!" << endl;
+        exit(-1);
+    }
+*/    //MatrixN x=*((*pcache)["x"]);
+    MatrixN x=xorg;
     // MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
     MatrixN y=*((*pstates)["y"]);  // XXX: pstates?
     if (var=="x") pm=&x;
@@ -298,6 +301,9 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
+    cerr << "CheckLayer" << endl;
+    std::flush(cerr);
+
     if (!cp.getPar("noVectorizationTests", false)) {
         cerr << "  check forward vectorizer " << layerName << "..." << endl;
         ret=checkForward(x, nullptr, pstates, eps);
@@ -345,7 +351,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
     t_cppl cache;
     MatrixN y;
     cerr << "SelfTest for: " << layerName << " -----------------" << endl;
-    MatrixN yf = forward(x, &cache, pstates, 0);
+    MatrixN yf = forward(x, nullptr, pstates, 0);
 
     if (layerType & LayerType::LT_NORMAL) {
         dchain = yf;
@@ -354,7 +360,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
         //cppl_set(&cache, "probs", new MatrixN(yf));
         //cppl_set(&cache, "y", new MatrixN(y));
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "selfTest: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
         dchain = y;

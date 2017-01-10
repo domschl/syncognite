@@ -60,10 +60,11 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        int TT=cp.getPar("T-Steps",0);
+        // threading!: int TT=cp.getPar("T-Steps",0);
+        int TT=T;
         if (TT==0) TT=T;
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "TSM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         if (x.cols() != D*TT) {
@@ -169,7 +170,7 @@ public:
     */
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "TSM-loss: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         MatrixN probs=*((*pcache)["probs"]);
@@ -214,7 +215,7 @@ public:
         MatrixN mask;
         // int N=probs.rows()/T;
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "TSM-bw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         int N=y.rows();

@@ -32,7 +32,7 @@ public:
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "SVM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
@@ -63,7 +63,7 @@ public:
         MatrixN margins=*((*pcache)["margins"]);
         MatrixN x=*((*pcache)["x"]);
         if (pstates->find("y") == pstates->end()) {
-            cerr << "pstates does not contain y -> fatal!" << endl;
+            cerr << "SVM-bw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
         VectorN numPos(x.rows());
