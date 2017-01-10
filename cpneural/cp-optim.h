@@ -196,22 +196,34 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
+void statePr(string s) {
+    cerr << s << endl;
+    std::flush(cerr);
+}
+
 t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
+    string ns="<"+std::to_string(id)+">:";
+    statePr(ns+"Enter");
     if (pstates->find("y") == pstates->end()) {
         cerr << "pstates does not contain y -> fatal!" << endl;
     }
     MatrixN yb=*((*pstates)["y"]);
+    statePr(ns+"Forward");
     forward(*pxb, &cache, pstates, id);
+    statePr(ns+"Loss");
     floatN thisloss=loss(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
+    statePr(ns+"Backward");
     backward(yb, &cache, pstates, &grads, id);
+    statePr(ns+"Delete");
     cppl_delete(&cache);
     cppl_delete(pstates);
     free(pxb);
+    statePr(ns+"Exit");
     return grads;
 }
 
