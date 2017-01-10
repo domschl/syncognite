@@ -167,12 +167,10 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
             (*pstates)["y"] = py;
             return -1000.0;
         }
-        cerr << "yt:" << yt << endl;
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
             for (int j=0; j<yt.cols(); j++) {
-                cerr << i << "," << j << ":" << yt(i,j) << endl;
                 if (yt(i,j)>pr) {
                     pr=yt(i,j);
                     ji=j;
@@ -191,33 +189,29 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     return err;
 }
 
-t_cppl Layer::workerThread(const MatrixN& xb, t_cppl* pstates, int id) {
+floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
+    t_cppl states;
+    MatrixN yvol = y;
+    states["y"]=&yvol;
+    return test(x, &states, batchsize);
+}
+
+t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
-    //Timer t,tw;
-    //cerr << "Context start: " << id << endl;
-    //t.startCpu();
-    //tw.startWall();
-    //auto start = std::chrono::steady_clock::now();
     if (pstates->find("y") == pstates->end()) {
         cerr << "pstates does not contain y -> fatal!" << endl;
     }
-    MatrixN yb = *((*pstates)["y"]);
-    forward(xb, &cache, pstates, id);
-    //cerr << "fw" << id << endl;
+    MatrixN yb=*((*pstates)["y"]);
+    forward(*pxb, &cache, pstates, id);
     floatN thisloss=loss(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
     backward(yb, &cache, pstates, &grads, id);
-    //cerr << "bw" << id << endl;
     cppl_delete(&cache);
-    //auto f=t.stopCpuMicro()/1000.0;
-    //auto fw=tw.stopWallMicro()/1000.0;
-    //auto end = std::chrono::steady_clock::now();
-    //auto diff = end - start;
-    //cerr << "Thread: " << id << ", cpu-time: " << f << "ms, wall-time: " << fw << "ms, chrono-duration: " << std::chrono::duration <double, std::milli> (diff).count() << " ms" << endl;
-    //cerr << "Context end: " << id << endl;
+    cppl_delete(pstates);
+    free(pxb);
     return grads;
 }
 
@@ -225,6 +219,9 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 string optimizer, const CpParams& cp) {
     Optimizer* popti=optimizerFactory(optimizer, cp);
     t_cppl optiCache;
+    t_cppl states[MAX_NUMTHREADS];
+    MatrixN* pxbi[MAX_NUMTHREADS];
+
     setFlag("train",true);
     bool bShuffle=true;
     floatN lastAcc;
@@ -337,16 +334,15 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 }*/
             }
             ++th;
-
-            cerr << xb << endl;
-            cerr << yb << endl;
-
-            t_cppl states;
+            states[bi].clear();
             for (auto st : *pstates) {
-                states[st.first] = st.second;
+                cppl_set(&(states[bi]), st.first, new MatrixN(*st.second));
             }
-            states["y"] = &yb;
-            gradsFut.push_back(std::async(std::launch::async, [this, xb, &states, bi]{ return this->workerThread(xb, &states, bi); }));
+            states[bi]["y"] = new MatrixN(yb);
+            pxbi[bi] = new MatrixN(xb);
+            MatrixN *pxb = pxbi[bi];
+            t_cppl *pst = &(states[bi]);
+            gradsFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
@@ -382,7 +378,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 while (!lossQueue.empty()) {
                     lastloss=lossQueue.front();
                     lossQueue.pop();
-                    cerr << "lossQueue pop" << endl;
+                    // cerr << "lossQueue pop" << endl;
                     if (meanloss==0) meanloss=lastloss;
                     else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
                     if (m2loss==0) m2loss=lastloss;
@@ -419,12 +415,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< (int)(tw.stopWallMicro()/1000000.0) << "s, (" << (int)(ttst/1000000.0) << "s test) loss:" << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
         if (meanacc==0.0) meanacc=accval;
         else meanacc=(meanacc+2.0*accval)/3.0;
-        cerr << e;
-        cerr << lastloss;
-        cerr << meanloss;
-        cerr << m2loss;
-        cerr << accval;
-        cerr << meanacc;
         logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << "          " << endl;
         std::flush(logfile);
         setFlag("train",true);
@@ -441,6 +431,16 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     cppl_delete(&optiCache);
     delete popti;
     return lastAcc;
+}
+
+floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
+                string optimizer, const CpParams& cp) {
+    t_cppl states, statesv;
+    MatrixN yvol=y;
+    MatrixN yvvol=yv;
+    states["y"]=&yvol;
+    statesv["y"]=&yvvol;
+    return train(x, &states, xv, &statesv, optimizer, cp);
 }
 
 /*floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,

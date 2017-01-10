@@ -151,10 +151,13 @@ public:
 
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
 
-    floatN train(const MatrixN& x, t_cppl* pastes, const MatrixN &xv, t_cppl* pstatesv,
+    floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const CpParams& cp);
-    t_cppl workerThread(const MatrixN& xb, t_cppl* pstates, int id);
+    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
+                        string optimizer, const CpParams& cp);
+    t_cppl workerThread(MatrixN *pxb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
+    floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
 
 private:

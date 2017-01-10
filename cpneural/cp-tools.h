@@ -118,7 +118,8 @@ void peekMat(const string label, const MatrixN& m) {
     }
 }
 
-
+#define MAX_NUMTHREADS 256
+#define MAX_CPUTHREADS 256
 #ifdef USE_CUDA
 #define MAX_GPUTHREADS 64
 cublasHandle_t *cuHandles;
@@ -379,6 +380,9 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
     cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
     int numHWThreads=std::thread::hardware_concurrency();
     cpNumCpuThreads=cp.getPar("NumCpuThreads", numHWThreads);
+    if (cpNumCpuThreads > MAX_CPUTHREADS) {
+        cpNumCpuThreads=MAX_CPUTHREADS;
+    }
     if (poptions!=nullptr) {
         *poptions=cp;
     }
@@ -425,6 +429,11 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
         line=cp.getString();
         c2file << line << endl;
         c2file.close();
+    }
+    if (cpNumCpuThreads + cpNumGpuThreads > MAX_NUMTHREADS) {
+        cerr << "Number of Gpu+CPU threads must not be > " << MAX_NUMTHREADS << endl;
+        cerr << "INVALID CONFIGURATION" << endl;
+        return false;
     }
     cerr << "Compile-time options: " << options << endl;
     cerr << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
