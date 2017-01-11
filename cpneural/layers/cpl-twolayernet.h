@@ -7,7 +7,7 @@
 class TwoLayerNet : public Layer {
 private:
     vector<int> hidden;
-    floatN initfactor;
+    floatN initfactor=0.1;
     void setup(const CpParams& cx) {
         bool retval=true;
         layerName="TwoLayerNet";
@@ -21,6 +21,7 @@ private:
         }
         hidden=cp.getPar("hidden",vector<int>{1024,1024});
         string inittype=cp.getPar("init",(string)"standard");
+        initfactor=cp.getPar("initfactor", initfactor);
 
         if (hidden.size()!=2) {
             retval=false;
@@ -80,6 +81,8 @@ public:
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
         t_cppl c1;
         MatrixN y0=af1->forward(x,&c1, pstates, id);
+        // cerr << "x:" << x << endl << "W:" << *((af1->params)["W"]) << endl;
+        // cerr << "b:" << *((af1->params)["b"]) << endl << "y0:" << y0 << endl;
         mlPush("af1",&c1,pcache);
         t_cppl c2;
         MatrixN y1=rl->forward(y0,&c2, pstates, id);

@@ -18,6 +18,10 @@ XavierMode xavierInitType(string stype) {
 }
 
 MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD, floatN initfactor=1.0) {
+    if (initfactor == 0.0) {
+        cerr << "Initfactor=0.0 is invalid! Setting to 1.0" << endl;
+        initfactor=1.0;
+    }
     floatN xavier = 2.0/std::sqrt((floatN)(w.cols()+w.rows())) * initfactor;
     float mean=0.0;
     float std=xavier / 2.0;

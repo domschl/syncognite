@@ -211,7 +211,7 @@ t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     backward(yb, &cache, pstates, &grads, id);
     cppl_delete(&cache);
     cppl_delete(pstates);
-    free(pxb);
+    delete pxb;
     return grads;
 }
 
@@ -337,9 +337,11 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             ++th;
             states[bi].clear();
             for (auto st : *pstates) {
-                cppl_set(&(states[bi]), st.first, new MatrixN(*st.second));
+                if (st.first != "y") {
+                    cppl_set(&(states[bi]), st.first, new MatrixN(*st.second));                    
+                }
             }
-            states[bi]["y"] = new MatrixN(yb);
+            cppl_set(&(states[bi]), "y", new MatrixN(yb));
             pxbi[bi] = new MatrixN(xb);
             MatrixN *pxb = pxbi[bi];
             t_cppl *pst = &(states[bi]);
