@@ -50,22 +50,24 @@ bool registerTest() {
 }
 
 int tFunc(VectorN x, int c) {
-    floatN s=0.0;
+    floatN y=0.0;
     for (unsigned j=0; j<x.cols(); j++) {
-        s += x(j);
+        y += x(j) * x(j);
     }
-    int y=(int)(((sin(s)+1.0)/2.0)*(floatN)c);
-    return y;
+    y = int(y * (floatN)c / 2.0) % c;
+
+    //cerr << x << ":" << y << "," << int(y) << " ";
+    return int(y);
 }
 
 bool trainTest() {
     bool allOk=true;
     CpParams cp;
     // int N=500,NV=50,NT=50,I=5,H=10,C=4;
-    int N=400,NV=40,NT=40,I=5,H=10,C=4;
+    int N=100,NV=40,NT=40,I=5,H=20,C=4;
     cp.setPar("inputShape",vector<int>{I});
     cp.setPar("hidden",vector<int>{H,C});
-    cp.setPar("init","standard");
+    cp.setPar("init","normal");
     cp.setPar("initfactor",(floatN)0.1);
     TwoLayerNet tln(cp);
 
@@ -87,7 +89,7 @@ bool trainTest() {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt.row(i),C);
 
-    CpParams cpo("{verbose=false;epochs=80.0;batch_size=20;learning_rate=5e-3;"\
+    CpParams cpo("{verbose=false;epochs=300.0;batch_size=20;learning_rate=5e-2;"\
                 "lr_decay=1.0;epsilon=1e-8;regularization=1e-3;maxthreads=4}");
 
     floatN train_err,test_err,val_err;
