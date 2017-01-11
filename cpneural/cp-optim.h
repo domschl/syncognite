@@ -196,9 +196,11 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
-t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
+// t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
+retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
+    retdict rd;
     if (pstates->find("y") == pstates->end()) {
         cerr << "workerThread: pstates does not contain y -> fatal!" << endl;
     }
@@ -210,9 +212,12 @@ t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     lossQueueMutex.unlock();
     backward(yb, &cache, pstates, &grads, id);
     cppl_delete(&cache);
-    cppl_delete(pstates);
+    // cppl_delete(pstates);
     delete pxb;
-    return grads;
+    rd["grads"] = grads;
+    rd["states"] = *pstates;
+    return rd;
+    //return grads;
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
@@ -291,7 +296,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         tw.startWall();
         int th=0;
         //std::list<std::future<t_cppl>> gradsFut;
-        std::vector<std::future<t_cppl>> gradsFut;
+        std::vector<std::future<retdict>> retFut;
         int bold=0;
         for (int b=0; b<chunks && !fracend; b++) {
             int bi=b%nt;
@@ -338,32 +343,34 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             states[bi].clear();
             for (auto st : *pstates) {
                 if (st.first != "y") {
-                    cppl_set(&(states[bi]), st.first, new MatrixN(*st.second));                    
+                    cppl_set(&(states[bi]), st.first, new MatrixN(*st.second));
                 }
             }
             cppl_set(&(states[bi]), "y", new MatrixN(yb));
             pxbi[bi] = new MatrixN(xb);
             MatrixN *pxb = pxbi[bi];
             t_cppl *pst = &(states[bi]);
-            gradsFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
+            retFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
-                //cerr << "gradFut size on get-loop: " << gradsFut.size() << endl;
-                for (auto &it : gradsFut) {
+                for (auto &it : retFut) {
                     --th;
-                    t_cppl grd = it.get();
+                    retdict rvg=it.get();
+                    t_cppl retGrads = rvg["grads"];
+                    t_cppl retStates = rvg["states"];
                     if (first) {
-                        for (auto g : grd) {
+                        for (auto g : retGrads) {
                             sgrad[g.first] = new MatrixN(*(g.second));
                             first=false;
                         }
                     } else {
-                        for (auto g : grd) {
+                        for (auto g : retGrads) {
                             *(sgrad[g.first]) += *(g.second);
                         }
                     }
-                    cppl_delete(&grd);
+                    cppl_delete(&retGrads);
+                    cppl_delete(&retStates);
                 }
                 if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
                     for (auto gi : sgrad) {
@@ -372,7 +379,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 }
                 update(popti, &sgrad, "", &optiCache);
                 cppl_delete(&sgrad);
-                gradsFut.clear();
+                retFut.clear();
 
                 float dv1=10.0;
                 float dv2=50.0;

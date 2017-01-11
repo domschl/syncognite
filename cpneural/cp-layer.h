@@ -114,6 +114,7 @@ LayerFactory _syncogniteLayerFactory;
 #define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
 #define CREATE_LAYER(LayerName, cp) _syncogniteLayerFactory.createLayerInstance(LayerName, cp);
 
+typedef map<string, t_cppl> retdict;
 
 class Layer {
 public:
@@ -159,7 +160,7 @@ public:
                         string optimizer, const CpParams& cp);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                         string optimizer, const CpParams& cp);
-    t_cppl workerThread(MatrixN *pxb, t_cppl* pstates, int id);
+    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
