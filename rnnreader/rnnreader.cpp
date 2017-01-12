@@ -277,15 +277,16 @@ int main(int argc, char *argv[]) {
             cerr << "------------" << rep << "--------------------------" << endl;
             for (int g=0; g<200; g++) {
                 t_cppl cache{};
+                t_cppl states{};
                 //wcout << g << L">";
                 MatrixN z(0,0);
-                cppl_set(&cache,"rnn1-hoi",new MatrixN(rnn1_ho));
+                cppl_set(&states,"rnn1-hoi",new MatrixN(rnn1_ho));
                 //cppl_set(&cache,"rnn2-hoi",new MatrixN(rnn2_ho));
                 //cppl_set(&cache,"rnn3-hoi",new MatrixN(rnn3_ho));
 
                 //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
                 //wcout << L"<" << endl << L">";
-                MatrixN probst=lb.forward(xg,z,&cache); //&cach  e);
+                MatrixN probst=lb.forward(xg,&cache, &states); //&cach  e);
                 MatrixN probsd=MatrixN(N*TT,VS);
                 for (int n=0; n<1; n++) {
                     for (int t=0; t<TT; t++) {
@@ -332,10 +333,12 @@ int main(int argc, char *argv[]) {
                 //rnn3_ho=*(cache["rnn3-ho"]);
                 //xg=xg2;
                 cppl_delete(&cache);
+                cppl_delete(&states);
             }
             //cache.clear();
             wcout << endl;
         }
+        cerr << "setting eliminated T-Steps param" << endl;
         lb.cp.setPar("T-Steps",T);
     /*
         prnn=lb.layerMap["WE0"];
