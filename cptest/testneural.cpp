@@ -257,20 +257,24 @@ int doTests() {
         allOk=false;
         cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
+
 /*
     // RNN
     int rnnN=4;
     MatrixN xrnn(rnnN,5*7);
+    t_cppl rnstates;
     MatrixN h0(rnnN,6);
     xrnn.setRandom();
     h0.setRandom();
+    rnstates["h"] = &h0;
     //                    D,T
     RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
-    *(rnn.params["ho"])=h0;
-    if (!rnn.selfTest(xrnn, yz, 1e-4, 1e-4)) {
+    //*(rnn.params["ho"])=h0;
+    if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
         allOk=false;
     }
-
+*/
+/*
     // WordEmbedding
     int weN=4, weT=3, weV=10, weD=8;
     MatrixN xwe(weN,weT);
@@ -452,32 +456,36 @@ int doTests() {
         cerr << red << "TwoLayerNet with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkRNNStepForward()) {
         cerr << green << "RNNForwardStep with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNForwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
+    /*
     if (checkRNNStepBackward()) {
         cerr << green << "RNNBackwardStep with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNBackwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
+    */
     if (checkRNNForward()) {
         cerr << green << "RNNForward with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNForward with test data: ERROR." << def << endl;
         allOk=false;
     }
+    /*
     if (checkRNNBackward()) {
         cerr << green << "RNNBackward with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+    */
+/*
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
     } else {

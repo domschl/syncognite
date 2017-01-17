@@ -17,8 +17,8 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 #include "layertests/cplt-svm.h"
 #include "layertests/cplt-softmax.h"
 #include "layertests/cplt-twolayernet.h"
-/*
 #include "layertests/cplt-rnn.h"
+/*
 #include "layertests/cplt-wordembedding.h"
 #include "layertests/cplt-temporalaffine.h"
 #include "layertests/cplt-temporalsoftmax.h"

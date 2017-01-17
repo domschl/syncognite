@@ -73,22 +73,21 @@ public:
 
     virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         // h(t)=tanh(Whh·h(t-1) + Wxh·x(t) + bh)    h(t-1) -> ho,   h(t) -> h
-        if (pcache!=nullptr) if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
+        // if (pcache!=nullptr) if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         int N=shape(x)[0];
-        MatrixN *ph;
-        if (pcache==nullptr || pcache->find("h")==pcache->end()) {
-            ph=new MatrixN(N,H);
-            ph->setZero();
-            if (pcache!=nullptr) cppl_set(pcache,"h",ph);
-            else free(ph);
-        } else {
-            if (pcache==nullptr) cerr << "pcache must not be null in rnn_step_forward" <<endl;
-            ph=(*pcache)["h"];
-            cppl_set(pcache,"ho",new MatrixN(*ph));
-        }
+        MatrixN h = *(*pstates)["h"];
+        //if (pcache==nullptr || pcache->find("h")==pcache->end()) {
+        //    ph=new MatrixN(N,H);
+        //    ph->setZero();
+        //    if (pcache!=nullptr) cppl_set(pcache,"h",ph);
+        //    else free(ph);
+        //} else {
+        //    if (pcache==nullptr) cerr << "pcache must not be null in rnn_step_forward" <<endl;
+        //    ph=(*pcache)["h"];
+        //    cppl_set(pcache,"ho",new MatrixN(*ph));
+        //}
         //cerr << shape(*ph) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
-        MatrixN hn = ((*ph * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
-        *ph=hn;
+        MatrixN hn = ((h * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
         return hn;
     }
     MatrixN tensorchunk(const MatrixN& x, vector<int>dims, int b) {
@@ -122,39 +121,45 @@ public:
             return h;
         }
         int N=shape(x)[0];
-        MatrixN h0;
-        if (pcache!=nullptr) {
-            if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
-        }
+        // MatrixN h0;
+        // if (pcache!=nullptr) {
+        //    if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
+        //}
 
         // if (id>0) cerr << "WARNING: rnn layer is not thread-safe, thread id>0! (set optimizer parameter maxthreads=1)" << endl;
-        if (pcache!=nullptr && pcache->find("hoi")!=pcache->end()) {
-            h0=*((*pcache)["hoi"]); // XXX: UUUUHHH!
-        } else {
-            h0=*params["ho"];  // XXX: REALLY not!
+        //if (pcache!=nullptr && pcache->find("hoi")!=pcache->end()) {
+        //    h0=*((*pcache)["hoi"]); // XXX: UUUUHHH!
+        //} else {
+        //    h0=*params["ho"];  // XXX: REALLY not!
+        //}
+        if (pstates->find("h")==pcache->end()) {
+            cerr << "FATAL: rnn->forward requires a state 'h'" << endl;
+            exit(-1);
         }
-        MatrixN h(N,T*H);
-        h.setZero();
-        MatrixN ht=h0;
-        MatrixN xi;
-        string name;
+        MatrixN h=*((*pstates)["h"]);
+        //MatrixN h(N,T*H);
+        //h.setZero();
+        //MatrixN ht=h;
+        //MatrixN xi;
+        //string name;
         for (int t=0; t<T; t++) {
             t_cppl cache{};
-            t_cppl states{}; // XXX  NEEDS TO BE FILLED!
-            xi=tensorchunk(x,{N,T,D},t);
-            cppl_set(&cache,"h",new MatrixN(ht)); // XXX: THIS NEEDS TO BE IN STATES!
+            t_cppl states{};
+            states["h"]=&h;
+            MatrixN xi=tensorchunk(x,{N,T,D},t);
+            //cppl_set(&cache,"h",new MatrixN(ht)); // XXX: THIS NEEDS TO BE IN STATES!
             /// XXX: HERE IT GOES! cppl_set(&states,)
-            ht = forward_step(xi,&cache,&states, id);
+            MatrixN ht = forward_step(xi,&cache,&states, id);
             tensorchunkinsert(&h, ht, {N,T,H}, t);
-            name="t"+std::to_string(t);
+            string name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
         }
-        // If we update ho, auto-differenciation wont work.
-        if (pcache!=nullptr && pcache->find("ho")!=pcache->end()) {
-            *(*pcache)["ho"]=ht;
-        } else {
-            if (!nohupdate) *params["ho"]=ht; // XXX WARNING: this makes the whole thing not thread-safe and state-dependant!
-        }
+        // If we update ho, auto-differentiation wont work.
+        //if (pcache!=nullptr && pcache->find("ho")!=pcache->end()) {
+        //    *(*pcache)["ho"]=ht;
+        //} else {
+        //    if (!nohupdate) *params["ho"]=ht; // XXX WARNING: this makes the whole thing not thread-safe and state-dependant!
+        //}
         return h;
     }
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
