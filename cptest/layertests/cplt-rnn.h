@@ -44,9 +44,11 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
     t_cppl cache;
-    cppl_set(&cache,"h",new MatrixN(h));
+    t_cppl states;
+    cppl_set(&states,"h",new MatrixN(h));
     MatrixN hn0=rnn.forward_step(x, &cache, 0);
     cppl_delete(&cache);
+    cppl_delete(&states);
     return matComp(hn,hn0,"RNNForwardStep",eps);
 }
 
@@ -327,7 +329,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     // for (auto ci : cache) cerr << ci.first << shape(*(ci.second))<< " ";
     //cerr << endl;
     *(rnn.params["ho"])=h0; // reset to original value...
-    
+
     MatrixN dx0=rnn.backward(dchain, &cache, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);

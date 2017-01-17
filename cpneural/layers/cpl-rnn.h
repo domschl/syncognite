@@ -65,10 +65,10 @@ public:
     ~RNN() {
         cppl_delete(&params);
     }
-    virtual void genZeroStates(t_cppl* pstates) {
-        MatrixN *ph= new MatrixN(N,H);   // XXX: N?
+    virtual void genZeroStates(t_cppl* pstates, int N) {
+        MatrixN *ph= new MatrixN(N,H);
         ph->setZero();
-        cppl_set(&params, "H", ph);
+        cppl_set(pstates, "h", ph);
     }
 
     virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
@@ -116,12 +116,8 @@ public:
         }
     }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        // not thread-safe!: int TT=cp.getPar("T-Steps",0);
-        int TT=T;
-        if (TT==0) TT=T;
-
-        if (x.cols() != D*TT) {
-            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*TT:" << D*TT << ", D:" << D << ", TT:" << TT << ", H:" << H << endl;
+        if (x.cols() != D*T) {
+            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
             MatrixN h(0,0);
             return h;
         }
@@ -131,25 +127,25 @@ public:
             if (pcache->find("x")==pcache->end()) cppl_set(pcache, "x", new MatrixN(x));
         }
 
-        if (id>0) cerr << "WARNING: rnn layer is not thread-safe, thread id>0! (set optimizer parameter maxthreads=1)" << endl;
+        // if (id>0) cerr << "WARNING: rnn layer is not thread-safe, thread id>0! (set optimizer parameter maxthreads=1)" << endl;
         if (pcache!=nullptr && pcache->find("hoi")!=pcache->end()) {
             h0=*((*pcache)["hoi"]); // XXX: UUUUHHH!
         } else {
             h0=*params["ho"];  // XXX: REALLY not!
         }
-        MatrixN h(N,TT*H);
+        MatrixN h(N,T*H);
         h.setZero();
         MatrixN ht=h0;
         MatrixN xi;
         string name;
-        for (int t=0; t<TT; t++) {
+        for (int t=0; t<T; t++) {
             t_cppl cache{};
             t_cppl states{}; // XXX  NEEDS TO BE FILLED!
-            xi=tensorchunk(x,{N,TT,D},t);
+            xi=tensorchunk(x,{N,T,D},t);
             cppl_set(&cache,"h",new MatrixN(ht)); // XXX: THIS NEEDS TO BE IN STATES!
             /// XXX: HERE IT GOES! cppl_set(&states,)
             ht = forward_step(xi,&cache,&states, id);
-            tensorchunkinsert(&h, ht, {N,TT,H}, t);
+            tensorchunkinsert(&h, ht, {N,T,H}, t);
             name="t"+std::to_string(t);
             mlPush(name,&cache,pcache);
         }
