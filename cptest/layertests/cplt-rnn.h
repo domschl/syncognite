@@ -216,7 +216,7 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     t_cppl states;
     states["h"] = new MatrixN(h0);
-    MatrixN hn0=rnn.forward(x, &cache, 0);
+    MatrixN hn0=rnn.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
     return matComp(hn,hn0,"RNNForward",eps);

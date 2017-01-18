@@ -137,6 +137,7 @@ public:
             exit(-1);
         }
         MatrixN h=*((*pstates)["h"]);
+        cerr << shape(h) << N << "," << T*H << endl;
         //MatrixN h(N,T*H);
         //h.setZero();
         //MatrixN ht=h;
