@@ -333,10 +333,6 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     states["h"] = new MatrixN(h0);
     MatrixN y=rnn.forward(x, &cache, &states);
-    // for (auto ci : cache) cerr << ci.first << shape(*(ci.second))<< " ";
-    //cerr << endl;
-    //*(rnn.params["ho"])=h0; // XXX: reset to original value...
-
     MatrixN dx0=rnn.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);
@@ -347,15 +343,12 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,dx0,"RNNBackward h",eps); // XXX: Uhhh!
+    ret=matComp(dh0,*(grads["ho"]),"RNNBackward ho",eps); // XXX: Uhhh!
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
-    //for (auto ci : cache) {
-    //    cerr << ci.first << " ";
-    //}
-    //cerr << endl;
     cppl_delete(&grads);
+    cppl_delete(&states);
     return allOk;
 }
 

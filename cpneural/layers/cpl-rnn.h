@@ -73,10 +73,15 @@ public:
 
     virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         int N=shape(x)[0];
-        MatrixN h = *(*pstates)["h"];
+        MatrixN hprev = *(*pstates)["h"];
         //cerr << shape(h) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
-        MatrixN hn = ((h * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
-        return hn;
+        MatrixN hnext = ((hprev * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
+        if (pcache != nullptr) {
+            (*pcache)["x"] = new MatrixN(x);
+            (*pcache)["hprev"] = new MatrixN(hprev);
+            (*pcache)["hnext"] = new MatrixN(hnext);
+        }
+        return hnext;
     }
     MatrixN tensorchunk(const MatrixN& x, vector<int>dims, int b) {
         int A=dims[0];
@@ -131,15 +136,14 @@ public:
             cerr << "cache does not contain x -> fatal!" << endl;
         }
         MatrixN x(*(*pcache)["x"]);
-        // XXX: TODO: STATES benutzen!
-        MatrixN h(*(*pcache)["h"]);
-        MatrixN ho(*(*pcache)["ho"]);
+        MatrixN hprev(*(*pcache)["hprev"]);
+        MatrixN hnext(*(*pcache)["hnext"]);
         MatrixN Wxh(*params["Wxh"]);
         MatrixN Whh(*params["Whh"]);
         MatrixN bh(*params["bh"]);
 
-        MatrixN hsq = h.array() * h.array();
-        MatrixN hone = MatrixN(h);
+        MatrixN hsq = hnext.array() * hnext.array();
+        MatrixN hone = MatrixN(hnext);
         hone.setOnes();
         MatrixN t1=(hone-hsq).array() * dchain.array();
         MatrixN t1t=t1.transpose();
@@ -147,7 +151,7 @@ public:
         MatrixN dx=(Wxh * t1t).transpose();
         MatrixN dWxh=(t1t * x).transpose();
         MatrixN dh=(Whh * t1t).transpose();
-        MatrixN dWhh=ho.transpose() * t1;
+        MatrixN dWhh=hprev.transpose() * t1;
 
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
@@ -179,7 +183,7 @@ public:
 
         return dx;
     }
-    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id=0) override {
+    virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN dWxh,dWhh,dbh;
         string name;
         int N=shape(dchain)[0];

@@ -463,28 +463,28 @@ int doTests() {
         cerr << red << "RNNForwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
-    /*
+
     if (checkRNNStepBackward()) {
         cerr << green << "RNNBackwardStep with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNBackwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
-    */
+
     if (checkRNNForward()) {
         cerr << green << "RNNForward with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNForward with test data: ERROR." << def << endl;
         allOk=false;
     }
-    /*
+
     if (checkRNNBackward()) {
         cerr << green << "RNNBackward with test data: OK." << def << endl;
     } else {
         cerr << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-    */
+    
 /*
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
