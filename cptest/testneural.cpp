@@ -258,9 +258,8 @@ int doTests() {
         cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
     }
 
-/*
     // RNN
-    int rnnN=4;
+    int rnnN=4;  // N=4, D=5, H=6, T=7
     MatrixN xrnn(rnnN,5*7);
     t_cppl rnstates;
     MatrixN h0(rnnN,6);
@@ -269,11 +268,12 @@ int doTests() {
     rnstates["h"] = &h0;
     //                    D,T
     RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
-    //*(rnn.params["ho"])=h0;
+    rnn.params["h0"]=&h0;  // This is just for the numerical differentiator for find a var for dh0"
     if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
         allOk=false;
     }
-*/
+    rnn.params.erase("h0");
+
 /*
     // WordEmbedding
     int weN=4, weT=3, weV=10, weD=8;
@@ -484,7 +484,7 @@ int doTests() {
         cerr << red << "RNNBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-    
+
 /*
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;

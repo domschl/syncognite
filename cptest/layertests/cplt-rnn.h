@@ -85,8 +85,8 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN bh(1,6);
     bh <<  -2.24794308, -0.62115254,  0.3501973 , -0.01646389,  0.194781  ,
        -0.25476446;
-    MatrixN h(4,6);
-    h << 0.20024643,  1.40404312,  0.90177809, -1.23836782,  0.45040351,
+    MatrixN h0(4,6);
+    h0 << 0.20024643,  1.40404312,  0.90177809, -1.23836782,  0.45040351,
          0.30889824,
         -0.09773321,  0.95785224,  0.59524814,  0.37567379,  0.67724748,
         -0.17839568,
@@ -127,8 +127,8 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dbh(1,6);
     dbh << -0.00364437, -0.1164864 , -0.66639534,  0.06503021,  0.25166159,
         0.01873921;
-    MatrixN dh(4,6);
-    dh << -0.03007664,  0.06901193, -0.05617264, -0.01267693, -0.03818692,
+    MatrixN dh0(4,6);
+    dh0 << -0.03007664,  0.06901193, -0.05617264, -0.01267693, -0.03818692,
         -0.002447  ,
         -1.03171308, -1.08006156, -0.17614215, -0.11097753, -0.25979309,
         -0.19269291,
@@ -153,7 +153,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
-    cppl_set(&states,"h",new MatrixN(h));
+    cppl_set(&states,"h",new MatrixN(h0));
     MatrixN y=rnn.forward_step(x, &cache, &states);
     MatrixN dx0=rnn.backward_step(dchain, &cache, &states, &grads);
     bool allOk=true;
@@ -165,7 +165,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNStepBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh,*(grads["ho"]),"RNNStepBackward h",eps);
+    ret=matComp(dh0,*(grads["h0"]),"RNNStepBackward h0",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -343,7 +343,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["ho"]),"RNNBackward ho",eps); // XXX: Uhhh!
+    ret=matComp(dh0,*(grads["h0"]),"RNNBackward h0",eps); // XXX: Uhhh!
     if (!ret) allOk=false;
 
     cppl_delete(&cache);

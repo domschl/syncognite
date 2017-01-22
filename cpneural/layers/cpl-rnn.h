@@ -15,7 +15,7 @@ private:
     void setup(const CpParams& cx) {
         layerName="RNN";
         inputShapeRang=1;
-        layerType=LayerType::LT_NORMAL & LayerType::LT_EXTERNALSTATE;
+        layerType=LayerType::LT_NORMAL | LayerType::LT_EXTERNALSTATE;
         cp=cx;
         vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
         int inputShapeFlat=1;
@@ -35,14 +35,14 @@ private:
         //outputShape={T*H};
         outputShape={H,T};
 
-        // cppl_set(&params, "ho", new MatrixN(N,H));
+        // cppl_set(&params, "h0", new MatrixN(N,H));
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,H),inittype,initfactor)));
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        //params["ho"]->setZero();
+        //params["h0"]->setZero();
 
 /*
         params["Wxh"]->setRandom();
@@ -126,8 +126,10 @@ public:
             MatrixN xi=tensorchunk(x,{N,T,D},t);
             ht = forward_step(xi,&cache,&states, id);
             tensorchunkinsert(&hn, ht, {N,T,H}, t);
-            string name="t"+std::to_string(t);
-            mlPush(name,&cache,pcache);
+            if (pcache!=nullptr) {
+                string name="t"+std::to_string(t);
+                mlPush(name,&cache,pcache);
+            } else cppl_delete(&cache);
         }
         return hn;
     }
@@ -145,6 +147,7 @@ public:
         MatrixN hsq = hnext.array() * hnext.array();
         MatrixN hone = MatrixN(hnext);
         hone.setOnes();
+
         MatrixN t1=(hone-hsq).array() * dchain.array();
         MatrixN t1t=t1.transpose();
         MatrixN dbh=t1.colwise().sum();
@@ -156,7 +159,7 @@ public:
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)["ho"] = new MatrixN(dh);
+        (*pgrads)["h0"] = new MatrixN(dh);
 
         if (maxClip != 0.0) {
             for (int i=0; i<dx.size(); i++) {
@@ -175,9 +178,9 @@ public:
                 if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
                 if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
             }
-            for (int i=0; i<(*(*pgrads)["ho"]).size(); i++) {
-                if ((*(*pgrads)["ho"])(i) < -1.0 * maxClip) (*(*pgrads)["ho"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["ho"])(i) > maxClip) (*(*pgrads)["ho"])(i)=maxClip;
+            for (int i=0; i<(*(*pgrads)["h0"]).size(); i++) {
+                if ((*(*pgrads)["h0"])(i) < -1.0 * maxClip) (*(*pgrads)["h0"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["h0"])(i) > maxClip) (*(*pgrads)["h0"])(i)=maxClip;
             }
         }
 
@@ -204,7 +207,7 @@ public:
             mlPop(name,pcache,&cache);
             dxi=backward_step(dhi,&cache,&states, &grads,id);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
-            dphi=*grads["ho"]; // XXX cache-rel? -> STATES!
+            dphi=*grads["h0"];
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];
@@ -220,7 +223,7 @@ public:
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)["ho"] = new MatrixN(dphi);
+        (*pgrads)["h0"] = new MatrixN(dphi);
         // cppl_remove(pcache, "x"); // XXX last cleanup.
         return dx;
     }
