@@ -313,7 +313,7 @@ int doTests() {
     if (!tmx.selfTest(txmx, ty, h, eps)) {
         allOk=false;
     }
-
+*/
     //LayerBlock1
     LayerBlock lb("{name='testblock'}");
     cerr << "LayerName for lb: " << lb.layerName << endl;
@@ -334,11 +334,13 @@ int doTests() {
 
     h=1e-3; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!lb.selfTest(xml,yml, h, eps)) {
+    t_cppl lbstates;
+    lbstates["y"]=&yml;
+    if (!lb.selfTest(xml, &lbstates, h, eps)) {
         allOk=false;
         cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-*/
+
     cerr << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {

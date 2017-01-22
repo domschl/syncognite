@@ -57,7 +57,7 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
 
     MatrixN dyc;
     MatrixN y;
-    if (layerType & LayerType::LT_NORMAL) {
+    if ((layerType & LayerType::LT_NORMAL) && !(layerType & LayerType::LT_LOSS)) {
         dyc = forward(x, &cache, pstates, 0);
         dyc.setRandom();
     } else if (layerType & LayerType::LT_LOSS) {
@@ -353,7 +353,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
     cerr << "SelfTest for: " << layerName << " -----------------" << endl;
     MatrixN yf = forward(x, nullptr, pstates, 0);
 
-    if (layerType & LayerType::LT_NORMAL) {
+    if ((layerType & LayerType::LT_NORMAL) && !(layerType & LayerType::LT_LOSS)) {
         dchain = yf;
         dchain.setRandom();
     } else if (layerType & LayerType::LT_LOSS) {

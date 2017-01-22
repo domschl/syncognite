@@ -151,7 +151,7 @@ public:
                 removeLayer(name);
                 return false;
             }
-            layerType = layerType & LayerType::LT_LOSS;
+            layerType = layerType | LayerType::LT_LOSS;
             lossLayer=name;
         }
         layerInputs[name]=inputLayers;
