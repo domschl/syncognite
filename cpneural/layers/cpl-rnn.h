@@ -42,17 +42,6 @@ private:
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        //params["h0"]->setZero();
-
-/*
-        params["Wxh"]->setRandom();
-        params["Whh"]->setRandom();
-        floatN xavier = 1.0/std::sqrt((floatN)(inputShapeFlat+H)); // (setRandom is [-1,1]-> fakt 0.5, xavier is 2/(ni+no))
-        *params["Wxh"] *= xavier;
-        *params["Whh"] *= xavier;
-        params["bh"]->setRandom();
-        *params["bh"] *= xavier;
-*/
         layerInit=true;
     }
 public:
@@ -117,7 +106,6 @@ public:
             exit(-1);
         }
         MatrixN ht=*((*pstates)["h"]);
-        //cerr << shape(h) << N << "," << T*H << endl;
         MatrixN hn(N,T*H);
         for (int t=0; t<T; t++) {
             t_cppl cache{};

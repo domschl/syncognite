@@ -39,21 +39,7 @@ public:
         cppl_delete(&params);
     }
 
-    /* not thread safe
-    unsigned long fastrand(void) {          //period 2^96-1
-    static unsigned long x=123456789, y=362436069, z=521288629;
-    unsigned long t;
-        x ^= x << 16;
-        x ^= x >> 5;
-        x ^= x << 1;
-
-       t = x;
-       x = y;
-       y = z;
-       z = t ^ x ^ y;
-
-      return z;
-    } */
+    
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         drop = cp.getPar("drop", (floatN)0.5);
