@@ -195,31 +195,6 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
         cppl_delete(&st);
         (*pm)(i) = pxold;
 
-        /*
-        if (var=="x") {
-            pxold = x(i);
-            x(i) = x(i) - h;
-            cppl_copy(pstates, &st);
-            y0 = forward(x, nullptr, &st, 0);
-            cppl_delete(&st);
-            x(i) = pxold + h;
-            cppl_copy(pstates, &st);
-            y1 = forward(x, nullptr, &st, 0 );
-            cppl_delete(&st);
-            x(i) = pxold;
-        } else {
-            pxold = (*(params[var]))(i);
-            (*(params[var]))(i) = (*(params[var]))(i) - h;
-            cppl_copy(pstates, &st);
-            y0 = forward(x, nullptr, &st, 0);
-            cppl_delete(&st);
-            (*(params[var]))(i) = pxold + h;
-            cppl_copy(pstates, &st);
-            y1 = forward(x, nullptr, &st, 0);
-            cppl_delete(&st);
-            (*(params[var]))(i) = pxold;
-        }
-        */
         MatrixN dy=y1-y0;
         MatrixN dd;
         dd = dy.cwiseProduct(dchain);
@@ -232,18 +207,11 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
 
 MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
     MatrixN *pm;
-    /*if (pcache->find("x") == pcache->end()) {
-        cerr << "FATAL: calcNumGradLoss needs cache-member x!" << endl;
-        exit(-1);
-    }
-*/    //MatrixN x=*((*pcache)["x"]);
     MatrixN x=xorg;
-    // MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
-    MatrixN y=*((*pstates)["y"]);  // XXX: pstates?
+    MatrixN y=*((*pstates)["y"]);
 
     pm=getVarPointerHack(var, &x, params, pstates);
     MatrixN grad(pm->rows(), pm->cols());
-    //cerr << var << "/dx-shape:" << shape(grad) << endl;
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
@@ -261,31 +229,7 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
         sy1 = loss(&cache, pstates);
         cppl_delete(&cache);
         (*pm)(i) = pxold;
-/*
-        if (var=="x") {
-            pxold = x(i);
-            x(i) = x(i) - h;
-            y0 = forward(x, &cache, pstates, 0);
-            sy0 = loss(&cache, pstates);
-            cppl_delete(&cache);
-            x(i) = pxold + h;
-            y1 = forward(x, &cache, pstates, 0);
-            sy1 = loss(&cache, pstates);
-            cppl_delete(&cache);
-            x(i) = pxold;
-        } else {
-            pxold = (*pm)(i);
-            (*pm)(i) = (*pm)(i) - h;
-            y0 = forward(x, &cache, pstates, 0);
-            sy0 = loss(&cache, pstates);
-            cppl_delete(&cache);
-            (*pm)(i) = pxold + h;
-            y1 = forward(x, &cache, pstates, 0);
-            sy1 = loss(&cache, pstates);
-            cppl_delete(&cache);
-            (*pm)(i) = pxold;
-        }
-        */
+
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
         grad(i)=drs;
