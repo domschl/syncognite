@@ -25,7 +25,7 @@ Create a ```Build``` directory within the syncognite directory and configure the
 ```
 # in sycognite/Build:
 cmake ..
-# use ccmake to configure options paths:
+# optionally use ccmake to configure options and paths:
 ccmake ..
 ```
 Build the project:
@@ -35,5 +35,5 @@ make
 Things that should work:
 
 Subprojects:
-* testneural (performance tests for all layers using testdata and numerical integration)
-* mnisttest (MNIST recognition with a convolutional network)
+* testneural (cptest subproject, performance tests for all layers using testdata and numerical integration)
+* mnisttest (cpmnist subproject, MNIST recognition with a convolutional network, requires dataset download, see datasets folder.)
