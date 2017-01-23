@@ -2,7 +2,7 @@
 #include <iomanip>
 
 // Manual build:
-// g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 testneural.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
+// g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 bench.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o bench
 
 using std::cerr; using std::endl;
 using std::setprecision; using std::setw; using std::fixed;
@@ -127,6 +127,7 @@ int doBench() {
             std::vector<int> inputShape(te);
             for (auto i=0; i< inputShape.size(); i++) inputShape[i]=M;
             int MI=M;
+            cp.setPar("inputShape",inputShape);
             if (it.first=="Convolution") {
 /*                inputShape[0]=3;
                 inputShape[1]=100;
@@ -138,36 +139,30 @@ int doBench() {
                 cp.setPar("pad",2);
                 cp.setPar("stride",3);
 */
-                inputShape[0]=3;
-                inputShape[1]=32;
-                inputShape[2]=32;
                 MI=32*32*3;
                 N=100;
                 cp.setPar("kernel",vector<int>{3,3,3});
                 cp.setPar("pad",1);
                 cp.setPar("stride",1);
                 cp.setPar("verbose",true);
+                cp.setPar("inputShape",vector<int>{3,32,32});
             } else if (it.first=="Pooling") {
-                inputShape[0]=3;
-                inputShape[1]=32;
-                inputShape[2]=32;
+                cp.setPar("inputShape",vector<int>{3,32,32});
                 MI=32*32*3;
                 cp.setPar("pad",2);
                 cp.setPar("stride",2);
             } else if (it.first=="SpatialBatchNorm") {
-                inputShape[0]=3;
-                inputShape[1]=32;
-                inputShape[2]=32;
+                cp.setPar("inputShape",vector<int>{3,32,32});
                 cp.setPar("batch_norm",N);
                 MI=32*32*3;
             } else if (it.first=="RNN") {
-                inputShape[0]=4;
+                cerr << "RNN and friends not yet adapted to new API" << endl;
+                exit(-1);
+                cp.setPar("inputShape",vector<int>{4,3}); // D,T
                 cp.setPar("N",10);
-                cp.setPar("hidden",1024);
-                cp.setPar("T",3);
+                cp.setPar("H",1024);
                 MI=12;
             }
-            cp.setPar("inputShape",inputShape);
             cp.setPar("train", true);
             Layer *l = CREATE_LAYER(it.first, cp)
             if (reps==0) {
