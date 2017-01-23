@@ -32,7 +32,8 @@ bool checkTemporalAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
      TemporalAffine pe("{inputShape=[4,3];M=5}");  // T=3;D=4; 12=T*D
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
-    MatrixN y0=pe.forward(x, nullptr);
+    t_cppl states;
+    MatrixN y0=pe.forward(x, nullptr, &states);
     return matComp(y,y0,"TemporalAffineForward",eps);
 }
 
@@ -66,7 +67,8 @@ bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
-    MatrixN y0=pe.forward(x, &cache);
+    t_cppl states;
+    MatrixN y0=pe.forward(x, &cache, &states);
 
     MatrixN dx(2,3*4);
     dx << -3.98456076,  -8.08466677, -10.98578141,  -5.24138688,
@@ -93,7 +95,7 @@ bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
           1.16542877, -0.44910557, -1.27087778,  0.4742068 ,  1.6213438;
 
     t_cppl grads;
-    MatrixN dx0=pe.backward(dchain, &cache, &grads);
+    MatrixN dx0=pe.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"TemporalAffineBackward dx",eps);
     if (!ret) allOk=false;

@@ -287,18 +287,18 @@ int doTests() {
     if (!we.selfTest(xwe, yz, 1e-2, 1e-3)) {
         allOk=false;
     }
-
+*/
     // N=10; T=5; D=6; M=7
     // TemporalAffine pct(CpParams("{inputShape=[30];T=5;D=6;M=7;noVectorizationTests=true}")); // 30=T*D
     TemporalAffine pct(CpParams("{inputShape=[6,5];M=7}")); // T=5;D=6;30=T*D
     MatrixN xtt(10,30);
     xtt.setRandom();
-    if (!pct.selfTest(xtt,yz)) {
+    if (!pct.selfTest(xtt,&s1)) {
         allOk=false;
     }
 
 
-
+/*
     // Temporal Softmax
     int tsmN=10, tsmC=4, Ttm=4;
     CpParams tc1;
@@ -501,7 +501,7 @@ int doTests() {
         cerr << red << "WordEmbeddingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+*/
     if (checkTemporalAffineForward()) {
         cerr << green << "TemporalAffineForward with test data: OK." << def << endl;
     } else {
@@ -515,7 +515,7 @@ int doTests() {
         cerr << red << "TemporalAffineBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkTemporalSoftmaxLoss(0.1)) {
         cerr << green << "TemporalSoftmaxLoss with test data: OK." << def << endl;
     } else {
