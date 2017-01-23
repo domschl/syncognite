@@ -131,7 +131,24 @@ bool  getMnistData(string filepath) {
     return true;
 }
 
- int main(int argc, char *argv[]) {
+void printSamples() {
+    vector<int> ins{0,4,16,25,108, 256,777};
+    for (auto in : ins) {
+        cerr << "-------------------------" << endl;
+        cerr << "Index: " << in << endl;
+        for (int cy=0; cy<28; cy++) {
+            for (int cx=0; cx<28; cx++) {
+                floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
+                if (pt<0.5) cerr << " ";
+                else cerr << "*";
+            }
+            cerr << endl;
+        }
+        cerr << (*cpMnistData["t_test"])(in,0) << endl;
+    }
+}
+
+int main(int argc, char *argv[]) {
      if (argc!=2) {
          cerr << "mnisttest <path-mnist.h5-file>" << endl;
          exit(-1);
@@ -140,6 +157,8 @@ bool  getMnistData(string filepath) {
      for (auto it : cpMnistData) {
          cerr << it.first << " " << shape(*(it.second)) << endl;
      }
+
+     // printSamples(); exit(-1);
 
      cpInitCompute("Mnist");
      registerLayers();
@@ -218,21 +237,3 @@ bool  getMnistData(string filepath) {
       }
      cpExitCompute();
  }
-
-
- /*
- vector<int> ins{0,4,16,25,108, 256,777};
- for (auto in : ins) {
-     cerr << "-------------------------" << endl;
-     cerr << "Index: " << in << endl;
-     for (int cy=0; cy<28; cy++) {
-         for (int cx=0; cx<28; cx++) {
-             floatN pt=(*cpMnistData["x_test"])(in, cy*28+cx);
-             if (pt<0.5) cerr << " ";
-             else cerr << "*";
-         }
-         cerr << endl;
-     }
-     cerr << (*cpMnistData["t_test"])(in,0) << endl;
- }
- */

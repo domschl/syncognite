@@ -7,7 +7,9 @@ Current state: **pre-alpha**:
 * data-source and build system need work.
 
 ## Dependencies:
-* C++ 11 compiler,
+* C++ 11 compiler (on Linux or Mac, Intel or ARM)
 * Eigen v3.3
-* Hdf5 for sample data.
+* Hdf5 for sample data. (optional, for data-sources MNIST and CIFAR10)
+* OpenMP (optional, for threading)
+* Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.

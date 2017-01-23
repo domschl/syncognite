@@ -4,3 +4,4 @@ Build/
 *.pch
 *.h5
 test
+datasets/originals/
