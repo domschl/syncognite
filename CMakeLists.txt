@@ -18,9 +18,9 @@ project(cpneural)
 
 option(WITH_FLOAT "Use float 32-bit precision (OFF=double)" ON)
 option(WITH_OPENMP "Use OpenMP libraries" ON)
-option(WITH_VIENNACL "Use ViennaCL library" ON)
+option(WITH_VIENNACL "Use ViennaCL library" OFF)
 option(WITH_CUDA "Use Nvidia CUDA libraries" OFF)
-option(WITH_OPENCL "Use OpenCL libraries" ON)
+option(WITH_OPENCL "Use OpenCL libraries" OFF)
 
 if (APPLE)
     include_directories("/usr/local/include")
