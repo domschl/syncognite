@@ -294,8 +294,6 @@ int doTests() {
         allOk=false;
     }
 
-
-/*
     // Temporal Softmax
     int tsmN=10, tsmC=4, Ttm=4;
     CpParams tc1;
@@ -308,10 +306,12 @@ int doTests() {
     for (unsigned i=0; i<ty.size(); i++) ty(i,0)=(rand()%tsmC);
     h=1e-2; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
     eps=1e-4; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
-    if (!tmx.selfTest(txmx, ty, h, eps)) {
+    t_cppl states;
+    states["y"]=&ty;
+    if (!tmx.selfTest(txmx, &states, h, eps)) {
         allOk=false;
     }
-*/
+
     //LayerBlock1
     LayerBlock lb("{name='testblock'}");
     cerr << "LayerName for lb: " << lb.layerName << endl;
@@ -511,7 +511,7 @@ int doTests() {
         cerr << red << "TemporalAffineBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkTemporalSoftmaxLoss(0.1)) {
         cerr << green << "TemporalSoftmaxLoss with test data: OK." << def << endl;
     } else {
@@ -526,7 +526,7 @@ int doTests() {
         allOk=false;
     }
 
-*/
+
     if (trainTest()) {
         cerr << green << "TrainTest: OK." << def << endl;
     } else {

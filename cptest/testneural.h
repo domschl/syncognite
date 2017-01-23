@@ -20,7 +20,7 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6);
 #include "layertests/cplt-rnn.h"
 #include "layertests/cplt-wordembedding.h"
 #include "layertests/cplt-temporalaffine.h"
-//#include "layertests/cplt-temporalsoftmax.h"
+#include "layertests/cplt-temporalsoftmax.h"
 
 using std::cerr; using std::endl;
 

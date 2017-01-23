@@ -19,9 +19,11 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
     TemporalSoftmax tsm(cp);
     t_cppl cache;
     cppl_set(&cache,"mask",new MatrixN(mask));
-    tsm.forward(x,y,&cache);
+    t_cppl states;
+    states["y"] = &y;
+    tsm.forward(x,&cache, &states);
     float loss;
-    loss=tsm.loss(y,&cache);
+    loss=tsm.loss(&cache, &states);
     cppl_delete(&cache);
     return loss;
 }
@@ -321,10 +323,12 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     cp.setPar("nohupdate",(bool)true);
     TemporalSoftmax tsm(cp);
     t_cppl cache;
+    t_cppl states;
     cppl_set(&cache,"mask",new MatrixN(mask));
-    tsm.forward(x,y,&cache);
+    states["y"]=&y;
+    tsm.forward(x,&cache,&states);
     float loss;
-    loss=tsm.loss(y,&cache);
+    loss=tsm.loss(&cache, &states);
 
     bool allOk=true;
 
@@ -334,7 +338,7 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     }
 
     t_cppl grads;
-    MatrixN dx0=tsm.backward(y,&cache,&grads);
+    MatrixN dx0=tsm.backward(y, &cache,&states,&grads);
 
     bool ret=matComp(dx,dx0,"TemporalSoftmax dx",eps);
     if (!ret) allOk=false;
