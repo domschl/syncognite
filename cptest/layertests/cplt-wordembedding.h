@@ -28,7 +28,8 @@ bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     WordEmbedding we(cp);
     *(we.params["W"])= W;
     t_cppl cache;
-    MatrixN y0=we.forward(x, &cache, 0);
+    t_cppl states;
+    MatrixN y0=we.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
     return matComp(y,y0,"WordEmbeddingForward",eps);
 }
@@ -615,11 +616,12 @@ bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS) {
 
     t_cppl cache;
     t_cppl grads;
-    MatrixN y0=we.forward(x, &cache);
+    t_cppl states;
+    MatrixN y0=we.forward(x, &cache, &states);
     bool allOk=true;
     bool ret=matComp(y,y0,"WordEmbeddingBackward forward consistency check",eps);
     if (!ret) allOk=false;
-    MatrixN dx0=we.backward(dchain, &cache, &grads);
+    MatrixN dx0=we.backward(dchain, &cache, &states, &grads);
     //bool ret=matComp(dx,dx0,"WordEmbeddingBackward dx",eps);
     //if (!ret) allOk=false;
     ret=matComp(dW,*(grads["W"]),"WordEmbeddingBackward dW",eps);

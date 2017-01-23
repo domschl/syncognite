@@ -268,14 +268,11 @@ int doTests() {
     rnstates["h"] = &h0;
     //                    D,T
     RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
-    //rnn.params["h0"]=&h0;  // This is just for the numerical differentiator for find a var for dh0"
-    // ^ no, really not.
     if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
         allOk=false;
     }
-    //rnn.params.erase("h0");
 
-/*
+
     // WordEmbedding
     int weN=4, weT=3, weV=10, weD=8;
     MatrixN xwe(weN,weT);
@@ -284,10 +281,10 @@ int doTests() {
     weW.setRandom();
     WordEmbedding we("{inputShape=[3];V=10;D=8;noVectorizationTests=true}");
     *(we.params["W"])=weW;
-    if (!we.selfTest(xwe, yz, 1e-2, 1e-3)) {
+    if (!we.selfTest(xwe, &s1, 1e-2, 1e-3)) {
         allOk=false;
     }
-*/
+
     // N=10; T=5; D=6; M=7
     // TemporalAffine pct(CpParams("{inputShape=[30];T=5;D=6;M=7;noVectorizationTests=true}")); // 30=T*D
     TemporalAffine pct(CpParams("{inputShape=[6,5];M=7}")); // T=5;D=6;30=T*D
@@ -488,7 +485,6 @@ int doTests() {
         allOk=false;
     }
 
-/*
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
     } else {
@@ -501,7 +497,7 @@ int doTests() {
         cerr << red << "WordEmbeddingBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-*/
+
     if (checkTemporalAffineForward()) {
         cerr << green << "TemporalAffineForward with test data: OK." << def << endl;
     } else {
