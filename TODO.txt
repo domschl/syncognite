@@ -1,36 +1,7 @@
-Changes to methods:
-
-cache and state hierarchy: what is the actual difference?
-live-span, init
-
-virtual MatrixN forward(const MatrixN& x, t_cppl* cache, t_cppl* states, int id);
-
-virtual MatrixN backward(const MatrixN& dtL, t_cppl* pcache, t_cppl* states, t_cppl* pgrads, int id);
-
-virtual floatN loss(t_cppl* pcache, t_cppl* states);
-
-
-
-
-test ** ok
-floatN test(const MatrixN& x, const MatrixN& y, int batchsize=100);
-
-selfTest ** ok
-bool selfTest(const MatrixN& x, const MatrixN& y, floatN h, floatN eps);
-
-update *! ?
-virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache);
-
-train !_! states for RNN where always missing?
-      NEEDs states
-      for RNN states check zerostate init for xv, yv?!
-floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv, t_cppl *states, string optimizer, const CpParams& cp);
-
-workerThread
-t_cppl workerThread(const MatrixN& xb, t_cppl *states, floatN *pl, int id);
-
-popti update bs. layer update
-
-
-
-
+[ ] - Update readme and TODO to a minimal state for pre-Alpha
+[ ] - sane build defaults (no ViennaCL)
+[ ] - data-downloader-scripts
+[ ] - document build
+[ ] - document mnist, cifar, test
+[ ] - minimal architecture overview
+[ ] - project motivation
