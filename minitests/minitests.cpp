@@ -99,13 +99,13 @@ int main(int argc, char *argv[]) {
     int ret=0;
     ret=0;
     //doTests();
-    cerr << "standard=============" << endl;
+    cerr << "standard init=============" << endl;
     trainTest("standard");
-    cerr << "normal===============" << endl;
+    cerr << "normal init===============" << endl;
     trainTest("normal");
-    cerr << "orthonormal==========" << endl;
+    cerr << "orthonormal init==========" << endl;
     trainTest("orthonormal");
-    cerr << "orthogonal==========" << endl;
+    cerr << "orthogonal init==========" << endl;
     trainTest("orthogonal");
     cpExitCompute();
     return ret;
