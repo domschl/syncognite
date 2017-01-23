@@ -12,7 +12,6 @@ The data is transformed into a single [HDF5 database](https://support.hdfgroup.o
 ```
 python download_mnist.py
 ```
-Currently only tested with Python 3.x
 
 ## Result:
 ```mnist.h5``` in directory ```datasets```.

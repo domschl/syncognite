@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 import numpy as np
 import h5py
 import gzip
@@ -94,7 +95,7 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
     for du in datadict:
         sourcefile = os.path.join(zippath, du["name"])
         f = gzip.open(sourcefile, 'rb')
-        data = f.read()
+        data = bytearray(f.read())
         f.close()
         ex = du["offset"]
         for ds in du["datasets"]:
@@ -104,7 +105,7 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
             return False
         offs = du["offset"]
         for ds in du["datasets"]:
-            print("Creating HDF5 dataset", ds)
+            print("Creating HDF5 dataset", ds, "...")
             n = du["datasets"][ds]
             w = du["entrysize"]
             shape = (n, w)
@@ -121,7 +122,7 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
                     for x in range(w):
                         di[y, x] = float(data[offs+y*w+x]) / du["norm"]
             offs += du["datasets"][ds] * du["entrysize"]
-            print(ds, shape, dtype)
+            # print(ds, shape, dtype)
             dset = hf.create_dataset(ds, shape, dtype=dtype,
                                      compression='gzip')
             dset[...] = di
@@ -146,6 +147,6 @@ if loadOriginalFiles(mnist_urls, destpath) is False:
     print("Download failed.")
 else:
     if encodeOriginalsToH5(mnist_urls, destpath, localpath) is True:
-        print("database file is now in:", destpath)
+        print("database file is now in:", localpath)
     else:
         print("Error during HDF5 file creation")
