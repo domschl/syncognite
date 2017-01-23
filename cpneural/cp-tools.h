@@ -49,6 +49,13 @@ void cppl_remove(t_cppl *p, string key) {
     }
 }
 
+void cppl_copy(t_cppl *src, t_cppl*dest) {
+    dest->clear();
+    for (auto st : *src) {
+        cppl_set(dest, st.first, new MatrixN(*st.second));
+    }
+}
+
 void mlPush(string prefix, t_cppl *src, t_cppl *dst) {
     if (dst!=nullptr) {
         for (auto pi : *src) {

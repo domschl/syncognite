@@ -333,6 +333,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     states["h"] = new MatrixN(h0);
     MatrixN y=rnn.forward(x, &cache, &states);
+    cppl_update(&states, "h", &h0);
     MatrixN dx0=rnn.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);

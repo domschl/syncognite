@@ -194,7 +194,7 @@ bool  getMnistData(string filepath) {
          if (verbose) cerr << "Topology-check for MultiLayer: ok." << endl;
      }
 
-     CpParams cpo("{verbose=true;lr_decay=0.95;epsilon=1e-8}");
+     CpParams cpo("{verbose=true;shuffle=true;lr_decay=0.95;epsilon=1e-8}");
      cpo.setPar("epochs",(floatN)40.0);
      cpo.setPar("batch_size",50);
      cpo.setPar("learning_rate", (floatN)5e-4);

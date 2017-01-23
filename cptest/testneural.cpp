@@ -268,11 +268,12 @@ int doTests() {
     rnstates["h"] = &h0;
     //                    D,T
     RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
-    rnn.params["h0"]=&h0;  // This is just for the numerical differentiator for find a var for dh0"
+    //rnn.params["h0"]=&h0;  // This is just for the numerical differentiator for find a var for dh0"
+    // ^ no, really not.
     if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
         allOk=false;
     }
-    rnn.params.erase("h0");
+    //rnn.params.erase("h0");
 
 /*
     // WordEmbedding

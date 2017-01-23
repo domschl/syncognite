@@ -228,7 +228,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     MatrixN* pxbi[MAX_NUMTHREADS];
 
     setFlag("train",true);
-    bool bShuffle=true;
     floatN lastAcc;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
@@ -250,6 +249,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
+    bool bShuffle=popti->cp.getPar("shuffle", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
@@ -358,7 +358,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     --th;
                     retdict rvg=it.get();
                     t_cppl retGrads = rvg["grads"];
-                    t_cppl retStates = rvg["states"];
                     if (first) {
                         for (auto g : retGrads) {
                             sgrad[g.first] = new MatrixN(*(g.second));
@@ -370,6 +369,9 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                         }
                     }
                     cppl_delete(&retGrads);
+                    t_cppl retStates = rvg["states"];
+                    // XXX here we need to copy the states back!
+                    // There is something missing for thread-state coupling!
                     cppl_delete(&retStates);
                 }
                 if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.

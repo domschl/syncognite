@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    CpParams cpo("{verbose=true;epsion=1e-8}");
+    CpParams cpo("{verbose=true;shuffle=true;epsion=1e-8}");
     cpo.setPar("learning_rate", (floatN)2e-2); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)1.0);
     cpo.setPar("regularization", (floatN)1e-5);

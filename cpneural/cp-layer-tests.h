@@ -140,6 +140,32 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
     return allOk;
 }
 
+MatrixN *getVarPointerHack(string var, MatrixN *px, t_cppl& params, t_cppl* pstates) {
+    MatrixN *pm;
+    if (var=="x") pm=px;
+    else {
+        if (params.find(var)==params.end()) {
+            if (pstates->find(var)!=pstates->end()) {
+                cerr << "Warning: trying to differentiate numerically a state" << endl;
+                pm = (*pstates)[var];
+            } else {
+                string var0 = var.substr(0, var.size()-1);
+                if (var0.size()>0 && pstates->find(var0)!=pstates->end()) {
+                    cerr << "Numerical check, mapping gradient " << var << " to state -> " << var0 << endl;
+                    pm = (*pstates)[var0];
+                    cerr << "pm set" << endl;
+                } else {
+                    pm = nullptr;
+                    cerr << "Cannot find corresponding variable to gradient: " << var << " -> FATAL" << endl;
+                }
+            }
+        }  else {
+            pm = params[var];
+        }
+    }
+    return pm;
+}
+
 MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
     cerr << "  checking numerical gradient for " << var << "..." << endl;
     MatrixN *pm;
@@ -149,28 +175,51 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
     } else {
         x=*((*pcache)["x"]);
     }
-    if (var=="x") pm=&x;
-    else pm = params[var];
+    pm=getVarPointerHack(var, &x, params, pstates);
+
     MatrixN grad((*pm).rows(), (*pm).cols());
 
     floatN pxold;
     for (unsigned int i=0; i<grad.size(); i++) {
         MatrixN y0,y1;
+        t_cppl st;
+
+        pxold = (*pm)(i);
+        (*pm)(i) = (*pm)(i) - h;
+        cppl_copy(pstates, &st);
+        y0 = forward(x, nullptr, &st, 0);
+        cppl_delete(&st);
+        (*pm)(i) = pxold + h;
+        cppl_copy(pstates, &st);
+        y1 = forward(x, nullptr, &st, 0);
+        cppl_delete(&st);
+        (*pm)(i) = pxold;
+
+        /*
         if (var=="x") {
             pxold = x(i);
             x(i) = x(i) - h;
-            y0 = forward(x, nullptr, pstates, 0);
+            cppl_copy(pstates, &st);
+            y0 = forward(x, nullptr, &st, 0);
+            cppl_delete(&st);
             x(i) = pxold + h;
-            y1 = forward(x, nullptr, pstates, 0 );
+            cppl_copy(pstates, &st);
+            y1 = forward(x, nullptr, &st, 0 );
+            cppl_delete(&st);
             x(i) = pxold;
         } else {
             pxold = (*(params[var]))(i);
             (*(params[var]))(i) = (*(params[var]))(i) - h;
-            y0 = forward(x, nullptr, pstates, 0);
+            cppl_copy(pstates, &st);
+            y0 = forward(x, nullptr, &st, 0);
+            cppl_delete(&st);
             (*(params[var]))(i) = pxold + h;
-            y1 = forward(x, nullptr, pstates, 0);
+            cppl_copy(pstates, &st);
+            y1 = forward(x, nullptr, &st, 0);
+            cppl_delete(&st);
             (*(params[var]))(i) = pxold;
         }
+        */
         MatrixN dy=y1-y0;
         MatrixN dd;
         dd = dy.cwiseProduct(dchain);
@@ -191,8 +240,8 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
     MatrixN x=xorg;
     // MatrixN y=*((*pcache)["y"]);  // XXX: pstates?
     MatrixN y=*((*pstates)["y"]);  // XXX: pstates?
-    if (var=="x") pm=&x;
-    else pm = params[var];
+
+    pm=getVarPointerHack(var, &x, params, pstates);
     MatrixN grad(pm->rows(), pm->cols());
     //cerr << var << "/dx-shape:" << shape(grad) << endl;
 
@@ -201,6 +250,18 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
         t_cppl cache;
         MatrixN y0,y1;
         float sy0, sy1;
+
+        pxold = (*pm)(i);
+        (*pm)(i) = (*pm)(i) - h;
+        y0 = forward(x, &cache, pstates, 0);
+        sy0 = loss(&cache, pstates);
+        cppl_delete(&cache);
+        (*pm)(i) = pxold + h;
+        y1 = forward(x, &cache, pstates, 0);
+        sy1 = loss(&cache, pstates);
+        cppl_delete(&cache);
+        (*pm)(i) = pxold;
+/*
         if (var=="x") {
             pxold = x(i);
             x(i) = x(i) - h;
@@ -224,6 +285,7 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
             cppl_delete(&cache);
             (*pm)(i) = pxold;
         }
+        */
         floatN dy=sy1-sy0;
         floatN drs = dy / (2.0 * h);
         grad(i)=drs;
@@ -257,19 +319,24 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     // MatrixN yt=forward(x, pcache);
     MatrixN dx;
     MatrixN yt;
+    t_cppl st;
+    cppl_copy(pstates, &st);
     if (lossFkt) {
-        yt=forward(x, pcache, pstates, 0);
-        loss(pcache, pstates);
-        dx=backward(y, pcache, pstates, &grads, 0);
+        yt=forward(x, pcache, &st, 0);
+        loss(pcache,&st);
+        dx=backward(y, pcache, &st, &grads, 0);
     } else {
-        yt=forward(x, pcache, pstates, 0);
-        dx=backward(dchain, pcache, pstates, &grads, 0);
+        yt=forward(x, pcache, &st, 0);
+        dx=backward(dchain, pcache, &st, &grads, 0);
     }
+    cppl_delete(&st);
     if (dx.rows()>0 && dx.cols()>0)  // Some layers (e.g. WordEmbeddings have no dx!)
         grads["x"]=new MatrixN(dx);
 
     t_cppl numGrads;
-    calcNumGrads(x, dchain, pcache, pstates, &grads, &numGrads, h, lossFkt);
+    cppl_copy(pstates, &st);
+    calcNumGrads(x, dchain, pcache, &st, &grads, &numGrads, h, lossFkt);
+    cppl_delete(&st);
 
     for (auto it : grads) {
         IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -351,7 +418,10 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
     t_cppl cache;
     MatrixN y;
     cerr << "SelfTest for: " << layerName << " -----------------" << endl;
-    MatrixN yf = forward(x, nullptr, pstates, 0);
+    t_cppl st;
+    cppl_copy(pstates, &st);
+    MatrixN yf = forward(x, nullptr, &st, 0);
+    cppl_delete(&st);
 
     if ((layerType & LayerType::LT_NORMAL) && !(layerType & LayerType::LT_LOSS)) {
         dchain = yf;
