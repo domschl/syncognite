@@ -13,3 +13,27 @@ Current state: **pre-alpha**:
 * OpenMP (optional, for threading)
 * Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.
+
+## Build
+syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and HDF5.
+
+Clone the repository:
+```
+git clone git://github.com/domschl/syncognite
+```
+Create a ```Build``` directory within the syncognite directory and configure the build:
+```
+# in sycognite/Build:
+cmake ..
+# use ccmake to configure options paths:
+ccmake ..
+```
+Build the project:
+```
+make
+```
+Things that should work:
+
+Subprojects:
+* testneural (performance tests for all layers using testdata and numerical integration)
+* mnisttest (MNIST recognition with a convolutional network)
