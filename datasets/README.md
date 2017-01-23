@@ -1,8 +1,8 @@
 # Helper scripts to download the original test-data
 
 ## MNIST: download_mnist.py
-Downloads the original handwritten mnist digits from [Yan LeCun's website](http://yann.lecun.com/exdb/mnist/)
-The data is transformed into a single [HDF5 database](https://support.hdfgroup.org/HDF5/) file.
+Downloads the original handwritten mnist digits from [Yan LeCun's website](http://yann.lecun.com/exdb/mnist/).
+The data is transformed into a single [HDF5 database](https://support.hdfgroup.org/HDF5/) file and partioned into 50000 train, 10000 validation and 10000 test entries. (The original data is 60000-train, 10000-test with no seperate validation data.)
 
 ## Requirements:
 * HDF5 OS drivers (Arch linux: ```hdf5-cpp-fortran```, Mac homebrew: ```hdf5```)
@@ -14,7 +14,7 @@ python download_mnist.py
 ```
 
 ## Result:
-```mnist.h5``` in directory ```datasets```.
+```mnist.h5``` HDF5 database with handwritten digits and labels in directory ```datasets```.
 
 Then use:
 ```
