@@ -3,24 +3,27 @@
 Check the [main page](../README.md) for build requirements.
 ## Build
 After configuration of CMake, the mnist part can be built directly by:
-```
+```bash
 make mnisttest
 ```
+## Dataset
+Use the [script download_mnist.py](../datasets/README.md) to download the MNIST training data in HDF5 format.
+
 ## Training
-From build directory:
-```
+From `Build` directory:
+```bash
 cpmnist/mnisttest ../datasets/mnist.h5
 ```
 ## Logging
 For live logging of the training progress, use gnuplot:
-```
+```bash
 gnuplot ../plots/liveplot.gnu
 ```
 ![after 6 episodes](../doc/images/mnist6.png)
 Note: Currently, this works only after 1. episode is complete.
 
-## output
-```
+## Output
+```bash
 $ cpmnist/mnisttest ../datasets/mnist.h5
 Reading: t_test t_train t_valid x_test x_train x_valid
 t_test (10000, 1)
@@ -78,4 +81,3 @@ Ep: 11, Time: 567s, (41s test) loss:0.049419 err(val):0.015700 acc(val):0.984300
 Ep: 12, Time: 569s, (41s test) loss:0.055270 err(val):0.015500 acc(val):0.984500055270021
 Ep: 13, Time: 572s, (42s test) loss:0.057783 err(val):0.015400 acc(val):0.984600057783070
 ...
-```
