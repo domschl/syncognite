@@ -107,13 +107,17 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
             print("Creating HDF5 dataset", ds, "...")
             n = du["datasets"][ds]
             w = du["entrysize"]
-            shape = (n, w)
+            if w == 1:
+                shape = (n,)
+            else:
+                shape = (n, w)
             if du["format"] == "int":
                 di = np.zeros(shape, dtype='int32')
                 dtype = 'i'
                 for y in range(n):
-                    for x in range(w):
-                        di[y, x] = data[offs+y*w+x]
+                    # for x in range(w):
+                    #     di[y, x] = data[offs+y*w+x]
+                    di[y] = data[offs+y]
             if du["format"] == "float":
                 di = np.zeros(shape, dtype='float')
                 dtype = 'f'
@@ -127,17 +131,6 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
             dset[...] = di
     hf.close()
     return True
-
-
-def checkFile():
-    with h5py.File('mnist.hdf5', 'r') as hf:
-        print('List of arrays in this file: \n', list(hf.keys()))
-        for ds in hf.keys():
-            data = hf.get(ds)
-            np_data = np.array(data)
-            print('Shape of the array ', ds, ': \n', np_data.shape)
-            print(len(data))
-            print("0:", data[0])
 
 
 localpath = os.path.dirname(os.path.realpath(__file__))
