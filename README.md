@@ -95,7 +95,7 @@ make
 Things that should work:
 
 Subprojects:
-* testneural (cptest subproject, performance tests for all layers using testdata and numerical integration)
+* [testneural](cptest/README.md) (cptest subproject, performance tests for all layers using testdata and numerical integration)
 * [mnisttest](cpmnist/README.md) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/README.md).)
 * [cifar10test](cpcifar10/README.md) (cpcifar10 subproject, cifar10 image recognition with a convolutional network, requires [dataset download](datasets/README.md).)
 * ...
