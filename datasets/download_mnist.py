@@ -107,13 +107,17 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
             print("Creating HDF5 dataset", ds, "...")
             n = du["datasets"][ds]
             w = du["entrysize"]
-            shape = (n, w)
+            if w == 1:
+                shape = (n,)
+            else:
+                shape = (n, w)
             if du["format"] == "int":
                 di = np.zeros(shape, dtype='int32')
                 dtype = 'i'
                 for y in range(n):
-                    for x in range(w):
-                        di[y, x] = data[offs+y*w+x]
+                    # for x in range(w):
+                    #     di[y, x] = data[offs+y*w+x]
+                    di[y] = data[offs+y]
             if du["format"] == "float":
                 di = np.zeros(shape, dtype='float')
                 dtype = 'f'
