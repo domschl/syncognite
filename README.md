@@ -11,7 +11,7 @@ Current state: **pre-alpha**
 
 ## Sample
 ### Model
-A deep convolutional net with batch-norm, dropout and fully connected layers:
+Example: C++ definition of a deep convolutional net with batch-norm, dropout and fully connected layers:
 ```cpp
   LayerBlock lb("{name='DomsNet';bench=false;init='orthonormal'}");
 
