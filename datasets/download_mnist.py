@@ -133,17 +133,6 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
     return True
 
 
-def checkFile():
-    with h5py.File('mnist.hdf5', 'r') as hf:
-        print('List of arrays in this file: \n', list(hf.keys()))
-        for ds in hf.keys():
-            data = hf.get(ds)
-            np_data = np.array(data)
-            print('Shape of the array ', ds, ': \n', np_data.shape)
-            print(len(data))
-            print("0:", data[0])
-
-
 localpath = os.path.dirname(os.path.realpath(__file__))
 destpath = os.path.join(localpath, "originals")
 if loadOriginalFiles(mnist_urls, destpath) is False:
