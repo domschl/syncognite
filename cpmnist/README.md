@@ -81,3 +81,4 @@ Ep: 11, Time: 567s, (41s test) loss:0.049419 err(val):0.015700 acc(val):0.984300
 Ep: 12, Time: 569s, (41s test) loss:0.055270 err(val):0.015500 acc(val):0.984500055270021
 Ep: 13, Time: 572s, (42s test) loss:0.057783 err(val):0.015400 acc(val):0.984600057783070
 ...
+```
