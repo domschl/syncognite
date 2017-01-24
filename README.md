@@ -18,18 +18,18 @@ Current state: **pre-alpha**:
 syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and HDF5.
 
 Clone the repository:
-```
+```bash
 git clone git://github.com/domschl/syncognite
 ```
 Create a ```Build``` directory within the syncognite directory and configure the build:
-```
+```bash
 # in sycognite/Build:
 cmake ..
 # optionally use ccmake to configure options and paths:
 ccmake ..
 ```
 Build the project:
-```
+```bash
 make
 ```
 Things that should work:
