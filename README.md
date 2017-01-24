@@ -36,5 +36,5 @@ Things that should work:
 
 Subprojects:
 * testneural (cptest subproject, performance tests for all layers using testdata and numerical integration)
-* mnisttest (cpmnist subproject, MNIST recognition with a convolutional network, requires [dataset download](datasets/README.md).)
+* [mnisttest](cpmnist/README.md) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/README.md).)
 * ...
