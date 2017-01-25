@@ -1,13 +1,13 @@
 # Training with CIFAR10 images
 ## Requirements
-Check the [main page](../README.md) for build requirements.
+Check the [main page](../../..) for build requirements.
 ## Build
 After configuration of CMake, the cifar10 part can be built directly by:
 ```
 make cifar10test
 ```
 ## Dataset
-Use the [script download_cifar10.py](../datasets/README.md) to download the CIFAR10 training data in HDF5 format.
+Use the [script download_cifar10.py](../datasets/) to download the CIFAR10 training data in HDF5 format.
 
 ## Training
 From build directory:
