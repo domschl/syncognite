@@ -84,7 +84,42 @@ Ep: 4, Time: 1359s, (12s test) loss:1.359592 err(val):0.457000 acc(val):0.543000
 Ep: 5, Time: 1343s, (12s test) loss:1.286471 err(val):0.436000 acc(val):0.564000.273972529
 Ep: 6, Time: 1346s, (13s test) loss:1.223408 err(val):0.424000 acc(val):0.576000.225793357
 Ep: 7, Time: 1356s, (12s test) loss:1.178642 err(val):0.397000 acc(val):0.603000.177728710
-At:   39% of epoch 8, 27.831942 ms/data, ett: 1363s, eta: -830s, loss: 1.106684, 1.1311514
+Ep: 8, Time: 1361s, (13s test) loss:1.137488 err(val):0.374000 acc(val):0.626000.141184944
+Ep: 9, Time: 1364s, (13s test) loss:1.116926 err(val):0.362000 acc(val):0.638000.119372196
+Ep: 10, Time: 1354s, (13s test) loss:1.059759 err(val):0.336000 acc(val):0.664000.054725048
+Ep: 11, Time: 1368s, (12s test) loss:0.997422 err(val):0.325000 acc(val):0.675000.003670459
+Ep: 12, Time: 1356s, (12s test) loss:0.969635 err(val):0.296000 acc(val):0.704000.964603988
+Ep: 13, Time: 1356s, (12s test) loss:0.944014 err(val):0.293000 acc(val):0.707000.956385960
+Ep: 14, Time: 1363s, (14s test) loss:0.904938 err(val):0.296000 acc(val):0.704000.907651125
+Ep: 15, Time: 1359s, (12s test) loss:0.852439 err(val):0.267000 acc(val):0.733000.850288041
+Ep: 16, Time: 1359s, (12s test) loss:0.857193 err(val):0.266000 acc(val):0.734000.850574656
+Ep: 17, Time: 1361s, (13s test) loss:0.815470 err(val):0.255000 acc(val):0.745000.820043432
+Ep: 18, Time: 1338s, (12s test) loss:0.782973 err(val):0.256000 acc(val):0.744000.783037590
+Ep: 19, Time: 1326s, (12s test) loss:0.743810 err(val):0.247000 acc(val):0.753000.731883702
+Ep: 20, Time: 1332s, (12s test) loss:0.734768 err(val):0.239000 acc(val):0.761000.727214807
+Ep: 21, Time: 1326s, (12s test) loss:0.689683 err(val):0.240000 acc(val):0.760000.694405632
+Ep: 22, Time: 1323s, (12s test) loss:0.679138 err(val):0.227000 acc(val):0.773000.677342569
+Ep: 23, Time: 1325s, (12s test) loss:0.658063 err(val):0.234000 acc(val):0.766000.664037277
+Ep: 24, Time: 1310s, (12s test) loss:0.612781 err(val):0.225000 acc(val):0.775000.603546196
+Ep: 25, Time: 1321s, (12s test) loss:0.632008 err(val):0.208000 acc(val):0.792000.625720851
+Ep: 26, Time: 1330s, (12s test) loss:0.559627 err(val):0.212000 acc(val):0.788000.564914247
+Ep: 27, Time: 1324s, (12s test) loss:0.570422 err(val):0.213000 acc(val):0.787000.564646240
+Ep: 28, Time: 1323s, (12s test) loss:0.534862 err(val):0.213000 acc(val):0.787000.535824721
+Ep: 29, Time: 1319s, (12s test) loss:0.506240 err(val):0.209000 acc(val):0.791000.506116784
+Ep: 30, Time: 1324s, (12s test) loss:0.507575 err(val):0.200000 acc(val):0.800000.504689279
+Ep: 31, Time: 1326s, (12s test) loss:0.486595 err(val):0.194000 acc(val):0.806000.488777527
+Ep: 32, Time: 1325s, (12s test) loss:0.496329 err(val):0.196000 acc(val):0.804000.484871926
+Ep: 33, Time: 1324s, (13s test) loss:0.466785 err(val):0.199000 acc(val):0.801000.467273205
+Ep: 34, Time: 1318s, (12s test) loss:0.451971 err(val):0.195000 acc(val):0.805000.443404932
+Ep: 35, Time: 1326s, (12s test) loss:0.423440 err(val):0.196000 acc(val):0.804000.427621099
+Ep: 36, Time: 1326s, (12s test) loss:0.381521 err(val):0.200000 acc(val):0.800000.386783803
+Ep: 37, Time: 1323s, (12s test) loss:0.385132 err(val):0.197000 acc(val):0.803000.384276088
+Ep: 38, Time: 1328s, (12s test) loss:0.375425 err(val):0.205000 acc(val):0.795000.374075503
+Ep: 39, Time: 1320s, (12s test) loss:0.356085 err(val):0.192000 acc(val):0.808000.362570721
+Ep: 40, Time: 1327s, (12s test) loss:0.347994 err(val):0.186000 acc(val):0.814000.350700600
+Final results on CIFAR10 after 40.000000 epochs:
+      Train-error: 0.036735 train-acc: 0.963265
+ Validation-error: 0.186000   val-acc: 0.814000
+       Test-error: 0.212600  test-acc: 0.787400
 
-...
 ```
