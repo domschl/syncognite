@@ -16,7 +16,7 @@ python download_mnist.py
 ###  Result:
 ```mnist.h5``` HDF5 database with handwritten digits and labels in directory ```datasets```.
 
-Then use:
+Then use [mnisttest](../cpmnist/):
 ```
 mnisttest <path-to-database>/mnist.h5
 ```
@@ -34,7 +34,7 @@ python download_cifar10.py
 ###  Result:
 ```cifar10.h5``` HDF5 database with images and labels in directory ```datasets```.
 
-Then use:
+Then use [cifar10test](../cpcifar10/):
 ```
 cifar10test <path-to-database>/cifar10.h5
 ```
