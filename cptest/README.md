@@ -6,7 +6,7 @@ SpatialBatchNorm, RNN, WordEmbedding, TemporalAffine, TemporalSoftmax, Softmax, 
 TwoLayerNet.
 
 ## Requirements
-Check the [main page](../README.md) for build requirements.
+Check the [main page](../) for build requirements.
 ## Build
 After configuration of CMake, the mnist part can be built directly by:
 ```bash
