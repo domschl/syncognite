@@ -1,13 +1,13 @@
 # Training with MNIST handwritten digits
 ## Requirements
-Check the [main page](../README.md) for build requirements.
+Check the [main page](../../..) for build requirements.
 ## Build
 After configuration of CMake, the mnist part can be built directly by:
 ```bash
 make mnisttest
 ```
 ## Dataset
-Use the [script download_mnist.py](../datasets/README.md) to download the MNIST training data in HDF5 format.
+Use the [script download_mnist.py](../datasets/) to download the MNIST training data in HDF5 format.
 
 ## Training
 From `Build` directory:
