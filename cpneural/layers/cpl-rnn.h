@@ -54,7 +54,7 @@ public:
     ~RNN() {
         cppl_delete(&params);
     }
-    virtual void genZeroStates(t_cppl* pstates, int N) {
+    virtual void genZeroStates(t_cppl* pstates, int N) override {
         MatrixN *ph= new MatrixN(N,H);
         ph->setZero();
         cppl_set(pstates, "h", ph);

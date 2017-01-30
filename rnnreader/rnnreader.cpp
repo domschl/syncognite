@@ -5,6 +5,7 @@
 #include <locale>
 #include <string>
 #include <iomanip>
+#include <ctime>
 
 #include "cp-neural.h"
 
@@ -15,6 +16,8 @@ class Text {
 private:
     bool isinit=false;
     bool readDataFile(string inputfile) {
+        // XXX: srand should be something more centrally chosen.
+        std::srand(std::time(0));
         std::wifstream txtfile(inputfile, std::ios::binary);
         if (!txtfile.is_open()) {
             return false;
@@ -58,6 +61,11 @@ public:
         if (!isinit) return 0;
         return v2w.size();
     }
+
+    wstring sample(int len) {
+        int p=std::rand()%(text.size()-len);
+        return text.substr(p,len);
+    }
 };
 
 int main(int argc, char *argv[]) {
@@ -89,7 +97,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier def(Color::FG_DEFAULT);
 
     int T=20;
-    int N=txt.text.size()-T-1;
+    int N=txt.text.size() / (T+1);
 
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
@@ -97,8 +105,9 @@ int main(int argc, char *argv[]) {
     wstring chunk,chunky;
     int n=0;
     for (int i=0; i<N-T-1; i+=T) {
-        chunk=txt.text.substr(i,T);
-        chunky=txt.text.substr(i+1,T);
+        wstring smp = txt.sample(T+1);
+        chunk=smp.substr(0);
+        chunky=smp.substr(1);
         for (int t=0; t<T; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
@@ -126,23 +135,7 @@ int main(int argc, char *argv[]) {
     MatrixN yv=yr.block(n1,0,dn,T);
     MatrixN Xt=Xr.block(n1+dn,0,dn,T);
     MatrixN yt=yr.block(n1+dn,0,dn,T);
-/*
 
-    X=Xr.block(0,0,100000,T);
-    y=yr.block(0,0,100000,T);
-    Xv=Xr.block(100000,0,10000,T);
-    yv=yr.block(100000,0,10000,T);
-    Xt=Xr.block(110000,0,10000,T);
-    yt=yr.block(110000,0,10000,T);
-*/
-/*
-    X=Xr.block(0,0,10000,T);
-    y=yr.block(0,0,10000,T);
-    Xv=Xr.block(10000,0,1000,T);
-    yv=yr.block(10000,0,1000,T);
-    Xt=Xr.block(11000,0,1000,T);
-    yt=yr.block(11000,0,1000,T);
-*/
     cpInitCompute("Rnnreader");
     registerLayers();
 
@@ -205,7 +198,8 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=true;shuffle=false;preservestates=true;epsilon=1e-8}");
+    // preseverstates not necessary for training!
+    CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
@@ -222,7 +216,7 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<10000; i++) {
 
         cpo.setPar("startepoch", (floatN)sep);
-        cpo.setPar("maxthreads", (int)1); // RNN can't cope with threads.
+        cpo.setPar("maxthreads", (int)1);  // XXX: can be increased now!
 
         //Layer *prnn1=lb.layerMap["rnn1"];
         //prnn1->params["ho"]->setZero();
