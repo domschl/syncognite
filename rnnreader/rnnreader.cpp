@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
     chunk = txt.text.substr(512,128);
     wcout << chunk << endl;
 */
-    CpParams cpo("{verbose=true;epsilon=1e-8}");
+    CpParams cpo("{verbose=true;shuffle=false;preservestates=true;epsilon=1e-8}");
     // CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);

@@ -250,7 +250,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     bool bShuffle=popti->cp.getPar("shuffle", (bool)false);
-    bool bPreserveStates=popti->cp.getPar("preserve_states", (bool)false);
+    bool bPreserveStates=popti->cp.getPar("preservestates", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
