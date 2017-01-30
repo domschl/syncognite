@@ -303,7 +303,7 @@ int doTests() {
     MatrixN txmx(tsmN,tsmC*Ttm);
     txmx.setRandom();
     MatrixN ty(tsmN,Ttm);
-    for (unsigned i=0; i<ty.size(); i++) ty(i,0)=(rand()%tsmC);
+    for (unsigned i=0; i<ty.size(); i++) ty(i)=(rand()%tsmC);
     h=1e-2; if (h<CP_DEFAULT_NUM_H) h=CP_DEFAULT_NUM_H;
     eps=1e-4; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     t_cppl states;
