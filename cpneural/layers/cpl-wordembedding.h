@@ -93,32 +93,33 @@ public:
     */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         // threading! int TT=cp.getPar("T-Steps",0);
-        int TT=T;
-        if (TT==0) TT=T;
-
-        if (x.cols() != TT) {
-            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " TT:" << TT << endl;
+        if (x.cols() != T) {
+            cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " T:" << T << endl;
             MatrixN y(0,0);
             return y;
         }
         int N=shape(x)[0];
         MatrixN W(*params["W"]);
         // MatrixN wVect(*params["V"]);
-        MatrixN xv(N*TT,V);
+        MatrixN xv(N*T,V);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<TT; t++) {
+            for (int t=0; t<T; t++) {
                 for (int vi=0; vi<V; vi++) {
-                    xv(n*TT+t,vi)=wVect(x(n,t),vi);
+                    if (x(n,t)>=V) {
+                        cerr << "WordEmbedding: Internal error: x(n,t)="<<x(n,t)<<">=V:"<<V<<endl;
+                        exit(-1);
+                    }
+                    xv(n*T+t,vi)=wVect(x(n,t),vi);
                 }
             }
         }
         if (pcache != nullptr) cppl_set(pcache, "xv", new MatrixN(xv));
         MatrixN y0 = xv * W;
-        MatrixN y(N,D*TT);
+        MatrixN y(N,D*T);
         for (int n=0; n<N; n++) {
             for (int d=0; d<D; d++) {
-                for (int t=0; t<TT; t++) {
-                    y(n,d+t*D) = y0(n*TT+t,d);
+                for (int t=0; t<T; t++) {
+                    y(n,d+t*D) = y0(n*T+t,d);
                 }
             }
         }

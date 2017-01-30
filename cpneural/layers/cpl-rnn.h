@@ -102,12 +102,12 @@ public:
         }
         int N=shape(x)[0];
 
-        if (pstates->find("h")==pcache->end()) {
+        if (pstates->find("h")==pstates->end()) {
             // XXX: Assume auto-setting to zerostate, if h is missing.
             genZeroStates(pstates, N);
         }
 
-        MatrixN ht=*((*pstates)["h"]);
+        MatrixN ht=*(*pstates)["h"];
 
         MatrixN hn(N,T*H);
         for (int t=0; t<T; t++) {

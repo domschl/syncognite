@@ -453,11 +453,12 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                 string optimizer, const CpParams& cp) {
     t_cppl states, statesv;
-    MatrixN yvol=y;
-    MatrixN yvvol=yv;
-    states["y"]=&yvol;
-    statesv["y"]=&yvvol;
-    return train(x, &states, xv, &statesv, optimizer, cp);
+    states["y"]=new MatrixN(y);
+    statesv["y"]=new MatrixN(yv);
+    auto loss = train(x, &states, xv, &statesv, optimizer, cp);
+    cppl_delete(&states);
+    cppl_delete(&statesv);
+    return loss;
 }
 
 /*floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
