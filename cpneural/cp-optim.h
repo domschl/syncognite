@@ -52,10 +52,6 @@ public:
 
 //  Uses the RMSProp update rule, which uses a moving average of squared gradient
 //  values to set adaptive per-parameter learning rates. [CS231]
-// Params:
-// learning_rate 1e-2
-// decay_rate 0.99
-// epsilon: 1e-8
 class RmsProp : public Optimizer {
     floatN lr;
     floatN dc,ep;
@@ -196,7 +192,6 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
-// t_cppl Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
 retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     t_cppl cache;
     t_cppl grads;
@@ -217,7 +212,6 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     rd["grads"] = grads;
     rd["states"] = *pstates;
     return rd;
-    //return grads;
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
@@ -379,7 +373,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                         // XXX here we need to copy the states back!
                         // There is something missing for thread-state coupling!
 
-                        // Hacky soltuion, only one thread on bPreserveStates...
+                        // Hacky, yet acceptable, solution, only one thread on bPreserveStates...
                         *pstates=retStates;
 
                     }
