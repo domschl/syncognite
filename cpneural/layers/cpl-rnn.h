@@ -101,11 +101,14 @@ public:
             return h;
         }
         int N=shape(x)[0];
+
         if (pstates->find("h")==pcache->end()) {
-            cerr << "FATAL: rnn->forward requires a state 'h'" << endl;
-            exit(-1);
+            // XXX: Assume auto-setting to zerostate, if h is missing.
+            genZeroStates(pstates, N);
         }
+
         MatrixN ht=*((*pstates)["h"]);
+
         MatrixN hn(N,T*H);
         for (int t=0; t<T; t++) {
             t_cppl cache{};
