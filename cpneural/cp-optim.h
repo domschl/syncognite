@@ -239,7 +239,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     }
     MatrixN y = *((*pstates)["y"]);
     if (pstatesv->find("y") == pstatesv->end()) {
-        cerr << "pstatesv does not contain y -> fatal!" << endl;
+        cerr << "pstates does not contain y -> fatal!" << endl;
     }
     MatrixN yv = *((*pstatesv)["y"]);
 
@@ -250,12 +250,17 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->cp.getPar("verbose", (bool)false);
     bool bShuffle=popti->cp.getPar("shuffle", (bool)false);
+    bool bPreserveStates=popti->cp.getPar("preserve_states", (bool)false);
     floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
 
     int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
     int maxThreads=popti->cp.getPar("maxthreads",(int)0);
+    if (maxThreads>1 && bPreserveStates) {
+        cerr << "ERROR: cannnot preserve states, if thread-count > 1, reducint to 1." << endl;
+        maxThreads=1;
+    }
     if (maxThreads!=0) {
         if (nt>maxThreads) nt=maxThreads;
     }
@@ -370,8 +375,14 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     }
                     cppl_delete(&retGrads);
                     t_cppl retStates = rvg["states"];
-                    // XXX here we need to copy the states back!
-                    // There is something missing for thread-state coupling!
+                    if (bPreserveStates) {
+                        // XXX here we need to copy the states back!
+                        // There is something missing for thread-state coupling!
+
+                        // Hacky soltuion, only one thread on bPreserveStates...
+                        *pstates=retStates;
+
+                    }
                     cppl_delete(&retStates);
                 }
                 if (regularization!=0.0) { // Loss is not adapted for regularization, since that's anyway only cosmetics.
