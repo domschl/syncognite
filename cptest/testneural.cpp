@@ -107,7 +107,7 @@ bool trainTest() {
     cerr << "Train-test, train-err=" << train_err << endl;
     cerr << "       validation-err=" << val_err << endl;
     cerr << "       final test-err=" << val_err << endl;
-    if (test_err>0.2 || val_err>0.2 || train_err>0.2 || test_err < -10.0 || val_err < -10.0 || train_err < -10.0) allOk=false;
+    if (test_err>0.4 || val_err>0.4 || train_err>0.4 || test_err < -10.0 || val_err < -10.0 || train_err < -10.0) allOk=false;
     return allOk;
 }
 
