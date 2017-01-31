@@ -64,50 +64,7 @@ public:
         ph->setZero();
         cppl_set(pstates, hname, ph);
     }
-/*
-    """
-    Forward pass for a single timestep of an LSTM.
 
-    The input data has dimension D, the hidden state has dimension H, and we
-    use a minibatch size of N.
-
-    Inputs:
-    - x: Input data, of shape (N, D)
-    - prev_h: Previous hidden state, of shape (N, H)
-    - prev_c: previous cell state, of shape (N, H)
-    - Wx: Input-to-hidden weights, of shape (D, 4H)
-    - Wh: Hidden-to-hidden weights, of shape (H, 4H)
-    - b: Biases, of shape (4H,)
-
-    Returns a tuple of:
-    - next_h: Next hidden state, of shape (N, H)
-    - next_c: Next cell state, of shape (N, H)
-    - cache: Tuple of values needed for backward pass.
-    """
-    next_h, next_c, cache = None, None, None
-    ##########################################################################
-    # TODO: Implement the forward pass for a single timestep of an LSTM.     #
-    # You may want to use the numerically stable sigmoid implementation above.
-    ##########################################################################
-    H = prev_h.shape[1]
-    phh = np.dot(prev_h, Wh)
-    phx = np.dot(x, Wx)
-    pshx = phx + b
-    ps = phh + pshx
-    i = sigmoid(ps[:, :H])
-    f = sigmoid(ps[:, H:2*H])
-    o = sigmoid(ps[:, 2*H:3*H])
-    g = np.tanh(ps[:, 3*H:4*H])
-    next_c = f * prev_c + i * g
-    tnc = np.tanh(next_c)
-    next_h = o * tnc
-    cache = (next_h, next_c, Wx, Wh, prev_h, prev_c, x, tnc, o, f, g, i, ps)
-    ##########################################################################
-    #                               END OF YOUR CODE                         #
-    ##########################################################################
-
-    return next_h, next_c, cache
-    */
     MatrixN Sigmoid(const MatrixN& m) {
         MatrixN mn(m);
         MatrixN y;
@@ -118,6 +75,20 @@ public:
         y=((mn.array()/2.0).tanh()-1.0)/2.0+1.0;
         return y;
     }
+    /*  Forward pass for a single timestep of an LSTM. [CS231]
+        The input data has dimension D, the hidden state has dimension H, and we
+        use a minibatch size of N.
+        Inputs:
+        - x: Input data, of shape (N, D)
+        - hprev: Previous hidden state, of shape (N, H)
+        - cprev: previous cell state, of shape (N, H)
+        - Wxh: Input-to-hidden weights, of shape (D, 4H)
+        - Whh: Hidden-to-hidden weights, of shape (H, 4H)
+        - bh: Biases, of shape (4H,)
+        Returns a tuple of:
+        - hnext: Next hidden state, of shape (N, H)
+        - cnext: Next cell state, of shape (N, H)
+        */
     t_cppl forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         t_cppl cp;
         int N=shape(x)[0];
@@ -130,9 +101,178 @@ public:
         MatrixN g = (xhx.block(0,3*H,N,H)).array().tanh();
         MatrixN cnext = f.array() * cprev.array() + i.array() * g.array();
         cp[cname0]=new MatrixN(cnext);
-        MatrixN hnext=cnext.array().tanh() * o.array();
+        MatrixN tnc=cnext.array().tanh();
+        MatrixN hnext=tnx * o.array();
         cp[hname0]=new MatrixN(hnext);
+        if (pcache!=nullptr) cppl_set(pcache,"tnc",new MatrixN(tnc));
+        if (pcache!=nullptr) cppl_set(pcache,"xhx",new MatrixN(xhx));
+        if (pcache!=nullptr) cppl_set(pcache,"i",new MatrixN(i));
+        if (pcache!=nullptr) cppl_set(pcache,"f",new MatrixN(f));
+        if (pcache!=nullptr) cppl_set(pcache,"o",new MatrixN(o));
+        if (pcache!=nullptr) cppl_set(pcache,"g",new MatrixN(g));
         return cp;
+    }
+
+    /*     Backward pass for a single timestep of an LSTM.
+
+        Inputs:
+        - dnext_h: Gradients of next hidden state, of shape (N, H)
+        - dnext_c: Gradients of next cell state, of shape (N, H)
+        - cache: Values from the forward pass
+
+        Returns a tuple of:
+        - dx: Gradient of input data, of shape (N, D)
+        - dprev_h: Gradient of previous hidden state, of shape (N, H)
+        - dprev_c: Gradient of previous cell state, of shape (N, H)
+        - dWx: Gradient of input-to-hidden weights, of shape (D, 4H)
+        - dWh: Gradient of hidden-to-hidden weights, of shape (H, 4H)
+        - db: Gradient of biases, of shape (4H,)
+        """
+        dx, dh, dc, dWx, dWh, db = None, None, None, None, None, None
+        next_h, next_c, Wx, Wh, prev_h, prev_c, x, tnc, o, f, g, i, ps = cache
+        H = prev_h.shape[1]
+
+        # next_h = o * tnc
+        do = tnc * dnext_h
+        dtnc = o * dnext_h
+        # tnc = np.tanh(next_c)
+        dnext_c += (1 - tnc * tnc) * dtnc
+        # next_c = fpc + ig
+        dfpc = dnext_c
+        dig = dnext_c
+        # fpc = f * prev_c
+        df = prev_c * dfpc
+        dprev_c = f * dfpc
+        # ig = i * g
+        di = g * dig
+        dg = i * dig
+        # g = np.tanh(ps[:,3*H:4*H])
+        dps = np.zeros(ps.shape)
+        dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
+        # o = sigmoid(ps[:,2*H:3*H])
+        dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
+        # f = sigmoid(ps[:,H:2*H])
+        dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
+        # i = sigmoid(ps[:,:H])
+        dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
+        # ps = phh + pshx
+        dphh = dps
+        dpshx = dps
+        # pshx = phx + b
+        dphx = dpshx.T
+        db = np.sum(dpshx, axis=0)
+        # phx = np.dot(x, Wx)
+        dx = np.dot(Wx, dphx).T
+        dWx = np.dot(dphx, x).T
+        # phh = np.dot(prev_h, Wh)
+        dprev_h = np.dot(Wh, dphh.T).T
+        dWh = np.dot(prev_h.T, dphh)
+        return dx, dprev_h, dprev_c, dWx, dWh, db
+    */
+    MatrixN backward_step(t_cppl& cp, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
+        MatrixN dx;
+        MatrixN hprev = *(*pstates)[hname];
+        MatrixN cprev = *(*pstates)[cname];
+        MatrixN tnc=*(pcache["tnc"]);
+        MatrixN xhx=*(pcache["xhx"]);
+        MatrixN o=*(pcache["i"]);
+        MatrixN o=*(pcache["f"]);
+        MatrixN o=*(pcache["o"]);
+        MatrixN o=*(pcache["g"]);
+        MatrixN dhnext=cp["dhnext"];
+        MatrixN dcnext=cp["dcnext"];
+        MatrixN hnext=o.array() * tnc.array();
+
+
+        MatrixN do=tnc.array() * dhnext.array();
+        MatrixN dtnc=o.array() * dhnext.array();
+        MatrixN dcnext += (tnc.array() * tnc.array() - 1.0) * (-1.0) * dtnc.array();
+        # dfpc = dnext_c
+        # dig = dnext_c
+        # fpc = f * prev_c
+        MatrixN df=cprev.array() * dcnext.array();
+        MatrixN dcprev = f.array() * dcnext.array();
+        # ig = i * g
+        MatrixN di = g.array() * dcnext.array();
+        MatrixN dg = i.array() * dcnext.array();
+
+        /*
+        # g = np.tanh(ps[:,3*H:4*H])
+        dps = np.zeros(ps.shape)
+        dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
+        # o = sigmoid(ps[:,2*H:3*H])
+        dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
+        # f = sigmoid(ps[:,H:2*H])
+        dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
+        # i = sigmoid(ps[:,:H])
+        dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
+        # ps = phh + pshx
+        dphh = dps
+        dpshx = dps
+        # pshx = phx + b
+        dphx = dpshx.T
+        db = np.sum(dpshx, axis=0)
+        # phx = np.dot(x, Wx)
+        dx = np.dot(Wx, dphx).T
+        dWx = np.dot(dphx, x).T
+        # phh = np.dot(prev_h, Wh)
+        dprev_h = np.dot(Wh, dphh.T).T
+        dWh = np.dot(prev_h.T, dphh)
+        */
+        /*
+        if (pcache->find("x") == pcache->end()) {
+            cerr << "cache does not contain x -> fatal!" << endl;
+        }
+        MatrixN x(*(*pcache)["x"]);
+        MatrixN hprev(*(*pcache)["hprev"]);
+        MatrixN hnext(*(*pcache)["hnext"]);
+        MatrixN Wxh(*params["Wxh"]);
+        MatrixN Whh(*params["Whh"]);
+        MatrixN bh(*params["bh"]);
+
+        MatrixN hsq = hnext.array() * hnext.array();
+        MatrixN hone = MatrixN(hnext);
+        hone.setOnes();
+
+        MatrixN t1=(hone-hsq).array() * dchain.array();
+        MatrixN t1t=t1.transpose();
+        MatrixN dbh=t1.colwise().sum();
+        MatrixN dx=(Wxh * t1t).transpose();
+        MatrixN dWxh=(t1t * x).transpose();
+        MatrixN dh=(Whh * t1t).transpose();
+        MatrixN dWhh=hprev.transpose() * t1;
+
+        */
+        /*
+        (*pgrads)["Wxh"] = new MatrixN(dWxh);
+        (*pgrads)["Whh"] = new MatrixN(dWhh);
+        (*pgrads)["bh"] = new MatrixN(dbh);
+        (*pgrads)[hname0] = new MatrixN(dh);
+
+        if (maxClip != 0.0) {
+            for (int i=0; i<dx.size(); i++) {
+                if (dx(i) < -1.0 * maxClip) dx(i)=-1.0*maxClip;
+                if (dx(i) > maxClip) dx(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["Wxh"]).size(); i++) {
+                if ((*(*pgrads)["Wxh"])(i) < -1.0 * maxClip) (*(*pgrads)["Wxh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["Wxh"])(i) > maxClip) (*(*pgrads)["Wxh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["Whh"]).size(); i++) {
+                if ((*(*pgrads)["Whh"])(i) < -1.0 * maxClip) (*(*pgrads)["Whh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["Whh"])(i) > maxClip) (*(*pgrads)["Whh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)["bh"]).size(); i++) {
+                if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
+                if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
+            }
+            for (int i=0; i<(*(*pgrads)[hname0]).size(); i++) {
+                if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
+                if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
+            }
+        }
+        */
+        return dx;
     }
 
     MatrixN tensorchunk(const MatrixN& x, vector<int>dims, int b) {
@@ -192,62 +332,6 @@ public:
         }
         */
         return hn;
-    }
-
-    virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
-        MatrixN dx;
-        /*
-        if (pcache->find("x") == pcache->end()) {
-            cerr << "cache does not contain x -> fatal!" << endl;
-        }
-        MatrixN x(*(*pcache)["x"]);
-        MatrixN hprev(*(*pcache)["hprev"]);
-        MatrixN hnext(*(*pcache)["hnext"]);
-        MatrixN Wxh(*params["Wxh"]);
-        MatrixN Whh(*params["Whh"]);
-        MatrixN bh(*params["bh"]);
-
-        MatrixN hsq = hnext.array() * hnext.array();
-        MatrixN hone = MatrixN(hnext);
-        hone.setOnes();
-
-        MatrixN t1=(hone-hsq).array() * dchain.array();
-        MatrixN t1t=t1.transpose();
-        MatrixN dbh=t1.colwise().sum();
-        MatrixN dx=(Wxh * t1t).transpose();
-        MatrixN dWxh=(t1t * x).transpose();
-        MatrixN dh=(Whh * t1t).transpose();
-        MatrixN dWhh=hprev.transpose() * t1;
-
-        (*pgrads)["Wxh"] = new MatrixN(dWxh);
-        (*pgrads)["Whh"] = new MatrixN(dWhh);
-        (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)[hname0] = new MatrixN(dh);
-
-        if (maxClip != 0.0) {
-            for (int i=0; i<dx.size(); i++) {
-                if (dx(i) < -1.0 * maxClip) dx(i)=-1.0*maxClip;
-                if (dx(i) > maxClip) dx(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Wxh"]).size(); i++) {
-                if ((*(*pgrads)["Wxh"])(i) < -1.0 * maxClip) (*(*pgrads)["Wxh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Wxh"])(i) > maxClip) (*(*pgrads)["Wxh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Whh"]).size(); i++) {
-                if ((*(*pgrads)["Whh"])(i) < -1.0 * maxClip) (*(*pgrads)["Whh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Whh"])(i) > maxClip) (*(*pgrads)["Whh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["bh"]).size(); i++) {
-                if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)[hname0]).size(); i++) {
-                if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
-                if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
-            }
-        }
-        */
-        return dx;
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
