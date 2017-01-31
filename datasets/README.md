@@ -38,3 +38,11 @@ Then use [cifar10test](../cpcifar10/):
 ```
 cifar10test <path-to-database>/cifar10.h5
 ```
+
+## RNNReader: tiny-shakespeare.txt
+From Justin Johnson's [torch-rnn](https://github.com/jcjohnson/torch-rnn/blob/master/data/tiny-shakespeare.txt) repository.
+
+To test text generation via RNNs, use [rnnreader](../rnnreader):
+```
+rnnreader <path-to-text>/tiny-shakespeare.txt
+```
