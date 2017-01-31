@@ -1,4 +1,4 @@
-# Training RNNs for text generation
+# RNNs for text generation
 ## Requirements
 Check the [main page](../../..) for build requirements.
 ## Build
