@@ -6,8 +6,8 @@ This library implements some of the assignments from Stanfords's [CS231n](http:/
 
 Current state: **pre-alpha**
 * documentation and pointers to samples incomplete.
-* work of RNNs very much unfinished and not yet adapted to API-changes for state-tensor-fields.
 * image processing (deep convolutions etc.) should work.
+* Currently, only plain RNNs are supported, LSTM support forthcoming.
 
 ## Sample
 ### Model
