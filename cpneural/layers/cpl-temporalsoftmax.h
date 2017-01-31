@@ -60,25 +60,22 @@ public:
     - dx: Gradient of loss with respect to scores x.
     */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        // threading!: int TT=cp.getPar("T-Steps",0);
-        int TT=T;
-        if (TT==0) TT=T;
-        if (pstates->find("y") == pstates->end()) {
+/*        if (pstates->find("y") == pstates->end()) {
             cerr << "TSM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
-        if (x.cols() != D*TT) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*TT:" << D*TT << endl;
+*/        if (x.cols() != D*T) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in x(cols):" << x.cols() << " D*T:" << D*T << endl;
             MatrixN probs(0,0);
             return probs;
         }
         int N=x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
-        MatrixN xt=MatrixN(N*TT, D);
+        MatrixN xt=MatrixN(N*T, D);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<TT; t++) {
+            for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {
-                    xt(n*TT+t,d)=x(n,t*D+d);
+                    xt(n*T+t,d)=x(n,t*D+d);
                 }
             }
         }
@@ -87,8 +84,8 @@ public:
             MatrixN probs(0,0);
             return probs;
         }
-        if (N*TT != xt.rows()) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(rows):" << xt.rows() << " N*TT:" << N*TT << endl;
+        if (N*T != xt.rows()) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalSoftmax in xt(rows):" << xt.rows() << " N*T:" << N*T << endl;
             MatrixN probs(0,0);
             return probs;
         }
@@ -102,7 +99,7 @@ public:
 */
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
-        if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+        //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
 
         VectorN mxc = xt.rowwise().maxCoeff();
         MatrixN xn = xt;
@@ -141,11 +138,11 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "probs", new MatrixN(probs));
 
         // probst: [(N * T), D] -> [N, (T * D)]
-        MatrixN probst=MatrixN(N,TT*D);
+        MatrixN probst=MatrixN(N,T*D);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<TT; t++) {
+            for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {
-                    probst(n,t*D+d)=probs(n*TT+t,d);
+                    probst(n,t*D+d)=probs(n*T+t,d);
                 }
             }
         }
@@ -193,6 +190,7 @@ public:
         }
         */
         //if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+
         floatN loss=0.0;
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {
