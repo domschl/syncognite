@@ -334,11 +334,12 @@ int doTests() {
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     t_cppl lbstates;
     lbstates["y"]=&yml;
+    /* This is just a pain: slow.
     if (!lb.selfTest(xml, &lbstates, h, eps)) {
         allOk=false;
         cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-
+    */
     cerr << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
@@ -485,6 +486,34 @@ int doTests() {
         allOk=false;
     }
 
+    if (checkLSTMStepForward()) {
+        cerr << green << " LSTMForwardStep with test data: OK." << def << endl;
+    } else {
+        cerr << red << " LSTMForwardStep with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+/*
+    if (checkLSTMStepBackward()) {
+        cerr << green << " LSTMBackwardStep with test data: OK." << def << endl;
+    } else {
+        cerr << red << " LSTMBackwardStep with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkLSTMForward()) {
+        cerr << green << " LSTMForward with test data: OK." << def << endl;
+    } else {
+        cerr << red << " LSTMForward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+
+    if (checkLSTMBackward()) {
+        cerr << green << " LSTMBackward with test data: OK." << def << endl;
+    } else {
+        cerr << red << " LSTMBackward with test data: ERROR." << def << endl;
+        allOk=false;
+    }
+*/
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
     } else {

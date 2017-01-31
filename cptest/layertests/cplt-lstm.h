@@ -68,18 +68,26 @@ bool checkLSTMStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          0.66382255,  0.76674007,  0.87195994,  0.97902709,  1.08751345,
          0.74192008,  0.90592151,  1.07717006,  1.25120233,  1.42395676;
 
-    LSTM lstm("{name='testlstm';inputShape=[10,1;H=4;N=3}");
-    *(lstm.params["Wxh")= Wxh;
-    *(lstm.params["Whh")= Whh;
-    *(lstm.params["bh")=bh;
+    LSTM lstm("{name='testlstm';inputShape=[4,1];H=5;N=3}");
+    *(lstm.params["Wxh"])= Wxh;
+    *(lstm.params["Whh"])= Whh;
+    *(lstm.params["bh"])=bh;
     t_cppl cache;
     t_cppl states;
     cppl_set(&states,"testlstm-h",new MatrixN(h));
     cppl_set(&states,"testlstm-c",new MatrixN(c));
-    MatrixN hn0=lstm.forward_step(x, &cache, &states, 0);
+    t_cppl cp=lstm.forward_step(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
-    return matComp(hn,hn0,"LSTMForwardStep",eps);
+    bool allOk=true;
+    if (!matComp(hn,*(cp["testlstm-h0"]),"LSTMForwardStep",eps)) {
+        allOk = false;
+    }
+    if (!matComp(cn,*(cp["testlstm-c0"]),"LSTMForwardStep",eps)) {
+        allOk = false;
+    }
+    cppl_delete(&cp);
+    return allOk;
 }
 /*
 bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
