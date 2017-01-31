@@ -2,7 +2,7 @@
 ## Requirements
 Check the [main page](../../..) for build requirements.
 ## Build
-After configuration of CMake, the rnnreader part can be built directly by:
+After configuration of CMake, `rnnreader` can be built directly by:
 ```
 make rnnreader
 ```
