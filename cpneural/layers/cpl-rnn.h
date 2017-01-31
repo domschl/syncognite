@@ -12,30 +12,31 @@ private:
     int T,D,H,N;
     float maxClip=0.0;
     bool nohupdate;
+    string hname;
+    string hname0;
     void setup(const CpParams& cx) {
-        layerName="RNN";
+        cp=cx;
+        layerName=cp.getPar("name",(string)"RNN");
+        hname=layerName+"-h";
+        hname0=layerName+"-h0";
+
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL | LayerType::LT_EXTERNALSTATE;
-        cp=cx;
         vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
         H=cp.getPar("H",1024);
-        // T=cp.getPar("T",3);
         N=cp.getPar("N",1);
         XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
         initfactor=cp.getPar("initfactor",(floatN)1.0);
         maxClip=cp.getPar("clip",(float)0.0);
         nohupdate=cp.getPar("nohupdate",(bool)false);  // true for auto-diff tests
-        // D=inputShapeFlat;
         D=inputShape[0];
         T=inputShape[1];
-        //outputShape={T*H};
         outputShape={H,T};
 
-        // cppl_set(&params, "h0", new MatrixN(N,H));
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,H),inittype,initfactor)));
@@ -57,13 +58,12 @@ public:
     virtual void genZeroStates(t_cppl* pstates, int N) override {
         MatrixN *ph= new MatrixN(N,H);
         ph->setZero();
-        cppl_set(pstates, "h", ph);
+        cppl_set(pstates, hname, ph);
     }
 
     virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         int N=shape(x)[0];
-        MatrixN hprev = *(*pstates)["h"];
-        //cerr << shape(h) << shape(*params["Whh"]) << shape(x) << shape(*params["Wxh"]) << endl;
+        MatrixN hprev = *(*pstates)[hname];
         MatrixN hnext = ((hprev * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
         if (pcache != nullptr) {
             (*pcache)["x"] = new MatrixN(x);
@@ -72,6 +72,7 @@ public:
         }
         return hnext;
     }
+
     MatrixN tensorchunk(const MatrixN& x, vector<int>dims, int b) {
         int A=dims[0];
         int C=dims[2];
@@ -94,6 +95,7 @@ public:
             }
         }
     }
+
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (x.cols() != D*T) {
             cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
@@ -102,18 +104,17 @@ public:
         }
         int N=shape(x)[0];
 
-        if (pstates->find("h")==pstates->end()) {
-            // XXX: Assume auto-setting to zerostate, if h is missing.
-            genZeroStates(pstates, N);
+        if (pstates->find(hname)==pstates->end()) {
+            genZeroStates(pstates, N);  // If states[hname] is not defined, initialize to zero!
         }
 
-        MatrixN ht=*(*pstates)["h"];
+        MatrixN ht=*(*pstates)[hname];
 
         MatrixN hn(N,T*H);
         for (int t=0; t<T; t++) {
             t_cppl cache{};
             t_cppl states{};
-            states["h"]=&ht;
+            states[hname]=&ht;
             MatrixN xi=tensorchunk(x,{N,T,D},t);
             ht = forward_step(xi,&cache,&states, id);
             tensorchunkinsert(&hn, ht, {N,T,H}, t);
@@ -122,12 +123,13 @@ public:
                 mlPush(name,&cache,pcache);
             } else cppl_delete(&cache);
         }
-        cppl_update(pstates,"h",&ht);  // XXX: check that h is reset, if forward called twice!
+        cppl_update(pstates,hname,&ht);
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent RNN-forward result: " << shape(hn) << endl;
         }
         return hn;
     }
+
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
         if (pcache->find("x") == pcache->end()) {
             cerr << "cache does not contain x -> fatal!" << endl;
@@ -154,7 +156,7 @@ public:
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)["h0"] = new MatrixN(dh);
+        (*pgrads)[hname0] = new MatrixN(dh);
 
         if (maxClip != 0.0) {
             for (int i=0; i<dx.size(); i++) {
@@ -173,14 +175,15 @@ public:
                 if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
                 if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
             }
-            for (int i=0; i<(*(*pgrads)["h0"]).size(); i++) {
-                if ((*(*pgrads)["h0"])(i) < -1.0 * maxClip) (*(*pgrads)["h0"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["h0"])(i) > maxClip) (*(*pgrads)["h0"])(i)=maxClip;
+            for (int i=0; i<(*(*pgrads)[hname0]).size(); i++) {
+                if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
+                if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
             }
         }
 
         return dx;
     }
+
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN dWxh,dWhh,dbh;
         string name;
@@ -191,18 +194,17 @@ public:
         for (int t=T-1; t>=0; t--) {
             t_cppl cache{};
             t_cppl grads{};
-            t_cppl states{}; // XXX: INIT!
+            t_cppl states{};
             if (t==T-1) {
                 dhi=tensorchunk(dchain,{N,T,H},t);
             } else {
                 dhi=tensorchunk(dchain,{N,T,H},t) + dphi;
             }
-            // dci <- dchain
             name="t"+std::to_string(t);
             mlPop(name,pcache,&cache);
             dxi=backward_step(dhi,&cache,&states, &grads,id);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
-            dphi=*grads["h0"];
+            dphi=*grads[hname0];
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];
@@ -213,13 +215,11 @@ public:
                 dbh+=*grads["bh"];
             }
             cppl_delete(&grads);
-            //cppl_delete(&cache); // XXX uuuhhh
         }
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)["h0"] = new MatrixN(dphi);
-        // cppl_remove(pcache, "x"); // XXX last cleanup.
+        (*pgrads)[hname0] = new MatrixN(dphi);
         return dx;
     }
 };

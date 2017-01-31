@@ -16,8 +16,6 @@ class Text {
 private:
     bool isinit=false;
     bool readDataFile(string inputfile) {
-        // XXX: srand should be something more centrally chosen.
-        std::srand(std::time(0));
         std::wifstream txtfile(inputfile, std::ios::binary);
         if (!txtfile.is_open()) {
             return false;
@@ -136,16 +134,18 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=Xr.block(n1+dn,0,dn,T);
     MatrixN yt=yr.block(n1+dn,0,dn,T);
 
+    std::srand(std::time(0));
+
     cpInitCompute("Rnnreader");
     registerLayers();
 
     LayerBlock lb("{name='rnnreader';init='normal'}");
     int VS=txt.vocsize();
     int H=256;
-    //int D=64;
     int BS=64;
     float clip=5.0;
 
+    //int D=64;
     // CpParams cp0;
     // cp0.setPar("inputShape",vector<int>{T});
     // cp0.setPar("V",VS);
@@ -164,8 +164,6 @@ int main(int argc, char *argv[]) {
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
     cp1.setPar("clip",clip);
-    // cp1.setPar("initfactor","0.01");
-    // lb.addLayer("RNN","rnn1",cp1,{"WE0"});
     lb.addLayer("RNN","rnn1",cp1,{"OH0"});
 
     CpParams cp2;
@@ -198,13 +196,8 @@ int main(int argc, char *argv[]) {
         cerr << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
 
-/*    wstring chunk;
-    chunk = txt.text.substr(512,128);
-    wcout << chunk << endl;
-*/
-    // preseverstates not necessary for training!
+    // preseverstates no longer necessary for training!
     CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
-    // CpParams cpo("{verbose=false;epsilon=1e-8}");
     cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
@@ -217,7 +210,6 @@ int main(int argc, char *argv[]) {
     for (int i=0; i<10000; i++) {
 
         cpo.setPar("startepoch", (floatN)sep);
-        //cpo.setPar("maxthreads", (int)1);  // XXX: can be increased now!
         t_cppl states;
         t_cppl statesv;
         states["y"] = new MatrixN(y);
@@ -232,14 +224,7 @@ int main(int argc, char *argv[]) {
         wstring instr=txt.text.substr(pos,T);
 
         MatrixN xg(1,T);
-        wcout << L"input: ";
-        for (int t=0; t<T; t++) {
-            xg(0,t) = X(0,t);
-            wcout  << txt.v2w[xg(0,t)];
-        }
-        wcout << endl;
         wstring sout{};
-
         Layer* prnn=lb.layerMap["rnn1"];
         t_cppl statesg{};
         prnn->genZeroStates(&statesg, 1);

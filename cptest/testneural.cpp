@@ -265,9 +265,9 @@ int doTests() {
     MatrixN h0(rnnN,6);
     xrnn.setRandom();
     h0.setRandom();
-    rnstates["h"] = &h0;
+    rnstates["rnn-h"] = &h0;
     //                    D,T
-    RNN rnn("{inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
+    RNN rnn("{name='rnn';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
     if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
         allOk=false;
     }

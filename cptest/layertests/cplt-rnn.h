@@ -39,13 +39,13 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         0.05454545,  0.11818182,  0.18181818,  0.24545455,
         0.30909091,  0.37272727,  0.43636364,  0.5;
 
-    RNN rnn("{inputShape=[10,1];H=4;N=3}");
+    RNN rnn("{name='testrnn';inputShape=[10,1];H=4;N=3}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
     t_cppl cache;
     t_cppl states;
-    cppl_set(&states,"h",new MatrixN(h));
+    cppl_set(&states,"testrnn-h",new MatrixN(h));
     MatrixN hn0=rnn.forward_step(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
@@ -146,14 +146,14 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.47915608,
          1.30290015, -0.72761588, -0.17990189,  1.2176583 , -0.42103704,
          0.61638331;
-    RNN rnn("{inputShape=[5,1];H=6;N=4}");
+    RNN rnn("{name='test2rnn';inputShape=[5,1];H=6;N=4}");
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
-    cppl_set(&states,"h",new MatrixN(h0));
+    cppl_set(&states,"test2rnn-h",new MatrixN(h0));
     MatrixN y=rnn.forward_step(x, &cache, &states);
     MatrixN dx0=rnn.backward_step(dchain, &cache, &states, &grads);
     bool allOk=true;
@@ -165,7 +165,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNStepBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["h0"]),"RNNStepBackward h0",eps);
+    ret=matComp(dh0,*(grads["test2rnn-h0"]),"RNNStepBackward h0",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -208,14 +208,14 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
          -0.51014825, -0.30524429, -0.06755202,  0.17806392,  0.40333043;
 
 //                        D,T
-    RNN rnn("{inputShape=[4,3];H=5;N=2}");
+    RNN rnn("{name='rnn3';inputShape=[4,3];H=5;N=2}");
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
     //*(rnn.params)["ho"]=h0;
     t_cppl cache;
     t_cppl states;
-    states["h"] = new MatrixN(h0);
+    states["rnn3-h"] = new MatrixN(h0);
     MatrixN hn0=rnn.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
@@ -322,7 +322,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
          -1.37433812,  0.19777929, -0.91821752, -0.54890713, -0.72215917,
          -1.38988503, -0.43959209, -0.33943549,  1.15280127, -0.06320341;
 //                        D,T
-    RNN rnn("{inputShape=[3,10];H=5;N=2}");   //inputShape=D, hidden=H
+    RNN rnn("{name='rnn4';inputShape=[3,10];H=5;N=2}");   //inputShape=D, hidden=H
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -331,9 +331,9 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl cache;
     t_cppl states;
     t_cppl grads;
-    states["h"] = new MatrixN(h0);
+    states["rnn4-h"] = new MatrixN(h0);
     MatrixN y=rnn.forward(x, &cache, &states);
-    cppl_update(&states, "h", &h0);
+    cppl_update(&states, "rnn4-h", &h0);
     MatrixN dx0=rnn.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"RNNBackward dx",eps);
@@ -344,7 +344,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     if (!ret) allOk=false;
     ret=matComp(dbh,*(grads["bh"]),"RNNBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["h0"]),"RNNBackward h0",eps); // XXX: Uhhh!
+    ret=matComp(dh0,*(grads["rnn4-h0"]),"RNNBackward h0",eps); // XXX: Uhhh!
     if (!ret) allOk=false;
 
     cppl_delete(&cache);

@@ -137,6 +137,7 @@ public:
             cpl.setPar("inputShape",inputShape);
         }
 
+        cpl.setPar("name",name);
         cpl.setPar("init",cpl.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
         cpl.setPar("initfactor",cpl.getPar("initfactor", initfactor));
 
