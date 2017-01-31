@@ -89,7 +89,7 @@ int randomChoice(vector<T> data, vector<T> probabilities) {
         if (accProbs[i] > dice) return i;
     }
     cerr << "Your probablity distribution wasn't a probablity (sum dist !=1): " << cumul << endl;
-    cerr << probabilities << endl;
+    //cerr << probabilities << endl;
     return data.size()-1;
 }
 

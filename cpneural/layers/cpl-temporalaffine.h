@@ -65,37 +65,34 @@ public:
     """
     */
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
-        int TT=T;
-        // not thread-safe:  int TT=cp.getPar("T-Steps",0);
-        if (TT==0) TT=T;
-
-        if (x.cols() != TT*D) {
-            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x*W: x(cols):" << x.cols() << " TT*D:" << TT*D << endl;
+        if (x.cols() != T*D) {
+            cerr << layerName << ": " << "Forward: dimension mismatch TemporalAFfine in x*W: x(cols):" << x.cols() << " T*D:" << T*D << endl;
             MatrixN y(0,0);
             return y;
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         int N=x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
-        MatrixN xt(N*TT, D);
+        MatrixN xt(N*T, D);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<TT; t++) {
+            for (int t=0; t<T; t++) {
                 for (int d=0; d<D; d++) {
-                    xt(n*TT+t,d)=x(n,t*D+d);
+                    xt(n*T+t,d)=x(n,t*D+d);
                 }
             }
         }
         if (pcache!=nullptr) cppl_set(pcache, "xt", new MatrixN(xt));
         MatrixN yt=(xt * (*params["W"])).rowwise() + RowVectorN(*params["b"]);
-        // cerr << "N:" << N << ", y:" << shape(y) << endl;
-        MatrixN y(N,TT*M);
+
+        MatrixN y(N,T*M);
         for (int n=0; n<N; n++) {
-            for (int t=0; t<TT; t++) {
+            for (int t=0; t<T; t++) {
                 for (int m=0; m<M; m++) {
-                    y(n,t*M+m)=yt(n*TT+t,m);
+                    y(n,t*M+m)=yt(n*T+t,m);
                 }
             }
         }
+
         return y;
     }
     /*

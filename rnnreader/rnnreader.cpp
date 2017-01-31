@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=20;
+    int T=64;
     int N=txt.text.size() / (T+1);
 
     MatrixN Xr(N,T);
@@ -104,16 +104,10 @@ int main(int argc, char *argv[]) {
 
     wstring chunk,chunky;
     int n=0;
-    int isf=10;
     for (int i=0; i<N; i++) {
         wstring smp = txt.sample(T+1);
         chunk=smp.substr(0,T);
         chunky=smp.substr(1,T);
-        if (isf>0) {
-            --isf;
-            wcout << "1:" << chunk << endl;
-            wcout << "y:" << chunky << endl;
-        }
         for (int t=0; t<T; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
@@ -145,35 +139,41 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal';initfactor=0.5}");
+    LayerBlock lb("{name='rnnreader';init='normal'}");
     int VS=txt.vocsize();
-    int H=48;
-    int D=16;
-    int BS=32;
+    int H=256;
+    //int D=64;
+    int BS=64;
     float clip=5.0;
+
+    // CpParams cp0;
+    // cp0.setPar("inputShape",vector<int>{T});
+    // cp0.setPar("V",VS);
+    // cp0.setPar("D",D);
+    // cp0.setPar("clip",clip);
+    // cp0.setPar("init",(string)"orthonormal");
+    // lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
     cp0.setPar("V",VS);
-    cp0.setPar("D",D);
-    cp0.setPar("clip",clip);
-    cp0.setPar("init",(string)"orthonormal");
-    lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
+    lb.addLayer("OneHot","OH0",cp0,{"input"});
 
     CpParams cp1;
-    cp1.setPar("inputShape",vector<int>{D,T});
+    cp1.setPar("inputShape",vector<int>{VS,T});
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
     cp1.setPar("clip",clip);
-    cp1.setPar("initfactor","0.01");
-    lb.addLayer("RNN","rnn1",cp1,{"WE0"});
+    // cp1.setPar("initfactor","0.01");
+    // lb.addLayer("RNN","rnn1",cp1,{"WE0"});
+    lb.addLayer("RNN","rnn1",cp1,{"OH0"});
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-//    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
@@ -184,10 +184,8 @@ int main(int argc, char *argv[]) {
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
-    //cp10.setPar("T",T);
-    //cp10.setPar("D",H);
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn1"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn2"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -211,7 +209,7 @@ int main(int argc, char *argv[]) {
     cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
-    floatN dep=20.0;
+    floatN dep=1.0;
     floatN sep=0.0;
     cpo.setPar("epochs",(floatN)dep);
     cpo.setPar("batch_size",BS);
@@ -234,89 +232,52 @@ int main(int argc, char *argv[]) {
         wstring instr=txt.text.substr(pos,T);
 
         MatrixN xg(1,T);
+        wcout << L"input: ";
         for (int t=0; t<T; t++) {
-            xg(0,t) = txt.w2v[' '];
+            xg(0,t) = X(0,t);
+            wcout  << txt.v2w[xg(0,t)];
         }
+        wcout << endl;
+        wstring sout{};
 
         Layer* prnn=lb.layerMap["rnn1"];
-        t_cppl states;
-        prnn->getZeroStates(&states, 1);
+        t_cppl statesg{};
+        prnn->genZeroStates(&statesg, 1);
 
         for (int g=0; g<200; g++) {
             t_cppl cache{};
 
-            MatrixN probst=lb.forward(xg,&cache, &states);
-            MatrixN probsd=MatrixN(N*TT,VS);
-            for (int n=0; n<1; n++) {
-                for (int t=0; t<TT; t++) {
-                    for (int d=0; d<VS; d++) {
-                        probsd(n*TT+t,d)=probst(n,t*VS+d);
-                    }
+            MatrixN probst=lb.forward(xg,&cache, &statesg);
+            MatrixN probsd=MatrixN(T,VS);
+            for (int t=0; t<T; t++) {
+                for (int v=0; v<VS; v++) {
+                    probsd(t,v)=probst(0,t*VS+v);
                 }
             }
-
-            for (int t=0; t<TT; t++) {
+            int li=-1;
+            for (int t=0; t<T; t++) {
                 vector<floatN> probs(VS);
                 vector<floatN> index(VS);
-                for (int d=0; d<VS; d++) {
-                    probs[d]=probsd(0*TT+t,d);
-                    index[d]=d;
+                for (int v=0; v<VS; v++) {
+                    probs[v]=probsd(t,v);
+                    index[v]=v;
                 }
-                int ind=(int)index[randomChoice(index, probs)];
-*//*                    float mx=-1000.0;
-                int ind=-1;
-                for (int d=0; d<VS; d++) {
-                    floatN p=yg(0,t*D+d);
-                    floatN pr=p*((floatN)(rand()%100)/5000.0+0.98);
-                    if (pr>mx) {
-                        mx=pr; // yg(0,t*D+d);
-                        ind=d;
-                    }
-                }
-*//*
-                    wchar_t cw=txt.v2w[ind];
-                    //if (t==0) wcout << L"[" << cw << L"<";
-                    //wcout << L"<" << cw << L">";
-                    if (t==0) wcout << cw;  //  << L"(" << ind << L")";
-                    // if (ind==0) cerr << "probs: " << probs << endl;
-                    xg2(0,t)=ind;
-                }
-                //wcout << L"<" << endl;
+                li=(int)index[randomChoice(index, probs)];
 
-                //for (int t=T-1; t>0; t--) xg(0,t)=xg(0,t-1);
-                //for (int t=0; t< T-1; t++) xg(0,t)=xg(0,t+1);
-                xg(0,0)=xg2(0,0);
-
-                rnn1_ho=*(cache["rnn1-ho"]);
-                //rnn2_ho=*(cache["rnn2-ho"]);
-                //rnn3_ho=*(cache["rnn3-ho"]);
-                //xg=xg2;
-                cppl_delete(&cache);
-                cppl_delete(&states);
+                wchar_t cw=txt.v2w[li];
+                //wcout << cw;
             }
-            //cache.clear();
-            wcout << endl;
+            //wcout <<  endl;
+            cppl_delete(&cache);
+
+            for (int t=0; t<T-1; t++) {
+                xg(0,t)=xg(0,t+1);
+            }
+            xg(0,T-1)=li;
+            sout += txt.v2w[li];
         }
-        cerr << "setting eliminated T-Steps param" << endl;
-        lb.cp.setPar("T-Steps",T);
-
-
-*/
+        wcout << "output: " << sout << endl;
+        cppl_delete(&statesg);
     }
-    /*
-    floatN train_err, val_err, test_err;
-    bool evalFinal=true;
-    if (evalFinal) {
-        train_err=lb.test(X, y, cpo.getPar("batch_size", 50));
-        val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
-        test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
-
-        cerr << "Final results on RnnReader after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
-        cerr << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
-        cerr << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
-        cerr << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
-    }
-    //return cAcc;
-    */
     cpExitCompute();
 }

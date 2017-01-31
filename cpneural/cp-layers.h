@@ -19,6 +19,7 @@
 #include "layers/cpl-temporalaffine.h"
 #include "layers/cpl-temporalsoftmax.h"
 #include "layers/cpl-nonlinearity.h"
+#include "layers/cpl-onehot.h"
 
 
 void registerLayers() {
@@ -38,6 +39,7 @@ void registerLayers() {
     REGISTER_LAYER("Softmax", Softmax, 1)
     REGISTER_LAYER("Svm", Svm, 1)
     REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
+    REGISTER_LAYER("OneHot", OneHot, 1)
 }
 
 
@@ -240,10 +242,12 @@ public:
         Timer t;
         trainMode = cp.getPar("train", false);
         // if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
+        /*
         if (pstates->find("y") == pstates->end()) {
             cerr << "blockForward: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
+        */
         // if (pcache!=nullptr) cppl_update(pcache, "y", new MatrixN(y));
         while (!done) {
             nLay=getLayerFromInput(cLay);
@@ -253,6 +257,12 @@ public:
             }
             string name=nLay[0];
             Layer *p = layerMap[name];
+            /*
+            if (pstates->find("y") == pstates->end()) {
+                if (p->layerType & LayerType::LT_LOSS) done=true;
+                continue; // Don't try loss, if
+            }
+            */
             // not thread-safe!: p->cp.setPar("T-Steps",cp.getPar("T-Steps",0));
             t_cppl cache;
             //cache.clear();

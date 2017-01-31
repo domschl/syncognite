@@ -123,6 +123,9 @@ public:
             } else cppl_delete(&cache);
         }
         cppl_update(pstates,"h",&ht);  // XXX: check that h is reset, if forward called twice!
+        if (hn.cols() != (T*H)) {
+            cerr << "Inconsistent RNN-forward result: " << shape(hn) << endl;
+        }
         return hn;
     }
     virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
