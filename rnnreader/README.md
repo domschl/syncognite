@@ -14,3 +14,6 @@ From build directory:
 ```
 rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
 ```
+
+## References
+* [tensor-poet](https://github.com/domschl/tensor-poet) is an implementation of the same basic idea using Tensorflow.
