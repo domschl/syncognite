@@ -104,10 +104,16 @@ int main(int argc, char *argv[]) {
 
     wstring chunk,chunky;
     int n=0;
+    int isf=10;
     for (int i=0; i<N; i++) {
         wstring smp = txt.sample(T+1);
         chunk=smp.substr(0,T);
         chunky=smp.substr(1,T);
+        if (isf>0) {
+            --isf;
+            wcout << "1:" << chunk << endl;
+            wcout << "y:" << chunky << endl;
+        }
         for (int t=0; t<T; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
@@ -210,9 +216,6 @@ int main(int argc, char *argv[]) {
     cpo.setPar("epochs",(floatN)dep);
     cpo.setPar("batch_size",BS);
 
-    MatrixN xg(1,1);
-    MatrixN xg2(1,1);
-    wstring sg;
     for (int i=0; i<10000; i++) {
 
         cpo.setPar("startepoch", (floatN)sep);
@@ -226,80 +229,50 @@ int main(int argc, char *argv[]) {
         cppl_delete(&statesv);
 
         sep+=dep;
-/*
+
         int pos=rand() % 1000 + 5000;
         wstring instr=txt.text.substr(pos,T);
 
-        xg(0,0)='A'+rand()%20;
+        MatrixN xg(1,T);
+        for (int t=0; t<T; t++) {
+            xg(0,t) = txt.w2v[' '];
+        }
 
-        //xg(0,0)=txt.w2v[sg[0]];
-        // lb.cp.setPar("T-Steps",1);
-*//*        Layer *prnn;
-        prnn=lb.layerMap["WE0"];
-        // prnn->cp.setPar("T-Steps",1);
-        prnn=lb.layerMap["rnn1"];
-        // prnn->cp.setPar("T-Steps",1);
-        prnn=lb.layerMap["rnn2"];
-        // prnn->cp.setPar("T-Steps",1);
-        prnn=lb.layerMap["rnn3"];
-        // prnn->cp.setPar("T-Steps",1);
-        prnn=lb.layerMap["af1"];
-        // prnn->cp.setPar("T-Steps",1);
-        prnn=lb.layerMap["sm1"];
-        // prnn->cp.setPar("T-Steps",1);
-*//*
-        int TT=1;
-        for (int rep=0; rep<3; rep++) {
-            MatrixN rnn1_ho = MatrixN(1,TT);
-            rnn1_ho.setZero();
-            MatrixN rnn2_ho = MatrixN(1,TT);
-            rnn2_ho.setZero();
-            MatrixN rnn3_ho = MatrixN(1,TT);
-            rnn3_ho.setZero();
-            /*cppl_set(&cache,"rnn2-ho",new MatrixN(1,TT));
-            cache["rnn2-ho"]->setZero();
-            cppl_set(&cache,"rnn3-ho",new MatrixN(1,TT));
-            cache["rnn3-ho"]->setZero();*/
-        /*    cerr << "------------" << rep << "--------------------------" << endl;
-            for (int g=0; g<200; g++) {
-                t_cppl cache{};
-                t_cppl states{};
-                //wcout << g << L">";
-                MatrixN z(0,0);
-                cppl_set(&states,"rnn1-hoi",new MatrixN(rnn1_ho));
-                //cppl_set(&cache,"rnn2-hoi",new MatrixN(rnn2_ho));
-                //cppl_set(&cache,"rnn3-hoi",new MatrixN(rnn3_ho));
+        Layer* prnn=lb.layerMap["rnn1"];
+        t_cppl states;
+        prnn->getZeroStates(&states, 1);
 
-                //for (int i; i<xg.cols(); i++) wcout << txt.v2w[xg(0,i)];
-                //wcout << L"<" << endl << L">";
-                MatrixN probst=lb.forward(xg,&cache, &states); //&cach  e);
-                MatrixN probsd=MatrixN(N*TT,VS);
-                for (int n=0; n<1; n++) {
-                    for (int t=0; t<TT; t++) {
-                        for (int d=0; d<VS; d++) {
-                            probsd(n*TT+t,d)=probst(n,t*VS+d);
-                        }
+        for (int g=0; g<200; g++) {
+            t_cppl cache{};
+
+            MatrixN probst=lb.forward(xg,&cache, &states);
+            MatrixN probsd=MatrixN(N*TT,VS);
+            for (int n=0; n<1; n++) {
+                for (int t=0; t<TT; t++) {
+                    for (int d=0; d<VS; d++) {
+                        probsd(n*TT+t,d)=probst(n,t*VS+d);
                     }
                 }
+            }
 
-                for (int t=0; t<TT; t++) {
-                    vector<floatN> probs(VS);
-                    vector<floatN> index(VS);
-                    for (int d=0; d<VS; d++) {
-                        probs[d]=probsd(0*TT+t,d);
-                        index[d]=d;
-                    }
-                    int ind=(int)index[randomChoice(index, probs)];
+            for (int t=0; t<TT; t++) {
+                vector<floatN> probs(VS);
+                vector<floatN> index(VS);
+                for (int d=0; d<VS; d++) {
+                    probs[d]=probsd(0*TT+t,d);
+                    index[d]=d;
+                }
+                int ind=(int)index[randomChoice(index, probs)];
 *//*                    float mx=-1000.0;
-                    int ind=-1;
-                    for (int d=0; d<VS; d++) {
-                        floatN p=yg(0,t*D+d);
-                        floatN pr=p*((floatN)(rand()%100)/5000.0+0.98);
-                        if (pr>mx) {
-                            mx=pr; // yg(0,t*D+d);
-                            ind=d;
-                        }
+                int ind=-1;
+                for (int d=0; d<VS; d++) {
+                    floatN p=yg(0,t*D+d);
+                    floatN pr=p*((floatN)(rand()%100)/5000.0+0.98);
+                    if (pr>mx) {
+                        mx=pr; // yg(0,t*D+d);
+                        ind=d;
                     }
+                }
 *//*
                     wchar_t cw=txt.v2w[ind];
                     //if (t==0) wcout << L"[" << cw << L"<";
@@ -327,18 +300,7 @@ int main(int argc, char *argv[]) {
         cerr << "setting eliminated T-Steps param" << endl;
         lb.cp.setPar("T-Steps",T);
 
-        prnn=lb.layerMap["WE0"];
-        // prnn->cp.setPar("T-Steps",T);
-        prnn=lb.layerMap["rnn1"];
-        // kprnn->cp.setPar("T-Steps",T);
-        prnn=lb.layerMap["rnn2"];
-        // prnn->cp.setPar("T-Steps",T);
-        prnn=lb.layerMap["rnn3"];
-        // prnn->cp.setPar("T-Steps",T);
-        prnn=lb.layerMap["af1"];
-        // prnn->cp.setPar("T-Steps",T);
-        prnn=lb.layerMap["sm1"];
-        // prnn->cp.setPar("T-Steps",T);
+
 */
     }
     /*
