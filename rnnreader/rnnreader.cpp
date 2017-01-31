@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=64;
+    int T=32;
     int N=txt.text.size() / (T+1);
 
     MatrixN Xr(N,T);
@@ -147,9 +147,9 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='normal'}");
     int VS=txt.vocsize();
-    int H=128;
+    int H=32;
     //int D=64;
-    int BS=72;
+    int BS=256;
     float clip=5.0;
 
     // CpParams cp0;
@@ -239,11 +239,14 @@ int main(int argc, char *argv[]) {
 
         MatrixN xg(1,T);
         for (int t=0; t<T; t++) {
-            xg(0,t) = txt.w2v[' '];
+            xg(0,t) = X(0,t);
+            wcout << L"input: " << txt.v2w[xg(0,t)];
         }
+        wcout << endl;
+        wstring sout{};
 
         Layer* prnn=lb.layerMap["rnn1"];
-        t_cppl statesg;
+        t_cppl statesg{};
         prnn->genZeroStates(&statesg, 1);
 
         for (int g=0; g<200; g++) {
@@ -256,6 +259,7 @@ int main(int argc, char *argv[]) {
                     probsd(t,v)=probst(1,t*VS+v);
                 }
             }
+            int li=-1;
             for (int t=0; t<T; t++) {
                 vector<floatN> probs(VS);
                 vector<floatN> index(VS);
@@ -263,15 +267,22 @@ int main(int argc, char *argv[]) {
                     probs[v]=probsd(t,v);
                     index[v]=v;
                 }
-                int ind=(int)index[randomChoice(index, probs)];
+                li=(int)index[randomChoice(index, probs)];
 
-                wchar_t cw=txt.v2w[ind];
+                wchar_t cw=txt.v2w[li];
                 wcout << cw;
             }
             wcout <<  endl;
             cppl_delete(&cache);
-            cppl_delete(&statesg);
+
+            for (int t=0; t<T-1; t++) {
+                xg(0,t)=xg(0,t+1);
+            }
+            xg(0,T-1)=li;
+            sout += txt.v2w[li];
         }
+        wcout << "output: " << sout << endl;
+        cppl_delete(&statesg);
     }
     cpExitCompute();
 }
