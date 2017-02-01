@@ -154,6 +154,9 @@ int main(int argc, char *argv[]) {
     // cp0.setPar("init",(string)"orthonormal");
     // lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
+    string rnntype="LSTM"; // or "RNN"
+    cerr << "RNN-type: " << rnntype << endl;
+
     CpParams cp0;
     cp0.setPar("inputShape",vector<int>{T});
     cp0.setPar("V",VS);
@@ -164,21 +167,21 @@ int main(int argc, char *argv[]) {
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
     cp1.setPar("clip",clip);
-    lb.addLayer("RNN","rnn1",cp1,{"OH0"});
+    lb.addLayer(rnntype,"rnn1",cp1,{"OH0"});
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
     cp2.setPar("clip",clip);
-    lb.addLayer("RNN","rnn2",cp2,{"rnn1"});
+    lb.addLayer(rnntype,"rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
     cp3.setPar("clip",clip);
-//    lb.addLayer("RNN","rnn3",cp3,{"rnn2"});
+//    lb.addLayer(rnntype,"rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
@@ -198,8 +201,8 @@ int main(int argc, char *argv[]) {
 
     // preseverstates no longer necessary for training!
     CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)4e-3); //2.2e-2);
-    cpo.setPar("lr_decay", (floatN)0.95);
+    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
+    // cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
     floatN dep=1.0;
@@ -229,7 +232,7 @@ int main(int argc, char *argv[]) {
         t_cppl statesg{};
         prnn->genZeroStates(&statesg, 1);
 
-        for (int g=0; g<200; g++) {
+        for (int g=0; g<1000; g++) {
             t_cppl cache{};
 
             MatrixN probst=lb.forward(xg,&cache, &statesg);

@@ -1,4 +1,4 @@
-# RNNs for text generation
+# LSTMs for text generation
 ## Requirements
 Check the [main page](../../..) for build requirements.
 ## Build
