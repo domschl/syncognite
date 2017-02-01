@@ -264,7 +264,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         logfile.open("log.txt", std::ios_base::app);
     } else {
         logfile.open("log.txt");
-        logfile << "# Epoche\tLoss\tAccuracy" << endl;
+        logfile << "# Epoche\tLoss\tMeanloss\tmeanloss2\tAccuracy\tmeanacc" << endl;
     }
     std::flush(logfile);
     vector<unsigned int> ack(x.rows());
@@ -412,7 +412,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     if (e+20.0<dv2) dv2=e+20.0;
                     cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << meanloss << ", " << m2loss << def << "\r";
                     std::flush(cerr);
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << meanloss << "\t" << m2loss << accval << meanacc << endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << "\t" meanloss << "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
                     std::flush(logfile);
                     bold=b;
                 }
