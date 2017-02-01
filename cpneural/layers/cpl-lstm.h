@@ -110,6 +110,7 @@ public:
         if (pcache!=nullptr) cppl_set(pcache,"f",new MatrixN(f));
         if (pcache!=nullptr) cppl_set(pcache,"o",new MatrixN(o));
         if (pcache!=nullptr) cppl_set(pcache,"g",new MatrixN(g));
+        if (pcache!=nullptr) cppl_set(pcache,"x",new MatrixN(x));
         return cp;
     }
 
@@ -170,7 +171,6 @@ public:
         return dx, dprev_h, dprev_c, dWx, dWh, db
     */
     MatrixN backward_step(t_cppl& cp, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
-        MatrixN dx;
         MatrixN hprev = *(*pstates)[hname];
         MatrixN cprev = *(*pstates)[cname];
         MatrixN tnc=*(*pcache)["tnc"];
@@ -179,12 +179,13 @@ public:
         MatrixN f=*(*pcache)["f"];
         MatrixN o=*(*pcache)["o"];
         MatrixN g=*(*pcache)["g"];
+        MatrixN x=*(*pcache)["x"];
         MatrixN dhnext=*cp["dhnext"];
         MatrixN dcnext=*cp["dcnext"];
         MatrixN hnext=o.array() * tnc.array();
 
 
-        MatrixN dfo=tnc.array() * dhnext.array();
+        MatrixN ddo=tnc.array() * dhnext.array();
         MatrixN dtnc=o.array() * dhnext.array();
         dcnext =  dcnext.array() + (tnc.array() * tnc.array() - 1.0) * (-1.0) * dtnc.array();
         // dfpc = dnext_c
@@ -196,58 +197,40 @@ public:
         MatrixN di = g.array() * dcnext.array();
         MatrixN dg = i.array() * dcnext.array();
 
-        /*
-        # g = np.tanh(ps[:,3*H:4*H])
-        dps = np.zeros(ps.shape)
-        dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
-        # o = sigmoid(ps[:,2*H:3*H])
-        dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
-        # f = sigmoid(ps[:,H:2*H])
-        dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
-        # i = sigmoid(ps[:,:H])
-        dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
-        # ps = phh + pshx
-        dphh = dps
-        dpshx = dps
-        # pshx = phx + b
-        dphx = dpshx.T
-        db = np.sum(dpshx, axis=0)
-        # phx = np.dot(x, Wx)
-        dx = np.dot(Wx, dphx).T
-        dWx = np.dot(dphx, x).T
-        # phh = np.dot(prev_h, Wh)
-        dprev_h = np.dot(Wh, dphh.T).T
-        dWh = np.dot(prev_h.T, dphh)
-        */
-        /*
-        if (pcache->find("x") == pcache->end()) {
-            cerr << "cache does not contain x -> fatal!" << endl;
-        }
-        MatrixN x(*(*pcache)["x"]);
-        MatrixN hprev(*(*pcache)["hprev"]);
-        MatrixN hnext(*(*pcache)["hnext"]);
-        MatrixN Wxh(*params["Wxh"]);
-        MatrixN Whh(*params["Whh"]);
-        MatrixN bh(*params["bh"]);
 
-        MatrixN hsq = hnext.array() * hnext.array();
-        MatrixN hone = MatrixN(hnext);
-        hone.setOnes();
+        //# g = np.tanh(ps[:,3*H:4*H])
+        //dps = np.zeros(ps.shape)
+        MatrixN dps(N,4*H);
+        //dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
+        MatrixN dps3 = (g.array() * g.array() - 1.0) * -1.0 * dg.array();
+        // o = sigmoid(ps[:,2*H:3*H])
+        // dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
+        MatrixN dps2 = (o.array() - 1.0) * -1.0 * o.array() * ddo.array();
+        // f = sigmoid(ps[:,H:2*H])
+        //dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
+        MatrixN dps1 = (f.array() -1.0) * -1.0 * f.array() * df.array();
+        //# i = sigmoid(ps[:,:H])
+        //dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
+        MatrixN dps0 = (i.array() - 1.0) * -1.0 * i.array() * di.array();
+        //# ps = phh + pshx
+        dps << dps0, dps1, dps2, dps3;  // stack matrices
+        MatrixN dphh = dps;
+        MatrixN dpshx = dps;
+        // pshx = phx + b
+        MatrixN dphx = dpshx.transpose();
+        MatrixN dbh = dpshx.colwise().sum();  // np.sum(dpshx, axis=0)
+        // phx = np.dot(x, Wx)
+        MatrixN dx = ((*params["Wxh"]) * dphx).transpose(); // np.dot(Wx, dphx).T
+        MatrixN dWxh = (dphx * x).transpose();
+        // phh = np.dot(prev_h, Wh)
+        MatrixN dhprev = ((*params["Wxh"]) * dphh.transpose()).transpose();
+        MatrixN dWhh = hprev.transpose() * dphh;
 
-        MatrixN t1=(hone-hsq).array() * dchain.array();
-        MatrixN t1t=t1.transpose();
-        MatrixN dbh=t1.colwise().sum();
-        MatrixN dx=(Wxh * t1t).transpose();
-        MatrixN dWxh=(t1t * x).transpose();
-        MatrixN dh=(Whh * t1t).transpose();
-        MatrixN dWhh=hprev.transpose() * t1;
-
-        */
-        /*
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)[hname0] = new MatrixN(dh);
+        (*pgrads)[hname0] = new MatrixN(dhprev);
+        (*pgrads)[cname0] = new MatrixN(dcprev);
 
         if (maxClip != 0.0) {
             for (int i=0; i<dx.size(); i++) {
@@ -270,8 +253,12 @@ public:
                 if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
                 if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
             }
+            for (int i=0; i<(*(*pgrads)[cname0]).size(); i++) {
+                if ((*(*pgrads)[cname0])(i) < -1.0 * maxClip) (*(*pgrads)[cname0])(i)=-1.0*maxClip;
+                if ((*(*pgrads)[cname0])(i) > maxClip) (*(*pgrads)[cname0])(i)=maxClip;
+            }
         }
-        */
+
         return dx;
     }
 
