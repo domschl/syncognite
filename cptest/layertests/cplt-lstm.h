@@ -96,7 +96,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
         -0.91729874,  1.2949408 ,  0.30581827, -1.06626142, -0.62425714,
          1.3310974 ,  1.49109516, -0.76034777,  0.81794231,  0.0370213 ,
          0.322284  ,  0.72646747,  0.59337862, -0.28343284,  0.75776449;
-    MatrixN Wxh(5,6);
+    MatrixN Wxh(5,4*6);
     Wxh << -1.48882307, -1.31838349,  0.29240856,  1.5984637 , -0.41510186,
         -1.71671711, -0.1801214 ,  0.25654143,  0.56909888, -0.41358719,
         -0.31663403, -1.10831106,  0.27130638, -1.4604725 , -1.01923905,
@@ -122,7 +122,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.63023023,  0.01281663,  0.48128139,  0.41041066, -1.25534191,
          2.11847347, -0.85888934, -1.57131664, -0.48578273,  0.66289712,
          1.58580844, -0.66301695, -1.24766604, -0.19725642;
-    MatrixN Whh(6,6);
+    MatrixN Whh(6,4*6);
     Whh << -0.11184118,  0.28467745, -2.08985422,  0.53816606,  0.7612456 ,
         -0.83805405, -1.21216907, -0.65090439,  2.19269347,  0.01593174,
          0.0727994 ,  1.45619685, -1.10564151, -0.03384617,  0.36535036,
@@ -153,7 +153,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.81966961, -0.95161632,  0.06503237,  0.4700693 , -0.48969956,
         -0.24870699, -1.41274653, -0.53035546, -0.60677597,  0.65960019,
          0.71232605, -0.12331018,  1.00164754,  0.92160405;
-    MatrixN bh(1,6);
+    MatrixN bh(1,4*6);
     bh <<  0.58725381,  0.80494554,  0.38742995,  0.88945343,  0.47551743,
        -0.51676094, -1.76482654, -1.00933661,  0.59589447, -0.35533488,
        -0.21441281, -0.59934395,  1.13860987,  1.54007768, -0.59275557,
@@ -183,7 +183,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          1.13556945, -0.96059371,  1.05623048, -1.96295061, -0.88835076,
         -0.00875893,  0.05340227, -0.830587  , -0.18716025, -0.10043013,
          0.63109588,  2.2149619 ,  0.12413751,  0.29553936, -0.44483678;
-    MatrixN dWxh(5,6);
+    MatrixN dWxh(5,4*6);
     dWxh << 0.26727149, -0.08133788,  0.33468205,  0.34370674,  0.02945046,
          0.12838739,  0.23631975, -0.21644728, -0.06638742, -0.07176414,
          0.00204075,  0.56841888,  0.00876323, -0.09697867, -0.04626373,
@@ -209,7 +209,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
         -0.1969861 ,  0.31383336, -0.03145996, -0.05356354, -0.23578903,
          0.12253839,  0.02998696,  0.04204235,  0.7225947 , -0.19442127,
          0.34007999,  0.07449499, -0.27895099, -0.02649201;
-    MatrixN dWhh(6,6);
+    MatrixN dWhh(6,4*6);
     dWhh << 0.17028232, -0.02619462, -0.31773944,  0.13106315,  0.06836877,
          0.03733655, -0.31286251,  0.07194272,  0.01753363,  0.04584371,
          0.16493271,  0.21311268, -0.00860544, -0.05292015,  0.21259969,
@@ -240,7 +240,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          0.24134716,  0.37002947, -0.01669678, -0.073027  ,  0.26368092,
          0.00543604,  0.00485413, -0.06444934, -1.56114242, -0.2026134 ,
          0.35652235,  0.07548003, -0.12368503,  0.07074973;
-    MatrixN dbh(1,6);
+    MatrixN dbh(1,4*6);
     dbh << -0.34989363,  0.50395517, -0.06171694, -0.37149871, -0.29869106,
        -0.29500801,  0.34951375,  0.53952778,  0.07959111,  0.05240588,
        -0.22670633, -0.67343199, -0.02816835,  0.16008401, -0.32252122,
@@ -285,26 +285,39 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
          1.60752062, -1.07254902, -0.41718862,  0.12105698, -0.73097875,
         -0.09625871;
 
-    LSTM lstm("{name='test2lstm';inputShape=[5,1;H=6;N=4}");
-    *(lstm.params["Wxh")=Wxh;
-    *(lstm.params["Whh")=Whh;
-    *(lstm.params["bh")=bh;
+    LSTM lstm("{name='test3lstm';inputShape=[5,1];H=6;N=4}");
+    *(lstm.params["Wxh"])=Wxh;
+    *(lstm.params["Whh"])=Whh;
+    *(lstm.params["bh"])=bh;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
-    cppl_set(&states,"test2lstm-h",new MatrixN(h0));
-    MatrixN y=lstm.forward_step(x, &cache, &states);
-    MatrixN dx0=lstm.backward_step(dchain, &cache, &states, &grads);
+    cppl_set(&states,"test3lstm-h",new MatrixN(h0));
+    cppl_set(&states,"test3lstm-c",new MatrixN(c0));
+    t_cppl cp=lstm.forward_step(x, &cache, &states);
+    cppl_delete(&cp);
+    t_cppl cp2;
+    if (!matComp(*states["test3lstm-h"], h0)) {
+        cerr << endl << "h0 got changed by forward!" << endl << endl;
+    }
+    //cppl_update(&states,"test3lstm-h",new MatrixN(h0));
+    //cppl_update(&states,"test3lstm-c",new MatrixN(c0));
+    cppl_set(&cp2,"test3lstm-h",new MatrixN(dhnext));
+    cppl_set(&cp2,"test3lstm-c",new MatrixN(dcnext));
+    MatrixN dx0=lstm.backward_step(cp2, &cache, &states, &grads);
+    cppl_delete(&cp2);
     bool allOk=true;
     bool ret=matComp(dx,dx0,"LSTMStepBackward dx",eps);
     if (!ret) allOk=false;
-    ret=matComp(dWxh,*(grads["Wxh"),"LSTMStepBackward dWxh",eps);
+    ret=matComp(dWxh,*(grads["Wxh"]),"LSTMStepBackward dWxh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dWhh,*(grads["Whh"),"LSTMStepBackward dWhh",eps);
+    ret=matComp(dWhh,*(grads["Whh"]),"LSTMStepBackward dWhh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dbh,*(grads["bh"),"LSTMStepBackward bh",eps);
+    ret=matComp(dbh,*(grads["bh"]),"LSTMStepBackward bh",eps);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["test2lstm-h0"),"LSTMStepBackward h0",eps);
+    ret=matComp(dh0,*(grads["test3lstm-h0"]),"LSTMStepBackward h0",eps);
+    if (!ret) allOk=false;
+    ret=matComp(dc0,*(grads["test3lstm-c0"]),"LSTMStepBackward c0",eps);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);

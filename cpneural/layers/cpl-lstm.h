@@ -106,6 +106,8 @@ public:
         cp[hname0]=new MatrixN(hnext);
         if (pcache!=nullptr) cppl_set(pcache,"tnc",new MatrixN(tnc));
         if (pcache!=nullptr) cppl_set(pcache,"xhx",new MatrixN(xhx));
+        if (pcache!=nullptr) cppl_set(pcache,hname,new MatrixN(hprev));
+        if (pcache!=nullptr) cppl_set(pcache,cname,new MatrixN(cprev));
         if (pcache!=nullptr) cppl_set(pcache,"i",new MatrixN(i));
         if (pcache!=nullptr) cppl_set(pcache,"f",new MatrixN(f));
         if (pcache!=nullptr) cppl_set(pcache,"o",new MatrixN(o));
@@ -171,8 +173,8 @@ public:
         return dx, dprev_h, dprev_c, dWx, dWh, db
     */
     MatrixN backward_step(t_cppl& cp, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
-        MatrixN hprev = *(*pstates)[hname];
-        MatrixN cprev = *(*pstates)[cname];
+        MatrixN hprev = *(*pcache)[hname];
+        MatrixN cprev = *(*pcache)[cname];
         MatrixN tnc=*(*pcache)["tnc"];
         MatrixN xhx=*(*pcache)["xhx"];
         MatrixN i=*(*pcache)["i"];
@@ -180,22 +182,38 @@ public:
         MatrixN o=*(*pcache)["o"];
         MatrixN g=*(*pcache)["g"];
         MatrixN x=*(*pcache)["x"];
-        MatrixN dhnext=*cp["dhnext"];
-        MatrixN dcnext=*cp["dcnext"];
-        MatrixN hnext=o.array() * tnc.array();
+        MatrixN dhnext=*cp[hname]; // dhnext
+        MatrixN dcnext=*cp[cname]; // dcnext
 
+        // # next_h = o * tnc
+        // do = tnc * dnext_h
+        // dtnc = o * dnext_h
 
         MatrixN ddo=tnc.array() * dhnext.array();
         MatrixN dtnc=o.array() * dhnext.array();
-        dcnext =  dcnext.array() + (tnc.array() * tnc.array() - 1.0) * (-1.0) * dtnc.array();
+        // # tnc = np.tanh(next_c)
+        // dnext_c += (1 - tnc * tnc) * dtnc
+        MatrixN dcnexts = dcnext +  ((1.0 - tnc.array() * tnc.array()) * dtnc.array()).matrix();
         // dfpc = dnext_c
         // dig = dnext_c
         // fpc = f * prev_c
-        MatrixN df=cprev.array() * dcnext.array();
+        MatrixN df = cprev.array() * dcnext.array();
+        // dprev_c = f * dfpc
         MatrixN dcprev = f.array() * dcnext.array();
+
+        cerr << "dhnext: " << shape(dhnext) << dhnext << endl;
+        cerr << "o: " << shape(o) << o << endl;
+        cerr << "dtnc: " << shape(dtnc) << dtnc << endl;
+        cerr << "tnc: " << shape(tnc) << tnc << endl;
+        cerr << "dcnext: " << shape(dcnexts) << dcnext << endl;
+        cerr << "dcnext+: " << shape(dcnexts) << dcnexts << endl;
+        cerr << "f: " << shape(f) << f << endl;
+        cerr << "dcprev:" << shape(dcprev) << dcprev << endl;
+
+
         // ig = i * g
-        MatrixN di = g.array() * dcnext.array();
-        MatrixN dg = i.array() * dcnext.array();
+        MatrixN di = g.array() * dcnexts.array();
+        MatrixN dg = i.array() * dcnexts.array();
 
 
         //# g = np.tanh(ps[:,3*H:4*H])

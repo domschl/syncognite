@@ -492,14 +492,14 @@ int doTests() {
         cerr << red << " LSTMForwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkLSTMStepBackward()) {
         cerr << green << " LSTMBackwardStep with test data: OK." << def << endl;
     } else {
         cerr << red << " LSTMBackwardStep with test data: ERROR." << def << endl;
         allOk=false;
     }
-
+/*
     if (checkLSTMForward()) {
         cerr << green << " LSTMForward with test data: OK." << def << endl;
     } else {
