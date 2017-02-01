@@ -205,15 +205,15 @@ public:
         cerr << "o: " << shape(o) << o << endl;
         cerr << "dtnc: " << shape(dtnc) << dtnc << endl;
         cerr << "tnc: " << shape(tnc) << tnc << endl;
-        cerr << "dcnext: " << shape(dcnexts) << dcnext << endl;
-        cerr << "dcnext+: " << shape(dcnexts) << dcnexts << endl;
+        cerr << "dcnext: " << shape(dcnext) << dcnext << endl;
+        cerr << "dcnext+: " << shape(dcnext) << dcnext << endl;
         cerr << "f: " << shape(f) << f << endl;
         cerr << "dcprev:" << shape(dcprev) << dcprev << endl;
 
 
         // ig = i * g
-        MatrixN di = g.array() * dcnexts.array();
-        MatrixN dg = i.array() * dcnexts.array();
+        MatrixN di = g.array() * dcnext.array();
+        MatrixN dg = i.array() * dcnext.array();
 
 
         //# g = np.tanh(ps[:,3*H:4*H])
@@ -241,7 +241,7 @@ public:
         MatrixN dx = ((*params["Wxh"]) * dphx).transpose(); // np.dot(Wx, dphx).T
         MatrixN dWxh = (dphx * x).transpose();
         // phh = np.dot(prev_h, Wh)
-        MatrixN dhprev = ((*params["Wxh"]) * dphh.transpose()).transpose();
+        MatrixN dhprev = ((*params["Whh"]) * dphh.transpose()).transpose();
         MatrixN dWhh = hprev.transpose() * dphh;
 
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
