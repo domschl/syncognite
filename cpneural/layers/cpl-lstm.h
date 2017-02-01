@@ -193,7 +193,7 @@ public:
         MatrixN dtnc=o.array() * dhnext.array();
         // # tnc = np.tanh(next_c)
         // dnext_c += (1 - tnc * tnc) * dtnc
-        MatrixN dcnexts = dcnext +  ((1.0 - tnc.array() * tnc.array()) * dtnc.array()).matrix();
+        dcnext = dcnext +  ((1.0 - tnc.array() * tnc.array()) * dtnc.array()).matrix();
         // dfpc = dnext_c
         // dig = dnext_c
         // fpc = f * prev_c
