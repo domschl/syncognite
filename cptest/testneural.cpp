@@ -348,12 +348,12 @@ int doTests() {
     eps=1e-5; if (eps<CP_DEFAULT_NUM_EPS) eps=CP_DEFAULT_NUM_EPS;
     t_cppl lbstates;
     lbstates["y"]=&yml;
-    /* This is just a pain: slow.
+    // This is just a pain: slow:
     if (!lb.selfTest(xml, &lbstates, h, eps)) {
         allOk=false;
         cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-    */
+    
     cerr << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {

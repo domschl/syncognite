@@ -6,8 +6,6 @@ This library implements some of the assignments from Stanfords's [CS231n](http:/
 
 Current state: **pre-alpha**
 * documentation and pointers to samples incomplete.
-* image processing (deep convolutions etc.) should work.
-* Currently, only plain RNNs are supported, LSTM support forthcoming.
 
 ## Sample
 ### Model
@@ -99,4 +97,3 @@ Subprojects:
 * [mnisttest](cpmnist/) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/).)
 * [cifar10test](cpcifar10/) (cpcifar10 subproject, cifar10 image recognition with a convolutional network, requires [dataset download](datasets/).)
 * [rnnreader](rnnreader/) (rnnreader subproject, text generation via RNNs, similar to char-rnn.)
-
