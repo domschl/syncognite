@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 
     int T=90;
     int N=txt.text.size() / (T+1);
-
+    cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
 
@@ -109,14 +109,17 @@ int main(int argc, char *argv[]) {
         for (int t=0; t<T; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
-            ++n;
         }
+        ++n;
     }
 
     int maxN = 100000;
     if (n>maxN) n=maxN;
     int n1=n*0.9;
     int dn=(n-n1)/2;
+    if (n1+2*dn > n) {
+        cerr << "Math doesn't work out." << endl;
+    }
 
     cerr << n1 << " datasets" << endl;
 
