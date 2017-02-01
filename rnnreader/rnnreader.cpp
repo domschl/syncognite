@@ -227,6 +227,9 @@ int main(int argc, char *argv[]) {
         wstring instr=txt.text.substr(pos,T);
 
         MatrixN xg(1,T);
+        for (int i=0; i<T; i++) {
+            xg(0,i)=txt.w2v[instr[i]];
+        }
         wstring sout{};
         Layer* prnn=lb.layerMap["rnn1"];
         t_cppl statesg{};
