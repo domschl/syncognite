@@ -6,6 +6,7 @@ This library implements some of the assignments from Stanfords's [CS231n](http:/
 
 Current state: **pre-alpha**
 * documentation and pointers to samples incomplete.
+* LSTM testing just beginning.
 
 ## Sample
 ### Model
