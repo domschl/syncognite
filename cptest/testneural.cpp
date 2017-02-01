@@ -506,14 +506,14 @@ int doTests() {
         cerr << red << " LSTMForward with test data: ERROR." << def << endl;
         allOk=false;
     }
-/*
+
     if (checkLSTMBackward()) {
         cerr << green << " LSTMBackward with test data: OK." << def << endl;
     } else {
         cerr << red << " LSTMBackward with test data: ERROR." << def << endl;
         allOk=false;
     }
-*/
+
     if (checkWordEmbeddingForward()) {
         cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
     } else {

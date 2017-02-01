@@ -141,7 +141,13 @@ public:
         MatrixN g=*(*pcache)["g"];
         MatrixN x=*(*pcache)["x"];
         MatrixN dhnext=*cp[hname]; // dhnext
-        MatrixN dcnext=*cp[cname]; // dcnext
+        MatrixN dcnext;
+        if (cp.find(cname)!=cp.end()) {
+            dcnext=*cp[cname]; // dcnext
+        } else {
+            dcnext=*cp[hname]; // zero-fake init
+            dcnext.setZero(); // Seems to be CS231 api-shortcut of backward() not accomodating dc.
+        }
 
         MatrixN ddo=tnc.array() * dhnext.array();
         MatrixN dtnc=o.array() * dhnext.array();
@@ -234,22 +240,7 @@ public:
             return h;
         }
         int N=shape(x)[0];
-/*
-N, T, D = x.shape
-H = h0.shape[1]
 
-cai = []
-h = np.zeros((N, T, H))
-c = np.zeros((N, H))
-ht = h0
-ct = c
-for i in range(T):
-    xi = x[:, i, :]
-    ht, ct, cache_i = lstm_step_forward(xi, ht, ct, Wx, Wh, b)
-    h[:, i, :] = ht
-    cai.append(cache_i)
-cache = (h, c, h0, Wx, Wh, x, cai)
-*/
         if (pstates->find(hname)==pstates->end()) {
             MatrixN *ph= new MatrixN(N,H);
             ph->setZero();
@@ -286,16 +277,16 @@ cache = (h, c, h0, Wx, Wh, x, cai)
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent LSTM-forward result: " << shape(hn) << endl;
         }
-        return hn;  // XXX return a t_cppl with cn too?
+        return hn;  // XXX return a t_cppl with cn too, preserver hn, cn as states?
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN dx(N,T*D);
-        /*
+
         MatrixN dWxh,dWhh,dbh;
         string name;
         int N=shape(dchain)[0];
-        MatrixN dhi,dxi,dphi;
+        MatrixN dhi,dci,dxi,dphi,dpci;
         dx.setZero();
         for (int t=T-1; t>=0; t--) {
             t_cppl cache{};
@@ -303,14 +294,23 @@ cache = (h, c, h0, Wx, Wh, x, cai)
             t_cppl states{};
             if (t==T-1) {
                 dhi=tensorchunk(dchain,{N,T,H},t);
+                dci=dhi; // That should also be set by dchain!!
+                dci.setZero();
             } else {
                 dhi=tensorchunk(dchain,{N,T,H},t) + dphi;
+                dci=dpci;
             }
             name="t"+std::to_string(t);
             mlPop(name,pcache,&cache);
-            dxi=backward_step(dhi,&cache,&states, &grads,id);
+            t_cppl cp;
+            cp[hname]=new MatrixN(dhi);
+            cp[cname]=new MatrixN(dci);
+            // cp[cname]=new MatrixN(dci); // XXX: dchain should also take care of dc! -> zero-init for now.
+            dxi=backward_step(cp,&cache,&states, &grads,id);
+            cppl_delete(&cp);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
             dphi=*grads[hname0];
+            dpci=*grads[cname0];
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];
@@ -326,7 +326,8 @@ cache = (h, c, h0, Wx, Wh, x, cai)
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
         (*pgrads)[hname0] = new MatrixN(dphi);
-        */
+        //(*pgrads)[cname0] = new MatrixN(dpci);
+
         return dx;
     }
 };
