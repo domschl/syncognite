@@ -63,6 +63,9 @@ public:
         MatrixN *ph= new MatrixN(N,H);
         ph->setZero();
         cppl_set(pstates, hname, ph);
+        MatrixN *pc= new MatrixN(N,H);
+        pc->setZero();
+        cppl_set(pstates, cname, pc);
     }
 
     MatrixN Sigmoid(const MatrixN& m) {
@@ -117,61 +120,16 @@ public:
     }
 
     /*     Backward pass for a single timestep of an LSTM.
-
         Inputs:
         - dnext_h: Gradients of next hidden state, of shape (N, H)
         - dnext_c: Gradients of next cell state, of shape (N, H)
-        - cache: Values from the forward pass
-
         Returns a tuple of:
         - dx: Gradient of input data, of shape (N, D)
         - dprev_h: Gradient of previous hidden state, of shape (N, H)
         - dprev_c: Gradient of previous cell state, of shape (N, H)
         - dWx: Gradient of input-to-hidden weights, of shape (D, 4H)
         - dWh: Gradient of hidden-to-hidden weights, of shape (H, 4H)
-        - db: Gradient of biases, of shape (4H,)
-        """
-        dx, dh, dc, dWx, dWh, db = None, None, None, None, None, None
-        next_h, next_c, Wx, Wh, prev_h, prev_c, x, tnc, o, f, g, i, ps = cache
-        H = prev_h.shape[1]
-
-        # next_h = o * tnc
-        do = tnc * dnext_h
-        dtnc = o * dnext_h
-        # tnc = np.tanh(next_c)
-        dnext_c += (1 - tnc * tnc) * dtnc
-        # next_c = fpc + ig
-        dfpc = dnext_c
-        dig = dnext_c
-        # fpc = f * prev_c
-        df = prev_c * dfpc
-        dprev_c = f * dfpc
-        # ig = i * g
-        di = g * dig
-        dg = i * dig
-        # g = np.tanh(ps[:,3*H:4*H])
-        dps = np.zeros(ps.shape)
-        dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
-        # o = sigmoid(ps[:,2*H:3*H])
-        dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
-        # f = sigmoid(ps[:,H:2*H])
-        dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
-        # i = sigmoid(ps[:,:H])
-        dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
-        # ps = phh + pshx
-        dphh = dps
-        dpshx = dps
-        # pshx = phx + b
-        dphx = dpshx.T
-        db = np.sum(dpshx, axis=0)
-        # phx = np.dot(x, Wx)
-        dx = np.dot(Wx, dphx).T
-        dWx = np.dot(dphx, x).T
-        # phh = np.dot(prev_h, Wh)
-        dprev_h = np.dot(Wh, dphh.T).T
-        dWh = np.dot(prev_h.T, dphh)
-        return dx, dprev_h, dprev_c, dWx, dWh, db
-    */
+        - db: Gradient of biases, of shape (4H,) */
     MatrixN backward_step(t_cppl& cp, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
         MatrixN hprev = *(*pcache)[hname];
         MatrixN cprev = *(*pcache)[cname];
@@ -185,62 +143,25 @@ public:
         MatrixN dhnext=*cp[hname]; // dhnext
         MatrixN dcnext=*cp[cname]; // dcnext
 
-        // # next_h = o * tnc
-        // do = tnc * dnext_h
-        // dtnc = o * dnext_h
-
         MatrixN ddo=tnc.array() * dhnext.array();
         MatrixN dtnc=o.array() * dhnext.array();
-        // # tnc = np.tanh(next_c)
-        // dnext_c += (1 - tnc * tnc) * dtnc
         dcnext = dcnext +  ((1.0 - tnc.array() * tnc.array()) * dtnc.array()).matrix();
-        // dfpc = dnext_c
-        // dig = dnext_c
-        // fpc = f * prev_c
         MatrixN df = cprev.array() * dcnext.array();
-        // dprev_c = f * dfpc
         MatrixN dcprev = f.array() * dcnext.array();
-
-        cerr << "dhnext: " << shape(dhnext) << dhnext << endl;
-        cerr << "o: " << shape(o) << o << endl;
-        cerr << "dtnc: " << shape(dtnc) << dtnc << endl;
-        cerr << "tnc: " << shape(tnc) << tnc << endl;
-        cerr << "dcnext: " << shape(dcnext) << dcnext << endl;
-        cerr << "dcnext+: " << shape(dcnext) << dcnext << endl;
-        cerr << "f: " << shape(f) << f << endl;
-        cerr << "dcprev:" << shape(dcprev) << dcprev << endl;
-
-
-        // ig = i * g
         MatrixN di = g.array() * dcnext.array();
         MatrixN dg = i.array() * dcnext.array();
-
-
-        //# g = np.tanh(ps[:,3*H:4*H])
-        //dps = np.zeros(ps.shape)
         MatrixN dps(N,4*H);
-        //dps[:, 3*H:4*H] = (np.ones(prev_h.shape) - g ** 2) * dg
         MatrixN dps3 = (g.array() * g.array() - 1.0) * -1.0 * dg.array();
-        // o = sigmoid(ps[:,2*H:3*H])
-        // dps[:, 2*H:3*H] = (np.ones(prev_h.shape) - o) * o * do
         MatrixN dps2 = (o.array() - 1.0) * -1.0 * o.array() * ddo.array();
-        // f = sigmoid(ps[:,H:2*H])
-        //dps[:, H:2*H] = (np.ones(prev_h.shape) - f) * f * df
         MatrixN dps1 = (f.array() -1.0) * -1.0 * f.array() * df.array();
-        //# i = sigmoid(ps[:,:H])
-        //dps[:, :H] = (np.ones(prev_h.shape) - i) * i * di
         MatrixN dps0 = (i.array() - 1.0) * -1.0 * i.array() * di.array();
-        //# ps = phh + pshx
         dps << dps0, dps1, dps2, dps3;  // stack matrices
         MatrixN dphh = dps;
         MatrixN dpshx = dps;
-        // pshx = phx + b
         MatrixN dphx = dpshx.transpose();
-        MatrixN dbh = dpshx.colwise().sum();  // np.sum(dpshx, axis=0)
-        // phx = np.dot(x, Wx)
-        MatrixN dx = ((*params["Wxh"]) * dphx).transpose(); // np.dot(Wx, dphx).T
+        MatrixN dbh = dpshx.colwise().sum();
+        MatrixN dx = ((*params["Wxh"]) * dphx).transpose();
         MatrixN dWxh = (dphx * x).transpose();
-        // phh = np.dot(prev_h, Wh)
         MatrixN dhprev = ((*params["Whh"]) * dphh.transpose()).transpose();
         MatrixN dWhh = hprev.transpose() * dphh;
 
@@ -305,38 +226,67 @@ public:
 
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         MatrixN hn(N,T*H);
-        /*
+        MatrixN cn(N,T*H);
+
         if (x.cols() != D*T) {
             cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
             MatrixN h(0,0);
             return h;
         }
         int N=shape(x)[0];
+/*
+N, T, D = x.shape
+H = h0.shape[1]
 
+cai = []
+h = np.zeros((N, T, H))
+c = np.zeros((N, H))
+ht = h0
+ct = c
+for i in range(T):
+    xi = x[:, i, :]
+    ht, ct, cache_i = lstm_step_forward(xi, ht, ct, Wx, Wh, b)
+    h[:, i, :] = ht
+    cai.append(cache_i)
+cache = (h, c, h0, Wx, Wh, x, cai)
+*/
         if (pstates->find(hname)==pstates->end()) {
-            genZeroStates(pstates, N);  // If states[hname] is not defined, initialize to zero!
+            MatrixN *ph= new MatrixN(N,H);
+            ph->setZero();
+            cppl_set(pstates, hname, ph);
+        }
+        if (pstates->find(cname)==pstates->end()) {
+            MatrixN *pc= new MatrixN(N,H);
+            pc->setZero();
+            cppl_set(pstates, cname, pc);
         }
 
         MatrixN ht=*(*pstates)[hname];
+        MatrixN ct=*(*pstates)[cname];
 
         for (int t=0; t<T; t++) {
             t_cppl cache{};
             t_cppl states{};
             states[hname]=&ht;
+            states[cname]=&ct;
             MatrixN xi=tensorchunk(x,{N,T,D},t);
-            ht = forward_step(xi,&cache,&states, id);
+            t_cppl cp = forward_step(xi,&cache,&states, id);
+            ht = *cp[hname0];
+            ct = *cp[cname0];
+            cppl_delete(&cp);
             tensorchunkinsert(&hn, ht, {N,T,H}, t);
+            tensorchunkinsert(&cn, ct, {N,T,H}, t);
             if (pcache!=nullptr) {
                 string name="t"+std::to_string(t);
                 mlPush(name,&cache,pcache);
             } else cppl_delete(&cache);
         }
         cppl_update(pstates,hname,&ht);
+        cppl_update(pstates,cname,&ct);
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent LSTM-forward result: " << shape(hn) << endl;
         }
-        */
-        return hn;
+        return hn;  // XXX return a t_cppl with cn too?
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
