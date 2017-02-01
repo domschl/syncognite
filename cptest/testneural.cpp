@@ -272,6 +272,20 @@ int doTests() {
         allOk=false;
     }
 
+    // LSTM
+    int lstmN=4;  // N=4, D=5, H=6, T=7
+    MatrixN xlstm(lstmN,5*7);
+    t_cppl lsstates;
+    MatrixN hl0(lstmN,6);
+    xlstm.setRandom();
+    hl0.setRandom();
+    lsstates["lstm-h"] = &hl0;
+    //                                 D,T
+    LSTM lstm("{name='lstm';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;nohupdate=true}");
+    if (!lstm.selfTest(xlstm, &lsstates, 1e-4, 1e-4)) {
+        allOk=false;
+    }
+
 
     // WordEmbedding
     int weN=4, weT=3, weV=10, weD=8;
