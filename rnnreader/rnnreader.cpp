@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 
     // preseverstates no longer necessary for training!
     CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-1); //2.2e-2);
     // cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
