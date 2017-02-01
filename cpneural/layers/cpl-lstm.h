@@ -102,7 +102,7 @@ public:
         MatrixN cnext = f.array() * cprev.array() + i.array() * g.array();
         cp[cname0]=new MatrixN(cnext);
         MatrixN tnc=cnext.array().tanh();
-        MatrixN hnext=tnx * o.array();
+        MatrixN hnext=tnc.array() * o.array();
         cp[hname0]=new MatrixN(hnext);
         if (pcache!=nullptr) cppl_set(pcache,"tnc",new MatrixN(tnc));
         if (pcache!=nullptr) cppl_set(pcache,"xhx",new MatrixN(xhx));
@@ -173,26 +173,26 @@ public:
         MatrixN dx;
         MatrixN hprev = *(*pstates)[hname];
         MatrixN cprev = *(*pstates)[cname];
-        MatrixN tnc=*(pcache["tnc"]);
-        MatrixN xhx=*(pcache["xhx"]);
-        MatrixN o=*(pcache["i"]);
-        MatrixN o=*(pcache["f"]);
-        MatrixN o=*(pcache["o"]);
-        MatrixN o=*(pcache["g"]);
-        MatrixN dhnext=cp["dhnext"];
-        MatrixN dcnext=cp["dcnext"];
+        MatrixN tnc=*(*pcache)["tnc"];
+        MatrixN xhx=*(*pcache)["xhx"];
+        MatrixN i=*(*pcache)["i"];
+        MatrixN f=*(*pcache)["f"];
+        MatrixN o=*(*pcache)["o"];
+        MatrixN g=*(*pcache)["g"];
+        MatrixN dhnext=*cp["dhnext"];
+        MatrixN dcnext=*cp["dcnext"];
         MatrixN hnext=o.array() * tnc.array();
 
 
-        MatrixN do=tnc.array() * dhnext.array();
+        MatrixN dfo=tnc.array() * dhnext.array();
         MatrixN dtnc=o.array() * dhnext.array();
-        MatrixN dcnext += (tnc.array() * tnc.array() - 1.0) * (-1.0) * dtnc.array();
-        # dfpc = dnext_c
-        # dig = dnext_c
-        # fpc = f * prev_c
+        dcnext =  dcnext.array() + (tnc.array() * tnc.array() - 1.0) * (-1.0) * dtnc.array();
+        // dfpc = dnext_c
+        // dig = dnext_c
+        // fpc = f * prev_c
         MatrixN df=cprev.array() * dcnext.array();
         MatrixN dcprev = f.array() * dcnext.array();
-        # ig = i * g
+        // ig = i * g
         MatrixN di = g.array() * dcnext.array();
         MatrixN dg = i.array() * dcnext.array();
 
