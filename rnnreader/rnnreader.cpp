@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=64;
+    int T=90;
     int N=txt.text.size() / (T+1);
 
     MatrixN Xr(N,T);
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    int maxN = 50000;
+    int maxN = 100000;
     if (n>maxN) n=maxN;
     int n1=n*0.9;
     int dn=(n-n1)/2;
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='normal'}");
+    LayerBlock lb("{name='rnnreader';init='orthonormal'}");
     int VS=txt.vocsize();
     int H=256;
     int BS=64;
@@ -166,27 +166,27 @@ int main(int argc, char *argv[]) {
     cp1.setPar("inputShape",vector<int>{VS,T});
     cp1.setPar("N",BS);
     cp1.setPar("H",H);
-    cp1.setPar("clip",clip);
+    //cp1.setPar("clip",clip);
     lb.addLayer(rnntype,"rnn1",cp1,{"OH0"});
 
     CpParams cp2;
     cp2.setPar("inputShape",vector<int>{H,T});
     cp2.setPar("N",BS);
     cp2.setPar("H",H);
-    cp2.setPar("clip",clip);
+    //cp2.setPar("clip",clip);
     lb.addLayer(rnntype,"rnn2",cp2,{"rnn1"});
 
     CpParams cp3;
     cp3.setPar("inputShape",vector<int>{H,T});
     cp3.setPar("N",BS);
     cp3.setPar("H",H);
-    cp3.setPar("clip",clip);
-//    lb.addLayer(rnntype,"rnn3",cp3,{"rnn2"});
+    //cp3.setPar("clip",clip);
+    lb.addLayer(rnntype,"rnn3",cp3,{"rnn2"});
 
     CpParams cp10;
     cp10.setPar("inputShape",vector<int>{H,T});
     cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn2"});
+    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
 
     CpParams cp11;
     cp11.setPar("inputShape",vector<int>{VS,T});
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
 
     // preseverstates no longer necessary for training!
     CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)5e-3); //2.2e-2);
+    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
     // cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
