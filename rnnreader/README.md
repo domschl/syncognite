@@ -15,53 +15,37 @@ From build directory:
 rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
 ```
 ## Output
-After about 250 epochs (three layers of LSTMs with 512 neurons, 90 time-steps), about 7hrs on a recent desktop CPU, with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
+After about 250 epochs (three layers of LSTMs with 512 neurons, 90 time-steps), about 20hrs on a recent desktop CPU (8 threads), with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
 ```
-output: hou wilt hore.
+PETRUCHIO:
+Procee! Come ither;
+Our heart-stoods a chirt you there's merry,
+Distlestimagity,
+Though this his magegether forth's a point
+That gove him reture the tribunes from my veawing
+His was abold heares,
+Sirray, Comprot thee, far
+Thas crown his offtimu, doth from me destenther flous.
 
-PRONTERO:
-That when senveimadly.
+MARCIUS:
+So, my resolute! Join, giencely, taking.
 
-Citizen:
-Ay Will heaven, doly!
+PETRUCHIO:
+Why hath Shall I propes at to fear
+The wellien and my people:' and bots, while you made
+he duty entructions are of the roor
+what my commands
+thy groed,
+Our antentictie!
+And say has peeson kiesd, and freth
+as you trumpeed? Look Porceith sortes?
 
-OXFORD:
-Come, manar! law my holy gewere I, by your, ghat,
-Well ligit of.
-
-LADY ANNE: I tomble reword,
-Than gore toghtser, simeshard! To wolk my love,
-And leney all colven.
-I'll seturnden ares.
-
-LEOM:
-Senat stay me agherl?
-
-GLOUCESTER:
-Undes, amad! most tall,
-Whou yot I can your warsh, and down both thyseef the words,
-End With withesp ground: where, in all.
-Thyolat
-Marr muret His man me, every more throwed.
-
-DUCHESS OF YORK:
-A, Goo. Dratheng Romeo pue thy preyon,
-Father nouge little-fool'd thee away'd.
-
-LEONTES:
-Sther lasiles!
-Whichors no all time. Son lows, this mercious, my lord,
-Cleaged from my fave: let's cape!
-O, in Pompot of wise.
-
-CORIOLANUS:
-Go, hels if I know your king,
-And pastly; believed no? if that foel arms? I love cewourning it becomfory!
-Some scurng, Lord Fatth: let'el pant thou llasted,
-Bries on mintle goast! Come, Encall, to it?
-
-Third Gentleman:
-I crow their briogsed with strung-inday.
+HAROLIO:
+So dear the king;
+And let us heaving? to pluck werd I happy
+From my compalinn; by the constage
+And fight to visit as three on: bus certain
+The lukening plaines mind othermine of my wore.
 ```
 ## References
 * Andrej Karpathy's [char-rnn](https://github.com/karpathy/char-rnn)
