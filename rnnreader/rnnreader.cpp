@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb("{name='rnnreader';init='orthonormal'}");
     int VS=txt.vocsize();
-    int H=256;
+    int H=512;
     int BS=64;
     float clip=5.0;
 
@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     // cpo.setPar("lr_decay", (floatN)0.95);
     //cpo.setPar("regularization", (floatN)1.);
 
-    floatN dep=1.0;
+    floatN dep=5.0;
     floatN sep=0.0;
     cpo.setPar("epochs",(floatN)dep);
     cpo.setPar("batch_size",BS);
