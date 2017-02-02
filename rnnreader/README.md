@@ -15,7 +15,7 @@ From build directory:
 rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
 ```
 ## Output
-After about 250 epochs (three layers of LSTMs with 512 neurons, 90 time-steps):
+After about 250 epochs (three layers of LSTMs with 512 neurons, 90 time-steps), about 7hrs on a recent desktop CPU, with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
 ```
 output: hou wilt hore.
 
