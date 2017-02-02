@@ -2,7 +2,7 @@
 This tests all currently implemented neural network layers.
 
 Affine, Relu, Nonlinearity, AffineRelu, BatchNorm, Dropout, Convolution, Pooling,
-SpatialBatchNorm, RNN, WordEmbedding, TemporalAffine, TemporalSoftmax, Softmax, Svm,
+SpatialBatchNorm, RNN, LSTM, WordEmbedding, TemporalAffine, TemporalSoftmax, Softmax, Svm,
 TwoLayerNet.
 
 ## Requirements
@@ -358,6 +358,367 @@ ConvolutionBackward dx err=1.53643e-11
 ConvolutionBackward dW err=5.04814e-11
 ConvolutionBackward bx err=1.47793e-11
 ConvolutionBackward (Convolution) with test data: OK.
+$ cptest/testneural 
+Compile-time options: FLOAT AVX FMA OPENMP 
+Eigen is using:      1 threads.
+CpuPool is using:    8 threads.
+Cpu+GpuPool is using:    0 threads.
+=== 0.: Init: registering layers
+=== 1.: Numerical gradient tests
+SelfTest for: Affine -----------------
+CheckLayer
+  check forward vectorizer Affine...
+Forward vectorizer OK, err=1.25067e-13
+Affine: Forward vectorizing test OK!
+  check backward vectorizer Affine...
+Backward vectorizer dx OK, err=8.42752e-14
+Backward vectorizer dW OK, err=3.44334e-12
+Backward vectorizer db OK, err=3.97904e-13
+Affine: Backward vectorizing test OK!
+  check numerical gradients Affine...
+  checking numerical gradient for W...
+  checking numerical gradient for b...
+  checking numerical gradient for x...
+Affine: ∂/∂W OK, err=1.17778e-05
+Affine: ∂/∂b OK, err=1.37792e-07
+Affine: ∂/∂x OK, err=1.07419e-05
+Affine: Gradient numerical test OK!
+Affine: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Relu -----------------
+CheckLayer
+  check forward vectorizer Relu...
+Forward vectorizer OK, err=0
+Relu: Forward vectorizing test OK!
+  check backward vectorizer Relu...
+Backward vectorizer dx OK, err=0
+Relu: Backward vectorizing test OK!
+  check numerical gradients Relu...
+  checking numerical gradient for x...
+Relu: ∂/∂x OK, err=5.01606e-07
+Relu: Gradient numerical test OK!
+Relu: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Nonlinearity-relu -----------------
+CheckLayer
+  check forward vectorizer Nonlinearity-relu...
+Forward vectorizer OK, err=0
+Nonlinearity-relu: Forward vectorizing test OK!
+  check backward vectorizer Nonlinearity-relu...
+Backward vectorizer dx OK, err=0
+Nonlinearity-relu: Backward vectorizing test OK!
+  check numerical gradients Nonlinearity-relu...
+  checking numerical gradient for x...
+Nonlinearity-relu: ∂/∂x OK, err=5.6392e-07
+Nonlinearity-relu: Gradient numerical test OK!
+Nonlinearity-relu: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Nonlinearity-sigmoid -----------------
+CheckLayer
+  check forward vectorizer Nonlinearity-sigmoid...
+Forward vectorizer OK, err=0
+Nonlinearity-sigmoid: Forward vectorizing test OK!
+  check backward vectorizer Nonlinearity-sigmoid...
+Backward vectorizer dx OK, err=0
+Nonlinearity-sigmoid: Backward vectorizing test OK!
+  check numerical gradients Nonlinearity-sigmoid...
+  checking numerical gradient for x...
+Nonlinearity-sigmoid: ∂/∂x OK, err=1.34359e-06
+Nonlinearity-sigmoid: Gradient numerical test OK!
+Nonlinearity-sigmoid: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Nonlinearity-tanh -----------------
+CheckLayer
+  check forward vectorizer Nonlinearity-tanh...
+Forward vectorizer OK, err=0
+Nonlinearity-tanh: Forward vectorizing test OK!
+  check backward vectorizer Nonlinearity-tanh...
+Backward vectorizer dx OK, err=0
+Nonlinearity-tanh: Backward vectorizing test OK!
+  check numerical gradients Nonlinearity-tanh...
+  checking numerical gradient for x...
+Nonlinearity-tanh: ∂/∂x OK, err=3.01089e-06
+Nonlinearity-tanh: Gradient numerical test OK!
+Nonlinearity-tanh: checkLayer: Numerical gradient check tests ok!
+SelfTest for: AffineRelu -----------------
+CheckLayer
+  check forward vectorizer AffineRelu...
+Forward vectorizer OK, err=0
+AffineRelu: Forward vectorizing test OK!
+  check backward vectorizer AffineRelu...
+Backward vectorizer dx OK, err=0
+Backward vectorizer daf-W OK, err=1.28841e-13
+Backward vectorizer daf-b OK, err=0
+AffineRelu: Backward vectorizing test OK!
+  check numerical gradients AffineRelu...
+  checking numerical gradient for af-W...
+  checking numerical gradient for af-b...
+  checking numerical gradient for x...
+AffineRelu: ∂/∂af-W OK, err=2.71084e-07
+AffineRelu: ∂/∂af-b OK, err=4.12491e-08
+AffineRelu: ∂/∂x OK, err=6.035e-07
+AffineRelu: Gradient numerical test OK!
+AffineRelu: checkLayer: Numerical gradient check tests ok!
+SelfTest for: BatchNorm -----------------
+CheckLayer
+  check numerical gradients BatchNorm...
+  checking numerical gradient for beta...
+  checking numerical gradient for gamma...
+  checking numerical gradient for x...
+BatchNorm: ∂/∂beta OK, err=5.66084e-06
+BatchNorm: ∂/∂gamma OK, err=4.66735e-06
+BatchNorm: ∂/∂x OK, err=0.000339093
+BatchNorm: Gradient numerical test OK!
+BatchNorm: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Dropout -----------------
+CheckLayer
+  check numerical gradients Dropout...
+  checking numerical gradient for x...
+Dropout: ∂/∂x OK, err=6.89784e-08
+Dropout: Gradient numerical test OK!
+Dropout: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Convolution -----------------
+CheckLayer
+  check forward vectorizer Convolution...
+Forward vectorizer OK, err=8.88178e-16
+Convolution: Forward vectorizing test OK!
+  check backward vectorizer Convolution...
+Backward vectorizer dx OK, err=1.66533e-16
+Backward vectorizer dW OK, err=1.51434e-12
+Backward vectorizer db OK, err=2.41585e-13
+Convolution: Backward vectorizing test OK!
+  check numerical gradients Convolution...
+  checking numerical gradient for W...
+  checking numerical gradient for b...
+  checking numerical gradient for x...
+Convolution: ∂/∂W OK, err=8.8004e-10
+Convolution: ∂/∂b OK, err=3.55271e-13
+Convolution: ∂/∂x OK, err=1.0801e-09
+Convolution: Gradient numerical test OK!
+Convolution: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Pooling -----------------
+CheckLayer
+  check forward vectorizer Pooling...
+Forward vectorizer OK, err=0
+Pooling: Forward vectorizing test OK!
+  check backward vectorizer Pooling...
+Backward vectorizer dx OK, err=0
+Pooling: Backward vectorizing test OK!
+  check numerical gradients Pooling...
+  checking numerical gradient for x...
+Pooling: ∂/∂x OK, err=1.78114e-06
+Pooling: Gradient numerical test OK!
+Pooling: checkLayer: Numerical gradient check tests ok!
+SelfTest for: SpatialBatchNorm -----------------
+CheckLayer
+  check numerical gradients SpatialBatchNorm...
+  checking numerical gradient for bn-beta...
+  checking numerical gradient for bn-gamma...
+  checking numerical gradient for x...
+SpatialBatchNorm: ∂/∂bn-beta OK, err=7.03705e-07
+SpatialBatchNorm: ∂/∂bn-gamma OK, err=2.60908e-06
+SpatialBatchNorm: ∂/∂x OK, err=8.78724e-05
+SpatialBatchNorm: Gradient numerical test OK!
+SpatialBatchNorm: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Svm -----------------
+CheckLayer
+  check forward vectorizer Svm...
+Forward vectorizer OK, err=0
+Svm: Forward vectorizing test OK!
+  check backward vectorizer Svm...
+Backward vectorizer dx OK, err=0
+Svm: Backward vectorizing test OK!
+  check numerical gradients Svm...
+Svm: ∂/∂x OK, err=8.54885e-07
+Svm: Gradient numerical test OK!
+Svm: checkLayer: Numerical gradient check tests ok!
+SelfTest for: Softmax -----------------
+CheckLayer
+  check forward vectorizer Softmax...
+Forward vectorizer OK, err=1.33227e-15
+Softmax: Forward vectorizing test OK!
+  check backward vectorizer Softmax...
+Backward vectorizer dx OK, err=1.73472e-17
+Softmax: Backward vectorizing test OK!
+  check numerical gradients Softmax...
+Softmax: ∂/∂x OK, err=3.0876e-08
+Softmax: Gradient numerical test OK!
+Softmax: checkLayer: Numerical gradient check tests ok!
+SelfTest for: TwoLayerNet -----------------
+CheckLayer
+  check forward vectorizer TwoLayerNet...
+Forward vectorizer OK, err=2.1684e-18
+TwoLayerNet: Forward vectorizing test OK!
+  check backward vectorizer TwoLayerNet...
+WARNING: x is not in cache!
+Backward vectorizer dx OK, err=7.36395e-22
+Backward vectorizer daf1-W OK, err=1.21864e-15
+Backward vectorizer daf1-b OK, err=1.30451e-15
+Backward vectorizer daf2-W OK, err=2.93136e-15
+Backward vectorizer daf2-b OK, err=8.99836e-14
+TwoLayerNet: Backward vectorizing test OK!
+  check numerical gradients TwoLayerNet...
+TwoLayerNet: ∂/∂af1-W OK, err=2.31902e-07
+TwoLayerNet: ∂/∂af1-b OK, err=9.23293e-07
+TwoLayerNet: ∂/∂af2-W OK, err=3.90354e-07
+TwoLayerNet: ∂/∂af2-b OK, err=5.7047e-08
+TwoLayerNet: ∂/∂x OK, err=6.31138e-08
+TwoLayerNet: Gradient numerical test OK!
+TwoLayerNet: checkLayer: Numerical gradient check tests ok!
+SelfTest for: rnn -----------------
+CheckLayer
+  check numerical gradients rnn...
+  checking numerical gradient for Whh...
+  checking numerical gradient for Wxh...
+  checking numerical gradient for bh...
+  checking numerical gradient for rnn-h0...
+Numerical check, mapping gradient rnn-h0 to state -> rnn-h
+pm set
+  checking numerical gradient for x...
+rnn: ∂/∂Whh OK, err=3.71331e-05
+rnn: ∂/∂Wxh OK, err=2.20368e-05
+rnn: ∂/∂bh OK, err=8.64702e-06
+rnn: ∂/∂rnn-h0 OK, err=5.02865e-06
+rnn: ∂/∂x OK, err=2.62612e-05
+rnn: Gradient numerical test OK!
+rnn: checkLayer: Numerical gradient check tests ok!
+SelfTest for: lstm -----------------
+CheckLayer
+  check numerical gradients lstm...
+  checking numerical gradient for Whh...
+  checking numerical gradient for Wxh...
+  checking numerical gradient for bh...
+  checking numerical gradient for lstm-h0...
+Numerical check, mapping gradient lstm-h0 to state -> lstm-h
+pm set
+  checking numerical gradient for x...
+lstm: ∂/∂Whh OK, err=4.10032e-06
+lstm: ∂/∂Wxh OK, err=4.89538e-06
+lstm: ∂/∂bh OK, err=1.02029e-06
+lstm: ∂/∂lstm-h0 OK, err=3.1329e-07
+lstm: ∂/∂x OK, err=1.36727e-06
+lstm: Gradient numerical test OK!
+lstm: checkLayer: Numerical gradient check tests ok!
+SelfTest for: WordEmbedding -----------------
+CheckLayer
+  check numerical gradients WordEmbedding...
+  checking numerical gradient for W...
+WordEmbedding: ∂/∂W OK, err=2.12097e-11
+WordEmbedding: Gradient numerical test OK!
+WordEmbedding: checkLayer: Numerical gradient check tests ok!
+SelfTest for: TemporalAffine -----------------
+CheckLayer
+  check forward vectorizer TemporalAffine...
+Forward vectorizer OK, err=4.66294e-15
+TemporalAffine: Forward vectorizing test OK!
+  check backward vectorizer TemporalAffine...
+Backward vectorizer dx OK, err=2.05391e-15
+Backward vectorizer dW OK, err=2.55707e-12
+Backward vectorizer db OK, err=2.41585e-12
+TemporalAffine: Backward vectorizing test OK!
+  check numerical gradients TemporalAffine...
+  checking numerical gradient for W...
+  checking numerical gradient for b...
+  checking numerical gradient for x...
+TemporalAffine: ∂/∂W OK, err=4.10227e-06
+TemporalAffine: ∂/∂b OK, err=8.56611e-07
+TemporalAffine: ∂/∂x OK, err=3.62892e-06
+TemporalAffine: Gradient numerical test OK!
+TemporalAffine: checkLayer: Numerical gradient check tests ok!
+SelfTest for: TemporalSoftmax -----------------
+CheckLayer
+  check numerical gradients TemporalSoftmax...
+TemporalSoftmax: ∂/∂x OK, err=4.92883e-08
+TemporalSoftmax: Gradient numerical test OK!
+TemporalSoftmax: checkLayer: Numerical gradient check tests ok!
+LayerName for lb: testblock
+af1: (10)[10] -> (1024)[1024]
+rl1: (1024)[1024] -> (1024)[1024]
+af2: (1024)[1024] -> (10)[10]
+sm1: (10)[10] -> (1)[1]
+Topology-check for LayerBlock: ok.
+SelfTest for: testblock -----------------
+CheckLayer
+  check forward vectorizer testblock...
+Forward vectorizer OK, err=1.11022e-16
+testblock: Forward vectorizing test OK!
+  check backward vectorizer testblock...
+WARNING: x is not in cache!
+Backward vectorizer dx OK, err=4.33676e-18
+Backward vectorizer daf1-W OK, err=2.65626e-14
+Backward vectorizer daf1-b OK, err=6.68575e-15
+Backward vectorizer daf2-W OK, err=1.47067e-14
+Backward vectorizer daf2-b OK, err=2.66454e-14
+testblock: Backward vectorizing test OK!
+  check numerical gradients testblock...
+testblock: ∂/∂af1-W OK, err=0.000339845
+testblock: ∂/∂af1-b OK, err=0.000123498                                                         
+testblock: ∂/∂af2-W OK, err=4.71533e-05                                                         
+testblock: ∂/∂af2-b OK, err=5.68294e-08                                                         
+testblock: ∂/∂x OK, err=2.03443e-07                                                             
+testblock: Gradient numerical test OK!                                                          
+testblock: checkLayer: Numerical gradient check tests ok!                                       
+=== 2.: Test-data tests                                                                         
+AffineForward err=5.13478e-16                                                                   
+AffineForward (Affine) with test data: OK.                                                      
+AffineBackward dx err=1.13687e-13                                                               
+AffineBackward dW err=8.90399e-14                                                               
+AffineBackward bx err=7.10543e-14                                                               
+AffineBackward (Affine) with test data: OK.                                                     
+ReluForward err=0                                                                               
+ReluForward with test data: OK.                                                                 
+ReluBackward dx err=0                                                                           
+ReluBackward (Affine) with test data: OK.                                                       
+NonlinearityForwardRelu err=0                                                                   
+NonlinearityForwardSigmoid err=8.88178e-15                                                      
+NonlinearityForwardTanh err=1.77636e-15                                                         
+NonlinearityForward with test data: OK.                                                         
+NonlinearityBackward (relu) dx err=0                                                            
+NonlinearityBackward (sigmoid) dx err=2.48412e-15                                               
+NonlinearityBackward (tanh) dx err=4.20219e-14                                                  
+NonlinearityBackward with test data: OK.                                                        
+AffineRelu err=5.06262e-14                                                                      
+AffineRelu dx err=5.15143e-13                                                                   
+AffineRelu dW err=3.03313e-13                                                                   
+AffineRelu db err=1.42109e-14                                                                   
+AffineRelu with test data: OK.                                                                  
+Mean:-3.57628e-08 -4.47035e-09 -5.96046e-09                                                     
+StdDev:0.999998 0.999995 0.999993                                                               
+BatchNormForward err=9.2642e-14                                                                 
+  BatchNorm forward ok.                                                                         
+ err=3.33067e-16                                                                                
+  BatchNorm running mean ok.                                                                    
+ err=2.27596e-15                                                                                
+  BatchNorm running var ok.                                                                     
+Mean:11 12 13                                                                                   
+StdDev:0.999998  1.99999  2.99998                                                               
+BatchNormForward err=9.09495e-13
+  BatchNorm beta/gamma forward ok.
+ err=3.33067e-16
+  BatchNorm running mean2 ok.
+ err=2.27596e-15
+  BatchNorm running var2 ok.
+  Running mean after 200 cycl: -0.0127315 0.00591051 -0.0120399
+  Running stdvar after 200 cycl: 0.582243 0.578787 0.571822
+switching test
+  Mean:1.43051e-08          -1           4
+Batchnorm train/test sequence: mean err=2.04636e-16
+  StdDev:0.999985  1.99997  2.99996
+Batchnorm train/test sequence: stdderi err=3.11984e-09
+BatchNormForward with test data: OK.
+BatchNormBackward dx err=9.78476e-15
+BatchNormBackward dgamma err=1.04416e-13
+BatchNormBackward dbeta err=2.84564e-13
+BatchNormBackward with test data: OK.
+Dropout: x-mean:10.0011
+  y-mean:7.99299
+  yt-mean:8.0009
+  drop:0.8
+  offs:10
+Dropout: statistics tests ok, err1:0.00791216 err2:0.00111961 err3:0.00701094
+Dropout with test data: OK.
+ConvolutionForward err=2.26996e-12
+ConvolutionForward (Convolution) with test data: OK.
+ConvolutionBackward dx err=1.53643e-11
+ConvolutionBackward dW err=5.04814e-11
+ConvolutionBackward bx err=1.47793e-11
+ConvolutionBackward (Convolution) with test data: OK.
 PoolingForward err=0
 PoolingForward with test data: OK.
 PoolingBackward dx err=0
@@ -372,7 +733,7 @@ Softmax dx err=5.23886e-16
 Softmax with test data: OK.
 TwoLayerNetScores err=7.81597e-14
 TwoLayerNet: loss-err: 1.19209e-07 for reg=0 OK.
-Got grads: af1-W af1-b af2-W af2-b
+Got grads: af1-W af1-b af2-W af2-b 
 TwoLayerNet dW1 err=1.29931e-14
 TwoLayerNet db1 err=1.97758e-16
 TwoLayerNet dW2 err=4.26326e-13
@@ -394,6 +755,25 @@ RNNBackward dWhh err=1.78926e-11
 RNNBackward bh err=3.87246e-13
 RNNBackward h0 err=8.74733e-12
 RNNBackward with test data: OK.
+LSTMForwardStep err=8.28226e-14
+LSTMForwardStep err=3.9968e-14
+ LSTMForwardStep with test data: OK.
+ err=0
+LSTMStepBackward dx err=1.57008e-12
+LSTMStepBackward dWxh err=7.6005e-13
+LSTMStepBackward dWhh err=1.4087e-12
+LSTMStepBackward bh err=2.17649e-13
+LSTMStepBackward h0 err=8.54431e-13
+LSTMStepBackward c0 err=7.49541e-14
+ LSTMBackwardStep with test data: OK.
+LSTMForward err=7.82499e-14
+ LSTMForward with test data: OK.
+LSTMBackward dx err=1.81453e-13
+LSTMBackward dWxh err=3.68338e-13
+LSTMBackward dWhh err=1.17496e-13
+LSTMBackward bh err=4.93251e-14
+LSTMBackward h0 err=4.996e-14
+ LSTMBackward with test data: OK.
 WordEmbeddingForward err=0
 WordEmbeddingForward with test data: OK.
 WordEmbeddingBackward forward consistency check err=0
@@ -406,16 +786,17 @@ TemporalAffineBackward dW err=3.1819e-13
 TemporalAffineBackward bx err=6.03961e-14
 TemporalAffineBackward with test data: OK.
 Checking TemporalSoftmaxLoss:
-  TemporalSMLoss check OK for ex (1): 2.30265, theoretical: 2.3
-  TemporalSMLoss check OK for ex (2): 23.0258, theoretical: 23
-  TemporalSMLoss check OK for ex (3): 2.32376, theoretical: 2.3
+  TemporalSMLoss check OK for ex (1): 2.30245, theoretical: 2.3
+  TemporalSMLoss check OK for ex (2): 23.0256, theoretical: 23
+  TemporalSMLoss check OK for ex (3): 2.31272, theoretical: 2.3
 TemporalSoftmaxLoss with test data: OK.
 TemporalSoftmax dx err=3.31224e-15
 TemporalSoftmax with test data: OK.
 Training net: data-size: 100, chunks: 5, batch_size: 20, threads: 4 (bz*ch): 100
-Train-test, train-err=0.06
-       validation-err=0.075
-       final test-err=0.075
+Train-test, train-err=0.19
+       validation-err=0.225
+       final test-err=0.225
 TrainTest: OK.
 All tests ok.
+
 ```
