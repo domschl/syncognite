@@ -380,7 +380,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
 
 
     #ifdef USE_GPU
-    cpNumGpuThreads=cp.getPar("NumGpuThreads", 8);
+    cpNumGpuThreads=cp.getPar("NumGpuThreads", 4);
     #else
     cpNumGpuThreads=0;
     #endif
