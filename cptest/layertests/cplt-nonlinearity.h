@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     bool allOk=true;
     MatrixN x(3,4);
@@ -18,7 +18,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
     Nonlinearity  nlr("{inputShape=[4];type='relu'}");
     MatrixN y0=nlr.forward(x, nullptr, &states);
-    if (!matComp(y,y0,"NonlinearityForwardRelu",eps)) allOk=false;
+    if (!matCompT(y,y0,"NonlinearityForwardRelu",eps,verbose)) allOk=false;
 
     x << -0.5,        -0.40909091, -0.31818182, -0.22727273,
          -0.13636364, -0.04545455,  0.04545455,  0.13636364,
@@ -30,7 +30,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
     Nonlinearity  nlr2("{inputShape=[4];type='sigmoid'}");
     y0=nlr2.forward(x, nullptr, &states);
-    if (!matComp(y,y0,"NonlinearityForwardSigmoid",eps)) allOk=false;
+    if (!matCompT(y,y0,"NonlinearityForwardSigmoid",eps,verbose)) allOk=false;
 
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
          -0.13636364, -0.04545455,  0.04545455,  0.13636364,
@@ -42,12 +42,12 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
     Nonlinearity  nlr3(CpParams("{inputShape=[4];type='tanh'}"));
     y0=nlr3.forward(x, nullptr, &states);
-    if (!matComp(y,y0,"NonlinearityForwardTanh",eps)) allOk=false;
+    if (!matCompT(y,y0,"NonlinearityForwardTanh",eps,verbose)) allOk=false;
 
     return allOk;
 }
 
-bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(4,4);
     x << -0.56204781, -0.30204112,  0.7685022 , -0.74405281,
@@ -70,7 +70,7 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=nl.forward(x, &cache, &states);
     MatrixN dx0=nl.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"NonlinearityBackward (relu) dx",eps);
+    bool ret=matCompT(dx,dx0,"NonlinearityBackward (relu) dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -93,7 +93,7 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
     Nonlinearity nl2("{inputShape=[4];type='sigmoid'}");
     y=nl2.forward(x, &cache, &states);
     dx0=nl2.backward(dchain, &cache, &states, &grads);
-    ret=matComp(dx,dx0,"NonlinearityBackward (sigmoid) dx",eps);
+    ret=matCompT(dx,dx0,"NonlinearityBackward (sigmoid) dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -117,12 +117,40 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS) {
     Nonlinearity nl3("{inputShape=[4];type='tanh'}");
     y=nl3.forward(x, &cache, &states);
     dx0=nl3.backward(dchain, &cache, &states, &grads);
-    ret=matComp(dx,dx0,"NonlinearityBackward (tanh) dx",eps);
+    ret=matCompT(dx,dx0,"NonlinearityBackward (tanh) dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
 
     return allOk;
+}
+
+bool testNonlinearity(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1 {};
+    cerr << lblue << "Nonlinearity Layers: " << def << endl;
+    vector<string> nls = {"relu", "sigmoid", "tanh"};
+    for (string nlsi : nls) {
+        CpParams cp("{inputShape=[20]}");
+        cp.setPar("type", nlsi);
+        Nonlinearity nlr(cp);
+        MatrixN xnl(10, 20);
+        xnl.setRandom();
+        bool res=nlr.selfTest(xnl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
+        registerTestResult("Nonlinearity", nlsi+", numerical gradient", res, "");
+    	if (!res) bOk = false;
+    }
+
+	bool res=checkNonlinearityForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Nonlinearity", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkNonlinearityBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Nonlinearity", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif

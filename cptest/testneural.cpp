@@ -175,23 +175,13 @@ int doTests() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    MatrixN xr(10,20);
-    xr.setRandom();
+    MatrixN xr(10,20); // XXX: These two lines generate a side-effect
+    xr.setRandom();    // XXX: that prevents numerical diff on Relu fail!
 
 	if (checkForTest("Affine")) if (!testAffine(verbose)) allOk=false;
-	if (checkForTest("Relu")) if (!testRelu(verbose)) allOk=false;
+    if (checkForTest("Relu")) if (!testRelu(verbose)) allOk=false;
+    if (checkForTest("Nonlinearity")) if (!testNonlinearity(verbose)) allOk=false;
 
-	vector<string> nls = {"relu", "sigmoid", "tanh"};
-	for (string nlsi : nls) {
-		CpParams cp("{inputShape=[20]}");
-		cp.setPar("type", nlsi);
-		Nonlinearity nlr(cp);
-		MatrixN xnl(10, 20);
-		xnl.setRandom();
-		if (!nlr.selfTest(xnl, &s1)) {
-			allOk = false;
-		}
-	}
 
 	AffineRelu rx("{inputShape=[2];hidden=3}");
 	MatrixN xarl(30, 2);
@@ -435,35 +425,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkReluForward()) {
-		cerr << green << "ReluForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "ReluForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkReluBackward()) {
-		cerr << green << "ReluBackward (Affine) with test data: OK." << def << endl;
-	} else {
-		cerr << red << "ReluBackward (Affine) with test data: ERROR." << def
-		     << endl;
-		allOk = false;
-	}
-
-	if (checkNonlinearityForward()) {
-		cerr << green << "NonlinearityForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "NonlinearityForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkNonlinearityBackward()) {
-		cerr << green << "NonlinearityBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "NonlinearityBackward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (checkAffineRelu()) {
 		cerr << green << "AffineRelu with test data: OK." << def << endl;
@@ -710,7 +671,7 @@ bool getArgs(int argc, char *argv[]) {
 int main(int argc, char *argv[]) {
 	verbose=1;
 	string name = "test";
-	cpInitCompute(name);
+	cpInitCompute(name, nullptr, 0);
 	registerLayers();
 	getTestCases();
 

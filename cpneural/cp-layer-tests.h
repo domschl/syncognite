@@ -118,12 +118,12 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
     if (dif < eps) {
-        if (verbose>1) cerr << "  Backward vectorizer dx OK, err=" << dif << endl;
+        if (verbose>1) cerr << "    Backward vectorizer dx OK, err=" << dif << endl;
     } else {
         if (verbose>0) {
-            cerr << "  Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
-            cerr << "  dxc:" << endl << dxc.format(CleanFmt) << endl;
-            cerr << "  Backward vectorizer dx Error, err=" << dif << endl;
+            cerr << "    Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
+            cerr << "    dxc:" << endl << dxc.format(CleanFmt) << endl;
+            cerr << "    Backward vectorizer dx Error, err=" << dif << endl;
         }
         allOk=false;
     }
@@ -132,12 +132,12 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
         MatrixN d = *grads[it.first] - *rgrads[it.first];
         floatN dif = d.cwiseProduct(d).sum();
         if (dif < eps) {
-            if (verbose>1) cerr << "  Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
+            if (verbose>1) cerr << "    Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
         } else {
             if (verbose>0) {
-                cerr << "  d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
-                cerr << "  d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
-                cerr << "  Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
+                cerr << "    d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
+                cerr << "    d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
+                cerr << "    Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
             }
             allOk=false;
         }
@@ -295,13 +295,13 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         MatrixN d = *(grads[it.first]) - *(numGrads[it.first]);
         floatN df = (d.cwiseProduct(d)).sum();
         if (df < eps) {
-            if (verbose>1) cerr << "  " << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
+            if (verbose>1) cerr << "    " << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
         } else {
             if (verbose>0) {
-                cerr << "  eps:" << eps << " h:" << h << endl;
-                cerr << "  ∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
-                cerr << "  ∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
-                cerr << "    ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
+                cerr << "    eps:" << eps << " h:" << h << endl;
+                cerr << "    ∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
+                cerr << "    ∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
+                cerr << "      ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
                 cerr << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
             }
             allOk=false;
@@ -322,7 +322,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    if (verbose>2) cerr << "CheckLayer start" << endl;
+    //if (verbose>2) cerr << "  CheckLayer start" << endl;
     std::flush(cerr);
 
     if (!cp.getPar("noVectorizationTests", false)) {
@@ -343,7 +343,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
             if (verbose>0) cerr << "  " << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
             allOk=false; //return ret;
         } else {
-            if (verbose>1) cerr << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
+            if (verbose>1) cerr << "  " << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
         }
     }
 
@@ -371,7 +371,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
     MatrixN dchain;
     t_cppl cache;
     MatrixN y;
-    if (verbose>1) cerr << "SelfTest for: " << layerName << " -----------------" << endl;
+    if (verbose>1) cerr << "  SelfTest for: " << layerName << endl;
     t_cppl st;
     cppl_copy(pstates, &st);
     MatrixN yf = forward(x, nullptr, &st, 0);
@@ -384,7 +384,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
         //cppl_set(&cache, "probs", new MatrixN(yf));
         //cppl_set(&cache, "y", new MatrixN(y));
         if (pstates->find("y") == pstates->end()) {
-            cerr << "selfTest: pstates does not contain y -> fatal!" << endl;
+            cerr << "  selfTest: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
         dchain = y;

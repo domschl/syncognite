@@ -51,9 +51,11 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
 }
 
 bool testRelu(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
 	t_cppl s1 {};
-	cerr << "Relu Layer: " << endl;
+	cerr << lblue << "Relu Layer: " << def << endl;
 	// Numerical gradient
 	Relu rl(CpParams("{inputShape=[20]}"));
 	MatrixN x(10, 20);

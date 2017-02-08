@@ -72,9 +72,11 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 }
 
 bool testAffine(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
 	t_cppl s1;
-	cerr << "Affine Layer: " << endl;
+	cerr << lblue << "Affine Layer: " << def << endl;
 	// Numerical gradient
 	Affine pc(CpParams("{inputShape=[30];hidden=20}"));
 	MatrixN x(10, 30);

@@ -281,7 +281,7 @@ int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
 int cpNumCpuThreads=1;
 
-bool threadContextInit(unsigned int numThreads) {
+bool threadContextInit(unsigned int numThreads, int verbose) {
     #ifdef USE_VIENNACL
     if (numThreads > MAX_GPUTHREADS) numThreads=MAX_GPUTHREADS;
     if (viennacl::ocl::get_platforms().size() == 0) {
@@ -294,7 +294,7 @@ bool threadContextInit(unsigned int numThreads) {
     cerr << nrDevs << " devices found." << endl;
     for (unsigned int i=0; i<numThreads; i++) {
         viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
-        cerr << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
+        if (verbose > 1) cerr << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
     }
     // Set context to 0 for main program, 1-numThreads for threads
     //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
@@ -304,7 +304,7 @@ bool threadContextInit(unsigned int numThreads) {
     cuHandles=(cublasContext **)malloc(sizeof(cublasHandle_t) * cpNumGpuThreads);
     for (int i=0; i<cpNumGpuThreads; i++) {
         cublasCreate(&(cuHandles[i]));
-        cerr << "Context " << i << " on: cublas" << endl;
+        if (verbose>1) cerr << "Context " << i << " on: cublas" << endl;
         //cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
         //cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
         //cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
@@ -355,7 +355,7 @@ int cpGetNumCpuThreads() {
     return cpNumCpuThreads;
 }
 
-bool cpInitCompute(string name, CpParams* poptions=nullptr) {
+bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
     CpParams cp;
     string options="";
     struct passwd *pw = getpwuid(getuid());
@@ -371,7 +371,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
         cp.setString(conf);
         cfile.close();
     } else {
-        cerr << "New configureation, '" << conffile << "' not found." << endl;
+        if (verbose>0) cerr << "New configureation, '" << conffile << "' not found." << endl;
     }
     // omp_set_num_threads(n)
     // Eigen::setNbThreads(n);
@@ -399,7 +399,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
 
     #ifdef USE_VIENNACL
     options += "VIENNACL ";
-    threadContextInit(cpNumGpuThreads);
+    threadContextInit(cpNumGpuThreads, verbose);
     #ifdef USE_OPENCL
     options += "OPENCL ";
     #endif
@@ -407,7 +407,7 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
 
     #ifdef USE_CUDA
     options += "CUDA ";
-    threadContextInit(cpNumGpuThreads);
+    threadContextInit(cpNumGpuThreads, verbose);
     #endif
 
     #ifdef USE_FLOAT
@@ -442,10 +442,12 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr) {
         cerr << "INVALID CONFIGURATION" << endl;
         return false;
     }
-    cerr << "Compile-time options: " << options << endl;
-    cerr << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
-    cerr << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
-    cerr << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
+    if (verbose>0) {
+        cerr << "Compile-time options: " << options << endl;
+        cerr << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
+        cerr << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
+        cerr << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
+    }
     return true;
 }
 
