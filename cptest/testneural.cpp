@@ -194,39 +194,9 @@ int doTests() {
     if (checkForTest("Svm")) if (!testSvm(verbose)) allOk=false;
     if (checkForTest("Softmax")) if (!testSoftmax(verbose)) allOk=false;
     if (checkForTest("TwoLayerNet")) if (!testTwoLayerNet(verbose)) allOk=false;
+    if (checkForTest("RNN")) if (!testRNN(verbose)) allOk=false;
+    if (checkForTest("LSTM")) if (!testLSTM(verbose)) allOk=false;
 
-
-
-
-	// RNN
-	int rnnN = 4; // N=4, D=5, H=6, T=7
-	MatrixN xrnn(rnnN, 5 * 7);
-	t_cppl rnstates;
-	MatrixN h0(rnnN, 6);
-	xrnn.setRandom();
-	h0.setRandom();
-	rnstates["rnn-h"] = &h0;
-	//                    D,T
-	RNN rnn("{name='rnn';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
-	    "nohupdate=true}");
-	if (!rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4)) {
-		allOk = false;
-	}
-
-	// LSTM
-	int lstmN = 4; // N=4, D=5, H=6, T=7
-	MatrixN xlstm(lstmN, 5 * 7);
-	t_cppl lsstates;
-	MatrixN hl0(lstmN, 6);
-	xlstm.setRandom();
-	hl0.setRandom();
-	lsstates["lstm-h"] = &hl0;
-	//                                 D,T
-	LSTM lstm("{name='lstm';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
-	    "nohupdate=true}");
-	if (!lstm.selfTest(xlstm, &lsstates, 1e-4, 1e-4)) {
-		allOk = false;
-	}
 
 	// WordEmbedding
 	int weN = 4, weT = 3, weV = 10, weD = 8;
@@ -308,62 +278,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkRNNStepForward()) {
-		cerr << green << "RNNForwardStep with test data: OK." << def << endl;
-	} else {
-		cerr << red << "RNNForwardStep with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkRNNStepBackward()) {
-		cerr << green << "RNNBackwardStep with test data: OK." << def << endl;
-	} else {
-		cerr << red << "RNNBackwardStep with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkRNNForward()) {
-		cerr << green << "RNNForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "RNNForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkRNNBackward()) {
-		cerr << green << "RNNBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "RNNBackward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkLSTMStepForward()) {
-		cerr << green << " LSTMForwardStep with test data: OK." << def << endl;
-	} else {
-		cerr << red << " LSTMForwardStep with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkLSTMStepBackward()) {
-		cerr << green << " LSTMBackwardStep with test data: OK." << def << endl;
-	} else {
-		cerr << red << " LSTMBackwardStep with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkLSTMForward()) {
-		cerr << green << " LSTMForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << " LSTMForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkLSTMBackward()) {
-		cerr << green << " LSTMBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << " LSTMBackward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (checkWordEmbeddingForward()) {
 		cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;

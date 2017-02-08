@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkLSTMStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkLSTMStepForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(3,4);    // N, D  // N, D, H = 3, 4, 5
     x << -0.4       , -0.25454545, -0.10909091,  0.03636364,
          0.18181818,  0.32727273,  0.47272727,  0.61818182,
@@ -80,17 +80,17 @@ bool checkLSTMStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     cppl_delete(&cache);
     cppl_delete(&states);
     bool allOk=true;
-    if (!matComp(hn,*(cp["testlstm-h0"]),"LSTMForwardStep",eps)) {
+    if (!matCompT(hn,*(cp["testlstm-h0"]),"LSTMForwardStep",eps,verbose)) {
         allOk = false;
     }
-    if (!matComp(cn,*(cp["testlstm-c0"]),"LSTMForwardStep",eps)) {
+    if (!matCompT(cn,*(cp["testlstm-c0"]),"LSTMForwardStep",eps,verbose)) {
         allOk = false;
     }
     cppl_delete(&cp);
     return allOk;
 }
 
-bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(4,5);     // N, D, H = 4, 5, 6
     x << 0.0871107, -0.61504182, -0.62466852, -0.1710203, 0.2413938,
         -0.42729072, 0.58361612, -0.75185921, -0.88845531, -0.81558297,
@@ -258,8 +258,8 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     cppl_set(&states,"test3lstm-c",new MatrixN(c0));
     t_cppl cp=lstm.forward_step(x, &cache, &states);
     cppl_delete(&cp);
-    if (!matComp(*states["test3lstm-h"], h0, "internal LSTM state-test", eps)) {
-        cerr << endl << "h0 got changed by forward!" << endl << endl;
+    if (!matCompT(*states["test3lstm-h"], h0, "internal LSTM state-test", eps, verbose)) {
+        if (verbose>0) cerr << endl << "    h0 got changed by forward!" << endl << endl;
     }
     //cppl_update(&states,"test3lstm-h",new MatrixN(h0));
     //cppl_update(&states,"test3lstm-c",new MatrixN(c0));
@@ -269,17 +269,17 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dx0=lstm.backward_step(cp2, &cache, &states, &grads);
     cppl_delete(&cp2);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"LSTMStepBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"LSTMStepBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWxh,*(grads["Wxh"]),"LSTMStepBackward dWxh",eps);
+    ret=matCompT(dWxh,*(grads["Wxh"]),"LSTMStepBackward dWxh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWhh,*(grads["Whh"]),"LSTMStepBackward dWhh",eps);
+    ret=matCompT(dWhh,*(grads["Whh"]),"LSTMStepBackward dWhh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dbh,*(grads["bh"]),"LSTMStepBackward bh",eps);
+    ret=matCompT(dbh,*(grads["bh"]),"LSTMStepBackward bh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["test3lstm-h0"]),"LSTMStepBackward h0",eps);
+    ret=matCompT(dh0,*(grads["test3lstm-h0"]),"LSTMStepBackward h0",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dc0,*(grads["test3lstm-c0"]),"LSTMStepBackward c0",eps);
+    ret=matCompT(dc0,*(grads["test3lstm-c0"]),"LSTMStepBackward c0",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -287,7 +287,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-bool checkLSTMForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkLSTMForward(floatN eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
     MatrixN x(2,15);   // N, D, H, T = 2, 5, 4, 3
     x << -0.4       , -0.36551724, -0.33103448, -0.29655172, -0.26206897,
          -0.22758621, -0.19310345, -0.15862069, -0.12413793, -0.08965517,
@@ -370,10 +370,10 @@ bool checkLSTMForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN hnc=lstm.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
-    return matComp(hn,hnc,"LSTMForward",eps);
+    return matCompT(hn,hnc,"LSTMForward",eps,verbose);
 }
 
-bool checkLSTMBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkLSTMBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(2,12);   // N, D, T, H = 2, 3, 4, 5
     x << 0.92746733, -0.9685769 ,  0.91606424,
           1.83326763,  1.25242585,  0.62720743,
@@ -519,21 +519,62 @@ bool checkLSTMBackward(float eps=CP_DEFAULT_NUM_EPS) {
     cppl_update(&states, "lstm4-h", &h0);
     MatrixN dx0=lstm.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"LSTMBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"LSTMBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWxh,*(grads["Wxh"]),"LSTMBackward dWxh",eps);
+    ret=matCompT(dWxh,*(grads["Wxh"]),"LSTMBackward dWxh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWhh,*(grads["Whh"]),"LSTMBackward dWhh",eps);
+    ret=matCompT(dWhh,*(grads["Whh"]),"LSTMBackward dWhh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dbh,*(grads["bh"]),"LSTMBackward bh",eps);
+    ret=matCompT(dbh,*(grads["bh"]),"LSTMBackward bh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["lstm4-h0"]),"LSTMBackward h0",eps); // XXX: Uhhh!
+    ret=matCompT(dh0,*(grads["lstm4-h0"]),"LSTMBackward h0",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
     cppl_delete(&states);
     return allOk;
+}
+
+bool testLSTM(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "LSTM Layer: " << def << endl;
+	// Numerical gradient
+    // LSTM
+	int lstmN = 4; // N=4, D=5, H=6, T=7
+	MatrixN xlstm(lstmN, 5 * 7);
+	t_cppl lsstates;
+	MatrixN hl0(lstmN, 6);
+	xlstm.setRandom();
+	hl0.setRandom();
+	lsstates["lstm-h"] = &hl0;
+	//                                 D,T
+	LSTM lstm("{name='lstm';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
+	    "nohupdate=true}");
+	bool res=lstm.selfTest(xlstm, &lsstates, 1e-4, 1e-4, verbose);
+	registerTestResult("LSTM", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkLSTMStepForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("LSTM", "StepForward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkLSTMStepBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("LSTM", "StepBackward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkLSTMForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("LSTM", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkLSTMBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("LSTM", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
 }
 
 #endif

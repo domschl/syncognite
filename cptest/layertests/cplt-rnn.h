@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(3,10);     // N, D, H = 3, 10, 4
     x << -0.4       , -0.36206897, -0.32413793, -0.2862069 , -0.24827586,
         -0.21034483, -0.17241379, -0.13448276, -0.09655172, -0.05862069,
@@ -49,10 +49,10 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN hn0=rnn.forward_step(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
-    return matComp(hn,hn0,"RNNForwardStep",eps);
+    return matCompT(hn,hn0,"RNNForwardStep",eps,verbose);
 }
 
-bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(4,5);     // N, D, H = 4, 5, 6
     x << .12416358,  1.69843114,  0.26088349,  0.61809901,  1.29498102,
          1.04395433,  0.345587  ,  1.82379102,  0.67565083,  1.19980857,
@@ -157,15 +157,15 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=rnn.forward_step(x, &cache, &states);
     MatrixN dx0=rnn.backward_step(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"RNNStepBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"RNNStepBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWxh,*(grads["Wxh"]),"RNNStepBackward dWxh",eps);
+    ret=matCompT(dWxh,*(grads["Wxh"]),"RNNStepBackward dWxh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWhh,*(grads["Whh"]),"RNNStepBackward dWhh",eps);
+    ret=matCompT(dWhh,*(grads["Whh"]),"RNNStepBackward dWhh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dbh,*(grads["bh"]),"RNNStepBackward bh",eps);
+    ret=matCompT(dbh,*(grads["bh"]),"RNNStepBackward bh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["test2rnn-h0"]),"RNNStepBackward h0",eps);
+    ret=matCompT(dh0,*(grads["test2rnn-h0"]),"RNNStepBackward h0",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -173,7 +173,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(2,12);   // N, T, D, H = 2, 3, 4, 5
     x << -0.1       , -0.0826087 , -0.06521739, -0.04782609,
          -0.03043478, -0.01304348,  0.00434783,  0.02173913,
@@ -219,10 +219,10 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     MatrixN hn0=rnn.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
     cppl_delete(&states);
-    return matComp(hn,hn0,"RNNForward",eps);
+    return matCompT(hn,hn0,"RNNForward",eps,verbose);
 }
 
-bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(2,30);   // N, D, T, H = 2, 3, 10, 5
     x << 1.42672007, -0.31937729, -0.86722593,
          -0.3784268 ,  0.87693254,  0.2210269 ,
@@ -336,21 +336,61 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS) {
     cppl_update(&states, "rnn4-h", &h0);
     MatrixN dx0=rnn.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"RNNBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"RNNBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWxh,*(grads["Wxh"]),"RNNBackward dWxh",eps);
+    ret=matCompT(dWxh,*(grads["Wxh"]),"RNNBackward dWxh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dWhh,*(grads["Whh"]),"RNNBackward dWhh",eps);
+    ret=matCompT(dWhh,*(grads["Whh"]),"RNNBackward dWhh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dbh,*(grads["bh"]),"RNNBackward bh",eps);
+    ret=matCompT(dbh,*(grads["bh"]),"RNNBackward bh",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dh0,*(grads["rnn4-h0"]),"RNNBackward h0",eps); // XXX: Uhhh!
+    ret=matCompT(dh0,*(grads["rnn4-h0"]),"RNNBackward h0",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
     cppl_delete(&states);
     return allOk;
+}
+
+bool testRNN(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "RNN Layer: " << def << endl;
+	// Numerical gradient
+    // RNN
+	int rnnN = 4; // N=4, D=5, H=6, T=7
+	MatrixN xrnn(rnnN, 5 * 7);
+	t_cppl rnstates;
+	MatrixN h0(rnnN, 6);
+	xrnn.setRandom();
+	h0.setRandom();
+	rnstates["rnn-h"] = &h0;
+	//                    D,T
+	RNN rnn("{name='rnn';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
+	    "nohupdate=true}");
+	bool res=rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4, verbose);
+	registerTestResult("RNN", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkRNNStepForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("RNN", "StepForward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkRNNStepBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("RNN", "StepBackward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkRNNForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("RNN", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkRNNBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("RNN", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif
