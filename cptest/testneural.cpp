@@ -187,25 +187,11 @@ int doTests() {
     if (checkForTest("Nonlinearity")) if (!testNonlinearity(verbose)) allOk=false;
     if (checkForTest("AffineRelu")) if (!testAffineRelu(verbose)) allOk=false;
     if (checkForTest("BatchNorm")) if (!testBatchNorm(verbose)) allOk=false;
+    if (checkForTest("Dropout")) if (!testDropout(verbose)) allOk=false;
 
 
 
 
-
-	// Dropout
-	Dropout dp("{inputShape=[5];train=true;noVectorizationTests=true;freeze=true;"
-	    "drop=0.8}");
-	MatrixN xdp(3, 5);
-	xdp.setRandom();
-	h = 1e-6;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-8;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	if (!dp.selfTest(xdp, &s1, h, eps)) {
-		allOk = false;
-	}
 
 	// Convolution
 	// Convolution cv("{inputShape=[3,4,4,16,3,3];stride=1;pad=0}");
@@ -413,13 +399,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkDropout()) {
-		cerr << green << "Dropout with test data: OK." << def << endl;
-	} else {
-		cerr << red << "Dropout with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (checkConvolutionForward()) {
 		cerr << green << "ConvolutionForward (Convolution) with test data: OK."
