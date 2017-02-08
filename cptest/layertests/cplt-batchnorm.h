@@ -51,13 +51,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar(1,3);
     runvar << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache["running_mean"]),runmean)) {
+    if (!matComp(*(cache["running_mean"]),runmean,"BatchNorm run-mean", eps)) {
         cerr << "BatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
         cerr << "  BatchNorm running mean ok." << endl;
     }
-    if (!matComp(*(cache["running_var"]),runvar)) {
+    if (!matComp(*(cache["running_var"]),runvar,"BatchNorm run-var", eps)) {
         cerr << "BatchNorm running-var failed" << endl;
         allOk=false;
     } else {
@@ -101,13 +101,13 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     runmean2 << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar2(1,3);
     runvar2 << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache2["running_mean"]),runmean2)) {
+    if (!matComp(*(cache2["running_mean"]),runmean2, "BatchNormForward", eps)) {
         cerr << "BatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
         cerr << "  BatchNorm running mean2 ok." << endl;
     }
-    if (!matComp(*(cache2["running_var"]),runvar2)) {
+    if (!matComp(*(cache2["running_var"]),runvar2, "BatchNormForward", eps)) {
         cerr << "BatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {

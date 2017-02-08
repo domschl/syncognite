@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(2,4);
     x << -0.1       , -0.01428571,  0.07142857,  0.15714286,
@@ -24,10 +24,10 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr, &states);
-    return matComp(y,y0,"AffineForward",eps);
+    return matCompT(y,y0,"AffineForward",eps,verbose);
 }
 
-bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(2,4);
     x << 1.31745392, -0.61371249,  0.45447287, -0.27054087,
@@ -60,15 +60,37 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=pe.forward(x, &cache, &states);
     MatrixN dx0=pe.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"AffineBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"AffineBackward dx",eps, verbose);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"AffineBackward dW",eps);
+    ret=matCompT(dW,*(grads["W"]),"AffineBackward dW",eps, verbose);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"]),"AffineBackward bx",eps);
+    ret=matCompT(db,*(grads["b"]),"AffineBackward bx",eps, verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testAffine(int verbose) {
+	bool bOk=true;
+	t_cppl s1;
+	cerr << "Affine Layer: " << endl;
+	// Numerical gradient
+	Affine pc(CpParams("{inputShape=[30];hidden=20}"));
+	MatrixN x(10, 30);
+	x.setRandom();
+	bool res = pc.selfTest(x, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Affine", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkAffineForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Affine", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkAffineBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Affine", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif

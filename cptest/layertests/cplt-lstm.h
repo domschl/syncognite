@@ -258,7 +258,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS) {
     cppl_set(&states,"test3lstm-c",new MatrixN(c0));
     t_cppl cp=lstm.forward_step(x, &cache, &states);
     cppl_delete(&cp);
-    if (!matComp(*states["test3lstm-h"], h0)) {
+    if (!matComp(*states["test3lstm-h"], h0, "internal LSTM state-test", eps)) {
         cerr << endl << "h0 got changed by forward!" << endl << endl;
     }
     //cppl_update(&states,"test3lstm-h",new MatrixN(h0));

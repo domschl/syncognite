@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(3,4);
     x << -0.5       , -0.40909091, -0.31818182, -0.22727273,
@@ -17,10 +17,10 @@ bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS) {
 
     Relu rl(CpParams("{inputShape=[4]}"));
     MatrixN y0=rl.forward(x, nullptr, &states);
-    return matComp(y,y0,"ReluForward",eps);
+    return matCompT(y,y0,"ReluForward",eps,verbose);
 }
 
-bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
     t_cppl states;
     MatrixN x(4,4);
     x << -0.56204781, -0.30204112,  0.7685022 , -0.74405281,
@@ -43,11 +43,33 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=rl.forward(x, &cache, &states);
     MatrixN dx0=rl.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"ReluBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"ReluBackward dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testRelu(int verbose) {
+	bool bOk=true;
+	t_cppl s1{};
+	cerr << "Relu Layer: " << endl;
+	// Numerical gradient
+	Relu rl(CpParams("{inputShape=[20]}"));
+	MatrixN x(10, 20);
+	x.setRandom();
+    bool res = rl.selfTest(x, &s1, CP_DEFAULT_NUM_H , CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Relu", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkReluForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Relu", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkReluBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Relu", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif
