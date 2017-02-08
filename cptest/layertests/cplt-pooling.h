@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(2,3*4*4); // 2x3x4x4 NxCxHxW
     x << -0.3       , -0.29263158, -0.28526316, -0.27789474,
@@ -53,10 +53,10 @@ bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     Pooling pl("{inputShape=[3,4,4];stride=2}");
     MatrixN y0=pl.forward(x, nullptr, &states);
 
-    return matComp(y,y0,"PoolingForward",eps);
+    return matCompT(y,y0,"PoolingForward",eps,verbose);
 }
 
-bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
     t_cppl states;
     MatrixN x(3, 2*8*8);
     x << -0.20821944,  0.76470027, -0.42823441,  0.23081636, -0.7821132 ,
@@ -304,11 +304,36 @@ bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=pl.forward(x, &cache, &states);
     MatrixN dx0=pl.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"PoolingBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"PoolingBackward dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testPooling(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "Pooling Layer: " << def << endl;
+	// Numerical gradient
+    // Pooling
+	Pooling pl("{inputShape=[3,4,4];stride=2}");
+	MatrixN xpl(20, 48);
+	xpl.setRandom();
+	bool res=pl.selfTest(xpl, &s1);
+	registerTestResult("Pooling", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkPoolingForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Pooling", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkPoolingBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Pooling", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif

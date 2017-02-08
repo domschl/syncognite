@@ -214,6 +214,28 @@ bool checkSpatialBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
     cppl_delete(&grads);
     return allOk;
 }
-
 */
+
+bool testSpatialBatchNorm(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "SpatialBatchNorm Layer: " << def << endl;
+	// Numerical gradient
+	// SpatialBatchNorm
+	SpatialBatchNorm sbn(
+		"{inputShape=[3,4,4];train=true;N=2;noVectorizationTests=true}");
+	MatrixN xsbn(2, 3 * 4 * 4);
+	xsbn.setRandom();
+	bool res=sbn.selfTest(xsbn, &s1);
+	registerTestResult("SpatialBatchNorm", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+    if (verbose>1) {
+        cerr << "  There is currently no additional forward/backward test" << endl;
+        cerr << "    with test-data implemented." << endl;
+    }
+	return bOk;
+}
 #endif

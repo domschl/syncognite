@@ -189,28 +189,10 @@ int doTests() {
     if (checkForTest("BatchNorm")) if (!testBatchNorm(verbose)) allOk=false;
     if (checkForTest("Dropout")) if (!testDropout(verbose)) allOk=false;
     if (checkForTest("Convolution")) if (!testConvolution(verbose)) allOk=false;
+    if (checkForTest("Pooling")) if (!testPooling(verbose)) allOk=false;
+    if (checkForTest("SpatialBatchNorm")) if (!testSpatialBatchNorm(verbose)) allOk=false;
 
 
-
-
-
-
-	// Pooling
-	Pooling pl("{inputShape=[3,4,4];stride=2}");
-	MatrixN xpl(20, 48);
-	xpl.setRandom();
-	if (!pl.selfTest(xpl, &s1)) {
-		allOk = false;
-	}
-
-	// SpatialBatchNorm
-	SpatialBatchNorm sbn(
-		"{inputShape=[3,4,4];train=true;N=2;noVectorizationTests=true}");
-	MatrixN xsbn(2, 3 * 4 * 4);
-	xsbn.setRandom();
-	if (!sbn.selfTest(xsbn, &s1)) {
-		allOk = false;
-	}
 
 	// SVM
 	int svN = 10, svC = 5;
@@ -392,19 +374,6 @@ int doTests() {
 
 	cerr << "=== 2.: Test-data tests" << endl;
 
-	if (checkPoolingForward()) {
-		cerr << green << "PoolingForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "PoolingForward with test data: ERROR." << def << endl;
-		allOk = false;
-		exit(-1);
-	}
-	if (checkPoolingBackward()) {
-		cerr << green << "PoolingBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "PoolingBackward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 	if (checkSvm()) {
 		cerr << green << "Svm with test data: OK." << def << endl;
 	} else {
