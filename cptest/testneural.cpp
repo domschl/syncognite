@@ -188,20 +188,12 @@ int doTests() {
     if (checkForTest("AffineRelu")) if (!testAffineRelu(verbose)) allOk=false;
     if (checkForTest("BatchNorm")) if (!testBatchNorm(verbose)) allOk=false;
     if (checkForTest("Dropout")) if (!testDropout(verbose)) allOk=false;
+    if (checkForTest("Convolution")) if (!testConvolution(verbose)) allOk=false;
 
 
 
 
 
-	// Convolution
-	// Convolution cv("{inputShape=[3,4,4,16,3,3];stride=1;pad=0}");
-	// MatrixN xcv(20,48);
-	Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
-	MatrixN xcv(2, 75);
-	xcv.setRandom();
-	if (!cv.selfTest(xcv, &s1, 1e-2, 1e-3)) {
-		allOk = false;
-	}
 
 	// Pooling
 	Pooling pl("{inputShape=[3,4,4];stride=2}");
@@ -399,24 +391,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkConvolutionForward()) {
-		cerr << green << "ConvolutionForward (Convolution) with test data: OK."
-		     << def << endl;
-	} else {
-		cerr << red << "ConvolutionForward (Convolution) with test data: ERROR."
-		     << def << endl;
-		allOk = false;
-		exit(-1);
-	}
-	if (checkConvolutionBackward()) {
-		cerr << green << "ConvolutionBackward (Convolution) with test data: OK."
-		     << def << endl;
-	} else {
-		cerr << red << "ConvolutionBackward (Convolution) with test data: ERROR."
-		     << def << endl;
-		allOk = false;
-	}
 
 	if (checkPoolingForward()) {
 		cerr << green << "PoolingForward with test data: OK." << def << endl;

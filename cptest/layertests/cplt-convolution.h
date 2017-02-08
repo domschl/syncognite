@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(2,48); // 2x3x4x4 NxCxHxW
     t_cppl states;
     x << -0.1       , -0.09368421, -0.08736842, -0.08105263,
@@ -108,10 +108,10 @@ bool checkConvolutionForwardMin(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr, &states);
 
-    return matComp(y,y0,"ConvolutionForward",eps);
+    return matCompT(y,y0,"ConvolutionForward",eps,verbose);
 }
 
-bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(7,108); // 2x3x4x4 NxCxHxW
     x << -1.00000000e-01,  -9.92052980e-02,  -9.84105960e-02,
@@ -629,10 +629,10 @@ bool checkConvolutionForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(cv.params["b"])=b;
     MatrixN y0=cv.forward(x, nullptr, &states);
 
-    return matComp(y,y0,"ConvolutionForward",eps);
+    return matCompT(y,y0,"ConvolutionForward",eps,verbose);
 }
 
-bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN x(4, 75);
     x << 4.06278962e-01,  -7.20029839e-01,  -8.77595062e-01,
@@ -1018,15 +1018,41 @@ bool checkConvolutionBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=cv.forward(x, &cache, &states);
     MatrixN dx0=cv.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"ConvolutionBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"ConvolutionBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"ConvolutionBackward dW",eps);
+    ret=matCompT(dW,*(grads["W"]),"ConvolutionBackward dW",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"]),"ConvolutionBackward bx",eps);
+    ret=matCompT(db,*(grads["b"]),"ConvolutionBackward bx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
 }
 
+bool testConvolution(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "Convolution Layer: " << def << endl;
+	// Numerical gradient
+    // Convolution
+	// Convolution cv("{inputShape=[3,4,4,16,3,3];stride=1;pad=0}");
+	// MatrixN xcv(20,48);
+	Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
+	MatrixN xcv(2, 75);
+	xcv.setRandom();
+	bool res=cv.selfTest(xcv, &s1, 1e-2, 1e-3);
+	registerTestResult("Convolution", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkConvolutionForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Convolution", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkConvolutionBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Convolution", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
+}
 #endif
