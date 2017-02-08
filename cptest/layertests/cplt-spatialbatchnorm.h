@@ -228,7 +228,7 @@ bool testSpatialBatchNorm(int verbose) {
 		"{inputShape=[3,4,4];train=true;N=2;noVectorizationTests=true}");
 	MatrixN xsbn(2, 3 * 4 * 4);
 	xsbn.setRandom();
-	bool res=sbn.selfTest(xsbn, &s1);
+	bool res=sbn.selfTest(xsbn, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
 	registerTestResult("SpatialBatchNorm", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

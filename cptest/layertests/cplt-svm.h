@@ -102,7 +102,7 @@ bool testSvm(int verbose) {
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=sv.selfTest(xsv, &svmstates, h, eps);
+	bool res=sv.selfTest(xsv, &svmstates, h, eps, verbose);
 	registerTestResult("SVM", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

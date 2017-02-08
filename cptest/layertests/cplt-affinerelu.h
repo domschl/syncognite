@@ -74,7 +74,7 @@ bool testAffineRelu(int verbose) {
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=rx.selfTest(xarl, &s1, h, eps);
+	bool res=rx.selfTest(xarl, &s1, h, eps, verbose);
 	registerTestResult("AffineRelu", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

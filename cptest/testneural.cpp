@@ -193,33 +193,10 @@ int doTests() {
     if (checkForTest("SpatialBatchNorm")) if (!testSpatialBatchNorm(verbose)) allOk=false;
     if (checkForTest("Svm")) if (!testSvm(verbose)) allOk=false;
     if (checkForTest("Softmax")) if (!testSoftmax(verbose)) allOk=false;
+    if (checkForTest("TwoLayerNet")) if (!testTwoLayerNet(verbose)) allOk=false;
 
 
 
-	// TwoLayerNet
-	int ntl1 = 4, ntl2 = 5, ntl3 = 6, ntlN = 30;
-	CpParams tcp;
-	tcp.setPar("inputShape", vector<int>{ntl1});
-	tcp.setPar("hidden", vector<int>{ntl2, ntl3});
-	tcp.setPar("init", (string) "standard");
-	TwoLayerNet tl(tcp);
-	MatrixN xtl(ntlN, ntl1);
-	xtl.setRandom();
-	MatrixN y2(ntlN, 1);
-	for (unsigned i = 0; i < y2.rows(); i++)
-		y2(i, 0) = (rand() % ntl3);
-	h = 1e-3;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-5;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	t_cppl tlstates;
-	tlstates["y"] = &y2;
-	if (!tl.selfTest(xtl, &tlstates, h, eps)) {
-		allOk = false;
-		cerr << red << "Numerical gradient for TwoLayerNet: ERROR." << def << endl;
-	}
 
 	// RNN
 	int rnnN = 4; // N=4, D=5, H=6, T=7
@@ -331,12 +308,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-	if (checkTwoLayer()) {
-		cerr << green << "TwoLayerNet with test data: OK." << def << endl;
-	} else {
-		cerr << red << "TwoLayerNet with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (checkRNNStepForward()) {
 		cerr << green << "RNNForwardStep with test data: OK." << def << endl;

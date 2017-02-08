@@ -211,7 +211,7 @@ bool testBatchNorm(int verbose) {
     BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
     MatrixN xbr(20, 10);
     xbr.setRandom();
-    bool res=bn.selfTest(xbr, &s1, 1e-4, 1e-3);
+    bool res=bn.selfTest(xbr, &s1, 1e-4, 1e-3, verbose);
 	registerTestResult("BatchNorm", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

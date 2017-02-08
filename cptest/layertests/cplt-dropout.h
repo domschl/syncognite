@@ -68,7 +68,7 @@ bool testDropout(int verbose) {
 	floatN eps = 1e-8;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=dp.selfTest(xdp, &s1, h, eps);
+	bool res=dp.selfTest(xdp, &s1, h, eps, verbose);
 	registerTestResult("Dropout", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

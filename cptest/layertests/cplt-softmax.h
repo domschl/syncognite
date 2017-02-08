@@ -94,7 +94,7 @@ bool testSoftmax(int verbose) {
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=mx.selfTest(xmx, &smstates, h, eps);
+	bool res=mx.selfTest(xmx, &smstates, h, eps, verbose);
 	registerTestResult("Softmax", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;   // N=3, D=5, H=4, C=2
     int N=3, D=5, H=4, C=2;
     t_cppl states;
@@ -48,7 +48,7 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     states["y"] = &yc;
     MatrixN sc0=tln.forward(x,&cache,&states);
-    bool ret=matComp(sc,sc0,"TwoLayerNetScores",eps);
+    bool ret=matCompT(sc,sc0,"TwoLayerNetScores",eps,verbose);
     if (!ret) allOk=false;
 
     MatrixN dW1(D,H);
@@ -73,25 +73,27 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
-        cerr << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
+        if (verbose>1) cerr << "  TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " OK." << endl;
     } else {
-        cerr << "TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
+        if (verbose>0) cerr << "  TwoLayerNet: loss-err: " << lse << " for reg=" << reg << " incorrect: " << ls << ", expected: " << lsc << endl;
         allOk=false;
     }
     MatrixN dx0=tln.backward(yc,&cache,&states, &grads);
 
-    cerr << "Got grads: ";
-    for (auto gi : grads) {
-        cerr << gi.first << " ";
+    if (verbose>2) {
+        cerr << "  Got grads: ";
+        for (auto gi : grads) {
+            cerr <<  gi.first << " ";
+        }
+        cerr << endl;
     }
-    cerr << endl;
-    ret=matComp(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps);
+    ret=matCompT(dW1,*(grads["af1-W"]),"TwoLayerNet dW1",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps);
+    ret=matCompT(db1,*(grads["af1-b"]),"TwoLayerNet db1",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps);
+    ret=matCompT(dW2,*(grads["af2-W"]),"TwoLayerNet dW2",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(db2,*(grads["af2-b"]),"TwoLayerNet db2",eps);
+    ret=matCompT(db2,*(grads["af2-b"]),"TwoLayerNet db2",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -99,4 +101,41 @@ bool checkTwoLayer(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool testTwoLayerNet(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "TwoLayerNet Layer: " << def << endl;
+	// Numerical gradient
+    // TwoLayerNet
+	int ntl1 = 4, ntl2 = 5, ntl3 = 6, ntlN = 30;
+	CpParams tcp;
+	tcp.setPar("inputShape", vector<int>{ntl1});
+	tcp.setPar("hidden", vector<int>{ntl2, ntl3});
+	tcp.setPar("init", (string) "standard");
+	TwoLayerNet tl(tcp);
+	MatrixN xtl(ntlN, ntl1);
+	xtl.setRandom();
+	MatrixN y2(ntlN, 1);
+	for (unsigned i = 0; i < y2.rows(); i++)
+		y2(i, 0) = (rand() % ntl3);
+	floatN h = 1e-3;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-5;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	t_cppl tlstates;
+	tlstates["y"] = &y2;
+	bool res=tl.selfTest(xtl, &tlstates, h, eps, verbose);
+	registerTestResult("TwoLayerNet", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkTwoLayerNet(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("TwoLayerNet", "Check (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
+}
 #endif

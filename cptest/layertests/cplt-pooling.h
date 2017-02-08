@@ -322,7 +322,7 @@ bool testPooling(int verbose) {
 	Pooling pl("{inputShape=[3,4,4];stride=2}");
 	MatrixN xpl(20, 48);
 	xpl.setRandom();
-	bool res=pl.selfTest(xpl, &s1);
+	bool res=pl.selfTest(xpl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
 	registerTestResult("Pooling", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

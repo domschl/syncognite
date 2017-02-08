@@ -1042,7 +1042,7 @@ bool testConvolution(int verbose) {
 	Convolution cv("{inputShape=[3,5,5];kernel=[2,3,3];stride=1;pad=1}");
 	MatrixN xcv(2, 75);
 	xcv.setRandom();
-	bool res=cv.selfTest(xcv, &s1, 1e-2, 1e-3);
+	bool res=cv.selfTest(xcv, &s1, 1e-2, 1e-3, verbose);
 	registerTestResult("Convolution", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 
