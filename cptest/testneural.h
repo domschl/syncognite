@@ -32,7 +32,7 @@ using std::endl;
 
 
 const vector<string> additionaltestcases{
-    "RegisterTest",
+    "LayerBlock", "TrainTwoLayerNet",
 };
 
 #endif

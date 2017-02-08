@@ -92,10 +92,50 @@ int tFunc(VectorN x, int c) {
 	return int(y);
 }
 
-bool trainTest() {
-	bool allOk = true;
+bool testLayerBlock(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def << endl;
+	LayerBlock lb("{name='testblock'}");
+	if (verbose>1) cerr << "  LayerName for lb: " << lb.layerName << endl;
+	lb.addLayer("Affine", "af1", "{inputShape=[10]}", {"input"});
+	lb.addLayer("Relu", "rl1", "", {"af1"});
+	lb.addLayer("Affine", "af2", "{hidden=10}", {"rl1"});
+	lb.addLayer("Softmax", "sm1", "", {"af2"});
+    bool bCT=false;
+    if (verbose>2) bCT=true;
+	bool res=lb.checkTopology(bCT);
+    registerTestResult("LayerBlock", "Topology check", res, "");
+    if (!res) bOk = false;
+
+	MatrixN xml(5, 10);
+	xml.setRandom();
+	MatrixN yml(5, 1);
+	for (unsigned i = 0; i < yml.rows(); i++)
+		yml(i, 0) = (rand() % 10);
+
+	floatN h = 1e-3;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-5;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	t_cppl lbstates;
+	lbstates["y"] = &yml;
+	// This is just a pain: slow:
+	res=lb.selfTest(xml, &lbstates, h, eps, verbose);
+    if (!res) bOk=false;
+    registerTestResult("LayerBlock", "Numerical self-test", res, "");
+    return bOk;
+}
+
+bool testTrainTwoLayerNet(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	cerr << lblue << "TwoLayerNet training test: " << def << endl;
 	CpParams cp;
-	// int N=500,NV=50,NT=50,I=5,H=10,C=4;
 	int N = 100, NV = 40, NT = 40, I = 5, H = 20, C = 4;
 	cp.setPar("inputShape", vector<int>{I});
 	cp.setPar("hidden", vector<int>{H, C});
@@ -123,28 +163,33 @@ bool trainTest() {
 	for (unsigned i = 0; i < yt.rows(); i++)
 		yt(i, 0) = tFunc(Xt.row(i), C);
 
-	CpParams cpo("{verbose=false;epochs=300.0;batch_size=20;learning_rate=5e-2;"
+	CpParams cpo("{epochs=300.0;batch_size=20;learning_rate=5e-2;"
 	    "lr_decay=1.0;epsilon=1e-8;regularization=1e-3;maxthreads=4}");
-
+    if (verbose>2) cpo.setPar("verbose", (bool)true);
+    else cpo.setPar("verbose",(bool)false);
 	floatN train_err, test_err, val_err;
 
 	t_cppl states {}, statesv {}, statest {};
 	states["y"] = &y;
 	statesv["y"] = &yv;
 	statest["y"] = &yt;
+    cerr << "  ";
 	tln.train(X, &states, Xv, &statesv, "Adam", cpo);
 	// tln.train(X, y, Xv, yv, "Sdg", cpo);
 	train_err = tln.test(X, &states);
 	val_err = tln.test(Xv, &statesv);
 	test_err = tln.test(Xt, &statest);
 
-	cerr << "Train-test, train-err=" << train_err << endl;
-	cerr << "       validation-err=" << val_err << endl;
-	cerr << "       final test-err=" << val_err << endl;
+    if (verbose>1) {
+        cerr << "  Train-test, train-err=" << train_err << endl;
+    	cerr << "         validation-err=" << val_err << endl;
+    	cerr << "         final test-err=" << val_err << endl;
+    }
 	if (test_err > 0.4 || val_err > 0.4 || train_err > 0.4 || test_err < -10.0 ||
 	    val_err < -10.0 || train_err < -10.0)
-		allOk = false;
-	return allOk;
+		bOk = false;
+    registerTestResult("TrainTest", "TwoLayerNet training", bOk, "");
+	return bOk;
 }
 
 vector<string> failedTests{};
@@ -200,57 +245,9 @@ int doTests() {
     if (checkForTest("TemporalAffine")) if (!testTemporalAffine(verbose)) allOk=false;
     if (checkForTest("TemporalSoftmax")) if (!testTemporalSoftmax(verbose)) allOk=false;
 
+    if (checkForTest("LayerBlock")) if (!testLayerBlock(verbose)) allOk=false;
+    if (checkForTest("TrainTwoLayerNet")) if (!testTrainTwoLayerNet(verbose)) allOk=false;
 
-	// LayerBlock1
-	LayerBlock lb("{name='testblock'}");
-	cerr << "LayerName for lb: " << lb.layerName << endl;
-	lb.addLayer("Affine", "af1", "{inputShape=[10]}", {"input"});
-	lb.addLayer("Relu", "rl1", "", {"af1"});
-	lb.addLayer("Affine", "af2", "{hidden=10}", {"rl1"});
-	lb.addLayer("Softmax", "sm1", "", {"af2"});
-	if (!lb.checkTopology(true)) {
-		allOk = false;
-		cerr << red << "Topology-check for LayerBlock: ERROR." << def << endl;
-	} else {
-		cerr << green << "Topology-check for LayerBlock: ok." << def << endl;
-	}
-	MatrixN xml(5, 10);
-	xml.setRandom();
-	MatrixN yml(5, 1);
-	for (unsigned i = 0; i < yml.rows(); i++)
-		yml(i, 0) = (rand() % 10);
-
-	h = 1e-3;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-5;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	t_cppl lbstates;
-	lbstates["y"] = &yml;
-	// This is just a pain: slow:
-	if (!lb.selfTest(xml, &lbstates, h, eps)) {
-		allOk = false;
-		cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
-	}
-
-	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (trainTest()) {
-		cerr << green << "TrainTest: OK." << def << endl;
-	} else {
-		cerr << red << "TrainTest: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	/*
-	    if (registerTest()) {
-	        cerr << green << "RegisterTest: OK." << def << endl;
-	    } else {
-	        cerr << red << "RegisterTest: ERROR." << def << endl;
-	        allOk=false;
-	    }
-	 */
 	if (allOk) {
 		cerr << green << "All tests ok." << def << endl;
 	} else {
