@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(2,4);  // N, T, V, D = 2, 4, 5, 3
     x << 0, 3, 1, 2,
          2, 1, 0, 3;
@@ -31,11 +31,11 @@ bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     t_cppl states;
     MatrixN y0=we.forward(x, &cache, &states, 0);
     cppl_delete(&cache);
-    return matComp(y,y0,"WordEmbeddingForward",eps);
+    return matCompT(y,y0,"WordEmbeddingForward",eps,verbose);
 }
 
 
-bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN x(50,3);   // N, T, V, D = 50, 3, 5, 6
     x << 2, 2, 4,       2, 2, 3,       2, 2, 4,       4, 3, 3,       3, 2, 2,
        1, 4, 1,       3, 3, 3,       4, 4, 3,       1, 1, 4,       2, 2, 2,
@@ -624,12 +624,41 @@ bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN dx0=we.backward(dchain, &cache, &states, &grads);
     //bool ret=matComp(dx,dx0,"WordEmbeddingBackward dx",eps);
     //if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"WordEmbeddingBackward dW",eps);
+    ret=matCompT(dW,*(grads["W"]),"WordEmbeddingBackward dW",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testWordEmbedding(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "WordEmbedding Layer: " << def << endl;
+	// Numerical gradient
+    // WordEmbedding
+	int weN = 4, weT = 3, weV = 10, weD = 8;
+	MatrixN xwe(weN, weT);
+	MatrixN weW(weV, weD);
+	xwe.setRandom();
+	weW.setRandom();
+	WordEmbedding we("{inputShape=[3];V=10;D=8;noVectorizationTests=true}");
+	*(we.params["W"]) = weW;
+	bool res=we.selfTest(xwe, &s1, 1e-2, 1e-3, verbose);
+	registerTestResult("WordEmbedding", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkWordEmbeddingForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("WordEmbedding", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkWordEmbeddingBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("WordEmbedding", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif

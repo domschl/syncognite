@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkTemporalAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkTemporalAffineForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     // N, T, D, M = 2, 3, 4, 5
     MatrixN x(2,3*4);  // (N, T*D)
     x << -0.7461612 , -1.55144546,  1.82876302,  0.5294384,
@@ -34,10 +34,10 @@ bool checkTemporalAffineForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     *(pe.params["b"])=b;
     t_cppl states;
     MatrixN y0=pe.forward(x, nullptr, &states);
-    return matComp(y,y0,"TemporalAffineForward",eps);
+    return matCompT(y,y0,"TemporalAffineForward",eps,verbose);
 }
 
-bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     // N, T, D, M = 2, 3, 4, 5
     MatrixN x(2,3*4);  // (N, T*D)
     x << -0.7461612 , -1.55144546,  1.82876302,  0.5294384,
@@ -97,15 +97,38 @@ bool checkTemporalAffineBackward(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl grads;
     MatrixN dx0=pe.backward(dchain, &cache, &states, &grads);
     bool allOk=true;
-    bool ret=matComp(dx,dx0,"TemporalAffineBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"TemporalAffineBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["W"]),"TemporalAffineBackward dW",eps);
+    ret=matCompT(dW,*(grads["W"]),"TemporalAffineBackward dW",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["b"]),"TemporalAffineBackward bx",eps);
+    ret=matCompT(db,*(grads["b"]),"TemporalAffineBackward bx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testTemporalAffine(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "TemporalAffine Layer: " << def << endl;
+	TemporalAffine pct(CpParams("{inputShape=[6,5];M=7}")); // T=5;D=6;30=T*D
+	MatrixN xtt(10, 30);
+	xtt.setRandom();
+	bool res=pct.selfTest(xtt, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("TemporalAffine", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkTemporalAffineForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("TemporalAffine", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkTemporalAffineBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("TemporalAffine", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
 }
 
 #endif

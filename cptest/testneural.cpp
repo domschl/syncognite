@@ -196,30 +196,9 @@ int doTests() {
     if (checkForTest("TwoLayerNet")) if (!testTwoLayerNet(verbose)) allOk=false;
     if (checkForTest("RNN")) if (!testRNN(verbose)) allOk=false;
     if (checkForTest("LSTM")) if (!testLSTM(verbose)) allOk=false;
+    if (checkForTest("WordEmbedding")) if (!testWordEmbedding(verbose)) allOk=false;
+    if (checkForTest("TemporalAffine")) if (!testTemporalAffine(verbose)) allOk=false;
 
-
-	// WordEmbedding
-	int weN = 4, weT = 3, weV = 10, weD = 8;
-	MatrixN xwe(weN, weT);
-	MatrixN weW(weV, weD);
-	xwe.setRandom();
-	weW.setRandom();
-	WordEmbedding we("{inputShape=[3];V=10;D=8;noVectorizationTests=true}");
-	*(we.params["W"]) = weW;
-	if (!we.selfTest(xwe, &s1, 1e-2, 1e-3)) {
-		allOk = false;
-	}
-
-	// N=10; T=5; D=6; M=7
-	// TemporalAffine
-	// pct(CpParams("{inputShape=[30];T=5;D=6;M=7;noVectorizationTests=true}"));
-	// // 30=T*D
-	TemporalAffine pct(CpParams("{inputShape=[6,5];M=7}")); // T=5;D=6;30=T*D
-	MatrixN xtt(10, 30);
-	xtt.setRandom();
-	if (!pct.selfTest(xtt, &s1)) {
-		allOk = false;
-	}
 
 	// Temporal Softmax
 	int tsmN = 10, tsmC = 4, Ttm = 4;
@@ -278,37 +257,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkWordEmbeddingForward()) {
-		cerr << green << "WordEmbeddingForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "WordEmbeddingForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-	if (checkWordEmbeddingBackward()) {
-		cerr << green << "WordEmbeddingBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "WordEmbeddingBackward with test data: ERROR." << def
-		     << endl;
-		allOk = false;
-	}
-
-	if (checkTemporalAffineForward()) {
-		cerr << green << "TemporalAffineForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "TemporalAffineForward with test data: ERROR." << def
-		     << endl;
-		allOk = false;
-	}
-
-	if (checkTemporalAffineBackward()) {
-		cerr << green << "TemporalAffineBackward with test data: OK." << def
-		     << endl;
-	} else {
-		cerr << red << "TemporalAffineBackward with test data: ERROR." << def
-		     << endl;
-		allOk = false;
-	}
 
 	if (checkTemporalSoftmaxLoss(0.1)) {
 		cerr << green << "TemporalSoftmaxLoss with test data: OK." << def << endl;
