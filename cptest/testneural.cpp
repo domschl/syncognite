@@ -191,52 +191,10 @@ int doTests() {
     if (checkForTest("Convolution")) if (!testConvolution(verbose)) allOk=false;
     if (checkForTest("Pooling")) if (!testPooling(verbose)) allOk=false;
     if (checkForTest("SpatialBatchNorm")) if (!testSpatialBatchNorm(verbose)) allOk=false;
+    if (checkForTest("Svm")) if (!testSvm(verbose)) allOk=false;
+    if (checkForTest("Softmax")) if (!testSoftmax(verbose)) allOk=false;
 
 
-
-	// SVM
-	int svN = 10, svC = 5;
-	CpParams c2;
-	c2.setPar("inputShape", vector<int>{svC});
-	Svm sv(c2);
-	t_cppl svmstates;
-	MatrixN xsv(svN, svC);
-	xsv.setRandom();
-	MatrixN yv(svN, 1);
-	for (unsigned i = 0; i < yv.rows(); i++)
-		yv(i, 0) = (rand() % svC);
-	svmstates["y"] = &yv;
-	h = 1e-3;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-6;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	if (!sv.selfTest(xsv, &svmstates, h, eps)) {
-		allOk = false;
-	}
-
-	// Softmax
-	int smN = 10, smC = 4;
-	CpParams c1;
-	c1.setPar("inputShape", vector<int>{smC});
-	Softmax mx(c1);
-	t_cppl smstates;
-	MatrixN xmx(smN, smC);
-	xmx.setRandom();
-	MatrixN y(smN, 1);
-	for (unsigned i = 0; i < y.rows(); i++)
-		y(i, 0) = (rand() % smC);
-	smstates["y"] = &y;
-	h = 1e-3;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-6;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	if (!mx.selfTest(xmx, &smstates, h, eps)) {
-		allOk = false;
-	}
 
 	// TwoLayerNet
 	int ntl1 = 4, ntl2 = 5, ntl3 = 6, ntlN = 30;
@@ -319,7 +277,7 @@ int doTests() {
 	// Temporal Softmax
 	int tsmN = 10, tsmC = 4, Ttm = 4;
 	CpParams tc1;
-	tc1.setPar("inputShape", vector<int>{smC, Ttm});
+	tc1.setPar("inputShape", vector<int>{tsmC, Ttm});
 	tc1.setPar("noVectorizationTests", (bool)true);
 	TemporalSoftmax tmx(tc1);
 	MatrixN txmx(tsmN, tsmC * Ttm);
@@ -373,19 +331,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkSvm()) {
-		cerr << green << "Svm with test data: OK." << def << endl;
-	} else {
-		cerr << red << "Svm with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-	if (checkSoftmax()) {
-		cerr << green << "Softmax with test data: OK." << def << endl;
-	} else {
-		cerr << red << "Softmax with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 	if (checkTwoLayer()) {
 		cerr << green << "TwoLayerNet with test data: OK." << def << endl;
 	} else {

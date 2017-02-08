@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     MatrixN x(10,5);
     x << -5.53887846e-04,  -1.66357895e-05,   9.78587865e-04, -1.32038284e-03,   4.77159634e-04,
@@ -48,25 +48,61 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl states;
     states["y"] = &y;
     MatrixN probs0=sm.forward(x, &cache, &states);
-    bool ret=matComp(probs,probs0,"Softmax probabilities",eps);
+    bool ret=matCompT(probs,probs0,"Softmax probabilities",eps,verbose);
     if (!ret) allOk=false;
     floatN loss0=sm.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
-        cerr << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        if (verbose>0) cerr << "  Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
     } else {
-        cerr << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+        if (verbose>1) cerr << "  Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
     //MatrixN dchain=x;
     //dchain.setOnes();
     MatrixN dx0=sm.backward(y, &cache, &states, &grads);
-    ret=matComp(dx,dx0,"Softmax dx",eps);
+    ret=matCompT(dx,dx0,"Softmax dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&grads);
     cppl_delete(&cache);
     return allOk;
+}
+
+bool testSoftmax(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "Softmax Layer: " << def << endl;
+	// Numerical gradient
+    // Softmax
+	int smN = 10, smC = 4;
+	CpParams c1;
+	c1.setPar("inputShape", vector<int>{smC});
+	Softmax mx(c1);
+	t_cppl smstates;
+	MatrixN xmx(smN, smC);
+	xmx.setRandom();
+	MatrixN y(smN, 1);
+	for (unsigned i = 0; i < y.rows(); i++)
+		y(i, 0) = (rand() % smC);
+	smstates["y"] = &y;
+	floatN h = 1e-3;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-6;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	bool res=mx.selfTest(xmx, &smstates, h, eps);
+	registerTestResult("Softmax", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkSoftmax(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("Softmax", "Check (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
 }
 
 #endif

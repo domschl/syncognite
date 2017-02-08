@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkSvm(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     MatrixN x(10,5);
     x << 2.48040968e-04,   5.60446668e-04,  -3.52994957e-04,
@@ -58,23 +58,59 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS) {
     t_cppl states;
     states["y"] = &y;
     MatrixN margins0=sv.forward(x, &cache, &states);
-    bool ret=matComp(margins,margins0,"Svm probabilities",eps);
+    bool ret=matCompT(margins,margins0,"Svm probabilities",eps,verbose);
     if (!ret) allOk=false;
     floatN loss0=sv.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
-        cerr << "Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
+        if (verbose>0) cerr << "  Loss error: correct:" << loss << " got: " << loss0 << ", err=" << err << endl;
         allOk=false;
     } else {
-        cerr << "Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
+        if (verbose>1) cerr << "  Loss ok, loss=" << loss0 << " (ref: " << loss << "), err=" << err << endl;
     }
     MatrixN dx0=sv.backward(y, &cache, &states, &grads);
-    ret=matComp(dx,dx0,"Softmax dx",eps);
+    ret=matCompT(dx,dx0,"Softmax dx",eps,verbose);
     if (!ret) allOk=false;
     cppl_delete(&grads);
     cppl_delete(&cache);
     return allOk;
+}
+
+bool testSvm(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "SVM Layer: " << def << endl;
+	// Numerical gradient
+    // SVM
+	int svN = 10, svC = 5;
+	CpParams c2;
+	c2.setPar("inputShape", vector<int>{svC});
+	Svm sv(c2);
+	t_cppl svmstates;
+	MatrixN xsv(svN, svC);
+	xsv.setRandom();
+	MatrixN yv(svN, 1);
+	for (unsigned i = 0; i < yv.rows(); i++)
+		yv(i, 0) = (rand() % svC);
+	svmstates["y"] = &yv;
+	floatN h = 1e-3;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-6;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	bool res=sv.selfTest(xsv, &svmstates, h, eps);
+	registerTestResult("SVM", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkSvm(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("SVM", "Check (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
 }
 
 #endif
