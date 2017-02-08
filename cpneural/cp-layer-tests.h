@@ -81,7 +81,7 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
     MatrixN dx = x;
     dx.setZero();
 
-    if (cache.find("x")==cache.end()) cerr << "  WARNING: x is not in cache!" << endl;
+    // if (cache.find("x")==cache.end()) cerr << "  WARNING: x is not in cache!" << endl;
 
     MatrixN dxc = backward(dyc, &cache, pstates, &grads, 0);
 
