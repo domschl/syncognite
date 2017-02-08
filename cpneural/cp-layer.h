@@ -166,16 +166,16 @@ public:
     retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
-    bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps);
+    bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps, int verbose);
 
 private:
-    bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps);
-    bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps);
-    MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h);
-    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h);
-    bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt);
-    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt);
-    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt);
+    bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps, int verbose);
+    bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps, int verbose);
+    MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h, int verbose);
+    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h, int verbose);
+    bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt, int verbose);
+    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt, int verbose);
+    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt, int verbose);
 };
 
 #endif

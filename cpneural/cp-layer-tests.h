@@ -3,7 +3,7 @@
 
 #include "cp-neural.h"
 
-bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     MatrixN yt;
     MatrixN y;
@@ -11,7 +11,7 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
     yt=forward(x, pcache, pstates, 0);
     if (layerType & LayerType::LT_LOSS) {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "checkForward: pstates does not contain y -> fatal!" << endl;
+            cerr << "  checkForward: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
     }
@@ -38,17 +38,20 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
     MatrixN d = yic - yt;
     floatN dif = d.cwiseProduct(d).sum();
 
-    if (dif < eps) {cerr << "Forward vectorizer OK, err=" << dif << endl;}
-    else {
-        cerr << "Forward vectorizer Error, err=" << dif << endl;
-        cerr << "yic:" << yic.format(CleanFmt) << endl;
-        cerr << "yt:" << yt.format(CleanFmt) << endl;
+    if (dif < eps) {
+        if (verbose>1) cerr << "  Forward vectorizer OK, err=" << dif << endl;
+    } else {
+        if (verbose>0) {
+            cerr << "  Forward vectorizer Error, err=" << dif << endl;
+            cerr << "  yic:" << yic.format(CleanFmt) << endl;
+            cerr << "  yt:" << yt.format(CleanFmt) << endl;
+        }
         allOk=false;
     }
     return allOk;
 }
 
-bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
@@ -62,23 +65,23 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
         dyc.setRandom();
     } else if (layerType & LayerType::LT_LOSS) {
         if (pstates->find("y") == pstates->end()) {
-            cerr << "checkBackward: pstates does not contain y -> fatal!" << endl;
+            if (verbose>0) cerr << "  checkBackward: pstates does not contain y -> fatal!" << endl;
         }
         y = *((*pstates)["y"]);
         forward(x, &cache, pstates, 0);
         dyc=y; // XXX: no!
     } else {
-        cerr << "BAD LAYER TYPE!" << layerType << endl;
+        cerr << "  BAD LAYER TYPE!" << layerType << endl;
         return false;
     }
     if (dyc.rows() != x.rows()) {
-        cerr << "internal error: y:" << shape(dyc) << " x:" << shape(x) << " - unequal number of rows!" << endl;
+        cerr << "  internal error: y:" << shape(dyc) << " x:" << shape(x) << " - unequal number of rows!" << endl;
         return false;
     }
     MatrixN dx = x;
     dx.setZero();
 
-    if (cache.find("x")==cache.end()) cerr << "WARNING: x is not in cache!" << endl;
+    if (cache.find("x")==cache.end()) cerr << "  WARNING: x is not in cache!" << endl;
 
     MatrixN dxc = backward(dyc, &cache, pstates, &grads, 0);
 
@@ -114,11 +117,14 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
     }
     MatrixN d = dx - dxc;
     floatN dif = d.cwiseProduct(d).sum();
-    if (dif < eps) {cerr << "Backward vectorizer dx OK, err=" << dif << endl;}
-    else {
-        cerr << "Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
-        cerr << "dxc:" << endl << dxc.format(CleanFmt) << endl;
-        cerr << "Backward vectorizer dx Error, err=" << dif << endl;
+    if (dif < eps) {
+        if (verbose>1) cerr << "  Backward vectorizer dx OK, err=" << dif << endl;
+    } else {
+        if (verbose>0) {
+            cerr << "  Backward vectorizer dx:" << endl << dx.format(CleanFmt) << endl;
+            cerr << "  dxc:" << endl << dxc.format(CleanFmt) << endl;
+            cerr << "  Backward vectorizer dx Error, err=" << dif << endl;
+        }
         allOk=false;
     }
 
@@ -126,11 +132,13 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
         MatrixN d = *grads[it.first] - *rgrads[it.first];
         floatN dif = d.cwiseProduct(d).sum();
         if (dif < eps) {
-            cerr << "Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
+            if (verbose>1) cerr << "  Backward vectorizer " << "d" << it.first << " OK, err=" << dif << endl;
         } else {
-            cerr << "d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
-            cerr << "d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
-            cerr << "Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
+            if (verbose>0) {
+                cerr << "  d" << it.first << ":" << endl << grads[it.first]->format(CleanFmt) << endl;
+                cerr << "  d" << it.first << "c:" << endl << rgrads[it.first]->format(CleanFmt) << endl;
+                cerr << "  Backward vectorizer " << "d" << it.first << " error, err=" << dif << endl;
+            }
             allOk=false;
         }
     }
@@ -140,23 +148,23 @@ bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, flo
     return allOk;
 }
 
-MatrixN *getVarPointerHack(string var, MatrixN *px, t_cppl& params, t_cppl* pstates) {
+MatrixN *getVarPointerHack(string var, MatrixN *px, t_cppl& params, t_cppl* pstates, int verbose=1) {
     MatrixN *pm;
     if (var=="x") pm=px;
     else {
         if (params.find(var)==params.end()) {
             if (pstates->find(var)!=pstates->end()) {
-                cerr << "Warning: trying to differentiate numerically a state" << endl;
+                if (verbose>1) cerr << "  Warning: trying to differentiate numerically a state" << endl;
                 pm = (*pstates)[var];
             } else {
                 string var0 = var.substr(0, var.size()-1);
                 if (var0.size()>0 && pstates->find(var0)!=pstates->end()) {
-                    cerr << "Numerical check, mapping gradient " << var << " to state -> " << var0 << endl;
+                    if (verbose>2) cerr << "  Numerical check, mapping gradient " << var << " to state -> " << var0 << endl;
                     pm = (*pstates)[var0];
-                    cerr << "pm set" << endl;
+                    if (verbose>2) cerr << "  pm set" << endl;
                 } else {
                     pm = nullptr;
-                    cerr << "Cannot find corresponding variable to gradient: " << var << " -> FATAL" << endl;
+                    if (verbose>0) cerr << "  Cannot find corresponding variable to gradient: " << var << " -> FATAL" << endl;
                 }
             }
         }  else {
@@ -166,8 +174,8 @@ MatrixN *getVarPointerHack(string var, MatrixN *px, t_cppl& params, t_cppl* psta
     return pm;
 }
 
-MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
-    cerr << "  checking numerical gradient for " << var << "..." << endl;
+MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H, int verbose=1) {
+    if (verbose>2) cerr << "  checking numerical gradient for " << var << "..." << endl;
     MatrixN *pm;
     MatrixN x;
     if (pcache->find("x")==pcache->end()) { // XXX that is quite a mess!
@@ -205,7 +213,7 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H) {
+MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H, int verbose=1) {
     MatrixN *pm;
     MatrixN x=xorg;
     MatrixN y=*((*pstates)["y"]);
@@ -237,20 +245,20 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
     return grad;
 }
 
-bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false) {
+bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false, int verbose=1) {
     for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
-            g = calcNumGrad(x, dchain, pcache, pstates, it.first, h);
+            g = calcNumGrad(x, dchain, pcache, pstates, it.first, h, verbose);
         } else {
-            g = calcNumGradLoss(x, pcache, pstates, it.first, h);
+            g = calcNumGradLoss(x, pcache, pstates, it.first, h, verbose);
         }
         cppl_set(pnumGrads, it.first, new MatrixN(g));
     }
     return true;
 }
 
-bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false){
+bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1){
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -287,13 +295,15 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
         MatrixN d = *(grads[it.first]) - *(numGrads[it.first]);
         floatN df = (d.cwiseProduct(d)).sum();
         if (df < eps) {
-            cerr << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
+            if (verbose>1) cerr << "  " << layerName << ": " << "∂/∂" << it.first << green << " OK, err=" << df << def << endl;
         } else {
-            cerr << "eps:" << eps << " h:" << h << endl;
-            cerr << "∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
-            cerr << "∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
-            cerr << "  ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
-            cerr << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
+            if (verbose>0) {
+                cerr << "  eps:" << eps << " h:" << h << endl;
+                cerr << "  ∂/∂" << it.first << "[num]: " << endl << (*(numGrads[it.first])).format(CleanFmt) << endl;
+                cerr << "  ∂/∂" << it.first << "[the]: " << endl << (*(grads[it.first])).format(CleanFmt) << endl;
+                cerr << "    ð" << it.first << "    : " << endl << ((*(grads[it.first])) - (*(numGrads[it.first]))).format(CleanFmt) << endl;
+                cerr << layerName << ": " << "∂/∂" << it.first << red << " ERROR, err=" << df << def << endl;
+            }
             allOk=false;
         }
     }
@@ -302,7 +312,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     return allOk;
 }
 
-bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false) {
+bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1) {
     // XXX: y parameter?
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -312,56 +322,56 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    cerr << "CheckLayer" << endl;
+    if (verbose>2) cerr << "CheckLayer start" << endl;
     std::flush(cerr);
 
     if (!cp.getPar("noVectorizationTests", false)) {
-        cerr << "  check forward vectorizer " << layerName << "..." << endl;
-        ret=checkForward(x, nullptr, pstates, eps);
+        if (verbose>2) cerr << "  check forward vectorizer " << layerName << "..." << endl;
+        ret=checkForward(x, nullptr, pstates, eps, verbose);
         if (!ret) {
-            cerr << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
+            if (verbose>0) cerr << "  " << layerName << ": " << red << "Forward vectorizing test failed!" << def << endl;
             return ret;
         } else {
-            cerr << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
+            if (verbose>1) cerr << "  " << layerName << ": "<< green << "Forward vectorizing test OK!" << def << endl;
         }
 
-        cerr << "  check backward vectorizer " << layerName << "..." << endl;
+        if (verbose>2) cerr << "  check backward vectorizer " << layerName << "..." << endl;
         t_cppl cache;
-        ret=checkBackward(x, &cache, pstates, eps);
+        ret=checkBackward(x, &cache, pstates, eps, verbose);
         cppl_delete(&cache);
         if (!ret) {
-            cerr << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
+            if (verbose>0) cerr << "  " << layerName << ": " << red << "Backward vectorizing test failed!" << def << endl;
             allOk=false; //return ret;
         } else {
-            cerr << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
+            if (verbose>1) cerr << layerName << ": " << green << "Backward vectorizing test OK!" << def << endl;
         }
     }
 
-    cerr << "  check numerical gradients " << layerName << "..." << endl;
+    if (verbose>2) cerr << "  check numerical gradients " << layerName << "..." << endl;
     t_cppl cache2;
-    ret=checkGradients(x, y, dchain, &cache2, pstates, h, eps, lossFkt);
+    ret=checkGradients(x, y, dchain, &cache2, pstates, h, eps, lossFkt, verbose);
     cppl_delete(&cache2);
     if (!ret) {
-        cerr << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
+        if (verbose>0) cerr << "  " << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
         return ret;
     } else {
-        cerr << layerName << ": " << green << "Gradient numerical test OK!" << def << endl;
+        if (verbose>1) cerr << "  " << layerName << ": " << green << "Gradient numerical test OK!" << def << endl;
     }
 
     if (allOk) {
-        cerr << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
+        if (verbose>0) cerr << "  " << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
     } else {
-        cerr << layerName << ": " << red << "checkLayer: tests ended with error!" << def << endl;
+        if (verbose>0) cerr << "  " << layerName << ": " << red << "checkLayer: Numerical gradient check ended with error!" << def << endl;
     }
     return allOk;
 }
 
-bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS) {
+bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
     MatrixN y;
-    cerr << "SelfTest for: " << layerName << " -----------------" << endl;
+    if (verbose>1) cerr << "SelfTest for: " << layerName << " -----------------" << endl;
     t_cppl st;
     cppl_copy(pstates, &st);
     MatrixN yf = forward(x, nullptr, &st, 0);
@@ -380,7 +390,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt);
+    ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt, verbose);
     cppl_delete(&cache);
     return ret;
 }

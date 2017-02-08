@@ -100,8 +100,8 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
 * C++ 11 compiler (on Linux or Mac, Intel or ARM)
-* Eigen v3.3
-* Hdf5 for sample data. (optional, for data-sources MNIST and CIFAR10)
+* Eigen v3.3 `eigen3`
+* Hdf5 for sample data, `hdf5-cpp-fortran`. (optional, for data-sources MNIST and CIFAR10)
 * OpenMP (optional, for threading)
 * Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.
