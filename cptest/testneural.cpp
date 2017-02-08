@@ -353,7 +353,7 @@ int doTests() {
         allOk=false;
         cerr << red << "Numerical gradient for LayerBlock: ERROR." << def << endl;
     }
-    
+
     cerr << "=== 2.: Test-data tests" << endl;
 
     if (checkAffineForward()) {
