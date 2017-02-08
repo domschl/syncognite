@@ -28,35 +28,35 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
     return loss;
 }
 
-bool checkTemporalSoftmaxLoss(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkTemporalSoftmaxLoss(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     float loss;
-    cerr << "Checking TemporalSoftmaxLoss:" << endl;
+    if (verbose>1) cerr << "  Checking TemporalSoftmaxLoss:" << endl;
     loss=getTemporalSMLoss(1000, 1, 10, 1.0);   // Should be about 2.3
     if (std::abs(loss-2.3)>eps) {
-        cerr << "  TemporalSMLoss check failed for ex (1): " << loss << ", should be 2.3" << endl;
+        if (verbose>0) cerr << "    TemporalSMLoss check failed for ex (1): " << loss << ", should be 2.3" << endl;
         allOk=false;
     } else {
-        cerr << "  TemporalSMLoss check OK for ex (1): " << loss << ", theoretical: 2.3" << endl;
+        if (verbose>1) cerr << "    TemporalSMLoss check OK for ex (1): " << loss << ", theoretical: 2.3" << endl;
     }
     loss=getTemporalSMLoss(1000, 10, 10, 1.0);  // Should be about 23
     if (std::abs(loss-23.0)>eps) {
-        cerr << "TemporalSMLoss check failed for ex (2): " << loss << ", should be 23" << endl;
+        if (verbose>0) cerr << "    TemporalSMLoss check failed for ex (2): " << loss << ", should be 23" << endl;
         allOk=false;
     } else {
-        cerr << "  TemporalSMLoss check OK for ex (2): " << loss << ", theoretical: 23" << endl;
+        if (verbose>1) cerr << "    TemporalSMLoss check OK for ex (2): " << loss << ", theoretical: 23" << endl;
     }
     loss=getTemporalSMLoss(50000, 10, 10, 0.1); // Should be about 2.3
     if (std::abs(loss-2.3)>eps) {
-        cerr << "  TemporalSMLoss check failed for ex (3): " << loss << ", should be 2.3" << endl;
+        if (verbose>0) cerr << "    TemporalSMLoss check failed for ex (3): " << loss << ", should be 2.3" << endl;
         allOk=false;
     } else {
-        cerr << "  TemporalSMLoss check OK for ex (3): " << loss << ", theoretical: 2.3" << endl;
+        if (verbose>1) cerr << "    TemporalSMLoss check OK for ex (3): " << loss << ", theoretical: 2.3" << endl;
     }
     return allOk;
 }
 
-bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     int N=7, T=8, V=9;
     MatrixN x(N,T*V);
     x << -1.23246054,  0.01065191,  0.54041174,  0.86820939,  0.14530547,
@@ -334,18 +334,59 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS) {
 
     if (std::abs(loss-lossTheo) > eps) {
         allOk=false;
-        cerr << "Error TemporalSoftmaxLoss (sample data): Loss sample data: " << lossTheo << ", calculated: " << loss << endl;
+        if (verbose>0) cerr << "  Error TemporalSoftmaxLoss (sample data): Loss sample data: " << lossTheo << ", calculated: " << loss << endl;
     }
 
     t_cppl grads;
     MatrixN dx0=tsm.backward(y, &cache,&states,&grads);
 
-    bool ret=matComp(dx,dx0,"TemporalSoftmax dx",eps);
+    bool ret=matCompT(dx,dx0,"TemporalSoftmax dx",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
     return allOk;
+}
+
+bool testTemporalSoftmax(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "TemporalSoftmax Layer: " << def << endl;
+	// Numerical gradient
+    // Temporal Softmax
+	int tsmN = 10, tsmC = 4, Ttm = 4;
+	CpParams tc1;
+	tc1.setPar("inputShape", vector<int>{tsmC, Ttm});
+	tc1.setPar("noVectorizationTests", (bool)true);
+	TemporalSoftmax tmx(tc1);
+	MatrixN txmx(tsmN, tsmC * Ttm);
+	txmx.setRandom();
+	MatrixN ty(tsmN, Ttm);
+	for (unsigned i = 0; i < ty.size(); i++)
+		ty(i) = (rand() % tsmC);
+	floatN h = 1e-2;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-4;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	t_cppl states;
+	states["y"] = &ty;
+	bool res=tmx.selfTest(txmx, &states, h, eps, verbose);
+	registerTestResult("TemporalSoftmax", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkTemporalSoftmaxLoss(0.1, verbose);
+	registerTestResult("TemporalSoftmax", "Loss (with test-data)", res, "");
+	if (!res) bOk = false;
+
+    res=checkTemporalSoftmax(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("TemporalSoftmax", "Check (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
 }
 
 #endif

@@ -198,30 +198,8 @@ int doTests() {
     if (checkForTest("LSTM")) if (!testLSTM(verbose)) allOk=false;
     if (checkForTest("WordEmbedding")) if (!testWordEmbedding(verbose)) allOk=false;
     if (checkForTest("TemporalAffine")) if (!testTemporalAffine(verbose)) allOk=false;
+    if (checkForTest("TemporalSoftmax")) if (!testTemporalSoftmax(verbose)) allOk=false;
 
-
-	// Temporal Softmax
-	int tsmN = 10, tsmC = 4, Ttm = 4;
-	CpParams tc1;
-	tc1.setPar("inputShape", vector<int>{tsmC, Ttm});
-	tc1.setPar("noVectorizationTests", (bool)true);
-	TemporalSoftmax tmx(tc1);
-	MatrixN txmx(tsmN, tsmC * Ttm);
-	txmx.setRandom();
-	MatrixN ty(tsmN, Ttm);
-	for (unsigned i = 0; i < ty.size(); i++)
-		ty(i) = (rand() % tsmC);
-	h = 1e-2;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-4;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	t_cppl states;
-	states["y"] = &ty;
-	if (!tmx.selfTest(txmx, &states, h, eps)) {
-		allOk = false;
-	}
 
 	// LayerBlock1
 	LayerBlock lb("{name='testblock'}");
@@ -257,20 +235,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkTemporalSoftmaxLoss(0.1)) {
-		cerr << green << "TemporalSoftmaxLoss with test data: OK." << def << endl;
-	} else {
-		cerr << red << "TemporalSoftmaxLoss with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkTemporalSoftmax()) {
-		cerr << green << "TemporalSoftmax with test data: OK." << def << endl;
-	} else {
-		cerr << red << "TemporalSoftmax with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (trainTest()) {
 		cerr << green << "TrainTest: OK." << def << endl;
