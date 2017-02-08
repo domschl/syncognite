@@ -167,42 +167,30 @@ int doTests() {
     s1["y"] = &yz;
     floatN h, eps;
 
-    cerr << "=== 0.: Init: registering layers" << endl;
-    //registerLayers();
-    cerr << "=== 1.: Numerical gradient tests" << endl;
     bool allOk=true;
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
+    cerr << endl << endl << lblue << "Syncognite layer tests" << def << endl;
+    if (verbose > 0) {
+        cerr << "Active tests: ";
+        for (auto at : actualtests) cerr << at << " ";
+        cerr << endl;
+    }
     MatrixN xr(10,20); // XXX: These two lines generate a side-effect
     xr.setRandom();    // XXX: that prevents numerical diff on Relu fail!
 
 	if (checkForTest("Affine")) if (!testAffine(verbose)) allOk=false;
     if (checkForTest("Relu")) if (!testRelu(verbose)) allOk=false;
     if (checkForTest("Nonlinearity")) if (!testNonlinearity(verbose)) allOk=false;
+    if (checkForTest("AffineRelu")) if (!testAffineRelu(verbose)) allOk=false;
+    if (checkForTest("BatchNorm")) if (!testBatchNorm(verbose)) allOk=false;
 
 
-	AffineRelu rx("{inputShape=[2];hidden=3}");
-	MatrixN xarl(30, 2);
-	xarl.setRandom();
-	h = 1e-6;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
-	eps = 1e-6;
-	if (eps < CP_DEFAULT_NUM_EPS)
-		eps = CP_DEFAULT_NUM_EPS;
-	if (!rx.selfTest(xarl, &s1, h, eps)) {
-		allOk = false;
-	}
 
-	// Batchnorm - still some strangities:
-	BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
-	MatrixN xbr(20, 10);
-	xbr.setRandom();
-	if (!bn.selfTest(xbr, &s1, 1e-4, 1e-3)) {
-		allOk = false;
-	}
+
 
 	// Dropout
 	Dropout dp("{inputShape=[5];train=true;noVectorizationTests=true;freeze=true;"
@@ -425,27 +413,6 @@ int doTests() {
 	}
 
 	cerr << "=== 2.: Test-data tests" << endl;
-
-	if (checkAffineRelu()) {
-		cerr << green << "AffineRelu with test data: OK." << def << endl;
-	} else {
-		cerr << red << "AffineRelu with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkBatchNormForward()) {
-		cerr << green << "BatchNormForward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "BatchNormForward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
-
-	if (checkBatchNormBackward()) {
-		cerr << green << "BatchNormBackward with test data: OK." << def << endl;
-	} else {
-		cerr << red << "BatchNormBackward with test data: ERROR." << def << endl;
-		allOk = false;
-	}
 
 	if (checkDropout()) {
 		cerr << green << "Dropout with test data: OK." << def << endl;

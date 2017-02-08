@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     t_cppl states;
     MatrixN x(2,4);
@@ -26,7 +26,7 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     *(arl.params["af-W"])=W;
     *(arl.params["af-b"])=b;
     MatrixN y0=arl.forward(x, &cache, &states);
-    bool ret=matComp(y,y0,"AffineRelu",eps);
+    bool ret=matCompT(y,y0,"AffineRelu",eps,verbose);
     if (!ret) allOk=false;
 
     MatrixN dx(2,4);
@@ -45,11 +45,11 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
 
     MatrixN dx0=arl.backward(dchain, &cache, &states, &grads);
 
-    ret=matComp(dx,dx0,"AffineRelu dx",eps);
+    ret=matCompT(dx,dx0,"AffineRelu dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dW,*(grads["af-W"]),"AffineRelu dW",eps);
+    ret=matCompT(dW,*(grads["af-W"]),"AffineRelu dW",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(db,*(grads["af-b"]),"AffineRelu db",eps);
+    ret=matCompT(db,*(grads["af-b"]),"AffineRelu db",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -58,4 +58,30 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool testAffineRelu(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "AffineRelu Layer: " << def << endl;
+	// Numerical gradient
+    AffineRelu rx("{inputShape=[2];hidden=3}");
+	MatrixN xarl(30, 2);
+	xarl.setRandom();
+	floatN h = 1e-6;
+	if (h < CP_DEFAULT_NUM_H)
+		h = CP_DEFAULT_NUM_H;
+	floatN eps = 1e-6;
+	if (eps < CP_DEFAULT_NUM_EPS)
+		eps = CP_DEFAULT_NUM_EPS;
+	bool res=rx.selfTest(xarl, &s1, h, eps);
+	registerTestResult("AffineRelu", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkAffineRelu(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("AffineRelu", "Forward/Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	return bOk;
+}
 #endif

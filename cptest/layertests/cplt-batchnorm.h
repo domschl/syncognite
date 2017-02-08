@@ -3,7 +3,7 @@
 
 #include "../testneural.h"
 
-bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
+bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl cache;
     t_cppl states;
     bool allOk=true;
@@ -35,33 +35,33 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn0=bn.forward(x, &cache, &states);
     MatrixN mean=xn0.colwise().mean();
-    cerr << "Mean:" << mean << endl;
+    if (verbose>1) cerr << "    Mean:" << mean << endl;
     MatrixN xme = xn0.rowwise() - RowVectorN(mean.row(0));
     MatrixN xmsq = ((xme.array() * xme.array()).colwise().sum()/xn0.rows()).array().sqrt();
-    cerr << "StdDev:" << xmsq << endl;
+    if (verbose>1) cerr << "    StdDev:" << xmsq << endl;
 
-    if (!matComp(xn,xn0,"BatchNormForward",eps)) {
-        cerr << "BatchNorm forward failed" << endl;
+    if (!matCompT(xn,xn0,"BatchNormForward",eps,verbose)) {
+        if (verbose>0) cerr << "  BatchNorm forward failed" << endl;
         allOk=false;
     }  else {
-        cerr << "  BatchNorm forward ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm forward ok." << endl;
     }
 
     MatrixN runmean(1,3);
     runmean << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar(1,3);
     runvar << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache["running_mean"]),runmean,"BatchNorm run-mean", eps)) {
-        cerr << "BatchNorm running-mean failed" << endl;
+    if (!matCompT(*(cache["running_mean"]),runmean,"BatchNorm run-mean", eps, verbose)) {
+        if (verbose>0) cerr << "  BatchNorm running-mean failed" << endl;
         allOk=false;
     } else {
-        cerr << "  BatchNorm running mean ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm running mean ok." << endl;
     }
-    if (!matComp(*(cache["running_var"]),runvar,"BatchNorm run-var", eps)) {
-        cerr << "BatchNorm running-var failed" << endl;
+    if (!matCompT(*(cache["running_var"]),runvar,"BatchNorm run-var", eps, verbose)) {
+        if (verbose>0) cerr << "  BatchNorm running-var failed" << endl;
         allOk=false;
     } else {
-        cerr << "  BatchNorm running var ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm running var ok." << endl;
     }
     cppl_delete(&cache);
 
@@ -85,33 +85,33 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2, &states);
     MatrixN mean2=xn20.colwise().mean();
-    cerr << "Mean:" << mean2 << endl;
+    if (verbose>1) cerr << "    Mean:" << mean2 << endl;
     MatrixN xme2 = xn20.rowwise() - RowVectorN(mean2.row(0));
     MatrixN xmsq2 = ((xme2.array() * xme2.array()).colwise().sum()/xn20.rows()).array().sqrt();
-    cerr << "StdDev:" << xmsq2 << endl;
+    if (verbose>1) cerr << "    StdDev:" << xmsq2 << endl;
 
-    if (!matComp(xn2,xn20,"BatchNormForward",eps)) {
-        cerr << "BatchNorm with beta/gamma forward failed" << endl;
+    if (!matCompT(xn2,xn20,"BatchNormForward",eps,verbose)) {
+        if (verbose>0) cerr << "  BatchNorm with beta/gamma forward failed" << endl;
         allOk=false;
     }  else {
-        cerr << "  BatchNorm beta/gamma forward ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm beta/gamma forward ok." << endl;
     }
 
     MatrixN runmean2(1,3);
     runmean2 << -0.06802819,  0.08842527,  0.01083855;
     MatrixN runvar2(1,3);
     runvar2 << 0.170594  ,  0.09975786,  0.08590872;
-    if (!matComp(*(cache2["running_mean"]),runmean2, "BatchNormForward", eps)) {
-        cerr << "BatchNorm running-mean2 failed" << endl;
+    if (!matCompT(*(cache2["running_mean"]),runmean2, "BatchNormForward", eps, verbose)) {
+        if (verbose>0) cerr << "  BatchNorm running-mean2 failed" << endl;
         allOk=false;
     } else {
-        cerr << "  BatchNorm running mean2 ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm running mean2 ok." << endl;
     }
-    if (!matComp(*(cache2["running_var"]),runvar2, "BatchNormForward", eps)) {
-        cerr << "BatchNorm running-var2 failed" << endl;
+    if (!matCompT(*(cache2["running_var"]),runvar2, "BatchNormForward", eps, verbose)) {
+        if (verbose>0) cerr << "  BatchNorm running-var2 failed" << endl;
         allOk=false;
     } else {
-        cerr << "  BatchNorm running var2 ok." << endl;
+        if (verbose>1) cerr << "  BatchNorm running var2 ok." << endl;
     }
     cppl_delete(&cache2);
 
@@ -125,22 +125,24 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
         xt.setRandom();
         bn3.forward(xt,&cache3, &states);
     }
-    cerr << "  Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
-    cerr << "  Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
-    cerr << "switching test" << endl;
+    if (verbose>1) {
+        cerr << "    Running mean after " << nnr << " cycl: " << *(cache3["running_mean"]) << endl;
+        cerr << "    Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
+    }
+    if (verbose>1) cerr << "  switching test" << endl;
     bn3.cp.setPar("train", false);
     if (bn3.cp.getPar("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
     xt.setRandom();
     MatrixN xn30=bn3.forward(xt, &cache3, &states);
     MatrixN mean3=xn30.colwise().mean();
-    cerr << "  Mean:" << mean3 << endl;
-    if (!matComp(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1)) {
+    if (verbose>1) cerr << "    Mean:" << mean3 << endl;
+    if (!matCompT(*(bn3.params["beta"]), mean3, "Batchnorm train/test sequence: mean", 0.1, verbose)) {
         allOk=0;
     }
     MatrixN xme3 = xn30.rowwise() - RowVectorN(mean3.row(0));
     MatrixN xmsq3 = ((xme3.array() * xme3.array()).colwise().sum()/xn30.rows()).array().sqrt();
-    cerr << "  StdDev:" << xmsq3 << endl;
-    if (!matComp(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1)) {
+    if (verbose>1) cerr << "    StdDev:" << xmsq3 << endl;
+    if (!matCompT(*(bn3.params["gamma"]), xmsq3, "Batchnorm train/test sequence: stdderi", 0.1, verbose)) {
         allOk=0;
     }
     cppl_delete(&cache3);
@@ -148,7 +150,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
-bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
+bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     t_cppl states;
     MatrixN x(4,5);
@@ -186,11 +188,11 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
     MatrixN y=bn.forward(x, &cache, &states);
     MatrixN dx0=bn.backward(dchain, &cache, &states, &grads);
 
-    bool ret=matComp(dx,dx0,"BatchNormBackward dx",eps);
+    bool ret=matCompT(dx,dx0,"BatchNormBackward dx",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dgamma,*grads["gamma"],"BatchNormBackward dgamma",eps);
+    ret=matCompT(dgamma,*grads["gamma"],"BatchNormBackward dgamma",eps,verbose);
     if (!ret) allOk=false;
-    ret=matComp(dbeta,*grads["beta"],"BatchNormBackward dbeta",eps);
+    ret=matCompT(dbeta,*grads["beta"],"BatchNormBackward dbeta",eps,verbose);
     if (!ret) allOk=false;
 
     cppl_delete(&cache);
@@ -198,4 +200,28 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS) {
     return allOk;
 }
 
+bool testBatchNorm(int verbose) {
+    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+    Color::Modifier def(Color::FG_DEFAULT);
+	bool bOk=true;
+	t_cppl s1;
+	cerr << lblue << "BatchNorm Layer: " << def << endl;
+	// Numerical gradient
+    // Batchnorm - still some strangities:
+    BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
+    MatrixN xbr(20, 10);
+    xbr.setRandom();
+    bool res=bn.selfTest(xbr, &s1, 1e-4, 1e-3);
+	registerTestResult("BatchNorm", "Numerical gradient", res, "");
+	if (!res) bOk = false;
+
+	res=checkBatchNormForward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("BatchNorm", "Forward (with test-data)", res, "");
+	if (!res) bOk = false;
+
+	res=checkBatchNormBackward(CP_DEFAULT_NUM_EPS, verbose);
+	registerTestResult("BatchNorm", "Backward (with test-data)", res, "");
+	if (!res) bOk = false;
+	return bOk;
+}
 #endif
