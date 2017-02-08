@@ -619,7 +619,7 @@ bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     MatrixN y0=we.forward(x, &cache, &states);
     bool allOk=true;
-    bool ret=matComp(y,y0,"WordEmbeddingBackward forward consistency check",eps);
+    bool ret=matCompT(y,y0,"WordEmbeddingBackward forward consistency check",eps,verbose);
     if (!ret) allOk=false;
     MatrixN dx0=we.backward(dchain, &cache, &states, &grads);
     //bool ret=matComp(dx,dx0,"WordEmbeddingBackward dx",eps);
