@@ -18,6 +18,8 @@ map<string, string> benchRecipes = {
     {"Dropout", "{benchN=100;inputShape=[1024];drop=0.5}"},
     {"LSTM", "{benchN=100;inputShape=[100,80];N=100;H=256}"},
     {"RNN", "{benchN=100;inputShape=[100,80];N=100;H=256}"},
+
+// BatchNorm, OneHot, Softmax, SpatialBatchNorm, Svm, TemporalAffine, TemporalSoftmax, TwoLayerNet, WordEmbedding
 //    {"Relu", "{inputShape=[1024]}"},
 //    {"Relu", "{inputShape=[1024]}"},
 //    {"Relu", "{inputShape=[1024]}"}
@@ -53,15 +55,12 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row) {
     MatrixN ya;
 
     int N=X.rows();
-    states["y"] = &y;
+    states["y"] = new MatrixN(y);
 
     cerr.precision(3);
     cerr << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
-
-    t_cppl cache;
-    t_cppl grads;
 
     tcpu.startCpu();
     ya=player->forward(X,&cache,&states,0);
@@ -75,17 +74,15 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row) {
 
     cppl_delete(&cache);
     cppl_delete(&grads);
+    cppl_delete(&states);
 
     tfx= tf / (double)N;
     tbx= tb / (double)N;
 
-    move(row,0); printw(name.c_str());
-    move(row,14); printw("%8.4f", tf);
-    move(row,22); printw("%8.4f", tfx);
-    move(row,40); printw("%8.4f", tb);
-    move(row,50); printw("%8.4f", tbx);
-    move(row+1,0);
-    refresh();
+    move(row,17); printw("%8.4f", tf);
+    move(row,24); printw("%8.4f", tfx);
+    move(row,33); printw("%8.4f", tb);
+    move(row,40); printw("%8.4f", tbx);
 
     return true;
 }
@@ -96,14 +93,17 @@ int doBench() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
     //Eigen::setNbThreads(0);
-    int mreps=1;
+    int mreps=10;
+    clear();
     for (int mrep=0; mrep<mreps; mrep++) {
         int row=0;
-        for (auto it : _syncogniteLayerFactory.mapl) {
+        move(0,0); printw("Layer                 fw(ms) fw/N(ms)      bw(ms) bw/N(ms)");
+        for (auto it : benchRecipes) {
             ++row;
+            move(row,0); printw(it.first.c_str());
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             if (benchRecipes.find(it.first)==benchRecipes.end()) {
-                // cerr << "No bench recipe for layer " << it.first << endl;
+                move(row, 24); printw("No bench recipe for layer %s", it.first.c_str());
             } else {
                 CpParams cp(benchRecipes[it.first]);
                 int bs=cp.getPar("benchN",(int)0);
@@ -145,7 +145,12 @@ int doBench() {
                 delete pl;
             }
         }
+        move(row+1,0);
+        refresh();
     }
+    printw("Press enter...");
+    getch();
+    endwin();
     return allOk;
 }
 
