@@ -26,6 +26,7 @@ map<string, string> benchRecipes = {
 
 };
 
+MatrixN benchMean;
 
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
@@ -44,6 +45,13 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
         cerr << "err=" << dif << endl;
         return false;
     }
+}
+
+float DM=1.0;
+float updateMean(int y,int x,float f) {
+    if (benchMean(y,x)==0) benchMean(y,x)=f;
+    else benchMean(y,x)=(benchMean(y,x)*DM+f)/(DM+1);
+    return benchMean(y,x);
 }
 
 bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row) {
@@ -66,18 +74,22 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row) {
     ya=player->forward(X,&cache,&states,0);
     tcus=tcpu.stopCpuMicro()/1000.0;
     if (tcus<tf) tf=tcus;
+    tf=updateMean(row-1,0,tf);
 
     tcpu.startCpu();
     player->backward(ya,&cache, &states, &grads, 0);
     tcus=tcpu.stopCpuMicro()/1000.0;
     if (tcus<tb) tb=tcus;
+    tb=updateMean(row-1,1,tb);
 
     cppl_delete(&cache);
     cppl_delete(&grads);
     cppl_delete(&states);
 
     tfx= tf / (double)N;
+    tfx=updateMean(row-1,2,tfx);
     tbx= tb / (double)N;
+    tbx=updateMean(row-1,3,tbx);
 
     move(row,17); printw("%8.4f", tf);
     move(row,24); printw("%8.4f", tfx);
@@ -93,11 +105,13 @@ int doBench() {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
     //Eigen::setNbThreads(0);
-    int mreps=10;
+    int mreps=100;
+    benchMean=MatrixN(benchRecipes.size(),8);
+    benchMean.setZero();
     clear();
     for (int mrep=0; mrep<mreps; mrep++) {
         int row=0;
-        move(0,0); printw("Layer                 fw(ms) fw/N(ms)      bw(ms) bw/N(ms)");
+        move(0,0); printw("Layer             fw(ms) fw/N(ms) bw(ms) bw/N(ms)");
         for (auto it : benchRecipes) {
             ++row;
             move(row,0); printw(it.first.c_str());
@@ -147,6 +161,9 @@ int doBench() {
         }
         move(row+1,0);
         refresh();
+        if (mrep<mreps/1.5) {
+            DM += 0.5;
+        }
     }
     printw("Press enter...");
     getch();
