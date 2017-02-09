@@ -1,5 +1,6 @@
 #include "cp-neural.h"
 #include <iomanip>
+#include <curses.h>
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 bench.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o bench
@@ -10,9 +11,13 @@ using std::setprecision; using std::setw; using std::fixed;
 map<string, string> benchRecipes = {
     {"Affine", "{benchN=100;inputShape=[1024];hidden=1024}"},
     {"Relu", "{benchN=100;inputShape=[1024]}"},
+    {"Nonlinearity", "{benchN=100;inputShape=[1024]}"},
     {"AffineRelu", "{benchN=100;inputShape=[1024];hidden=1024}"},
     {"Convolution", "{benchN=100;inputShape=[3,32,32];kernel=[64,5,5];stride=1;pad=2}"},
+    {"Pooling", "{benchN=100;inputShape=[3,64,64];stride=2}"},
     {"Dropout", "{benchN=100;inputShape=[1024];drop=0.5}"},
+    {"LSTM", "{benchN=100;inputShape=[100,80];N=100;H=256}"},
+    {"RNN", "{benchN=100;inputShape=[100,80];N=100;H=256}"},
 //    {"Relu", "{inputShape=[1024]}"},
 //    {"Relu", "{inputShape=[1024]}"},
 //    {"Relu", "{inputShape=[1024]}"}
@@ -39,49 +44,48 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y) {
+bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row) {
     Timer tcpu;
-    double tcus, tcusn, tfn, tf,tb, tfx, tbx;
+    float tcus, tcusn, tfn, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
-    string sname;
     MatrixN ya;
 
     int N=X.rows();
     states["y"] = &y;
-    sname=name;
-    while (sname.size() < 12) sname += " ";
 
     cerr.precision(3);
     cerr << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
-    int reps=1;
-    for (int rep=0; rep<reps; rep++) {
-        t_cppl cache;
-        t_cppl grads;
 
-        tcpu.startCpu();
-        ya=player->forward(X,&cache,&states,0);
-        tcus=tcpu.stopCpuMicro()/1000.0;
-        if (tcus<tf) tf=tcus;
+    t_cppl cache;
+    t_cppl grads;
 
-        tcpu.startCpu();
-        player->backward(ya,&cache, &states, &grads, 0);
-        tcus=tcpu.stopCpuMicro()/1000.0;
-        if (tcus<tb) tb=tcus;
+    tcpu.startCpu();
+    ya=player->forward(X,&cache,&states,0);
+    tcus=tcpu.stopCpuMicro()/1000.0;
+    if (tcus<tf) tf=tcus;
 
-        cppl_delete(&cache);
-        cppl_delete(&grads);
-    }
+    tcpu.startCpu();
+    player->backward(ya,&cache, &states, &grads, 0);
+    tcus=tcpu.stopCpuMicro()/1000.0;
+    if (tcus<tb) tb=tcus;
 
+    cppl_delete(&cache);
+    cppl_delete(&grads);
 
     tfx= tf / (double)N;
     tbx= tb / (double)N;
 
-    cerr << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
-    cerr << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
+    move(row,0); printw(name.c_str());
+    move(row,14); printw("%8.4f", tf);
+    move(row,22); printw("%8.4f", tfx);
+    move(row,40); printw("%8.4f", tb);
+    move(row,50); printw("%8.4f", tbx);
+    move(row+1,0);
+    refresh();
 
     return true;
 }
@@ -91,18 +95,15 @@ int doBench() {
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
-    int nr=0;
-    int N=100;
-    int M=3072;
-    int reps=0;
-
     //Eigen::setNbThreads(0);
-    for (int mrep=0; mrep<4; mrep++) {
+    int mreps=1;
+    for (int mrep=0; mrep<mreps; mrep++) {
+        int row=0;
         for (auto it : _syncogniteLayerFactory.mapl) {
-            ++nr;
+            ++row;
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
             if (benchRecipes.find(it.first)==benchRecipes.end()) {
-                cerr << "No bench recipe for layer " << it.first << endl;
+                // cerr << "No bench recipe for layer " << it.first << endl;
             } else {
                 CpParams cp(benchRecipes[it.first]);
                 int bs=cp.getPar("benchN",(int)0);
@@ -137,14 +138,13 @@ int doBench() {
                         y(k)=rand()%is;
                     }
                 }
-                if (!benchLayer(it.first, pl, X, y)) {
+                if (!benchLayer(it.first, pl, X, y, row)) {
                     cerr << "Error" << endl;
                     allOk=false;
                 }
                 delete pl;
             }
         }
-        cerr << endl;
     }
     return allOk;
 }
@@ -204,7 +204,8 @@ void icolmagic() {
 
 
 int main() {
-    cpInitCompute("Bench");
+    initscr();
+    cpInitCompute("Bench",nullptr,0);
     registerLayers();
     int ret=0;
     ret=doBench();
