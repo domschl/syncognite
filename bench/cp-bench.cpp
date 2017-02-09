@@ -7,6 +7,19 @@
 using std::cerr; using std::endl;
 using std::setprecision; using std::setw; using std::fixed;
 
+map<string, string> benchRecipes = {
+    {"Affine", "{benchN=100;inputShape=[1024];hidden=1024}"},
+    {"Relu", "{benchN=100;inputShape=[1024]}"},
+    {"AffineRelu", "{benchN=100;inputShape=[1024];hidden=1024}"},
+    {"Convolution", "{benchN=100;inputShape=[3,32,32];kernel=[64,5,5];stride=1;pad=2}"},
+    {"Dropout", "{benchN=100;inputShape=[1024];drop=0.5}"},
+//    {"Relu", "{inputShape=[1024]}"},
+//    {"Relu", "{inputShape=[1024]}"},
+//    {"Relu", "{inputShape=[1024]}"}
+
+};
+
+
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
         cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
@@ -26,60 +39,36 @@ bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     }
 }
 
-bool benchLayer(string name, Layer* player, int N, int M, int reps) {
-    MatrixN x(N,M);
-    MatrixN y(N,1);
-    MatrixN ya;
-    x.setRandom();
-    y.setRandom();
-    for (int i=0; i<y.size(); i++) {
-        y(i)=(floatN)(int)((y(i)+1)*5);
-    }
+bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y) {
     Timer tcpu;
     double tcus, tcusn, tfn, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
     string sname;
+    MatrixN ya;
 
+    int N=X.rows();
     states["y"] = &y;
     sname=name;
-
     while (sname.size() < 12) sname += " ";
 
     cerr.precision(3);
     cerr << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
+    int reps=1;
     for (int rep=0; rep<reps; rep++) {
         t_cppl cache;
         t_cppl grads;
-        /*
+
         tcpu.startCpu();
-        player->forward(x,nullptr);
+        ya=player->forward(X,&cache,&states,0);
         tcus=tcpu.stopCpuMicro()/1000.0;
-        if (tcus<tfn) tfn=tcus;
-        */
-        tcpu.startCpu();
-        if (player->layerType==LayerType::LT_NORMAL) {
-            ya=player->forward(x,&cache,&states,0);
-        } else {
-            ya=player->forward(x,&cache,&states,0);
-        }
-        tcus=tcpu.stopCpuMicro()/1000.0;
-        // cerr << "Transform (" << name << "): " << shape(x) << "->" << shape(ya) << endl;
         if (tcus<tf) tf=tcus;
 
-/*        if (name=="BatchNorm") {
-            return false;
-        }
-*/
         tcpu.startCpu();
-        if (player->layerType==LayerType::LT_NORMAL) {
-            player->backward(ya,&cache, &states, &grads, 0);
-        } else {
-            player->backward(y,&cache, &states, &grads, 0);
-        }
+        player->backward(ya,&cache, &states, &grads, 0);
         tcus=tcpu.stopCpuMicro()/1000.0;
         if (tcus<tb) tb=tcus;
 
@@ -90,7 +79,7 @@ bool benchLayer(string name, Layer* player, int N, int M, int reps) {
 
     tfx= tf / (double)N;
     tbx= tb / (double)N;
-    //cerr << sname << " forward (no cache):    " << fixed << setw(8) << tcus << "ms (cpu), " << endl;
+
     cerr << sname << " forward (with cache):  " << fixed << setw(8) << tf << "ms (cpu), " << tfx << "ms (/sample)." << endl;
     cerr << sname << " backward (with cache): " << fixed << setw(8) << tb << "ms (cpu), " << tbx << "ms (/sample)." << endl;
 
@@ -109,73 +98,51 @@ int doBench() {
 
     //Eigen::setNbThreads(0);
     for (int mrep=0; mrep<4; mrep++) {
-    /*    if (mrep > 0) {
-            cerr << "Eigen thread count: " << mrep << endl;
-            Eigen::setNbThreads(mrep);
-        }
-*/        for (auto it : _syncogniteLayerFactory.mapl) {
+        for (auto it : _syncogniteLayerFactory.mapl) {
             ++nr;
-            //if (mrep > 0 && it.first!="Affine") continue;
-
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[it.first];
-            CpParams cp;
-
-/*            if (te==2) cerr << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "x" << M << "]"<< endl;
-            else if (te==1) cerr << nr << ".: " << it.first << " N=" << N << " dim=[" << M << "]" << endl;
-            else cerr  << nr << ".: " << it.first << " N=" << N << endl;
-*/
-            std::vector<int> inputShape(te);
-            for (auto i=0; i< inputShape.size(); i++) inputShape[i]=M;
-            int MI=M;
-            cp.setPar("inputShape",inputShape);
-            if (it.first=="Convolution") {
-/*                inputShape[0]=3;
-                inputShape[1]=100;
-                inputShape[2]=100;
-                MI=100*100*3;
-                inputShape[3]=8;
-                inputShape[4]=5;
-                inputShape[5]=5;
-                cp.setPar("pad",2);
-                cp.setPar("stride",3);
-*/
-                MI=32*32*3;
-                N=100;
-                cp.setPar("kernel",vector<int>{3,3,3});
-                cp.setPar("pad",1);
-                cp.setPar("stride",1);
-                cp.setPar("verbose",true);
-                cp.setPar("inputShape",vector<int>{3,32,32});
-            } else if (it.first=="Pooling") {
-                cp.setPar("inputShape",vector<int>{3,32,32});
-                MI=32*32*3;
-                cp.setPar("pad",2);
-                cp.setPar("stride",2);
-            } else if (it.first=="SpatialBatchNorm") {
-                cp.setPar("inputShape",vector<int>{3,32,32});
-                cp.setPar("batch_norm",N);
-                MI=32*32*3;
-            } else if (it.first=="RNN") {
-                cerr << "RNN and friends not yet adapted to new API" << endl;
-                exit(-1);
-                cp.setPar("inputShape",vector<int>{4,3}); // D,T
-                cp.setPar("N",10);
-                cp.setPar("H",1024);
-                MI=12;
+            if (benchRecipes.find(it.first)==benchRecipes.end()) {
+                cerr << "No bench recipe for layer " << it.first << endl;
+            } else {
+                CpParams cp(benchRecipes[it.first]);
+                int bs=cp.getPar("benchN",(int)0);
+                if (bs==0) {
+                    cerr << "No benchN batch size defined in recipe for layer " << it.first << endl;
+                    continue;
+                }
+                string bd=cp.getPar("benchDataType",(string)"");
+                vector<int> isv=cp.getPar("inputShape", vector<int>{});
+                if (isv.size()==0) {
+                    cerr << "No inputShape batch size defined in recipe for layer " << it.first << endl;
+                    continue;
+                }
+                int is=1;
+                for (auto k=0; k<isv.size(); k++) is *= isv[k];
+                MatrixN X(bs,is);
+                MatrixN y(bs,1);
+                if (bd=="") {
+                    X.setRandom();
+                } else if (bd=="int100") {
+                    for (auto k=0; k<X.size(); k++) {
+                        X(k)=rand()%100;
+                    }
+                } else {
+                    cerr << "No benchDataType: " << bd << " is not understood in recipe for layer " << it.first << endl;
+                    continue;
+                }
+                cp.setPar("train", true);
+                Layer *pl = CREATE_LAYER(it.first, cp)
+                if (pl->layerType & LayerType::LT_LOSS) {
+                    for (auto k=0; k<y.size(); k++) {
+                        y(k)=rand()%is;
+                    }
+                }
+                if (!benchLayer(it.first, pl, X, y)) {
+                    cerr << "Error" << endl;
+                    allOk=false;
+                }
+                delete pl;
             }
-            cp.setPar("train", true);
-            Layer *l = CREATE_LAYER(it.first, cp)
-            if (reps==0) {
-                //reps=10; // warm-up for first measurement
-                //cerr << "Warmup..." << endl;
-                reps=1;
-            }
-            else reps=1;
-            if (!benchLayer(it.first, l, N, MI, reps)) {
-                cerr << "Error" << endl;
-                allOk=false;
-            }
-            delete l;
         }
         cerr << endl;
     }
@@ -183,7 +150,6 @@ int doBench() {
 }
 
 #ifdef USE_CUDA
-
 void cudaBench() {
     int N=801, K=20000, M=70;
     MatrixN a(N,K),b(K,M),c0(N,M),c1(N,M);
@@ -202,7 +168,6 @@ void cudaBench() {
 
 //HO = 1 + (H + 2 * pad - HH) / stride;
 //WO = 1 + (W + 2 * pad - WW) / stride;
-
 void colmagic() {
     int N=7;
     Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
@@ -236,10 +201,10 @@ void icolmagic() {
         cerr << "seems good" << endl;
     }
 }
+
+
 int main() {
     cpInitCompute("Bench");
-
-
     registerLayers();
     int ret=0;
     ret=doBench();
