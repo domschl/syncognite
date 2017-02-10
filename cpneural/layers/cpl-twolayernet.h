@@ -27,7 +27,7 @@ private:
             retval=false;
             cerr << "TwoLayer: bad hidden-vector init! size=" << hidden.size() << "!=2" << endl;
         }
-        outputShape={hidden[1]};
+        outputShape={1};
 
         CpParams c1,c2,c3,c4;
         c1.setPar("inputShape",vector<int>{inputShapeFlat});
