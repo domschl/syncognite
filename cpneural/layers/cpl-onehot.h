@@ -45,14 +45,18 @@ public:
         int N=shape(x)[0];
 
         MatrixN y(N,V*T);
-        for (int n=0; n<N; n++) {
-            for (int v=0; v<V; v++) {
-                for (int t=0; t<T; t++) {
+        int n,v,t;
+        for (n=0; n<N; n++) {
+            for (v=0; v<V; v++) {
+                for (t=0; t<T; t++) {
+                    y(n,t*V+v) = wVect(x(n,t),v);
+                    /*
                     if (x(n,t)>=V) {
                         cerr << "OneHot: Internal error: " << x(n,t) << " exceeds V:" << V << endl;
                     } else {
                         y(n,t*V+v) = wVect(x(n,t),v);
                     }
+                    */
                 }
             }
         }
