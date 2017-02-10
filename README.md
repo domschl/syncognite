@@ -128,6 +128,7 @@ Things that should work:
 
 Subprojects:
 * [testneural](cptest/) (cptest subproject, consistency tests for all layers using testdata and numerical differentials)
+* [bench](bench/) (benchmark subproject, benchmarks for all layers)
 * [mnisttest](cpmnist/) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/).)
 * [cifar10test](cpcifar10/) (cpcifar10 subproject, cifar10 image recognition with a convolutional network, requires [dataset download](datasets/).)
 * [rnnreader](rnnreader/) (rnnreader subproject, text generation via RNN/LSTMs, similar to char-rnn.)
