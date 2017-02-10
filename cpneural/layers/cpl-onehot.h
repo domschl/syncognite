@@ -51,7 +51,7 @@ public:
                     if (x(n,t)>=V) {
                         cerr << "OneHot: Internal error: " << x(n,t) << " exceeds V:" << V << endl;
                     } else {
-                        y(n,t*V+v) = wVect(x(n,t),v);                        
+                        y(n,t*V+v) = wVect(x(n,t),v);
                     }
                 }
             }
