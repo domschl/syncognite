@@ -12,7 +12,7 @@ After configuration of CMake, the mnist part can be built directly by:
 ```bash
 make bench
 ```
-The code in [`bench.cpp`](bench.cpp) shows one-liner layer definitions for all network layers within `benchRecipes`, which can be used as examples of layer definitions.
+The code in [`cp-bench.cpp`](cp-bench.cpp) shows one-liner layer definitions for all network layers within `benchRecipes`, which can be used as examples of layer definitions.
 
 New benchmarks can be added by extending `benchRecipes`.
 ## Usage
