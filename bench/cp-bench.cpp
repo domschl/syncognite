@@ -104,6 +104,18 @@ float updateMean(int y,int x,float f) {
     return benchMean(y,x);
 }
 
+void colprint(floatN f) {
+    if (f<0.0) {
+        attron(COLOR_PAIR(1));
+        printw("%4.1f",f);
+        attroff(COLOR_PAIR(1));
+    } else if (f>0.0) {
+        attron(COLOR_PAIR(2));
+        printw("%4.1f",f);
+        attroff(COLOR_PAIR(2));
+    } else printw("%4.1f",f);
+}
+
 bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     Timer tcpu;
     float tcus, tcusn, tfn, tf,tb, tfx, tbx;
@@ -129,7 +141,7 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     if (tcus<tf) tf=tcus;
     tf=updateMean(row0,0,tf);
     htf=historyMean(row0,0);
-    if (htf!=0.0) ptf=(htf-tf)/htf*100.0;
+    if (htf!=0.0) ptf=(htf-tf)/tf*100.0;
 
     tcpu.startCpu();
     player->backward(ya,&cache, &states, &grads, 0);
@@ -137,7 +149,7 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     if (tcus<tb) tb=tcus;
     tb=updateMean(row0,1,tb);
     htb=historyMean(row0,1);
-    if (htb!=0.0) ptb=(htb-tb)/htb*100.0;
+    if (htb!=0.0) ptb=(htb-tb)/tb*100.0;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -150,15 +162,16 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
 
     move(row,17); printw("%8.4f", tf);
     move(row,24); printw("%8.4f", tfx);
-    if (ptf!=0.0) { move(row,33); printw("%4.1f", ptf); }
+    if (ptf!=0.0) { move(row,33); colprint(ptf); }
     move(row,38); printw("%8.4f", tb);
     move(row,45); printw("%8.4f", tbx);
-    if (ptb!=0.0) { move(row,54); printw("%4.1f", ptb); }
+    if (ptb!=0.0) { move(row,54); colprint(ptb); }
     return true;
 }
 
 int doBench() {
     bool allOk=true;
+    bool doSave=false;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
@@ -171,6 +184,7 @@ int doBench() {
     int maxrow=0;
     clear();
     for (int mrep=0; mrep<mreps; mrep++) {
+        clear();
         move(0,0); printw("Layer             fw(ms) fw/N(ms) bw(ms) bw/N(ms)");
         for (auto it : benchRecipes) {
             string classname=it.first;
@@ -233,16 +247,17 @@ int doBench() {
         move(maxrow+1,0);
         printw("q - quite   s - snapshot   c - compare       ");
         refresh();
-        if (mrep<mreps/1.5) {
-            DM += 0.5;
+        if (mrep<mreps/1.3) {
+            DM += 0.8;
         }
         int c=getch();
         if (c=='q') break;
-        else if (c=='s') saveBench("bench.txt");
+        else if (c=='s') {doSave=true; saveBench("bench.txt");}
         else if (c=='c') loadBench("bench.txt");
     }
     move(maxrow+1,0);
     endwin();
+    if (doSave) saveBench("bench.txt");
     return allOk;
 }
 
@@ -306,6 +321,9 @@ int main() {
     noecho(); // no echo
     nodelay(stdscr, TRUE); // async keyboard checks
     // scrollok(stdscr, TRUE); // if scrolling is needed.
+    start_color();			/* Start color 			*/
+    init_pair(1, COLOR_RED, COLOR_BLACK);
+    init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
     cpInitCompute("Bench",nullptr,0);
     registerLayers();
