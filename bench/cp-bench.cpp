@@ -1,6 +1,8 @@
 #include "cp-neural.h"
 #include <iomanip>
 #include <curses.h>
+#include <fstream>
+#include <iostream>
 
 // Manual build:
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 bench.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o bench
@@ -32,7 +34,50 @@ map<string, string> benchRecipes = {
 };
 
 MatrixN benchMean;
+MatrixN historyMean;
 
+bool saveBench(const string fname) {
+	std::ofstream file(fname);
+	if (file.is_open()) {
+		file << benchMean << '\n';
+        file.close();
+        return true;
+	}
+    return false;
+}
+
+void split(const string &s, const char delim, vector<string> &elems) {
+    std::stringstream ss;
+    ss.str(s);
+    string item;
+    while (getline(ss, item, delim)) {
+        if (item!=" " && item!="") elems.push_back(item);
+    }
+}
+
+bool loadBench(const string fname) {
+    std::ifstream file(fname);
+	if (file.is_open()) {
+        for (int i=0; i<historyMean.rows(); i++) {
+            string line;
+            getline(file,line);
+            vector<string>vs;
+            split(line,' ',vs);
+            if (vs.size()==8) {
+                for (int j=0; j<8; j++) {
+                    historyMean(i,j)=(floatN)stod(vs[j]);
+                }
+            } else {
+                cerr << "BADsize!=8: " << vs.size() << endl;
+                file.close();
+                return false;
+            }
+        }
+        file.close();
+        return true;
+	}
+    return false;
+}
 bool matComp(MatrixN& m0, MatrixN& m1, string msg="", floatN eps=1.e-6) {
     if (m0.cols() != m1.cols() || m0.rows() != m1.rows()) {
         cerr << msg << ": Incompatible shapes " << shape(m0) << "!=" << shape(m1) << endl;
@@ -66,6 +111,7 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     t_cppl grads;
     t_cppl states;
     MatrixN ya;
+    floatN htf,htb;
 
     int row=row0+1;
     int N=X.rows();
@@ -75,18 +121,23 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     cerr << fixed;
 
     tfn=1e8; tf=1e8; tb=1e8;
+    floatN ptf=0.0; floatN ptb=0.0;
 
     tcpu.startCpu();
     ya=player->forward(X,&cache,&states,0);
     tcus=tcpu.stopCpuMicro()/1000.0;
     if (tcus<tf) tf=tcus;
     tf=updateMean(row0,0,tf);
+    htf=historyMean(row0,0);
+    if (htf!=0.0) ptf=(htf-tf)/htf*100.0;
 
     tcpu.startCpu();
     player->backward(ya,&cache, &states, &grads, 0);
     tcus=tcpu.stopCpuMicro()/1000.0;
     if (tcus<tb) tb=tcus;
     tb=updateMean(row0,1,tb);
+    htb=historyMean(row0,1);
+    if (htb!=0.0) ptb=(htb-tb)/htb*100.0;
 
     cppl_delete(&cache);
     cppl_delete(&grads);
@@ -99,9 +150,10 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
 
     move(row,17); printw("%8.4f", tf);
     move(row,24); printw("%8.4f", tfx);
-    move(row,33); printw("%8.4f", tb);
-    move(row,40); printw("%8.4f", tbx);
-
+    if (ptf!=0.0) { move(row,33); printw("%4.1f", ptf); }
+    move(row,38); printw("%8.4f", tb);
+    move(row,45); printw("%8.4f", tbx);
+    if (ptb!=0.0) { move(row,54); printw("%4.1f", ptb); }
     return true;
 }
 
@@ -114,6 +166,8 @@ int doBench() {
     int mreps=100;
     benchMean=MatrixN(benchRecipes.size(),8);
     benchMean.setZero();
+    historyMean=MatrixN(benchRecipes.size(),8);
+    historyMean.setZero();
     int maxrow=0;
     clear();
     for (int mrep=0; mrep<mreps; mrep++) {
@@ -176,12 +230,16 @@ int doBench() {
             }
             delete pl;
         }
+        move(maxrow+1,0);
+        printw("q - quite   s - snapshot   c - compare       ");
         refresh();
         if (mrep<mreps/1.5) {
             DM += 0.5;
         }
         int c=getch();
         if (c=='q') break;
+        else if (c=='s') saveBench("bench.txt");
+        else if (c=='c') loadBench("bench.txt");
     }
     move(maxrow+1,0);
     endwin();
