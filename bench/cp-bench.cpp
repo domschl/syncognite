@@ -245,7 +245,7 @@ int doBench() {
             delete pl;
         }
         move(maxrow+1,0);
-        printw("q - quite   s - snapshot   c - compare       ");
+        printw("q - quite   s - save-on-exit   c - compare    [%3d]   ", mreps-mrep);
         refresh();
         if (mrep<mreps/1.3) {
             DM += 0.8;
