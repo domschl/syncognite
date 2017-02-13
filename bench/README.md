@@ -8,7 +8,7 @@ SpatialBatchNorm, RNN, LSTM, WordEmbedding, TemporalAffine, TemporalSoftmax, Sof
 Check the [main page](../../..) for build requirements. Additionally, `curses` is needed.
 
 ## Build
-After configuration of CMake, the mnist part can be built directly by:
+After configuration of CMake, `bench` can be built directly by:
 ```bash
 make bench
 ```
@@ -29,7 +29,7 @@ map<string, string> benchRecipes = {
 ```bash
 bench/bench
 ```
-Press 'q' to stop the Benchmarks.
+Press `q` to stop the Benchmarks.
 
 ## Output
 ```bash
