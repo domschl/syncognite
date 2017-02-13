@@ -29,9 +29,8 @@ map<string, string> benchRecipes = {
 ```bash
 bench/bench
 ```
-Press `q` to stop the Benchmarks.
+Press `q` to stop the Benchmarks, `s` to save results to `bench.txt` on completion, `c` to
+compare relative improvements to previously saved results.
 
 ## Output
-```bash
-
-```
+![Running benchmark](../doc/images/bench.png)

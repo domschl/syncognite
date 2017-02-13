@@ -172,6 +172,7 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
 int doBench() {
     bool allOk=true;
     bool doSave=false;
+    bool bAbort=false;
     Color::Modifier red(Color::FG_RED);
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
@@ -185,7 +186,10 @@ int doBench() {
     clear();
     for (int mrep=0; mrep<mreps; mrep++) {
         clear();
-        move(0,0); printw("Layer             fw(ms) fw/N(ms) bw(ms) bw/N(ms)");
+        move(0,0);
+        attron(COLOR_PAIR(3));
+        printw("Layer             fw(ms) fw/N(ms)   %%  bw(ms) bw/N(ms)   %%     ");
+        attroff(COLOR_PAIR(3));
         for (auto it : benchRecipes) {
             string classname=it.first;
             while (isdigit(classname[classname.size()-1])) {
@@ -244,20 +248,33 @@ int doBench() {
             }
             delete pl;
         }
+        int pr=(mrep*100/mreps);
         move(maxrow+1,0);
-        printw("q - quite   s - save-on-exit   c - compare    [%3d]   ", mreps-mrep);
+        attron(COLOR_PAIR(3));
+        printw("q: abort   s: save-on-completion   c: compare-previous  [%3d%%]", pr);
+        attroff(COLOR_PAIR(3));
         refresh();
         if (mrep<mreps/1.3) {
             DM += 0.8;
         }
         int c=getch();
-        if (c=='q') break;
+        if (c=='q') {bAbort=true; break;}
         else if (c=='s') {doSave=true; saveBench("bench.txt");}
         else if (c=='c') loadBench("bench.txt");
     }
-    move(maxrow+1,0);
-    endwin();
     if (doSave) saveBench("bench.txt");
+    move(maxrow+1,0);
+    if (!bAbort) {
+        attron(COLOR_PAIR(3));
+        if (doSave) printw("Benchmark saved, press q...                                    ");
+        else        printw("Press q...                                                     ");
+        attroff(COLOR_PAIR(3));
+        refresh();
+        nodelay(stdscr, FALSE); // async keyboard checks
+        getch();
+        refresh();
+    }
+    endwin();
     return allOk;
 }
 
@@ -324,6 +341,8 @@ int main() {
     start_color();			/* Start color 			*/
     init_pair(1, COLOR_RED, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
+    init_pair(3, COLOR_BLUE, COLOR_WHITE);
+    init_pair(4, COLOR_WHITE, COLOR_BLACK);
 
     cpInitCompute("Bench",nullptr,0);
     registerLayers();
