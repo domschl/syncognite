@@ -11,26 +11,26 @@ using std::cerr; using std::endl;
 using std::setprecision; using std::setw; using std::fixed;
 
 map<string, string> benchRecipes = {
-    {"OneHot", "{benchIdx=0;benchName='OneHot';benchDataType='int100';benchN=100;V=100;inputShape=[100]}"},
-    {"Affine", "{benchIdx=1;benchName='Affine';benchN=100;inputShape=[1024];hidden=1024}"},
-    {"AffineRelu", "{benchIdx=2;benchName='AffineRelu';benchN=100;inputShape=[1024];hidden=1024}"},
-    {"Relu", "{benchIdx=3;benchName='Relu';benchN=100;inputShape=[1024]}"},
-    {"Nonlinearity0", "{benchIdx=4;benchName='Nonlin-Relu';benchN=100;type='relu';inputShape=[1024]}"},
-    {"Nonlinearity1", "{benchIdx=5;benchName='Nonlin-Sgmd';benchN=100;type='sigmoid';inputShape=[1024]}"},
-    {"Nonlinearity2", "{benchIdx=6;benchName='Nonlin-Tanh';benchN=100;type='tanh';inputShape=[1024]}"},
-    {"Dropout", "{benchIdx=7;benchName='Dropout';benchN=100;inputShape=[1024];drop=0.5}"},
-    {"BatchNorm", "{benchIdx=8;benchName='BatchNorm';benchN=100;inputShape=[1024]}"},
-    {"SpatialBatchNorm", "{benchIdx=9;benchName='SpatialBtchNrm';benchN=100;N=100;inputShape=[3,32,32]}"},
-    {"Convolution", "{benchIdx=10;benchName='Convolution';benchN=100;inputShape=[3,32,32];kernel=[64,5,5];stride=1;pad=2}"},
-    {"Pooling", "{benchIdx=11;benchName='Pooling';benchN=100;inputShape=[3,64,64];stride=2}"},
-    {"LSTM", "{benchIdx=12;benchName='LSTM';benchN=100;inputShape=[100,80];N=100;H=256}"},
-    {"RNN", "{benchIdx=13;benchName='RNN';benchN=100;inputShape=[100,80];N=100;H=256}"},
-    {"TemporalAffine", "{benchIdx=14;benchName='TemporalAff';benchN=100;inputShape=[100,80];N=100;M=256}"},
-    {"WordEmbedding", "{benchIdx=15;benchName='WordEmbed';benchN=100;inputShape=[100];D=100;V=256}"},
-    {"Svm", "{benchIdx=16;benchName='SVM';benchN=100;inputShape=[1024]}"},
-    {"Softmax", "{benchIdx=17;benchName='Softmax';benchN=100;inputShape=[1024]}"},
-    {"TemporalSoftmax", "{benchIdx=18;benchName='TemporalSM';benchN=100;inputShape=[100,80]}"},
-    {"TwoLayerNet", "{benchIdx=19;benchName='TwoLayerNet';benchN=100;inputShape=[1024];hidden=[1024,1024]}"},
+    {"OneHot", R"({"benchIdx":0,"benchName":"OneHot","benchDataType":"int100","benchN":100,"V":100,"inputShape":[100]})"},
+    {"Affine", R"({"benchIdx":1,"benchName":"Affine","benchN":100,"inputShape":[1024],"hidden":1024})"},
+    {"AffineRelu", R"({"benchIdx":2,"benchName":"AffineRelu","benchN":100,"inputShape":[1024],"hidden":1024})"},
+    {"Relu", R"({"benchIdx":3,"benchName":"Relu","benchN":100,"inputShape":[1024]})"},
+    {"Nonlinearity0", R"({"benchIdx":4,"benchName":"Nonlin-Relu","benchN":100,"type":"relu","inputShape":[1024]})"},
+    {"Nonlinearity1", R"({"benchIdx":5,"benchName":"Nonlin-Sgmd","benchN":100,"type":"sigmoid","inputShape":[1024]})"},
+    {"Nonlinearity2", R"({"benchIdx":6,"benchName":"Nonlin-Tanh","benchN":100,"type":"tanh","inputShape":[1024]})"},
+    {"Dropout", R"({"benchIdx":7,"benchName":"Dropout","benchN":100,"inputShape":[1024],"drop":0.5})"},
+    {"BatchNorm", R"({"benchIdx":8,"benchName":"BatchNorm","benchN":100,"inputShape":[1024]})"},
+    {"SpatialBatchNorm", R"({"benchIdx":9,"benchName":"SpatialBtchNrm","benchN":100,"N":100,"inputShape":[3,32,32]})"},
+    {"Convolution", R"({"benchIdx":10,"benchName":"Convolution","benchN":100,"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})"},
+    {"Pooling", R"({"benchIdx":11,"benchName":"Pooling","benchN":100,"inputShape":[3,64,64],"stride":2})"},
+    {"LSTM", R"({"benchIdx":12,"benchName":"LSTM","benchN":100,"inputShape":[100,80],"N":100,"H":256})"},
+    {"RNN", R"({"benchIdx":13,"benchName":"RNN","benchN":100,"inputShape":[100,80],"N":100,"H":256})"},
+    {"TemporalAffine", R"({"benchIdx":14,"benchName":"TemporalAff","benchN":100,"inputShape":[100,80],"N":100,"M":256})"},
+    {"WordEmbedding", R"({"benchIdx":15,"benchName":"WordEmbed","benchN":100,"inputShape":[100],"D":100,"V":256})"},
+    {"Svm", R"({"benchIdx":16,"benchName":"SVM","benchN":100,"inputShape":[1024]})"},
+    {"Softmax", R"({"benchIdx":17,"benchName":"Softmax","benchN":100,"inputShape":[1024]})"},
+    {"TemporalSoftmax", R"({"benchIdx":18,"benchName":"TemporalSM","benchN":100,"inputShape":[100,80]})"},
+    {"TwoLayerNet", R"({"benchIdx":19,"benchName":"TwoLayerNet","benchN":100,"inputShape":[1024],"hidden":[1024,1024]})"},
 };
 
 MatrixN benchMean;
@@ -195,8 +195,8 @@ int doBench() {
             while (isdigit(classname[classname.size()-1])) {
                 classname=classname.substr(0,classname.size()-1);
             }
-            CpParams cp(benchRecipes[it.first]);
-            int row=cp.getPar("benchIdx",(int)-1);
+            json j(json::parse(benchRecipes[it.first]));
+            int row=j.value("benchIdx",(int)-1);
             if (row>=benchRecipes.size()) {
                 cerr << "benchIdx must not be equal or greater than size of benchRecipes, error in: " << it.first << endl;
                 exit(-1);
@@ -205,17 +205,17 @@ int doBench() {
                 cerr << "No benchIdx defined for: " << it.first << endl;
                 exit(-1);
             }
-            string name=cp.getPar("benchName",it.first);
+            string name=j.value("benchName",it.first);
             move(row+1,0); printw(name.c_str());
             if (row+1 > maxrow) maxrow=row+1;
             t_layer_props_entry te=_syncogniteLayerFactory.mapprops[classname];
-            int bs=cp.getPar("benchN",(int)0);
+            int bs=j.value("benchN",(int)0);
             if (bs==0) {
                 cerr << "No benchN batch size defined in recipe for layer " << it.first << endl;
                 continue;
             }
-            string bd=cp.getPar("benchDataType",(string)"");
-            vector<int> isv=cp.getPar("inputShape", vector<int>{});
+            string bd=j.value("benchDataType",(string)"");
+            vector<int> isv=j.value("inputShape", vector<int>{});
             if (isv.size()==0) {
                 cerr << "No inputShape batch size defined in recipe for layer " << it.first << endl;
                 continue;
@@ -234,8 +234,8 @@ int doBench() {
                 cerr << "No benchDataType: " << bd << " is not understood in recipe for layer " << it.first << endl;
                 continue;
             }
-            cp.setPar("train", true);
-            Layer *pl = CREATE_LAYER(classname, cp)
+            j["train"]=true;
+            Layer *pl = CREATE_LAYER(classname, j)
             if (pl->layerType & LayerType::LT_LOSS) {
                 y=MatrixN(bs,pl->outputShape[0]);
                 for (auto k=0; k<y.size(); k++) {
@@ -278,60 +278,6 @@ int doBench() {
     return allOk;
 }
 
-#ifdef USE_CUDA
-void cudaBench() {
-    int N=801, K=20000, M=70;
-    MatrixN a(N,K),b(K,M),c0(N,M),c1(N,M);
-    a.setRandom();
-    b.setRandom();
-    Timer t1;
-    t1.startWall();
-    c0=a*b;
-    cerr << "Eigen: " << t1.stopWallMicro() << endl << endl;
-    t1.startWall();
-    c1=matmul(&a,&b,1,true);
-    cerr << "Cuda : " << t1.stopWallMicro() << endl << endl;
-    matComp(c0,c1,"cuda-divergence",0.01);
-}
-#endif
-
-//HO = 1 + (H + 2 * pad - HH) / stride;
-//WO = 1 + (W + 2 * pad - WW) / stride;
-void colmagic() {
-    int N=7;
-    Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
-    vector<int> vo=cv.getOutputShape();
-    int F=vo[0], HO=vo[1], WO=vo[2];
-    int rws=4;
-    MatrixN m(rws,HO * WO * F * N / rws);
-    m.setZero();
-    for (int i=0; i<m.size(); i++) m(i%rws,i/rws)=i;
-    cerr << "OLD:" << endl;
-    cv.col2imx(m,N);
-    cerr << "NEW:" << endl;
-    cv.col2im(m,N);
-}
-
-void icolmagic() {
-    int N=19;
-    Convolution cv{"{inputShape=[2,3,3];kernel=[4,3,3];stride=1;pad=1}"};
-    vector<int> vo=cv.getOutputShape();
-    int F=vo[0], HO=vo[1], WO=vo[2];
-    int rws=4;
-    //MatrixN m(rws,HO * WO * F * N / rws);
-    MatrixN m(N,HO * WO * F);
-    m.setZero();
-    for (int i=0; i<m.size(); i++) m(i)=i;
-    cerr << "OLD:" << endl;
-    MatrixN x1=cv.icol2imx(m,N);
-    cerr << "NEW:" << endl;
-    MatrixN x2=cv.icol2im(m,N);
-    if (matComp(x1,x2)) {
-        cerr << "seems good" << endl;
-    }
-}
-
-
 int main() {
     initscr(); // curses
     cbreak(); // no character buffering
@@ -348,15 +294,6 @@ int main() {
     registerLayers();
     int ret=0;
     ret=doBench();
-
-    #ifdef USE_CUDA
-    if (cpGetNumGpuThreads()>0){
-        cerr << "Cuda tests:" << endl;
-        cudaBench();
-    }
-    #endif
-
-    //icolmagic();
 
     cpExitCompute();
     return ret;
