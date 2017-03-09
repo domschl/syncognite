@@ -68,8 +68,8 @@ def loadOriginalFile(cfdict, destpath):
     return True
 
 
-def uncompressOriginal(filename, destpath):
-    if os.path.exists(destpath):
+def uncompressOriginal(filename, destpath, batchpath):
+    if os.path.exists(batchpath):
         print("Destination {} exists, not expanding again.".format(destpath))
         return True
     if (filename.endswith("tar.gz")):
@@ -150,11 +150,11 @@ def encodeCifar(cfdict, h5path, batchpath):
 localpath = os.path.dirname(os.path.realpath(__file__))
 destpath = os.path.join(localpath, "originals")
 batchpath = os.path.join(destpath, cifar_dict["batchfolder"])
-if loadOriginalFile(cifar_dict, destpath) is False:
+if loadOriginalFile(cifar_dict,destpath) is False:
     print("Download failed.")
 else:
     print('CIFAR file at:', cifar_dict["filename"])
-    if (uncompressOriginal(cifar_dict["filename"], destpath)):
+    if (uncompressOriginal(cifar_dict["filename"], destpath, batchpath)):
         print("Archive expansion completed")
         if encodeCifar(cifar_dict, localpath, batchpath) is False:
             print("Failed to create H5 database.")
