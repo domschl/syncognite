@@ -107,11 +107,12 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
 * C++ 11 compiler (on Linux or Mac, Intel or ARM)
-* Eigen v3.3 `eigen3`
+* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`
 * Hdf5 for sample data, `hdf5-cpp-fortran`. (optional, for data-sources MNIST and CIFAR10)
 * OpenMP (optional, for threading)
 * Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.
+* [nlohmann_json](https://github.com/nlohmann/json), already included in source tree (cpneural/nlohmann_json).
 
 ## Build
 syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and HDF5.

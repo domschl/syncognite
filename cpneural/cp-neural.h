@@ -20,6 +20,8 @@
 #include <chrono>
 #include <iomanip>
 
+#include "nlohmann_json/json.hpp"
+
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
