@@ -32,7 +32,7 @@ public:
     Dropout(const json& jx) {
         setup(jx);
     }
-    Dropout(string conf) {
+    Dropout(const string conf) {
         setup(json::parse(conf));
     }
     ~Dropout() {

@@ -68,7 +68,7 @@ bool checkLSTMStepForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.66382255,  0.76674007,  0.87195994,  0.97902709,  1.08751345,
          0.74192008,  0.90592151,  1.07717006,  1.25120233,  1.42395676;
 
-    LSTM lstm("{name='testlstm';inputShape=[4,1];H=5;N=3}");
+    LSTM lstm(R"({"name":"testlstm","inputShape":[4,1],"H":5,"N":3})"_json);
     *(lstm.params["Wxh"])= Wxh;
     *(lstm.params["Whh"])= Whh;
     *(lstm.params["bh"])=bh;
@@ -247,7 +247,7 @@ bool checkLSTMStepBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
  -1.6213349,   0.72557348, -0.09883938,  0.11600921,  0.17970186, -0.29548906,
   0.13532574, -1.56997402, -0.65726879, -0.59209996,  0.96049231,  1.87353271;
 
-    LSTM lstm("{name='test3lstm';inputShape=[5,1];H=6;N=4}");
+    LSTM lstm(R"({"name":"test3lstm","inputShape":[5,1],"H":6,"N":4})"_json);
     *(lstm.params["Wxh"])=Wxh;
     *(lstm.params["Whh"])=Whh;
     *(lstm.params["bh"])=bh;
@@ -358,8 +358,8 @@ bool checkLSTMForward(floatN eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
     0.6704845,   0.69350089,  0.71486014,  0.7346449 ,
     0.81733511,  0.83677871,  0.85403753,  0.86935314 ;
 
-//                                       D,T
-    LSTM lstm("{name='lstm3';inputShape=[5,3];H=4;N=2}");
+//                                             D,T
+    LSTM lstm(R"({"name":"lstm3","inputShape":[5,3],"H":4,"N":2})"_json);
     *(lstm.params["Wxh"])= Wxh;
     *(lstm.params["Whh"])= Whh;
     *(lstm.params["bh"])=bh;
@@ -506,7 +506,7 @@ bool checkLSTMBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           1.21894487,  0.20341521,  0.68888364, -0.38292364, -1.50478578,
          -1.4867672 ,  1.30026383, -0.98036198, -1.380473  ,  1.68487066;
 //                                       D,T
-    LSTM lstm("{name='lstm4';inputShape=[3,4];H=5;N=2}");   //inputShape=D, hidden=H
+    LSTM lstm(R"({"name":"lstm4","inputShape":[3,4],"H":5,"N":2})"_json);   //inputShape=D, hidden=H
     *(lstm.params["Wxh"])=Wxh;
     *(lstm.params["Whh"])=Whh;
     *(lstm.params["bh"])=bh;
@@ -551,9 +551,8 @@ bool testLSTM(int verbose) {
 	xlstm.setRandom();
 	hl0.setRandom();
 	lsstates["lstm-h"] = &hl0;
-	//                                 D,T
-	LSTM lstm("{name='lstm';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
-	    "nohupdate=true}");
+	//                                        D,T
+	LSTM lstm(R"({"name":"lstm","inputShape":[5,7],"H":6,"N":4,"noVectorizationTests":true,"nohupdate":true})"_json);
 	bool res=lstm.selfTest(xlstm, &lsstates, 1e-4, 1e-4, verbose);
 	registerTestResult("LSTM", "Numerical gradient", res, "");
 	if (!res) bOk = false;

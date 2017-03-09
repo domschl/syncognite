@@ -31,8 +31,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           0.62625677, -1.24542905,  0.67804096,
           1.02169486,  0.1622018 , -0.74815305;
 
-    BatchNorm bn("{inputShape=[3];train=true}");
-    //bn.setPar("trainMode", true);
+    BatchNorm bn(R"({"inputShape":[3],"train":true})"_json);
     MatrixN xn0=bn.forward(x, &cache, &states);
     MatrixN mean=xn0.colwise().mean();
     if (verbose>1) cerr << "    Mean:" << mean << endl;
@@ -79,10 +78,9 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
            12.02169486,  12.3244036 ,  10.75554084;
 
 
-    BatchNorm bn2("{inputShape=[3];train=true}");
+    BatchNorm bn2(R"({"inputShape":[3],"train":true})"_json);
     *(bn2.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn2.params["beta"]) << 11.0, 12.0, 13.0;
-    //bn.setPar("trainMode", true);
     MatrixN xn20=bn2.forward(x, &cache2, &states);
     MatrixN mean2=xn20.colwise().mean();
     if (verbose>1) cerr << "    Mean:" << mean2 << endl;
@@ -118,7 +116,7 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl cache3;
     int nnr=200;
     MatrixN xt(nnr,3);
-    BatchNorm bn3("{inputShape=[3];train=true}");
+    BatchNorm bn3(R"({"inputShape":[3],"train":true})"_json);
     *(bn3.params["gamma"]) << 1.0, 2.0, 3.0;
     *(bn3.params["beta"]) << 0.0, -1.0, 4.0;
     for (int i=0; i<nnr; i++) {
@@ -130,8 +128,8 @@ bool checkBatchNormForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
         cerr << "    Running stdvar after " << nnr << " cycl: " << *(cache3["running_var"]) << endl;
     }
     if (verbose>1) cerr << "  switching test" << endl;
-    bn3.cp.setPar("train", false);
-    if (bn3.cp.getPar("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
+    bn3.j["train"]=false;
+    if (bn3.j.value("train", true)) cerr << "INTERNAL ERROR: parSet boolean failed!" << endl;
     xt.setRandom();
     MatrixN xn30=bn3.forward(xt, &cache3, &states);
     MatrixN mean3=xn30.colwise().mean();
@@ -179,7 +177,7 @@ bool checkBatchNormBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
               -0.26565248,  0.26942709,  0.09496168, -0.00460701,  1.22847938,
               -0.54081537, -0.35927023, -0.23993959,  1.0851781 ,  0.51968779;
 
-    BatchNorm bn("{inputShape=[5];train=true}");
+    BatchNorm bn(R"({"inputShape":[5],"train":true})"_json);
     *(bn.params["gamma"])=gamma;
     *(bn.params["beta"])=beta;
 
@@ -208,7 +206,7 @@ bool testBatchNorm(int verbose) {
 	cerr << lblue << "BatchNorm Layer: " << def << endl;
 	// Numerical gradient
     // Batchnorm - still some strangities:
-    BatchNorm bn("{inputShape=[10];train=true;noVectorizationTests=true}");
+    BatchNorm bn(R"({"inputShape":[10],"train":true,"noVectorizationTests":true})"_json);
     MatrixN xbr(20, 10);
     xbr.setRandom();
     bool res=bn.selfTest(xbr, &s1, 1e-4, 1e-3, verbose);

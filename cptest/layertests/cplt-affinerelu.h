@@ -20,7 +20,9 @@ bool checkAffineRelu(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     y << 0.        ,  3.41322609,  1.91853897,  0.        ,  0.24028072,
          0.        ,  1.65643012,  1.40374932,  1.32668765,  5.19182449;
 
-    AffineRelu arl("{inputShape=[4];hidden=5}");
+    cerr << "1" << endl;
+    AffineRelu arl(R"({"inputShape":[4],"hidden":5})"_json);
+    cerr << "2" << endl;
     t_cppl cache;
     t_cppl grads;
     *(arl.params["af-W"])=W;
@@ -65,7 +67,7 @@ bool testAffineRelu(int verbose) {
 	t_cppl s1;
 	cerr << lblue << "AffineRelu Layer: " << def << endl;
 	// Numerical gradient
-    AffineRelu rx("{inputShape=[2];hidden=3}");
+    AffineRelu rx(R"({"inputShape":[2],"hidden":3})"_json);
 	MatrixN xarl(30, 2);
 	xarl.setRandom();
 	floatN h = 1e-6;

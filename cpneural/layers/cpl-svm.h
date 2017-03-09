@@ -24,7 +24,7 @@ public:
     Svm(const json& jx) {
         setup(jx);
     }
-    Svm(string conf) {
+    Svm(const string conf) {
         setup(json::parse(conf));
     }
     ~Svm() {

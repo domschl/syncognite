@@ -16,7 +16,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.        ,  0.        ,  0.04545455,  0.13636364,
          0.22727273,  0.31818182,  0.40909091,  0.5;
 
-    Nonlinearity  nlr("{inputShape=[4];type='relu'}");
+    Nonlinearity  nlr(R"({"inputShape":[4],"type":"relu"})"_json);
     MatrixN y0=nlr.forward(x, nullptr, &states);
     if (!matCompT(y,y0,"NonlinearityForwardRelu",eps,verbose)) allOk=false;
 
@@ -28,7 +28,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.46596182,  0.48863832,  0.51136168,  0.53403818,
          0.55657487,  0.57888108,  0.60086988,  0.62245933;
 
-    Nonlinearity  nlr2("{inputShape=[4];type='sigmoid'}");
+    Nonlinearity  nlr2(R"({"inputShape":[4],"type":"sigmoid"})"_json);
     y0=nlr2.forward(x, nullptr, &states);
     if (!matCompT(y,y0,"NonlinearityForwardSigmoid",eps,verbose)) allOk=false;
 
@@ -40,7 +40,7 @@ bool checkNonlinearityForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          -0.13552465, -0.04542327,  0.04542327,  0.13552465,
           0.22343882,  0.30786199,  0.38770051,  0.46211716;
 
-    Nonlinearity  nlr3(CpParams("{inputShape=[4];type='tanh'}"));
+    Nonlinearity  nlr3(R"({"inputShape":[4],"type":"tanh"})"_json);
     y0=nlr3.forward(x, nullptr, &states);
     if (!matCompT(y,y0,"NonlinearityForwardTanh",eps,verbose)) allOk=false;
 
@@ -64,7 +64,7 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
               -1.10965119,  0.24569561, -0.68054398,  2.23784401,
               -0.39696365,  0.36303492, -0.08854093,  0.63582723,
               -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-    Nonlinearity nl("{inputShape=[4];type='relu'}");
+    Nonlinearity nl(R"({"inputShape":[4],"type":"relu"})"_json);
     t_cppl cache;
     t_cppl grads;
     MatrixN y=nl.forward(x, &cache, &states);
@@ -90,7 +90,7 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.28881523, -0.42522819, -0.29022231,  0.35862906,
         -2.03870191,  0.84601717,  1.57136025, -1.61173135;
 
-    Nonlinearity nl2("{inputShape=[4];type='sigmoid'}");
+    Nonlinearity nl2(R"({"inputShape":[4],"type":"sigmoid"})"_json);
     y=nl2.forward(x, &cache, &states);
     dx0=nl2.backward(dchain, &cache, &states, &grads);
     ret=matCompT(dx,dx0,"NonlinearityBackward (sigmoid) dx",eps,verbose);
@@ -114,7 +114,7 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           1.18579972,  1.72226031,  0.53919526, -2.23895634,
          -1.11987843, -0.69806274, -0.37361077, -0.3332982;
 
-    Nonlinearity nl3("{inputShape=[4];type='tanh'}");
+    Nonlinearity nl3(R"({"inputShape":[4],"type":"tanh"})"_json);
     y=nl3.forward(x, &cache, &states);
     dx0=nl3.backward(dchain, &cache, &states, &grads);
     ret=matCompT(dx,dx0,"NonlinearityBackward (tanh) dx",eps,verbose);
@@ -133,9 +133,9 @@ bool testNonlinearity(int verbose) {
     cerr << lblue << "Nonlinearity Layers: " << def << endl;
     vector<string> nls = {"relu", "sigmoid", "tanh"};
     for (string nlsi : nls) {
-        CpParams cp("{inputShape=[20]}");
-        cp.setPar("type", nlsi);
-        Nonlinearity nlr(cp);
+        json j(R"({"inputShape":[20]})"_json);
+        j["type"]=(string)nlsi;
+        Nonlinearity nlr(j);
         MatrixN xnl(10, 20);
         xnl.setRandom();
         bool res=nlr.selfTest(xnl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);

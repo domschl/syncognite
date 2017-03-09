@@ -23,7 +23,7 @@ public:
     Softmax(const json& jx) {
         setup(jx);
     }
-    Softmax(string conf) {
+    Softmax(const string conf) {
         setup(json::parse(conf));
     }
     ~Softmax() {

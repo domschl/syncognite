@@ -34,10 +34,10 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          -0.69824561,  2.46626566,
          -0.51027569,  2.3685213;
 
-    CpParams cp;
-    cp.setPar("inputShape",vector<int>{D});
-    cp.setPar("hidden",vector<int>{H,C});
-    TwoLayerNet tln(cp);
+    json j;
+    j["inputShape"]=vector<int>{D};
+    j["hidden"]=vector<int>{H,C};
+    TwoLayerNet tln(j);
 
     *(tln.params["af1-W"])=W1;
     *(tln.params["af1-b"])=b1;
@@ -110,11 +110,11 @@ bool testTwoLayerNet(int verbose) {
 	// Numerical gradient
     // TwoLayerNet
 	int ntl1 = 4, ntl2 = 5, ntl3 = 6, ntlN = 30;
-	CpParams tcp;
-	tcp.setPar("inputShape", vector<int>{ntl1});
-	tcp.setPar("hidden", vector<int>{ntl2, ntl3});
-	tcp.setPar("init", (string) "standard");
-	TwoLayerNet tl(tcp);
+	json j;
+	j["inputShape"]=vector<int>{ntl1};
+	j["hidden"]=vector<int>{ntl2, ntl3};
+	j["init"]=(string) "standard";
+	TwoLayerNet tl(j);
 	MatrixN xtl(ntlN, ntl1);
 	xtl.setRandom();
 	MatrixN y2(ntlN, 1);

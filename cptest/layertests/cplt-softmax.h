@@ -42,7 +42,7 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           0.02001579,  0.01998471,  0.01999883,  0.01999018, -0.07998951,
           0.0199872 , -0.08000205,  0.02000866,  0.02000501,  0.02000117;
 
-    Softmax sm("{inputShape=[5]}");
+    Softmax sm(R"({"inputShape":[5]})"_json);
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
@@ -78,9 +78,9 @@ bool testSoftmax(int verbose) {
 	// Numerical gradient
     // Softmax
 	int smN = 10, smC = 4;
-	CpParams c1;
-	c1.setPar("inputShape", vector<int>{smC});
-	Softmax mx(c1);
+	json j1;
+	j1["inputShape"]=vector<int>{smC};
+	Softmax mx(j1);
 	t_cppl smstates;
 	MatrixN xmx(smN, smC);
 	xmx.setRandom();

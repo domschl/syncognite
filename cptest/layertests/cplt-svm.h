@@ -52,7 +52,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           0.1, -0.4,  0.1,  0.1,  0.1,
           0.1,  0.1,  0.1,  0.1, -0.4;
 
-    Svm sv("{inputShape=[5]}");
+    Svm sv(R"({"inputShape":[5]})"_json);
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
@@ -86,9 +86,9 @@ bool testSvm(int verbose) {
 	// Numerical gradient
     // SVM
 	int svN = 10, svC = 5;
-	CpParams c2;
-	c2.setPar("inputShape", vector<int>{svC});
-	Svm sv(c2);
+	json j2;
+	j2["inputShape"]=vector<int>{svC};
+	Svm sv(j2);
 	t_cppl svmstates;
 	MatrixN xsv(svN, svC);
 	xsv.setRandom();

@@ -37,7 +37,7 @@ public:
     BatchNorm(const json& jx) {
         setup(jx);
     }
-    BatchNorm(string conf) {
+    BatchNorm(const string conf) {
         setup(json::parse(conf));
     }
     ~BatchNorm() {

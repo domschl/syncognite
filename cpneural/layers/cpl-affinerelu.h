@@ -18,13 +18,14 @@ private:
             inputShapeFlat *= j;
         }
         hidden=j.value("hidden",1024);
-        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        string init=j.value("init",(string)"standard");
+        XavierMode inittype=xavierInitType(init);
         initfactor=j.value("initfactor",(floatN)1.0);
 
         outputShape={hidden};
         json ja;
         ja["inputShape"]=vector<int>{inputShapeFlat};
-        ja["init"]=inittype;
+        ja["init"]=init;
         ja["initfactor"]=initfactor;
         ja["hidden"]=hidden;
         af=new Affine(ja);
@@ -41,7 +42,7 @@ public:
     AffineRelu(const json& jx) {
         setup(jx);
     }
-    AffineRelu(string conf) {
+    AffineRelu(const string conf) {
         setup(json::parse(conf));
     }
     ~AffineRelu() {

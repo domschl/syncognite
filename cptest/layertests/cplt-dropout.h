@@ -12,10 +12,10 @@ bool checkDropout(float eps=3.0e-2, int verbose=1) {
     floatN dop=0.8;
     x.array() += dl;
 
-    Dropout dp("{inputShape=[500];train=true}");
-    dp.cp.setPar("drop",dop);
+    Dropout dp(R"({"inputShape":[500],"train":true})"_json);
+    dp.j["drop"]=dop;
     MatrixN y=dp.forward(x, nullptr, &states);
-    dp.cp.setPar("train",false);
+    dp.j["train"]=false;
     MatrixN yt=dp.forward(x, nullptr, &states);
 
     floatN xm=x.mean();
@@ -59,7 +59,7 @@ bool testDropout(int verbose) {
 	cerr << lblue << "Dropout Layer: " << def << endl;
 	// Numerical gradient
     // Dropout
-	Dropout dp("{inputShape=[5];train=true;noVectorizationTests=true;freeze=true;drop=0.8}");
+	Dropout dp(R"({"inputShape":[5],"train":true,"noVectorizationTests":true,"freeze":true,"drop":0.8})"_json);
 	MatrixN xdp(3, 5);
 	xdp.setRandom();
 	floatN h = 1e-6;

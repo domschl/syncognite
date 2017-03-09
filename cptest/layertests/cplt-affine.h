@@ -19,8 +19,7 @@ bool checkAffineForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     y << -0.24103896, -0.03584416,  0.16935065,
          -0.23480519,  0.03272727,  0.30025974;
 
-     //Affine pe(CpParams("{inputShape=[4,3]}"));
-     Affine pe("{inputShape=[4];hidden=3}");
+    Affine pe( R"({"inputShape":[4],"hidden":3})"_json );
     *(pe.params["W"])= W;
     *(pe.params["b"])=b;
     MatrixN y0=pe.forward(x, nullptr, &states);
@@ -52,7 +51,7 @@ bool checkAffineBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN dchain(2,5);
     dchain << 0.83641977, -1.65103186,  3.03523817,  0.44273757,  0.13073521,
               0.36971463, -0.49298824, -0.5927959 ,  1.89074546,  1.81001949;
-    Affine pe("{inputShape=[4];hidden=5}");
+    Affine pe(R"({"inputShape":[4],"hidden":5})"_json);
     *(pe.params["W"])=W;
     *(pe.params["b"])=b;
     t_cppl cache;
@@ -78,7 +77,7 @@ bool testAffine(int verbose) {
 	t_cppl s1;
 	cerr << lblue << "Affine Layer: " << def << endl;
 	// Numerical gradient
-	Affine pc(CpParams("{inputShape=[30];hidden=20}"));
+	Affine pc(R"({"inputShape":[30],"hidden":20})"_json);
 	MatrixN x(10, 30);
 	x.setRandom();
 	bool res = pc.selfTest(x, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);

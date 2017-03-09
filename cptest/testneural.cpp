@@ -64,9 +64,9 @@ bool registerTest() {
 	for (auto it : _syncogniteLayerFactory.mapl) {
 		cerr << nr << ".: " << it.first << " ";
 		t_layer_props_entry te = _syncogniteLayerFactory.mapprops[it.first];
-		CpParams cp;
-		cp.setPar("inputShape", std::vector<int>(te));
-		Layer *l = CREATE_LAYER(it.first, cp) if (l->layerType == LT_NORMAL) {
+		json j;
+		j["inputShape"]=std::vector<int>(te);
+		Layer *l = CREATE_LAYER(it.first, j) if (l->layerType == LT_NORMAL) {
 			cerr << "normal layer" << endl;
 		}
 		else if (l->layerType == LT_LOSS) {
@@ -98,12 +98,13 @@ bool testLayerBlock(int verbose) {
     Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
 	cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def << endl;
-	LayerBlock lb("{name='testblock'}");
+	LayerBlock lb(R"({"name": "testblock"})"_json);
 	if (verbose>1) cerr << "  LayerName for lb: " << lb.layerName << endl;
-	lb.addLayer("Affine", "af1", "{inputShape=[10]}", {"input"});
-	lb.addLayer("Relu", "rl1", "", {"af1"});
-	lb.addLayer("Affine", "af2", "{hidden=10}", {"rl1"});
-	lb.addLayer("Softmax", "sm1", "", {"af2"});
+	lb.addLayer("Affine", "af1", R"({"inputShape":[10]})", {"input"});
+	lb.addLayer("Relu", "rl1", "{}", {"af1"});
+	lb.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
+	lb.addLayer("Softmax", "sm1", "{}", {"af2"});
+	cerr << "1" << endl;
     bool bCT=false;
     if (verbose>2) bCT=true;
 	bool res=lb.checkTopology(bCT);
@@ -136,13 +137,13 @@ bool testTrainTwoLayerNet(int verbose) {
     Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
 	cerr << lblue << "TwoLayerNet training test: " << def << endl;
-	CpParams cp;
+	json j;
 	int N = 100, NV = 40, NT = 40, I = 5, H = 20, C = 4;
-	cp.setPar("inputShape", vector<int>{I});
-	cp.setPar("hidden", vector<int>{H, C});
-	cp.setPar("init", "normal");
-	cp.setPar("initfactor", (floatN)0.1);
-	TwoLayerNet tln(cp);
+	j["inputShape"]=vector<int>{I};
+	j["hidden"]=vector<int>{H, C};
+	j["init"]="normal";
+	j["initfactor"]=(floatN)0.1;
+	TwoLayerNet tln(j);
 
 	MatrixN X(N, I); // XXX: 1-I never used by tfunc...
 	X.setRandom();

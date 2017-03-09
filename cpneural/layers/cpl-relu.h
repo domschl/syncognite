@@ -22,7 +22,7 @@ public:
     Relu(const json& jx) {
         setup(jx);
     }
-    Relu(string conf) {
+    Relu(const string conf) {
         setup(json::parse(conf));
     }
     ~Relu() {

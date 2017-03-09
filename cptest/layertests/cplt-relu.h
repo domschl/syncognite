@@ -15,7 +15,7 @@ bool checkReluForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 	    0.,  0.,  0.04545455,  0.13636364,
 	    0.22727273,  0.31818182,  0.40909091,  0.5;
 
-	Relu rl(CpParams("{inputShape=[4]}"));
+	Relu rl(R"({"inputShape":[4]})"_json);
 	MatrixN y0=rl.forward(x, nullptr, &states);
 	return matCompT(y,y0,"ReluForward",eps,verbose);
 }
@@ -37,7 +37,7 @@ bool checkReluBackward(float eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
 	    -1.10965119,  0.24569561, -0.68054398,  2.23784401,
 	    -0.39696365,  0.36303492, -0.08854093,  0.63582723,
 	    -0.07389104, -0.38178744, -1.18782779, -0.8492151;
-	Relu rl("{inputShape=[4]}");
+	Relu rl(R"({"inputShape":[4]})"_json);
 	t_cppl cache;
 	t_cppl grads;
 	MatrixN y=rl.forward(x, &cache, &states);
@@ -57,7 +57,7 @@ bool testRelu(int verbose) {
 	t_cppl s1 {};
 	cerr << lblue << "Relu Layer: " << def << endl;
 	// Numerical gradient
-	Relu rl(CpParams("{inputShape=[20]}"));
+	Relu rl(R"({"inputShape":[20]})"_json);
 	MatrixN x(10, 20);
 	x.setRandom();
 	bool res = rl.selfTest(x, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
