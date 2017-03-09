@@ -125,7 +125,7 @@ bool  getcifar10Data(string filepath) {
     }
     H5::H5File fmn((H5std_string)filepath, H5F_ACC_RDONLY);
     cp_cifar10_pfile=&fmn;
-    int nr=fmn.getNumObjs();
+    //int nr=fmn.getNumObjs();
     //cerr << nr << endl;
     cp_cifar10_iter_info info;
     info.index=0;
@@ -136,44 +136,43 @@ bool  getcifar10Data(string filepath) {
 }
 
 
-floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
-    // LayerBlock lb("{name='DomsNet';bench=false;init='standard'}");
-    LayerBlock lb("{name='DomsNet';bench=false;init='orthonormal'}");
-    lb.addLayer("Convolution", "cv1", "{inputShape=[3,32,32];kernel=[64,5,5];stride=1;pad=2}",{"input"});
-    lb.addLayer("BatchNorm","sb1","",{"cv1"});
-    lb.addLayer("Relu","rl1","",{"sb1"});
-    lb.addLayer("Dropout","doc1","{drop=0.5}",{"rl1"});
-    lb.addLayer("Convolution", "cv2", "{kernel=[64,3,3];stride=1;pad=1}",{"doc1"});
-    lb.addLayer("Relu","rl2","",{"cv2"});
-    lb.addLayer("Convolution", "cv3", "{kernel=[128,3,3];stride=2;pad=1}",{"rl2"});
-    lb.addLayer("BatchNorm","sb2","",{"cv3"});
-    lb.addLayer("Relu","rl3","",{"sb2"});
-    lb.addLayer("Dropout","doc2","{drop=0.8}",{"rl3"});
-    lb.addLayer("Convolution", "cv4", "{kernel=[128,3,3];stride=1;pad=1}",{"doc2"});
-    lb.addLayer("Relu","rl4","",{"cv4"});
-    lb.addLayer("Convolution", "cv5", "{kernel=[256,3,3];stride=2;pad=1}",{"rl4"});
-    lb.addLayer("BatchNorm","sb3","",{"cv5"});
-    lb.addLayer("Relu","rl5","",{"sb3"});
-    lb.addLayer("Dropout","doc3","{drop=0.6}",{"rl5"});
-    lb.addLayer("Convolution", "cv6", "{kernel=[256,3,3];stride=1;pad=1}",{"doc3"});
-    lb.addLayer("Relu","rl6","",{"cv6"});
-    lb.addLayer("Dropout","doc4","{drop=0.6}",{"rl6"});
-    lb.addLayer("Convolution", "cv7", "{kernel=[512,3,3];stride=2;pad=1}",{"doc4"});
-    lb.addLayer("Relu","rl7","",{"cv7"});
-    lb.addLayer("Dropout","doc5","{drop=0.6}",{"rl7"});
-    lb.addLayer("Convolution", "cv8", "{kernel=[512,3,3];stride=1;pad=1}",{"doc5"});
-    lb.addLayer("Relu","rl8","",{"cv8"});
+floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false) {
+    LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
+    lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
+    lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
+    lb.addLayer("Relu","rl1","{}",{"sb1"});
+    lb.addLayer("Dropout","doc1",R"({"drop":0.5})",{"rl1"});
+    lb.addLayer("Convolution", "cv2", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"doc1"});
+    lb.addLayer("Relu","rl2","{}",{"cv2"});
+    lb.addLayer("Convolution", "cv3", R"({"kernel":[128,3,3],"stride":2,"pad":1})",{"rl2"});
+    lb.addLayer("BatchNorm","sb2","{}",{"cv3"});
+    lb.addLayer("Relu","rl3","{}",{"sb2"});
+    lb.addLayer("Dropout","doc2",R"({"drop":0.8})",{"rl3"});
+    lb.addLayer("Convolution", "cv4", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"doc2"});
+    lb.addLayer("Relu","rl4","{}",{"cv4"});
+    lb.addLayer("Convolution", "cv5", R"({"kernel":[256,3,3],"stride":2,"pad":1})",{"rl4"});
+    lb.addLayer("BatchNorm","sb3","{}",{"cv5"});
+    lb.addLayer("Relu","rl5","{}",{"sb3"});
+    lb.addLayer("Dropout","doc3",R"({"drop":0.6})",{"rl5"});
+    lb.addLayer("Convolution", "cv6", R"({"kernel":[256,3,3],"stride":1,"pad":1})",{"doc3"});
+    lb.addLayer("Relu","rl6","{}",{"cv6"});
+    lb.addLayer("Dropout","doc4",R"({"drop":0.6})",{"rl6"});
+    lb.addLayer("Convolution", "cv7", R"({"kernel":[512,3,3],"stride":2,"pad":1})",{"doc4"});
+    lb.addLayer("Relu","rl7","{}",{"cv7"});
+    lb.addLayer("Dropout","doc5",R"({"drop":0.6})",{"rl7"});
+    lb.addLayer("Convolution", "cv8", R"({"kernel":[512,3,3],"stride":1,"pad":1})",{"doc5"});
+    lb.addLayer("Relu","rl8","{}",{"cv8"});
 
-    lb.addLayer("Affine","af1","{hidden=1024}",{"rl8"});
-    lb.addLayer("BatchNorm","bn1","",{"af1"});
-    lb.addLayer("Relu","rla1","",{"bn1"});
-    lb.addLayer("Dropout","do1","{drop=0.7}",{"rla1"});
-    lb.addLayer("Affine","af2","{hidden=512}",{"do1"});
-    lb.addLayer("BatchNorm","bn2","",{"af2"});
-    lb.addLayer("Relu","rla2","",{"bn2"});
-    lb.addLayer("Dropout","do2","{drop=0.7}",{"rla2"});
-    lb.addLayer("Affine","af3","{hidden=10}",{"do2"});
-    lb.addLayer("Softmax","sm1","",{"af3"});
+    lb.addLayer("Affine","af1",R"({"hidden":1024})",{"rl8"});
+    lb.addLayer("BatchNorm","bn1","{}",{"af1"});
+    lb.addLayer("Relu","rla1","{}",{"bn1"});
+    lb.addLayer("Dropout","do1",R"({"drop":0.7})",{"rla1"});
+    lb.addLayer("Affine","af2",R"({"hidden":512})",{"do1"});
+    lb.addLayer("BatchNorm","bn2","{}",{"af2"});
+    lb.addLayer("Relu","rla2","{}",{"bn2"});
+    lb.addLayer("Dropout","do2",R"({"drop":0.7})",{"rla2"});
+    lb.addLayer("Affine","af3",R"({"hidden":10})",{"do2"});
+    lb.addLayer("Softmax","sm1","{}",{"af3"});
 
     if (verbose) cerr << "Checking LayerBlock topology..." << endl;
     if (!lb.checkTopology(verbose)) {
@@ -182,15 +181,15 @@ floatN evalMultilayer(CpParams& cpo, MatrixN& X, MatrixN& y, MatrixN& Xv, Matrix
         if (verbose) cerr << "Topology-check for LayerBLock: ok." << endl;
     }
 
-    floatN cAcc=lb.train(X, y, Xv, yv, "Adam", cpo);
+    floatN cAcc=lb.train(X, y, Xv, yv, "Adam", jo);
 
     floatN train_err, val_err, test_err;
     if (evalFinal) {
-        train_err=lb.test(X, y, cpo.getPar("batch_size", 50));
-        val_err=lb.test(Xv, yv, cpo.getPar("batch_size", 50));
-        test_err=lb.test(Xt, yt, cpo.getPar("batch_size", 50));
+        train_err=lb.test(X, y, jo.value("batch_size", 50));
+        val_err=lb.test(Xv, yv, jo.value("batch_size", 50));
+        test_err=lb.test(Xt, yt, jo.value("batch_size", 50));
 
-        cerr << "Final results on CIFAR10 after " << cpo.getPar("epochs",(floatN)0.0) << " epochs:" << endl;
+        cerr << "Final results on CIFAR10 after " << jo.value("epochs",(floatN)0.0) << " epochs:" << endl;
         cerr << "      Train-error: " << train_err << " train-acc: " << 1.0-train_err << endl;
         cerr << " Validation-error: " << val_err <<   "   val-acc: " << 1.0-val_err << endl;
         cerr << "       Test-error: " << test_err <<  "  test-acc: " << 1.0-test_err << endl;
@@ -242,13 +241,13 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    CpParams cpo("{verbose=true;shuffle=true;epsion=1e-8}");
-    cpo.setPar("learning_rate", (floatN)2e-2); //2.2e-2);
-    cpo.setPar("lr_decay", (floatN)1.0);
-    cpo.setPar("regularization", (floatN)1e-5);
+    json jo(R"({"verbose":true,"shuffle":true,"epsion":1e-8})"_json);
+    jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
+    jo["lr_decay"]=(floatN)1.0;
+    jo["regularization"]=(floatN)1e-5;
 
-    cpo.setPar("epochs",(floatN)40.0);
-    cpo.setPar("batch_size",50);
+    jo["epochs"]=(floatN)40.0;
+    jo["batch_size"]=50;
 
     bool autoOpt=false;
 
@@ -258,13 +257,13 @@ int main(int argc, char *argv[]) {
         //vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; -> 1e-2
         vector<floatN> regi{1e-1,5e-2,1e-2,5e-3,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
         vector<floatN> learni{1e-2,5e-3,1e-3}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
-        cpo.setPar("epochs",(floatN)2.0);
+        jo["epochs"]=(floatN)2.0;
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {
-            cpo.setPar("learning_rate", learn);
+            jo["learning_rate"]=learn;
             for (auto reg : regi) {
-                cpo.setPar("regularization", reg);
-                cAcc=evalMultilayer(cpo, X, y, Xv, yv, Xt, yt);
+                jo["regularization"]=reg;
+                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt);
                 if (cAcc > cmAcc) {
                     bReg=reg;
                     bLearn=learn;
@@ -281,10 +280,10 @@ int main(int argc, char *argv[]) {
         bReg=1.e-6;
     }
 
-    cpo.setPar("learning_rate", bLearn);
-    cpo.setPar("regularization", bReg);
-    cpo.setPar("epochs",(floatN)40.0);
-    evalMultilayer(cpo, X, y, Xv, yv, Xt, yt, true, true);
+    jo["learning_rate"]=bLearn;
+    jo["regularization"]=bReg;
+    jo["epochs"]=(floatN)40.0;
+    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true);
 
     for (auto it : cpcifar10Data) {
          free(it.second);
