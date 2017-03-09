@@ -100,11 +100,10 @@ bool testLayerBlock(int verbose) {
 	cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def << endl;
 	LayerBlock lb(R"({"name": "testblock"})"_json);
 	if (verbose>1) cerr << "  LayerName for lb: " << lb.layerName << endl;
-	lb.addLayer("Affine", "af1", R"({"inputShape":[10]})", {"input"});
+	lb.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});
 	lb.addLayer("Relu", "rl1", "{}", {"af1"});
 	lb.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
 	lb.addLayer("Softmax", "sm1", "{}", {"af2"});
-	cerr << "1" << endl;
     bool bCT=false;
     if (verbose>2) bCT=true;
 	bool res=lb.checkTopology(bCT);

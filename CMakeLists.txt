@@ -52,6 +52,7 @@ if ((";${gcc_like_compilers};" MATCHES ";${CMAKE_CXX_COMPILER_ID};") AND
     option(USE_AVX_INSTRUCTIONS  "Compile your program with AVX & AVX2 instructions"  ON)
     option(USE_FMA_INSTRUCTIONS  "Compile your program with FMA instructions"  ON)
     if(USE_AVX_INSTRUCTIONS)
+        add_definitions(-march=native)
         add_definitions(-mavx -mavx2)
         add_definitions(-DUSE_AVX)
         message(STATUS "Enabling AVX & AVX2 instructions")

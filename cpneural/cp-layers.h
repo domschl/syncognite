@@ -48,8 +48,8 @@ void registerLayers() {
 class LayerBlock : public Layer {
 private:
     bool bench;
-    string inittype;
-    floatN initfactor;
+    string inittype{"standard"};
+    floatN initfactor=1.0;
     void setup(const json& jx) {
         j=jx;
         layerName=j.value("name",(string)"block");
@@ -166,6 +166,7 @@ public:
     }
     bool addLayer(string layerclass, string name, string params, vector<string> inputLayers) {
         json jl=json::parse(params);
+        cerr << layerclass << ", " << name << ", " << params << endl;
         return addLayer(layerclass, name, jl, inputLayers);
     }
 

@@ -19,7 +19,7 @@ private:
         }
         hidden=j.value("hidden",1024);
         string init=j.value("init",(string)"standard");
-        XavierMode inittype=xavierInitType(init);
+        //XavierMode inittype=xavierInitType(init);
         initfactor=j.value("initfactor",(floatN)1.0);
 
         outputShape={hidden};

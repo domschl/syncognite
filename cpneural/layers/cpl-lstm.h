@@ -12,6 +12,7 @@ private:
     int T,D,H,N;
     float maxClip=0.0;
     bool nohupdate;
+    bool forgetGateInitOnes=true;
     string hname;
     string hname0;
     string cname;
@@ -36,6 +37,7 @@ private:
         XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
         initfactor=j.value("initfactor",(floatN)1.0);
         maxClip=j.value("clip",(float)0.0);
+        forgetGateInitOnes=j.value("forgetgateinitones",true);
         nohupdate=j.value("nohupdate",(bool)false);  // true for auto-diff tests
         D=inputShape[0];
         T=inputShape[1];
@@ -64,7 +66,11 @@ public:
         ph->setZero();
         cppl_set(pstates, hname, ph);
         MatrixN *pc= new MatrixN(N,H);
-        pc->setZero();
+        if (forgetGateInitOnes) {
+            pc->setOnes();
+        } else {
+            pc->setZero();
+        }
         cppl_set(pstates, cname, pc);
     }
 
@@ -248,7 +254,11 @@ public:
         }
         if (pstates->find(cname)==pstates->end()) {
             MatrixN *pc= new MatrixN(N,H);
-            pc->setZero();
+            if (forgetGateInitOnes) {
+                pc->setOnes();
+            } else {
+                pc->setZero();
+            }
             cppl_set(pstates, cname, pc);
         }
 

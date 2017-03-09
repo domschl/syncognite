@@ -359,7 +359,7 @@ bool checkLSTMForward(floatN eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
     0.81733511,  0.83677871,  0.85403753,  0.86935314 ;
 
 //                                             D,T
-    LSTM lstm(R"({"name":"lstm3","inputShape":[5,3],"H":4,"N":2})"_json);
+    LSTM lstm(R"({"name":"lstm3","inputShape":[5,3],"H":4,"N":2,"forgetgateinitones":false})"_json);
     *(lstm.params["Wxh"])= Wxh;
     *(lstm.params["Whh"])= Whh;
     *(lstm.params["bh"])=bh;
@@ -506,7 +506,7 @@ bool checkLSTMBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           1.21894487,  0.20341521,  0.68888364, -0.38292364, -1.50478578,
          -1.4867672 ,  1.30026383, -0.98036198, -1.380473  ,  1.68487066;
 //                                       D,T
-    LSTM lstm(R"({"name":"lstm4","inputShape":[3,4],"H":5,"N":2})"_json);   //inputShape=D, hidden=H
+    LSTM lstm(R"({"name":"lstm4","inputShape":[3,4],"H":5,"N":2,"forgetgateinitones":false})"_json);   //inputShape=D, hidden=H
     *(lstm.params["Wxh"])=Wxh;
     *(lstm.params["Whh"])=Whh;
     *(lstm.params["bh"])=bh;

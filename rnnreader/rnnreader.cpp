@@ -161,35 +161,29 @@ int main(int argc, char *argv[]) {
     cerr << "RNN-type: " << rnntype << endl;
 
     json j0;
+    string oName{"OH0"};
     j0["inputShape"]=vector<int>{T};
     j0["V"]=VS;
-    lb.addLayer("OneHot","OH0",j0,{"input"});
+    lb.addLayer("OneHot",oName,j0,{"input"});
 
+    int layer_depth=5;
+    string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
     j1["N"]=BS;
     j1["H"]=H;
+    j1["forgetgateinitones"]=true;
     //j1["clip"]=clip;
-    lb.addLayer(rnntype,"rnn1",j1,{"OH0"});
-
-    json j2;
-    j2["inputShape"]=vector<int>{H,T};
-    j2["N"]=BS;
-    j2["H"]=H;
-    //j2["clip"]=clip;
-    lb.addLayer(rnntype,"rnn2",j2,{"rnn1"});
-
-    json j3;
-    j3["inputShape"]=vector<int>{H,T};
-    j3["N"]=BS;
-    j3["H"]=H;
-    //j3["clip"]=clip;
-    lb.addLayer(rnntype,"rnn3",j3,{"rnn2"});
+    for (auto l=0; l<layer_depth; l++) {
+        nName="lstm"+std::to_string(l);
+        lb.addLayer(rnntype,nName,j1,{oName});
+        oName=nName;
+    }
 
     json j10;
     j10["inputShape"]=vector<int>{H,T};
     j10["M"]=VS;
-    lb.addLayer("TemporalAffine","af1",j10,{"rnn3"});
+    lb.addLayer("TemporalAffine","af1",j10,{oName});
 
     json j11;
     j11["inputShape"]=vector<int>{VS,T};
@@ -231,9 +225,9 @@ int main(int argc, char *argv[]) {
             xg(0,i)=txt.w2v[instr[i]];
         }
         wstring sout{};
-        Layer* prnn=lb.layerMap["rnn1"];
+        Layer* plstm0=lb.layerMap["lstm0"];
         t_cppl statesg{};
-        prnn->genZeroStates(&statesg, 1);
+        plstm0->genZeroStates(&statesg, 1);
 
         for (int g=0; g<1000; g++) {
             t_cppl cache{};
