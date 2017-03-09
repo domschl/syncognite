@@ -39,7 +39,7 @@ bool checkRNNStepForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
         0.05454545,  0.11818182,  0.18181818,  0.24545455,
         0.30909091,  0.37272727,  0.43636364,  0.5;
 
-    RNN rnn("{name='testrnn';inputShape=[10,1];H=4;N=3}");
+    RNN rnn(R"({"name":"testrnn","inputShape":[10,1],"H":4,"N":3})"_json);
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
@@ -146,7 +146,7 @@ bool checkRNNStepBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.47915608,
          1.30290015, -0.72761588, -0.17990189,  1.2176583 , -0.42103704,
          0.61638331;
-    RNN rnn("{name='test2rnn';inputShape=[5,1];H=6;N=4}");
+    RNN rnn(R"({"name":"test2rnn","inputShape":[5,1],"H":6,"N":4})"_json);
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -207,8 +207,8 @@ bool checkRNNForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          -0.27150199, -0.07088804,  0.13562939,  0.33099728,  0.50158768,
          -0.51014825, -0.30524429, -0.06755202,  0.17806392,  0.40333043;
 
-//                        D,T
-    RNN rnn("{name='rnn3';inputShape=[4,3];H=5;N=2}");
+//                                          D,T
+    RNN rnn(R"({"name":"rnn3","inputShape":[4,3],"H":5,"N":2})"_json);
     *(rnn.params["Wxh"])= Wxh;
     *(rnn.params["Whh"])= Whh;
     *(rnn.params["bh"])=bh;
@@ -322,7 +322,7 @@ bool checkRNNBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          -1.37433812,  0.19777929, -0.91821752, -0.54890713, -0.72215917,
          -1.38988503, -0.43959209, -0.33943549,  1.15280127, -0.06320341;
 //                        D,T
-    RNN rnn("{name='rnn4';inputShape=[3,10];H=5;N=2}");   //inputShape=D, hidden=H
+    RNN rnn(R"({"name":"rnn4","inputShape":[3,10],"H":5,"N":2})"_json);   //inputShape=D, hidden=H
     *(rnn.params["Wxh"])=Wxh;
     *(rnn.params["Whh"])=Whh;
     *(rnn.params["bh"])=bh;
@@ -368,9 +368,8 @@ bool testRNN(int verbose) {
 	xrnn.setRandom();
 	h0.setRandom();
 	rnstates["rnn-h"] = &h0;
-	//                    D,T
-	RNN rnn("{name='rnn';inputShape=[5,7];H=6;N=4;noVectorizationTests=true;"
-	    "nohupdate=true}");
+	//                                     D,T
+	RNN rnn(R"({"name":"rnn","inputShape":[5,7],"H":6,"N":4,"noVectorizationTests":true,"nohupdate":true})"_json);
 	bool res=rnn.selfTest(xrnn, &rnstates, 1e-4, 1e-4, verbose);
 	registerTestResult("RNN", "Numerical gradient", res, "");
 	if (!res) bOk = false;

@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb("{name='rnnreader';init='orthonormal'}");
+    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
     int H=512;
     int BS=64;
@@ -160,40 +160,40 @@ int main(int argc, char *argv[]) {
     string rnntype="LSTM"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
 
-    CpParams cp0;
-    cp0.setPar("inputShape",vector<int>{T});
-    cp0.setPar("V",VS);
-    lb.addLayer("OneHot","OH0",cp0,{"input"});
+    json j0;
+    j0["inputShape"]=vector<int>{T};
+    j0["V"]=VS;
+    lb.addLayer("OneHot","OH0",j0,{"input"});
 
-    CpParams cp1;
-    cp1.setPar("inputShape",vector<int>{VS,T});
-    cp1.setPar("N",BS);
-    cp1.setPar("H",H);
-    //cp1.setPar("clip",clip);
-    lb.addLayer(rnntype,"rnn1",cp1,{"OH0"});
+    json j1;
+    j1["inputShape"]=vector<int>{VS,T};
+    j1["N"]=BS;
+    j1["H"]=H;
+    //j1["clip"]=clip;
+    lb.addLayer(rnntype,"rnn1",j1,{"OH0"});
 
-    CpParams cp2;
-    cp2.setPar("inputShape",vector<int>{H,T});
-    cp2.setPar("N",BS);
-    cp2.setPar("H",H);
-    //cp2.setPar("clip",clip);
-    lb.addLayer(rnntype,"rnn2",cp2,{"rnn1"});
+    json j2;
+    j2["inputShape"]=vector<int>{H,T};
+    j2["N"]=BS;
+    j2["H"]=H;
+    //j2["clip"]=clip;
+    lb.addLayer(rnntype,"rnn2",j2,{"rnn1"});
 
-    CpParams cp3;
-    cp3.setPar("inputShape",vector<int>{H,T});
-    cp3.setPar("N",BS);
-    cp3.setPar("H",H);
-    //cp3.setPar("clip",clip);
-    lb.addLayer(rnntype,"rnn3",cp3,{"rnn2"});
+    json j3;
+    j3["inputShape"]=vector<int>{H,T};
+    j3["N"]=BS;
+    j3["H"]=H;
+    //j3["clip"]=clip;
+    lb.addLayer(rnntype,"rnn3",j3,{"rnn2"});
 
-    CpParams cp10;
-    cp10.setPar("inputShape",vector<int>{H,T});
-    cp10.setPar("M",VS);
-    lb.addLayer("TemporalAffine","af1",cp10,{"rnn3"});
+    json j10;
+    j10["inputShape"]=vector<int>{H,T};
+    j10["M"]=VS;
+    lb.addLayer("TemporalAffine","af1",j10,{"rnn3"});
 
-    CpParams cp11;
-    cp11.setPar("inputShape",vector<int>{VS,T});
-    lb.addLayer("TemporalSoftmax","sm1",cp11,{"af1"});
+    json j11;
+    j11["inputShape"]=vector<int>{VS,T};
+    lb.addLayer("TemporalSoftmax","sm1",j11,{"af1"});
 
     if (!lb.checkTopology(true)) {
         allOk=false;
@@ -203,24 +203,21 @@ int main(int argc, char *argv[]) {
     }
 
     // preseverstates no longer necessary for training!
-    CpParams cpo("{verbose=true;shuffle=false;preservestates=false;epsilon=1e-8}");
-    cpo.setPar("learning_rate", (floatN)1e-3); //2.2e-2);
-    // cpo.setPar("lr_decay", (floatN)0.95);
-    //cpo.setPar("regularization", (floatN)1.);
+    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"epsilon":1e-8})"_json);
+    jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
 
     floatN dep=5.0;
     floatN sep=0.0;
-    cpo.setPar("epochs",(floatN)dep);
-    cpo.setPar("batch_size",BS);
+    jo["epochs"]=(floatN)dep;
+    jo["batch_size"]=BS;
 
     for (int i=0; i<10000; i++) {
-
-        cpo.setPar("startepoch", (floatN)sep);
+        jo["startepoch"]=(floatN)sep;
         t_cppl states;
         t_cppl statesv;
         states["y"] = new MatrixN(y);
         statesv["y"] = new MatrixN(yv);
-        floatN cAcc=lb.train(X, &states, Xv, &statesv, "Adam", cpo);
+        floatN cAcc=lb.train(X, &states, Xv, &statesv, "Adam", jo);
         cppl_delete(&states);
         cppl_delete(&statesv);
 
@@ -258,7 +255,7 @@ int main(int argc, char *argv[]) {
                 }
                 li=(int)index[randomChoice(index, probs)];
 
-                wchar_t cw=txt.v2w[li];
+                //wchar_t cw=txt.v2w[li];
                 //wcout << cw;
             }
             //wcout <<  endl;

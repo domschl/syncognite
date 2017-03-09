@@ -325,7 +325,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     //if (verbose>2) cerr << "  CheckLayer start" << endl;
     std::flush(cerr);
 
-    if (!cp.getPar("noVectorizationTests", false)) {
+    if (!j.value("noVectorizationTests", false)) {
         if (verbose>2) cerr << "  check forward vectorizer " << layerName << "..." << endl;
         ret=checkForward(x, nullptr, pstates, eps, verbose);
         if (!ret) {

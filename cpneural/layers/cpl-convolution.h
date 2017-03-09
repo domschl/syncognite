@@ -27,20 +27,20 @@ private:
     int pad, stride;
     bool mlverbose;
     floatN initfactor;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Convolution";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         if (inputShape.size()!=3) {
             retval=false;
         } else { // inputShape: C, H, W;
             C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
         }
 
-        vector<int> kernel=cp.getPar("kernel", vector<int>{});
+        vector<int> kernel=j.value("kernel", vector<int>{});
         if (kernel.size()!=3) {
             retval=false;
             F=0; HH=0; WW=0;
@@ -53,8 +53,8 @@ private:
 
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
 
         cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(F,C*HH*WW),inittype,initfactor))); // W
         cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(F,1),inittype,initfactor))); // b
@@ -64,9 +64,9 @@ private:
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
-        stride = cp.getPar("stride", 1);
-        mlverbose = cp.getPar("verbose", false);
-        pad = cp.getPar("pad", (int)((HH-1)/2));
+        stride = j.value("stride", 1);
+        mlverbose = j.value("verbose", false);
+        pad = j.value("pad", (int)((HH-1)/2));
         if (pad>=HH || pad>=WW) {
             cerr << "bad configuration, pad:" << pad << ">=" << " HH,WW:" << HH << "," << WW << endl;
             retval=false;
@@ -110,11 +110,11 @@ private:
         layerInit=retval;
     }
 public:
-    Convolution(const CpParams& cx) {
-        setup(cx);
+    Convolution(const json& jx) {
+        setup(jx);
     }
     Convolution(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~Convolution() {
         cppl_delete(&params);

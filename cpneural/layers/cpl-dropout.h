@@ -7,20 +7,20 @@
 class Dropout : public Layer {
 private:
     bool freeze;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Dropout";
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
+        j=jx;
         inputShapeRang=1;
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
         outputShape={inputShape};
-        drop = cp.getPar("drop", (floatN)0.5);
-        trainMode = cp.getPar("train", (bool)false);
-        freeze = cp.getPar("freeze", (bool)false);
+        drop = j.value("drop", (floatN)0.5);
+        trainMode = j.value("train", (bool)false);
+        freeze = j.value("freeze", (bool)false);
         if (freeze) srand(123);
         else srand(time(nullptr));
         layerInit=true;
@@ -29,23 +29,23 @@ public:
     floatN drop;
     bool trainMode;
 
-    Dropout(const CpParams& cx) {
-        setup(cx);
+    Dropout(const json& jx) {
+        setup(jx);
     }
-    Dropout(string conf) {
-        setup(CpParams(conf));
+    Dropout(const string conf) {
+        setup(json::parse(conf));
     }
     ~Dropout() {
         cppl_delete(&params);
     }
 
-    
+
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        drop = cp.getPar("drop", (floatN)0.5);
+        drop = j.value("drop", (floatN)0.5);
         if (drop==1.0) return x;
-        trainMode = cp.getPar("train", false);
-        freeze = cp.getPar("freeze", false);
+        trainMode = j.value("train", false);
+        freeze = j.value("freeze", false);
         if (freeze) srand(123);
         MatrixN xout;
         if (trainMode) {
@@ -77,7 +77,7 @@ public:
     }
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         MatrixN dx;
-        trainMode = cp.getPar("train", false);
+        trainMode = j.value("train", false);
         if (trainMode && drop!=1.0) {
             MatrixN* pmask=(*pcache)["dropmask"];
             dx=y.array() * (*pmask).array();

@@ -61,7 +61,7 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
 
 class Optimizer {
 public:
-    CpParams cp;
+    json j;
     virtual ~Optimizer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
@@ -88,17 +88,17 @@ typedef std::map<string, t_layer_props_entry> t_layer_props;
 class Layer;
 
 template<typename T>
-Layer* createLayerInstance(const CpParams& cp) {
-    return new T(cp);
+Layer* createLayerInstance(const json& j) {
+    return new T((const json &)j);
 }
 
-typedef std::map<std::string, Layer*(*)(const CpParams&)> t_layer_creator_map;
+typedef std::map<std::string, Layer*(*)(const json&)> t_layer_creator_map;
 
 class LayerFactory {
 public:
     t_layer_creator_map mapl;
     t_layer_props mapprops;
-    void registerInstanceCreator(std::string name, Layer*(sub)(const CpParams&), t_layer_props_entry lprops ) {
+    void registerInstanceCreator(std::string name, Layer*(sub)(const json&), t_layer_props_entry lprops ) {
         auto it=mapl.find(name);
         if (it!=mapl.end()) {
             cerr << "Layer " << name << " is already registered, preventing additional registration." << endl;
@@ -107,15 +107,15 @@ public:
             mapprops[name] = lprops;
         }
     }
-    Layer* createLayerInstance(std::string name, const CpParams& cp) {
-        return mapl[name](cp);
+    Layer* createLayerInstance(std::string name, const json& j) {
+        return mapl[name](j);
     }
 };
 
 LayerFactory _syncogniteLayerFactory;
 
 #define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
-#define CREATE_LAYER(LayerName, cp) _syncogniteLayerFactory.createLayerInstance(LayerName, cp);
+#define CREATE_LAYER(LayerName, j) _syncogniteLayerFactory.createLayerInstance(LayerName, j);
 
 typedef map<string, t_cppl> retdict;
 
@@ -125,7 +125,7 @@ public:
     LayerType layerType;
     int inputShapeRang;
     vector<int>outputShape;
-    CpParams cp;
+    json j;
     t_cppl params;
     bool layerInit;
     std::mutex lossQueueMutex;
@@ -157,12 +157,12 @@ public:
         return true;
     }
 
-    virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
+    virtual void setFlag(string name, bool val) { j[name]=val; }
 
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                        string optimizer, const CpParams& cp);
+                        string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
-                        string optimizer, const CpParams& cp);
+                        string optimizer, const json& j);
     retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);

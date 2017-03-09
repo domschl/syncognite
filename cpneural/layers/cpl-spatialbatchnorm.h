@@ -21,33 +21,33 @@ class SpatialBatchNorm : public Layer {
 private:
     int C, H, W, N0;
     BatchNorm *pbn;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="SpatialBatchNorm";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         assert (inputShape.size()==3);
         // inputShape: C, H, W
         C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
-        N0=cp.getPar("N",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
+        N0=j.value("N",100);   // Unusual: we need to know the batch_size for creation of the BN layer!
         outputShape={C,H,W};
 
-        CpParams cs(cp);
-        cs.setPar("inputShape",vector<int>{N0*H*W});
-        pbn = new BatchNorm(cs);
-        pbn->cp.setPar("train",cp.getPar("train",false));
+        json js=j;
+        js["inputShape"]=vector<int>{N0*H*W};
+        pbn = new BatchNorm(js);
+        pbn->j["train"]=j.value("train",false);
         mlPush("bn", &(pbn->params), &params);
 
         layerInit=retval;
     }
 public:
-    SpatialBatchNorm(const CpParams& cx) {
-        setup(cx);
+    SpatialBatchNorm(const json& jx) {
+        setup(jx);
     }
     SpatialBatchNorm(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~SpatialBatchNorm() {
         //cppl_delete(&params);
@@ -100,7 +100,7 @@ public:
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
         // XXX cache x2c and use allocated memory for im2col call!
         int N=shape(x)[0];
-        pbn->cp.setPar("train",cp.getPar("train",false));
+        pbn->j["train"]=j.value("train",false);
         if (shape(x)[1]!=(unsigned int)C*W*H) {
             cerr << "SpatialBatchNorm Fw: Invalid input data x: expected C*H*W=" << C*H*W << ", got: " << shape(x)[1] << endl;
             return MatrixN(0,0);
@@ -127,7 +127,7 @@ public:
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         int N=shape(dchain)[0];
-        pbn->cp.setPar("train",cp.getPar("train",false));
+        pbn->j["train"]=j.value("train",false);
         if (shape(dchain)[1]!=(unsigned int)C*H*W) {
             cerr << "SpatialBatchNorm Bw: Invalid input data dchain: expected C*H*W=" << C*H*W << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);

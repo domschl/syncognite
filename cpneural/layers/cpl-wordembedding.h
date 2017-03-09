@@ -23,22 +23,22 @@ private:
     int T,D,V;
     MatrixN wVect;
     floatN initfactor;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="WordEmbedding";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
         T=inputShape[0];
-        V=cp.getPar("V",1024);
-        D=cp.getPar("D",128);
+        V=j.value("V",1024);
+        D=j.value("D",128);
         outputShape={D,T};
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
 
         cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(V,D),inittype,initfactor)));
         wVect=MatrixN(V,V);
@@ -56,11 +56,11 @@ private:
         layerInit=true;
     }
 public:
-    WordEmbedding(const CpParams& cx) {
-        setup(cx);
+    WordEmbedding(const json& jx) {
+        setup(jx);
     }
     WordEmbedding(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~WordEmbedding() {
         cppl_delete(&params);

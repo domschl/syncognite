@@ -50,7 +50,7 @@ bool checkPoolingForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           0.32631579,  0.34105263,
           0.38526316,  0.4;
          // inputShape: C, H, W; kernel: F, HH=stride, WW=stride
-    Pooling pl("{inputShape=[3,4,4];stride=2}");
+    Pooling pl(R"({"inputShape":[3,4,4],"stride":2})"_json);
     MatrixN y0=pl.forward(x, nullptr, &states);
 
     return matCompT(y,y0,"PoolingForward",eps,verbose);
@@ -298,7 +298,7 @@ bool checkPoolingBackward(float eps=CP_DEFAULT_NUM_EPS,int verbose=1) {
            0.        ,  0.        ,  1.40399454,
            0.        ,  0.        ,  0.        ,  0.        ,  0.        ,
           -0.62679592,  0.        ,  0.;
-    Pooling pl("{inputShape=[2,8,8];stride=2}");
+    Pooling pl(R"({"inputShape":[2,8,8],"stride":2})"_json);
     t_cppl cache;
     t_cppl grads;
     MatrixN y=pl.forward(x, &cache, &states);
@@ -319,7 +319,7 @@ bool testPooling(int verbose) {
 	cerr << lblue << "Pooling Layer: " << def << endl;
 	// Numerical gradient
     // Pooling
-	Pooling pl("{inputShape=[3,4,4];stride=2}");
+	Pooling pl(R"({"inputShape":[3,4,4],"stride":2})"_json);
 	MatrixN xpl(20, 48);
 	xpl.setRandom();
 	bool res=pl.selfTest(xpl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);

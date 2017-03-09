@@ -6,13 +6,13 @@
 class  TemporalSoftmax : public Layer {
 private:
     int T,D; //,V;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         int allOk=true;
         layerName="TemporalSoftmax";
         inputShapeRang=2;
         layerType=LayerType::LT_LOSS;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
@@ -25,11 +25,11 @@ private:
         layerInit=allOk;
     }
 public:
-     TemporalSoftmax(const CpParams& cx) {
-        setup(cx);
+     TemporalSoftmax(const json& jx) {
+        setup(jx);
     }
      TemporalSoftmax(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~ TemporalSoftmax() {
         cppl_delete(&params);

@@ -20,12 +20,16 @@
 #include <chrono>
 #include <iomanip>
 
+#include "nlohmann_json/json.hpp"
+
 #include <Eigen/Dense>
 #include <unsupported/Eigen/CXX11/Tensor>
 
 using std::cerr; using std::endl;
 using std::vector; using std::string;
 using std::map;
+
+using json = nlohmann::json;
 
 using Eigen::IOFormat;
 

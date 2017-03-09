@@ -14,9 +14,9 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
         if (rand()%1000 < p*1000.0) mask(i)=1.0;
         else mask(i)=0.0;
     }
-    CpParams cp;
-    cp.setPar("inputShape",vector<int>{V,T});
-    TemporalSoftmax tsm(cp);
+    json j;
+    j["inputShape"]=vector<int>{V,T};
+    TemporalSoftmax tsm(j);
     t_cppl cache;
     cppl_set(&cache,"mask",new MatrixN(mask));
     t_cppl states;
@@ -318,10 +318,10 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 
     floatN lossTheo=9.9761896117014111;
 
-    CpParams cp;
-    cp.setPar("inputShape",vector<int>{V,T});
-    cp.setPar("nohupdate",(bool)true);
-    TemporalSoftmax tsm(cp);
+    json j;
+    j["inputShape"]=vector<int>{V,T};
+    j["nohupdate"]=(bool)true;
+    TemporalSoftmax tsm(j);
     t_cppl cache;
     t_cppl states;
     cppl_set(&cache,"mask",new MatrixN(mask));
@@ -357,10 +357,10 @@ bool testTemporalSoftmax(int verbose) {
 	// Numerical gradient
     // Temporal Softmax
 	int tsmN = 10, tsmC = 4, Ttm = 4;
-	CpParams tc1;
-	tc1.setPar("inputShape", vector<int>{tsmC, Ttm});
-	tc1.setPar("noVectorizationTests", (bool)true);
-	TemporalSoftmax tmx(tc1);
+	json j;
+	j["inputShape"]=vector<int>{tsmC, Ttm};
+	j["noVectorizationTests"]=(bool)true;
+	TemporalSoftmax tmx(j);
 	MatrixN txmx(tsmN, tsmC * Ttm);
 	txmx.setRandom();
 	MatrixN ty(tsmN, Ttm);

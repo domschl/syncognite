@@ -7,18 +7,18 @@ class OneHot : public Layer {
 private:
     int T,V;
     MatrixN wVect;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="OneHot";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
         T=inputShape[0];
-        V=cp.getPar("V",1024);
+        V=j.value("V",1024);
         outputShape={V, T};
 
         wVect=MatrixN(V,V);
@@ -27,11 +27,11 @@ private:
         layerInit=true;
     }
 public:
-    OneHot(const CpParams& cx) {
-        setup(cx);
+    OneHot(const json& jx) {
+        setup(jx);
     }
     OneHot(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~OneHot() {
         cppl_delete(&params);

@@ -6,11 +6,11 @@
 class Sdg : public Optimizer {
     floatN lr;
 public:
-    Sdg(const CpParams& cx) {
-        cp=cx;
+    Sdg(const json& jx) {
+        j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
-        lr=cp.getPar("learning_rate", (floatN)1e-2);
+        lr=j.value("learning_rate", (floatN)1e-2);
         x=x-lr*dx;
         return x;
     }
@@ -27,12 +27,12 @@ class SdgMomentum : public Optimizer {
     floatN lr;
     floatN mm;
 public:
-    SdgMomentum(const CpParams& cx) {
-        cp=cx;
+    SdgMomentum(const json& jx) {
+        j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", (floatN)1e-2);
-        mm=cp.getPar("momentum",(floatN)0.9);
+        lr=j.value("learning_rate", (floatN)1e-2);
+        mm=j.value("momentum",(floatN)0.9);
         string cname=var+"-velocity";
         if (pocache->find("cname_v")==pocache->end()) {
             MatrixN z=MatrixN(x);
@@ -56,13 +56,13 @@ class RmsProp : public Optimizer {
     floatN lr;
     floatN dc,ep;
 public:
-    RmsProp(const CpParams& cx) {
-        cp=cx;
+    RmsProp(const json& jx) {
+        j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", (floatN)1e-2);
-        dc=cp.getPar("decay_rate", (floatN)0.99);
-        ep=cp.getPar("epsilon", (floatN)1e-8);
+        lr=j.value("learning_rate", (floatN)1e-2);
+        dc=j.value("decay_rate", (floatN)0.99);
+        ep=j.value("epsilon", (floatN)1e-8);
         string cname=var+"-movavr";
         if (pocache->find("cname")==pocache->end()) {
             MatrixN z=MatrixN(x);
@@ -91,14 +91,14 @@ class Adam : public Optimizer {
     floatN lr;
     floatN b1,b2,ep;
 public:
-    Adam(const CpParams& cx) {
-        cp=cx;
+    Adam(const json& jx) {
+        j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
-        lr=cp.getPar("learning_rate", (floatN)1e-2);
-        b1=cp.getPar("beta1", (floatN)0.9);
-        b2=cp.getPar("beta2", (floatN)0.999);
-        ep=cp.getPar("epsilon", (floatN)1e-8);
+        lr=j.value("learning_rate", (floatN)1e-2);
+        b1=j.value("beta1", (floatN)0.9);
+        b2=j.value("beta2", (floatN)0.999);
+        ep=j.value("epsilon", (floatN)1e-8);
         string cname_m=var+"-m";
         if (pocache->find("cname_m")==pocache->end()) {
             MatrixN z=MatrixN(x);
@@ -128,11 +128,11 @@ public:
     }
 };
 
-Optimizer *optimizerFactory(string name, const CpParams& cp) {
-    if (name=="Sdg") return (Optimizer *)new Sdg(cp);
-    if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(cp);
-    if (name=="RmsProp") return (Optimizer *)new RmsProp(cp);
-    if (name=="Adam") return (Optimizer *)new Adam(cp);
+Optimizer *optimizerFactory(string name, const json& j) {
+    if (name=="Sdg") return (Optimizer *)new Sdg(j);
+    if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(j);
+    if (name=="RmsProp") return (Optimizer *)new RmsProp(j);
+    if (name=="Adam") return (Optimizer *)new Adam(j);
     cerr << "optimizerFactory called for unknown optimizer " << name << "." << endl;
     return nullptr;
 }
@@ -215,8 +215,8 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                string optimizer, const CpParams& cp) {
-    Optimizer* popti=optimizerFactory(optimizer, cp);
+                string optimizer, const json& j) {
+    Optimizer* popti=optimizerFactory(optimizer, j);
     t_cppl optiCache;
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
@@ -237,20 +237,20 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     }
     MatrixN yv = *((*pstatesv)["y"]);
 
-    float epf=popti->cp.getPar("epochs", (float)1.0); //Default only!
+    float epf=popti->j.value("epochs", (float)1.0); //Default only!
     int ep=(int)ceil(epf);
-    float sepf=popti->cp.getPar("startepoch", (float)0.0);
-    int bs=popti->cp.getPar("batch_size", (int)100); // Defaults only! are overwritten!
-    floatN lr_decay=popti->cp.getPar("lr_decay", (floatN)1.0); //Default only!
-    bool verbose=popti->cp.getPar("verbose", (bool)false);
-    bool bShuffle=popti->cp.getPar("shuffle", (bool)false);
-    bool bPreserveStates=popti->cp.getPar("preservestates", (bool)false);
-    floatN lr = popti->cp.getPar("learning_rate", (floatN)1.0e-2); // Default only!
-    floatN regularization = popti->cp.getPar("regularization", (floatN)0.0); // Default only!
+    float sepf=popti->j.value("startepoch", (float)0.0);
+    int bs=popti->j.value("batch_size", (int)100); // Defaults only! are overwritten!
+    floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
+    bool verbose=popti->j.value("verbose", (bool)false);
+    bool bShuffle=popti->j.value("shuffle", (bool)false);
+    bool bPreserveStates=popti->j.value("preservestates", (bool)false);
+    floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
+    floatN regularization = popti->j.value("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
 
     int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
-    int maxThreads=popti->cp.getPar("maxthreads",(int)0);
+    int maxThreads=popti->j.value("maxthreads",(int)0);
     if (maxThreads>1 && bPreserveStates) {
         cerr << "ERROR: cannnot preserve states, if thread-count > 1, reducint to 1." << endl;
         maxThreads=1;
@@ -279,7 +279,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     //bs=bs/nt;
     lr=lr/nt;
     Timer tw;
-    popti->cp.setPar("learning_rate", lr); // adpated to thread-count XXX here?
+    popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=(x.rows()+bs-1) / bs;
     cerr << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
@@ -437,7 +437,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;
-            popti->cp.setPar("learning_rate", lr);
+            popti->j["learning_rate"]=lr;
         }
 /*        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {
@@ -451,19 +451,14 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 }
 
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
-                string optimizer, const CpParams& cp) {
+                string optimizer, const json& j) {
     t_cppl states, statesv;
     states["y"]=new MatrixN(y);
     statesv["y"]=new MatrixN(yv);
-    auto loss = train(x, &states, xv, &statesv, optimizer, cp);
+    auto loss = train(x, &states, xv, &statesv, optimizer, j);
     cppl_delete(&states);
     cppl_delete(&statesv);
     return loss;
 }
 
-/*floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
-                string optimizer, const CpParams& cp) {
-    return train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN &yv,
-                    string optimizer, const CpParams& cp, nullptr);
-    }*/
 #endif

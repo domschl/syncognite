@@ -24,8 +24,7 @@ bool checkWordEmbeddingForward(floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.        ,  0.07142857,  0.14285714,
          0.64285714,  0.71428571,  0.78571429;
 
-    CpParams cp("{inputShape=[4];V=5;D=3}");
-    WordEmbedding we(cp);
+    WordEmbedding we(R"({"inputShape":[4],"V":5,"D":3})"_json);
     *(we.params["W"])= W;
     t_cppl cache;
     t_cppl states;
@@ -611,7 +610,7 @@ bool checkWordEmbeddingBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
           -1.13801366e+00,   8.22529430e-01,  -9.06626773e-01,
           2.97478930e-02,  -1.09266151e+00,  -3.95794124e-02,
           -8.57433423e-01,   1.24854517e+00,  -4.80061940e-01;
-    WordEmbedding we("{inputShape=[3];hidden=5;V=5;D=6}");   //inputShape=T
+    WordEmbedding we(R"({"inputShape":[3],"hidden":5,"V":5,"D":6})"_json);   //inputShape=T
     *(we.params["W"])=W;
 
     t_cppl cache;
@@ -645,7 +644,7 @@ bool testWordEmbedding(int verbose) {
 	MatrixN weW(weV, weD);
 	xwe.setRandom();
 	weW.setRandom();
-	WordEmbedding we("{inputShape=[3];V=10;D=8;noVectorizationTests=true}");
+	WordEmbedding we(R"({"inputShape":[3],"V":10,"D":8,"noVectorizationTests":true})"_json);
 	*(we.params["W"]) = weW;
 	bool res=we.selfTest(xwe, &s1, 1e-2, 1e-3, verbose);
 	registerTestResult("WordEmbedding", "Numerical gradient", res, "");

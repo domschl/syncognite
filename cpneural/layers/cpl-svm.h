@@ -7,12 +7,12 @@
 // Multiclass support vector machine Svm
 class Svm : public Layer {
 private:
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Svm";
         layerType=LayerType::LT_LOSS;
-        cp=cx;
+        j=jx;
         inputShapeRang=1;
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
@@ -21,11 +21,11 @@ private:
         layerInit=true;
     }
 public:
-    Svm(const CpParams& cx) {
-        setup(cx);
+    Svm(const json& jx) {
+        setup(jx);
     }
-    Svm(string conf) {
-        setup(CpParams(conf));
+    Svm(const string conf) {
+        setup(json::parse(conf));
     }
     ~Svm() {
         cppl_delete(&params);

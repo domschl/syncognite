@@ -16,9 +16,9 @@ private:
     string hname0;
     string cname;
     string cname0;
-    void setup(const CpParams& cx) {
-        cp=cx;
-        layerName=cp.getPar("name",(string)"LSTM");
+    void setup(const json& jx) {
+        j=jx;
+        layerName=j.value("name",(string)"LSTM");
         hname=layerName+"-h";
         hname0=layerName+"-h0";
         cname=layerName+"-c";
@@ -26,17 +26,17 @@ private:
 
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL | LayerType::LT_EXTERNALSTATE;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        H=cp.getPar("H",1024);
-        N=cp.getPar("N",1);
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
-        maxClip=cp.getPar("clip",(float)0.0);
-        nohupdate=cp.getPar("nohupdate",(bool)false);  // true for auto-diff tests
+        H=j.value("H",1024);
+        N=j.value("N",1);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
+        maxClip=j.value("clip",(float)0.0);
+        nohupdate=j.value("nohupdate",(bool)false);  // true for auto-diff tests
         D=inputShape[0];
         T=inputShape[1];
         outputShape={H,T};
@@ -50,11 +50,11 @@ private:
         layerInit=true;
     }
 public:
-    LSTM(const CpParams& cx) {
-        setup(cx);
+    LSTM(const json& jx) {
+        setup(jx);
     }
     LSTM(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~LSTM() {
         cppl_delete(&params);

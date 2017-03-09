@@ -6,15 +6,15 @@
 // Batch normalization
 class BatchNorm : public Layer {
 private:
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=1;
-        cp=cx;
-        eps = cp.getPar("eps", (floatN)1e-5);
-        momentum = cp.getPar("momentum", (floatN)0.9);
-        trainMode = cp.getPar("train", (bool)false);
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        j=jx;
+        eps = j.value("eps", (floatN)1e-5);
+        momentum = j.value("momentum", (floatN)0.9);
+        trainMode = j.value("train", (bool)false);
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
@@ -34,11 +34,11 @@ public:
     floatN momentum;
     bool trainMode;
 
-    BatchNorm(const CpParams& cx) {
-        setup(cx);
+    BatchNorm(const json& jx) {
+        setup(jx);
     }
-    BatchNorm(string conf) {
-        setup(CpParams(conf));
+    BatchNorm(const string conf) {
+        setup(json::parse(conf));
     }
     ~BatchNorm() {
         cppl_delete(&params);
@@ -47,7 +47,7 @@ public:
         MatrixN *prm, *prv;
         MatrixN *pbeta, *pgamma;
         MatrixN xout;
-        trainMode = cp.getPar("train", false);
+        trainMode = j.value("train", false);
         if (pcache==nullptr || pcache->find("running_mean")==pcache->end()) {
             prm=new MatrixN(1,shape(x)[1]);
             prm->setZero();

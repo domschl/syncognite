@@ -53,12 +53,12 @@ int tFunc(floatN x, int c) {
 
 bool trainTest(string init) {
     bool allOk=true;
-    CpParams cp;
+    json j;
     int N=300,NV=30,NT=30,I=5,H=20,C=4;
-    cp.setPar("inputShape",vector<int>{I});
-    cp.setPar("hidden",vector<int>{H,C});
-    cp.setPar("init",init);
-    TwoLayerNet tln(cp);
+    j["inputShape"]=vector<int>{I};
+    j["hidden"]=vector<int>{H,C};
+    j["init"]=init;
+    TwoLayerNet tln(j);
 
     MatrixN X(N,I);
     X.setRandom();
@@ -75,12 +75,11 @@ bool trainTest(string init) {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
 
-    CpParams cpo("{verbose=false;epochs=100.0;batch_size=20;learning_rate=1e-2;"\
-                "lr_decay=1.0;momentum=0.9;decay_rate=0.98;epsilon=1e-8;threads=2}");
+    json jo(R"({"verbose":false,"epochs":100.0,"batch_size":20,"learning_rate":1e-2,"lr_decay":1.0,"momentum":0.9,"decay_rate":0.98,"epsilon":1e-8,"threads":2})"_json);
 
     floatN train_err,test_err,val_err;
 
-    tln.train(X, y, Xv, yv, "Adam", cpo);
+    tln.train(X, y, Xv, yv, "Adam", jo);
     //tln.train(X, y, Xv, yv, "Sdg", cpo);
     train_err=tln.test(X, y);
     val_err=tln.test(Xv, yv);
@@ -99,6 +98,7 @@ int main(int argc, char *argv[]) {
     int ret=0;
     ret=0;
     //doTests();
+
     cerr << "standard init=============" << endl;
     trainTest("standard");
     cerr << "normal init===============" << endl;
@@ -108,5 +108,34 @@ int main(int argc, char *argv[]) {
     cerr << "orthogonal init==========" << endl;
     trainTest("orthogonal");
     cpExitCompute();
+    
+
+    json j;
+    j["test"]=vector<int>{3,4,5};
+    j["turbo"]["traffic"]["tangente"]=3.13;
+    cerr << j << endl;
+    if (j["tandem"]["kat"]==nullptr)
+        cerr << "not defined"<< endl;
+    string a;
+    a=j.value("murksel","tada");
+    cerr << a << endl;
+    j["murksel"]="ding";
+    a=j.value("murksel","tada");
+    cerr << a << endl;
+    int b;
+    b=j.value("hidden",13);
+    cerr << b << endl;
+    j["hidden"]=1024;
+    b=j.value("hidden",13);
+    cerr << b << endl;
+
+
+    json j2 = R"({"test":32,"turbo":"loader","c2": [2]})"_json;
+    cerr << j2 << endl;
+    string l=j2["turbo"];
+    cerr << j2["turbo"]<<endl;
+    cerr << j.dump(4) << endl;
+    cerr << j2.dump(4) << endl;
     return ret;
+
 }
