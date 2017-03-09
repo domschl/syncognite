@@ -46,6 +46,11 @@ private:
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,4*H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,4*H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
+        if (forgetGateInitOnes)
+            params["bh"]->block(0,H,1,H).setOnes();
+
+        cerr << *params["bh"] << endl;
+
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
@@ -66,11 +71,7 @@ public:
         ph->setZero();
         cppl_set(pstates, hname, ph);
         MatrixN *pc= new MatrixN(N,H);
-        if (forgetGateInitOnes) {
-            pc->setOnes();
-        } else {
-            pc->setZero();
-        }
+        pc->setZero();
         cppl_set(pstates, cname, pc);
     }
 
@@ -254,11 +255,7 @@ public:
         }
         if (pstates->find(cname)==pstates->end()) {
             MatrixN *pc= new MatrixN(N,H);
-            if (forgetGateInitOnes) {
-                pc->setOnes();
-            } else {
-                pc->setZero();
-            }
+            pc->setZero();
             cppl_set(pstates, cname, pc);
         }
 
