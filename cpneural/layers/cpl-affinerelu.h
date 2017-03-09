@@ -7,42 +7,42 @@ class AffineRelu : public Layer {
 private:
     int hidden;
     floatN initfactor;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=2;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        hidden=cp.getPar("hidden",1024);
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        hidden=j.value("hidden",1024);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
 
         outputShape={hidden};
-        CpParams ca;
-        ca.setPar("inputShape", vector<int>{inputShapeFlat});
-        ca.setPar("init",inittype);
-        ca.setPar("initfactor",initfactor);
-        ca.setPar("hidden", hidden);
-        af=new Affine(ca);
+        json ja;
+        ja["inputShape"]=vector<int>{inputShapeFlat};
+        ja["init"]=inittype;
+        ja["initfactor"]=initfactor;
+        ja["hidden"]=hidden;
+        af=new Affine(ja);
         mlPush("af", &(af->params), &params);
-        CpParams cl;
-        cl.setPar("inputShape", vector<int>{hidden});
-        rl=new Relu(cl);
+        json jl;
+        jl["inputShape"]=vector<int>{hidden};
+        rl=new Relu(jl);
         mlPush("re", &(rl->params), &params);
         layerInit=true;
     }
 public:
     Affine *af;
     Relu *rl;
-    AffineRelu(const CpParams& cx) {
-        setup(cx);
+    AffineRelu(const json& jx) {
+        setup(jx);
     }
     AffineRelu(string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~AffineRelu() {
         delete af;

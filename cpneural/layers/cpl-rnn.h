@@ -14,25 +14,25 @@ private:
     bool nohupdate;
     string hname;
     string hname0;
-    void setup(const CpParams& cx) {
-        cp=cx;
-        layerName=cp.getPar("name",(string)"RNN");
+    void setup(const json& jx) {
+        j=jx;
+        layerName=j.value("name",(string)"RNN");
         hname=layerName+"-h";
         hname0=layerName+"-h0";
 
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL | LayerType::LT_EXTERNALSTATE;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        H=cp.getPar("H",1024);
-        N=cp.getPar("N",1);
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
-        maxClip=cp.getPar("clip",(float)0.0);
-        nohupdate=cp.getPar("nohupdate",(bool)false);  // true for auto-diff tests
+        H=j.value("H",1024);
+        N=j.value("N",1);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
+        maxClip=j.value("clip",(float)0.0);
+        nohupdate=j.value("nohupdate",(bool)false);  // true for auto-diff tests
         D=inputShape[0];
         T=inputShape[1];
         outputShape={H,T};
@@ -46,11 +46,11 @@ private:
         layerInit=true;
     }
 public:
-    RNN(const CpParams& cx) {
-        setup(cx);
+    RNN(const json& jx) {
+        setup(jx);
     }
     RNN(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~RNN() {
         cppl_delete(&params);
@@ -62,7 +62,6 @@ public:
     }
 
     virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
-        int N=shape(x)[0];
         MatrixN hprev = *(*pstates)[hname];
         MatrixN hnext = ((hprev * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"])).array().tanh();
         if (pcache != nullptr) {

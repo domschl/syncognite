@@ -8,20 +8,20 @@ class TwoLayerNet : public Layer {
 private:
     vector<int> hidden;
     floatN initfactor=0.1;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         bool retval=true;
         layerName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
         inputShapeRang=1;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        hidden=cp.getPar("hidden",vector<int>{1024,1024});
-        string inittype=cp.getPar("init",(string)"standard");
-        initfactor=cp.getPar("initfactor", initfactor);
+        hidden=j.value("hidden",vector<int>{1024,1024});
+        string inittype=j.value("init",(string)"standard");
+        initfactor=j.value("initfactor", initfactor);
 
         if (hidden.size()!=2) {
             retval=false;
@@ -29,24 +29,24 @@ private:
         }
         outputShape={1};
 
-        CpParams c1,c2,c3,c4;
-        c1.setPar("inputShape",vector<int>{inputShapeFlat});
-        c1.setPar("hidden",hidden[0]);
-        c1.setPar("init",inittype);
-        c1.setPar("initfactor",initfactor);
-        c2.setPar("inputShape",vector<int>{hidden[0]});
-        c3.setPar("inputShape",vector<int>{hidden[0]});
-        c3.setPar("hidden",hidden[1]);
-        c3.setPar("init",inittype);
-        c3.setPar("initfactor",initfactor);
-        c4.setPar("inputShape",vector<int>{hidden[1]});
-        af1=new Affine(c1);
+        json j1,j2,j3,j4;
+        j1["inputShape"]=vector<int>{inputShapeFlat};
+        j1["hidden"]=hidden[0];
+        j1["init"]=inittype;
+        j1["initfactor"]=initfactor;
+        j2["inputShape"]=vector<int>{hidden[0]};
+        j3["inputShape"]=vector<int>{hidden[0]};
+        j3["hidden"]=hidden[1];
+        j3["init"]=inittype;
+        j3["initfactor"]=initfactor;
+        j4["inputShape"]=vector<int>{hidden[1]};
+        af1=new Affine(j1);
         mlPush("af1", &(af1->params), &params);
-        rl=new Relu(c2);
+        rl=new Relu(j2);
         mlPush("rl", &(rl->params), &params);
-        af2=new Affine(c3);
+        af2=new Affine(j3);
         mlPush("af2", &(af2->params), &params);
-        sm=new Softmax(c4);
+        sm=new Softmax(j4);
         mlPush("sm", &(sm->params), &params);
         layerInit=retval;
     }
@@ -55,11 +55,11 @@ public:
     Relu *rl;
     Affine *af2;
     Softmax *sm;
-    TwoLayerNet(CpParams cx) {
-        setup(cx);
+    TwoLayerNet(const json& jx) {
+        setup(jx);
     }
-    TwoLayerNet(string conf) {
-        setup(CpParams(conf));
+    TwoLayerNet(const string conf) {
+        setup(json::parse(conf));
     }
     ~TwoLayerNet() {
         delete af1;

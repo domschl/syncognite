@@ -9,19 +9,19 @@ private:
     int numCpuThreads;
     int hidden;
     floatN initfactor;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Affine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        hidden=cp.getPar("hidden",1024);
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        hidden=j.value("hidden",1024);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
         outputShape={hidden};
 
         MatrixN W = xavierInit(MatrixN(inputShapeFlat,hidden),inittype,initfactor);
@@ -34,11 +34,11 @@ private:
         layerInit=true;
     }
 public:
-    Affine(const CpParams& cx) {
-        setup(cx);
+    Affine(const json& jx) {
+        setup(jx);
     }
     Affine(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~Affine() {
         cppl_delete(&params);

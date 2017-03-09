@@ -7,22 +7,22 @@ class  TemporalAffine : public Layer {
 private:
     int T,D,M;
     floatN initfactor;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         int allOk=true;
         layerName="TemporalAffine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
         D=inputShape[0]; // cp.getPar("D",128);
         T=inputShape[1]; // cp.getPar("T",128);
-        M=cp.getPar("M",128);
-        XavierMode inittype=xavierInitType(cp.getPar("init",(string)"standard"));
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        M=j.value("M",128);
+        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        initfactor=j.value("initfactor",(floatN)1.0);
 
         outputShape={M,T};
 
@@ -39,11 +39,11 @@ private:
         layerInit=allOk;
     }
 public:
-     TemporalAffine(const CpParams& cx) {
-        setup(cx);
+     TemporalAffine(const json& jx) {
+        setup(jx);
     }
      TemporalAffine(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~ TemporalAffine() {
         cppl_delete(&params);

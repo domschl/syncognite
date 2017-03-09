@@ -6,12 +6,12 @@
 
 class Softmax : public Layer {
 private:
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Softmax";
         layerType=LayerType::LT_LOSS;
-        cp=cx;
+        j=jx;
         inputShapeRang=1;
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
@@ -20,11 +20,11 @@ private:
         layerInit=true;
     }
 public:
-    Softmax(const CpParams& cx) {
-        setup(cx);
+    Softmax(const json& jx) {
+        setup(jx);
     }
     Softmax(string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~Softmax() {
         cppl_delete(&params);

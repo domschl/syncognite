@@ -1,4 +1,4 @@
 -I/usr/include/eigen3
--I/usr/local/include/nlohmann
 -I/home/dsc/git/AI/syncognite/cpneural
-
+-I/home/dsc/git/AI/syncognite/cpneural/nlohmann_json
+-I/home/dsc/git/AI/syncognite/cpneural/layers

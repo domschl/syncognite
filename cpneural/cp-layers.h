@@ -50,15 +50,15 @@ private:
     bool bench;
     string inittype;
     floatN initfactor;
-    void setup(const CpParams& cx) {
-        cp=cx;
-        layerName=cp.getPar("name",(string)"block");
-        bench=cp.getPar("bench",false);
+    void setup(const json& jx) {
+        j=jx;
+        layerName=j.value("name",(string)"block");
+        bench=j.value("bench",false);
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
-        trainMode = cp.getPar("train", false);
-        inittype=cp.getPar("init", (string)"standard");
-        initfactor=cp.getPar("initfactor",(floatN)1.0);
+        trainMode = j.value("train", false);
+        inittype=j.value("init", (string)"standard");
+        initfactor=j.value("initfactor",(floatN)1.0);
         checked=false;
     }
 public:
@@ -68,11 +68,11 @@ public:
     bool checked;
     bool trainMode;
 
-    LayerBlock(const CpParams& cx) {
-        setup(cx);
+    LayerBlock(const json& jx) {
+        setup(jx);
     }
     LayerBlock(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
         layerInit=true;
     }
     ~LayerBlock() {
@@ -94,7 +94,7 @@ public:
         layerMap.erase(fi);
         return true;
     }
-    bool addLayer(const string layerclass, const string name, CpParams& cpl, const vector<string> inputLayers) {
+    bool addLayer(const string layerclass, const string name, json& jl, const vector<string> inputLayers) {
         if (layerMap.find(name) != layerMap.end()) {
             cerr << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
@@ -124,7 +124,7 @@ public:
                 return false;
             }
             vector<int> inputShape, prevOutputShape;
-            inputShape=cpl.getPar("inputShape", vector<int>{});
+            inputShape=jl.value("inputShape", vector<int>{});
             prevOutputShape=lP->second->getOutputShape();
             if (prevOutputShape.size()==0) {
                 cerr << "Missing outputShape defintion for inputLayer " << firstInput << endl;
@@ -136,14 +136,14 @@ public:
             for (unsigned int i=0; i<prevOutputShape.size(); i++) {
                 inputShape[i]=prevOutputShape[i];
             }
-            cpl.setPar("inputShape",inputShape);
+            jl["inputShape"]=inputShape;
         }
 
-        cpl.setPar("name",name);
-        cpl.setPar("init",cpl.getPar("init", inittype)); // set init to global block value, if not set for the specific layer.
-        cpl.setPar("initfactor",cpl.getPar("initfactor", initfactor));
+        jl["name"]=name;
+        jl["init"]=jl.value("init", inittype); // set init to global block value, if not set for the specific layer.
+        jl["initfactor"]=jl.value("initfactor", initfactor);
 
-        layerMap[name]=CREATE_LAYER(layerclass, cpl)   // Macro!
+        layerMap[name]=CREATE_LAYER(layerclass, jl)   // Macro!
         Layer *pLayer = layerMap[name];
         if (pLayer->layerInit==false) {
             cerr << "Attempt to add layer " << name << " failed: Bad initialization." << endl;
@@ -165,8 +165,8 @@ public:
         return true;
     }
     bool addLayer(string layerclass, string name, string params, vector<string> inputLayers) {
-        CpParams cpl(params);
-        return addLayer(layerclass, name, cpl, inputLayers);
+        json jl=json::parse(params);
+        return addLayer(layerclass, name, jl, inputLayers);
     }
 
     bool checkTopology(bool verbose=false) {
@@ -207,7 +207,7 @@ public:
                 Layer *p=layerMap[name];
 
                 int inputShapeFlat=1;
-                for (int j : p->cp.getPar("inputShape", vector<int>{})) {
+                for (int j : p->j.value("inputShape", vector<int>{})) {
                     inputShapeFlat *= j;
                 }
                 int outputShapeFlat=1;
@@ -216,7 +216,7 @@ public:
                 }
                 // string intype=p->cp.getPar("init",(string)"not defined");
 
-                cerr << name << ": " << p->cp.getPar("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
+                cerr << name << ": " << p->j.value("inputShape", vector<int>{}) << "[" << inputShapeFlat << "]";
                 cerr << " -> " << p->getOutputShape() << "[" << outputShapeFlat << "]" << endl;
 
                 if (p->layerInit==false) cerr << "  " << name << ": bad initialization!" << endl;
@@ -243,7 +243,7 @@ public:
         MatrixN x0=x;
         MatrixN xn;
         Timer t;
-        trainMode = cp.getPar("train", false);
+        trainMode = j.value("train", false);
         // if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
         /*
         if (pstates->find("y") == pstates->end()) {
@@ -344,7 +344,7 @@ public:
         MatrixN dxn;
         string cl=lossLayer;
         MatrixN dx0=dy;
-        trainMode = cp.getPar("train", false);
+        trainMode = j.value("train", false);
         while (!done) {
             t_cppl cache;
             t_cppl grads;
@@ -377,7 +377,7 @@ public:
         return true;
     }
     virtual void setFlag(string name, bool val) override {
-        cp.setPar(name,val);
+        j[name]=val;
         for (auto ly : layerMap) {
             ly.second->setFlag(name, val);
         }

@@ -16,16 +16,16 @@ namespace Nonlin {
 class Nonlinearity : public Layer {
 private:
     Nonlin::Nonlin nonlintype=Nonlin::NL_INVALID;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
+        j=jx;
         inputShapeRang=1;
-        vector<int> inputShape=cp.getPar("inputShape", vector<int>{});
+        vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {
             inputShapeFlat *= j;
         }
-        string nonlintypestr=cp.getPar("type", (string)"relu");
+        string nonlintypestr=j.value("type", (string)"relu");
         layerName="Nonlinearity-"+nonlintypestr;
         if (nonlintypestr=="relu") nonlintype=Nonlin::NL_RELU;
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
@@ -65,11 +65,11 @@ public:
         }
         return y;
     }
-    Nonlinearity(const CpParams& cx) {
-        setup(cx);
+    Nonlinearity(const json& jx) {
+        setup(jx);
     }
-    Nonlinearity(string conf) {
-        setup(CpParams(conf));
+    Nonlinearity(const string conf) {
+        setup(json::parse(conf));
     }
     ~Nonlinearity() {
         cppl_delete(&params);

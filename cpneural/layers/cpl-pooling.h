@@ -24,15 +24,15 @@ private:
     int C, H, W, HH, WW;
     int HO, WO;
     int stride;
-    void setup(const CpParams& cx) {
+    void setup(const json& jx) {
         layerName="Pooling";
         inputShapeRang=3;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        cp=cx;
-        vector<int> inputShape=cp.getPar("inputShape",vector<int>{0});
+        j=jx;
+        vector<int> inputShape=j.value("inputShape",vector<int>{0});
         assert (inputShape.size()==3);
-        stride = cp.getPar("stride", 2);
+        stride = j.value("stride", 2);
         // inputShape: C, H, W        // XXX: we don't need HH und WW, they have to be equal to stride anyway!
         C=inputShape[0]; H=inputShape[1]; W=inputShape[2];
         HH=stride; WW=stride;  // XXX: Simplification, our algo doesn't work for HH or WW != stride.
@@ -53,11 +53,11 @@ private:
         layerInit=retval;
     }
 public:
-    Pooling(const CpParams& cx) {
-        setup(cx);
+    Pooling(const json& jx) {
+        setup(jx);
     }
     Pooling(const string conf) {
-        setup(CpParams(conf));
+        setup(json::parse(conf));
     }
     ~Pooling() {
         cppl_delete(&params);
