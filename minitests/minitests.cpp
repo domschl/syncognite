@@ -117,6 +117,19 @@ int main(int argc, char *argv[]) {
     cerr << j << endl;
     if (j["tandem"]["kat"]==nullptr)
         cerr << "not defined"<< endl;
+    string a;
+    a=j.value("murksel","tada");
+    cerr << a << endl;
+    j["murksel"]="ding";
+    a=j.value("murksel","tada");
+    cerr << a << endl;
+    int b;
+    b=j.value("hidden",13);
+    cerr << b << endl;
+    j["hidden"]=1024;
+    b=j.value("hidden",13);
+    cerr << b << endl;
+
 
     json j2 = R"({"test":32,"turbo":"loader"})"_json;
     cerr << j2 << endl;

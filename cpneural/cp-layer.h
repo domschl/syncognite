@@ -61,7 +61,7 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
 
 class Optimizer {
 public:
-    CpParams cp;
+    json j;
     virtual ~Optimizer() {}; // Otherwise destructor of derived classes is never called!
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
 };
@@ -160,9 +160,9 @@ public:
     virtual void setFlag(string name, bool val) { cp.setPar(name,val); }
 
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                        string optimizer, const CpParams& cp);
+                        string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
-                        string optimizer, const CpParams& cp);
+                        string optimizer, const json& j);
     retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);

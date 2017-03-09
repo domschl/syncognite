@@ -45,6 +45,7 @@ bool getTestCases() {
 	for (auto tc : additionaltestcases) {
 		testcases.push_back(tc);
 	}
+	return false;  // not yet defined.
 }
 
 bool checkForTest(string tc) {
@@ -163,10 +164,9 @@ bool testTrainTwoLayerNet(int verbose) {
 	for (unsigned i = 0; i < yt.rows(); i++)
 		yt(i, 0) = tFunc(Xt.row(i), C);
 
-	CpParams cpo("{epochs=300.0;batch_size=20;learning_rate=5e-2;"
-	    "lr_decay=1.0;epsilon=1e-8;regularization=1e-3;maxthreads=4}");
-    if (verbose>2) cpo.setPar("verbose", (bool)true);
-    else cpo.setPar("verbose",(bool)false);
+	json jo=R"({"epochs":300.0,"batch_size":20,"learning_rate":5e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":1e-3,"maxthreads":4})"_json;
+    if (verbose>2) jo["verbose"]=true;
+    else jo["verbose"]=false;
 	floatN train_err, test_err, val_err;
 
 	t_cppl states {}, statesv {}, statest {};
@@ -174,7 +174,7 @@ bool testTrainTwoLayerNet(int verbose) {
 	statesv["y"] = &yv;
 	statest["y"] = &yt;
     cerr << "  ";
-	tln.train(X, &states, Xv, &statesv, "Adam", cpo);
+	tln.train(X, &states, Xv, &statesv, "Adam", jo);
 	// tln.train(X, y, Xv, yv, "Sdg", cpo);
 	train_err = tln.test(X, &states);
 	val_err = tln.test(Xv, &statesv);
@@ -210,7 +210,6 @@ int doTests() {
     MatrixN yz=MatrixN(0,0);
     t_cppl s1;
     s1["y"] = &yz;
-    floatN h, eps;
 
     bool allOk=true;
     Color::Modifier lblue(Color::FG_LIGHT_BLUE);
