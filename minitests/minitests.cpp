@@ -99,6 +99,7 @@ int main(int argc, char *argv[]) {
     int ret=0;
     ret=0;
     //doTests();
+    /*
     cerr << "standard init=============" << endl;
     trainTest("standard");
     cerr << "normal init===============" << endl;
@@ -108,5 +109,21 @@ int main(int argc, char *argv[]) {
     cerr << "orthogonal init==========" << endl;
     trainTest("orthogonal");
     cpExitCompute();
+    */
+
+    json j;
+    j["test"]=vector<int>{3,4,5};
+    j["turbo"]["traffic"]["tangente"]=3.13;
+    cerr << j << endl;
+    if (j["tandem"]["kat"]==nullptr)
+        cerr << "not defined"<< endl;
+
+    json j2 = R"({"test":32,"turbo":"loader"})"_json;
+    cerr << j2 << endl;
+    string l=j2["turbo"];
+    cerr << j2["turbo"]<<endl;
+    cerr << j.dump(4) << endl;
+    cerr << j2.dump(4) << endl;
     return ret;
+
 }

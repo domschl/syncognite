@@ -29,6 +29,8 @@ using std::cerr; using std::endl;
 using std::vector; using std::string;
 using std::map;
 
+using json = nlohmann::json;
+
 using Eigen::IOFormat;
 
 #include "cp-math.h"
