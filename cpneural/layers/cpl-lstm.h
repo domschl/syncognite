@@ -49,7 +49,7 @@ private:
         if (forgetGateInitOnes)
             params["bh"]->block(0,H,1,H).setOnes();
 
-        cerr << *params["bh"] << endl;
+        //cerr << *params["bh"] << endl;
 
         numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();

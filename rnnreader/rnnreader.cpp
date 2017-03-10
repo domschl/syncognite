@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=2;
+    int layer_depth=5;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"epsilon":1e-8})"_json);
     jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
 
-    floatN dep=1.0;
+    floatN dep=10.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
