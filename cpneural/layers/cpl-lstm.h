@@ -13,6 +13,7 @@ private:
     float maxClip=0.0;
     bool nohupdate;
     bool forgetGateInitOnes=true;
+    floatN forgetBias=1.0;
     string hname;
     string hname0;
     string cname;
@@ -39,6 +40,7 @@ private:
         initfactor=j.value("initfactor",(floatN)1.0);
         maxClip=j.value("clip",(float)0.0);
         forgetGateInitOnes=j.value("forgetgateinitones",true);
+        forgetBias=j.value("forgetbias",1.0);
         nohupdate=j.value("nohupdate",(bool)false);  // true for auto-diff tests
         D=inputShape[0];
         T=inputShape[1];
@@ -48,7 +50,7 @@ private:
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,4*H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
         if (forgetGateInitOnes) {
-            params["bh"]->block(0,H,1,H).setOnes();
+            params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array() + forgetBias;
             cerr << "ForgetGate -> Ones" << endl;
         }
 

@@ -142,9 +142,9 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.01})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"normal"})"_json);
     int VS=txt.vocsize();
-    int H=128;
+    int H=512;
     int BS=64;
     float clip=5.0;
 
@@ -166,13 +166,14 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=2;
+    int layer_depth=5;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
     j1["N"]=BS;
     j1["H"]=H;
-    j1["forgetgateinitones"]=false;
+    j1["forgetgateinitones"]=true;
+    j1["forgetbias"]=1.0;
     j1["clip"]=clip;
     for (auto l=0; l<layer_depth; l++) {
         nName="lstm"+std::to_string(l);
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":true,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
 
-    floatN dep=2.0;
+    floatN dep=1.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
