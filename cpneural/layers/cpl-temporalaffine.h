@@ -122,6 +122,10 @@ public:
         }
 
         MatrixN dxt = dchaint * (*params["W"]).transpose(); // dx
+        if ((*(*pcache)["xt"]).transpose().cols() != dchaint.rows()) {
+            cerr << endl << "TA: xt.T dot dchaint:" << shape((*(*pcache)["xt"]).transpose()) << ", " << shape(dchaint) << endl;
+            exit(-1);
+        }
         cppl_set(pgrads, "W", new MatrixN((*(*pcache)["xt"]).transpose() * dchaint)); //dW
         cppl_set(pgrads, "b", new MatrixN(dchaint.colwise().sum())); //db
         MatrixN dx(N, T*D);

@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     // cp0.setPar("init",(string)"orthonormal");
     // lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
-    string rnntype="RNN"; // or "RNN"
+    string rnntype="LSTM"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
 
     json j0;
@@ -201,7 +201,7 @@ int main(int argc, char *argv[]) {
     //cerr << jc.dump(4) << endl;
 
     // preseverstates no longer necessary for training!
-    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"epsilon":1e-8})"_json);
+    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":true,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
 
     floatN dep=2.0;

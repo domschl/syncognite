@@ -245,6 +245,8 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     bool verbose=popti->j.value("verbose", (bool)false);
     bool bShuffle=popti->j.value("shuffle", (bool)false);
     bool bPreserveStates=popti->j.value("preservestates", (bool)false);
+    bool noTests=popti->j.value("notests", (bool)false);
+    bool noFragmentBatches=popti->j.value("nofragmentbatches",false);
     floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
     floatN regularization = popti->j.value("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
@@ -308,7 +310,9 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 cerr << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
             }
             //cerr << "[" << y0 << "," << y0+dy-1 << "] ";
-
+            if (dy!=bs && noFragmentBatches) {
+                break;  // RNN and LSTMs can't handle different batch-sizes.
+            }
             MatrixN xb(dy,x.cols());
             MatrixN yb(dy,y.cols());
             xb.setZero();
@@ -423,17 +427,19 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         //cerr << "ED" << endl;
 
         //floatN errtra=test(x,y);
-        Timer tt;
-        tt.startWall();
-        floatN errval=test(xv,pstatesv,bs);
-        floatN ttst=tt.stopWallMicro();
-        accval=1.0-errval;
-        lastAcc=accval;
-        if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< std::setprecision(2) << (int)(tw.stopWallMicro()/1000000.0) << "s, (" << std::setprecision(2) << (int)(ttst/1000000.0) << "s test) loss:" << std::setprecision(4) << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
-        if (meanacc==0.0) meanacc=accval;
-        else meanacc=(meanacc+2.0*accval)/3.0;
-        logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
-        std::flush(logfile);
+        if (!noTests) {
+            Timer tt;
+            tt.startWall();
+            floatN errval=test(xv,pstatesv,bs);
+            floatN ttst=tt.stopWallMicro();
+            accval=1.0-errval;
+            lastAcc=accval;
+            if (verbose) cerr << "Ep: " << e+1 << ", Time: "<< std::setprecision(2) << (int)(tw.stopWallMicro()/1000000.0) << "s, (" << std::setprecision(2) << (int)(ttst/1000000.0) << "s test) loss:" << std::setprecision(4) << m2loss << " err(val):" << errval << green << " acc(val):" << accval << def << endl;
+            if (meanacc==0.0) meanacc=accval;
+            else meanacc=(meanacc+2.0*accval)/3.0;
+            logfile << e+1.0 << "\t" << lastloss << "\t" << meanloss<< "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
+            std::flush(logfile);
+        }
         setFlag("train",true);
         if (lr_decay!=1.0) {
             lr *= lr_decay;

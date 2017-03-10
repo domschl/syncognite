@@ -47,8 +47,10 @@ private:
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,4*H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,4*H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
-        if (forgetGateInitOnes)
+        if (forgetGateInitOnes) {
             params["bh"]->block(0,H,1,H).setOnes();
+            cerr << "ForgetGate -> Ones" << endl;
+        }
 
         //cerr << *params["bh"] << endl;
 
@@ -285,7 +287,7 @@ public:
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent LSTM-forward result: " << shape(hn) << endl;
         }
-        return hn;  // XXX return a t_cppl with cn too, preserver hn, cn as states?
+        return hn;
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
