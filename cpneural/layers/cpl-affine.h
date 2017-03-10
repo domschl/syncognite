@@ -11,6 +11,7 @@ private:
     floatN initfactor;
     void setup(const json& jx) {
         layerName="Affine";
+        layerClassName="Affine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         j=jx;

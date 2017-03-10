@@ -23,6 +23,7 @@ private:
     BatchNorm *pbn;
     void setup(const json& jx) {
         layerName="SpatialBatchNorm";
+        layerClassName="SpatialBatchNorm";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;

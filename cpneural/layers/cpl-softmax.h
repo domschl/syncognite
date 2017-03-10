@@ -8,6 +8,7 @@ class Softmax : public Layer {
 private:
     void setup(const json& jx) {
         layerName="Softmax";
+        layerClassName="Softmax";
         layerType=LayerType::LT_LOSS;
         j=jx;
         inputShapeRang=1;

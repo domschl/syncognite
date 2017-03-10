@@ -9,6 +9,7 @@ private:
     bool freeze;
     void setup(const json& jx) {
         layerName="Dropout";
+        layerClassName="Dropout";
         layerType=LayerType::LT_NORMAL;
         j=jx;
         inputShapeRang=1;

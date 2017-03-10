@@ -9,6 +9,7 @@ class Svm : public Layer {
 private:
     void setup(const json& jx) {
         layerName="Svm";
+        layerClassName="Svm";
         layerType=LayerType::LT_LOSS;
         j=jx;
         inputShapeRang=1;

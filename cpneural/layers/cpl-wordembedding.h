@@ -25,6 +25,7 @@ private:
     floatN initfactor;
     void setup(const json& jx) {
         layerName="WordEmbedding";
+        layerClassName="WordEmbedding";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         j=jx;

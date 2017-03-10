@@ -20,6 +20,7 @@ private:
     void setup(const json& jx) {
         j=jx;
         layerName=j.value("name",(string)"LSTM");
+        layerClassName="LSTM";
         hname=layerName+"-h";
         hname0=layerName+"-h0";
         cname=layerName+"-c";

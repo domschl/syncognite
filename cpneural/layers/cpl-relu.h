@@ -7,6 +7,7 @@ class Relu : public Layer {
 private:
     void setup(const json& jx) {
         layerName="Relu";
+        layerClassName="Relu";
         layerType=LayerType::LT_NORMAL;
         j=jx;
         inputShapeRang=1;

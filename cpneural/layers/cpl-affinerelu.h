@@ -9,6 +9,7 @@ private:
     floatN initfactor;
     void setup(const json& jx) {
         layerName="AffineRelu";
+        layerClassName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=2;
         j=jx;

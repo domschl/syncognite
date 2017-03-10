@@ -26,6 +26,7 @@ private:
     int stride;
     void setup(const json& jx) {
         layerName="Pooling";
+        layerClassName="Pooling";
         inputShapeRang=3;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;

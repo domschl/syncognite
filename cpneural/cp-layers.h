@@ -34,7 +34,7 @@ void registerLayers() {
     REGISTER_LAYER("Pooling", Pooling, 3)
     REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("RNN", RNN, 1)
-    REGISTER_LAYER("LSTM", RNN, 1)
+    REGISTER_LAYER("LSTM", LSTM, 1)
     REGISTER_LAYER("WordEmbedding", WordEmbedding, 1)
     REGISTER_LAYER("TemporalAffine", TemporalAffine, 1)
     REGISTER_LAYER("TemporalSoftmax", TemporalSoftmax, 1)
@@ -53,6 +53,7 @@ private:
     void setup(const json& jx) {
         j=jx;
         layerName=j.value("name",(string)"block");
+        layerClassName="LayerBlock";
         bench=j.value("bench",false);
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
@@ -383,5 +384,31 @@ public:
             ly.second->setFlag(name, val);
         }
     }
+    virtual void getLayerConfiguration(json &jlc) override {
+        string cLay="input";
+        vector<string> nLay;
+        bool done=false;
+        vector<json>jlayers{};
+        while (!done) {
+            nLay=getLayerFromInput(cLay);
+            if (nLay.size()!=1) {
+                cerr << "Unexpected topology: "<< nLay.size() << " layer follow layer " << cLay << " 1 expected.";
+                break;
+            }
+            string name=nLay[0];
+            Layer *p = layerMap[name];
+            json ji;
+            p->getLayerConfiguration(ji);
+            jlayers.push_back(ji);
+            if (p->layerType & LayerType::LT_LOSS) done=true;
+            else cLay=name;
+        }
+        jlc[layerName]=j;
+        jlc["layerclassname"]=layerClassName;
+        jlc["layername"]=layerName;
+        jlc["sublayers"]=jlayers;
+        return;
+    }
+
 };
 #endif

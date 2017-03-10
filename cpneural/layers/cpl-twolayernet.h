@@ -11,6 +11,7 @@ private:
     void setup(const json& jx) {
         bool retval=true;
         layerName="TwoLayerNet";
+        layerClassName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
         inputShapeRang=1;
         j=jx;

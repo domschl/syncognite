@@ -29,6 +29,7 @@ private:
     floatN initfactor;
     void setup(const json& jx) {
         layerName="Convolution";
+        layerClassName="Convolution";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;

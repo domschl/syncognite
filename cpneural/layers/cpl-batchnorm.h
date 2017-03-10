@@ -8,6 +8,7 @@ class BatchNorm : public Layer {
 private:
     void setup(const json& jx) {
         layerName="BatchNorm";
+        layerClassName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=1;
         j=jx;

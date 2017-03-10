@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=90;
+    int T=30;
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
@@ -142,9 +142,9 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"normal"})"_json);
     int VS=txt.vocsize();
-    int H=512;
+    int H=128;
     int BS=64;
     float clip=5.0;
 
@@ -166,14 +166,14 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=5;
+    int layer_depth=2;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
     j1["N"]=BS;
     j1["H"]=H;
-    j1["forgetgateinitones"]=true;
-    //j1["clip"]=clip;
+    j1["forgetgateinitones"]=false;
+    j1["clip"]=clip;
     for (auto l=0; l<layer_depth; l++) {
         nName="lstm"+std::to_string(l);
         lb.addLayer(rnntype,nName,j1,{oName});
@@ -196,11 +196,15 @@ int main(int argc, char *argv[]) {
         cerr << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
 
+    //json jc;
+    //lb.getLayerConfiguration(jc);
+    //cerr << jc.dump(4) << endl;
+
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"epsilon":1e-8})"_json);
     jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
 
-    floatN dep=10.0;
+    floatN dep=2.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;

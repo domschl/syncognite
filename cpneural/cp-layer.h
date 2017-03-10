@@ -114,14 +114,15 @@ public:
 
 LayerFactory _syncogniteLayerFactory;
 
-#define REGISTER_LAYER(LayerName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerName,&createLayerInstance<LayerClass>, props);
-#define CREATE_LAYER(LayerName, j) _syncogniteLayerFactory.createLayerInstance(LayerName, j);
+#define REGISTER_LAYER(LayerClassName, LayerClass, props) _syncogniteLayerFactory.registerInstanceCreator(LayerClassName,&createLayerInstance<LayerClass>, props);
+#define CREATE_LAYER(LayerClassName, jprops) _syncogniteLayerFactory.createLayerInstance(LayerClassName, jprops);
 
 typedef map<string, t_cppl> retdict;
 
 class Layer {
 public:
     string layerName;
+    string layerClassName;
     LayerType layerType;
     int inputShapeRang;
     vector<int>outputShape;
@@ -158,6 +159,12 @@ public:
     }
 
     virtual void setFlag(string name, bool val) { j[name]=val; }
+
+    virtual void getLayerConfiguration(json &jlc) {
+        jlc=j;
+        jlc["layerclassname"]=layerClassName;
+        jlc["layername"]=layerName;
+    }
 
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const json& j);

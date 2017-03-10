@@ -9,6 +9,7 @@ private:
     MatrixN wVect;
     void setup(const json& jx) {
         layerName="OneHot";
+        layerClassName="OneHot";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         j=jx;

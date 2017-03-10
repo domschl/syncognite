@@ -17,6 +17,7 @@ private:
     void setup(const json& jx) {
         j=jx;
         layerName=j.value("name",(string)"RNN");
+        layerClassName="RNN";
         hname=layerName+"-h";
         hname0=layerName+"-h0";
 

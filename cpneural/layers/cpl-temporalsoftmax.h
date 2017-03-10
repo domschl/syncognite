@@ -9,6 +9,7 @@ private:
     void setup(const json& jx) {
         int allOk=true;
         layerName="TemporalSoftmax";
+        layerClassName="TemporalSoftmax";
         inputShapeRang=2;
         layerType=LayerType::LT_LOSS;
         j=jx;

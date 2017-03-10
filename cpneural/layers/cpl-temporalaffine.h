@@ -10,6 +10,7 @@ private:
     void setup(const json& jx) {
         int allOk=true;
         layerName="TemporalAffine";
+        layerClassName="TemporalAffine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
         j=jx;

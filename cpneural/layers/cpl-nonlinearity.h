@@ -27,6 +27,7 @@ private:
         }
         string nonlintypestr=j.value("type", (string)"relu");
         layerName="Nonlinearity-"+nonlintypestr;
+        layerClassName="Nonlinearity";
         if (nonlintypestr=="relu") nonlintype=Nonlin::NL_RELU;
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
         else if (nonlintypestr=="tanh") nonlintype=Nonlin::NL_TANH;
