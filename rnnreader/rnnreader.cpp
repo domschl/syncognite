@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
     j1["inputShape"]=vector<int>{VS,T};
     j1["N"]=BS;
     j1["H"]=H;
-    j1["forgetgateinitones"]=true;
+    j1["forgetgateinitones"]=false;
     j1["clip"]=clip;
     for (auto l=0; l<layer_depth; l++) {
         nName="lstm"+std::to_string(l);
