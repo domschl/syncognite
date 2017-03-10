@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     // cp0.setPar("init",(string)"orthonormal");
     // lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
-    string rnntype="LSTM"; // or "RNN"
+    string rnntype="RNN"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
 
     json j0;
