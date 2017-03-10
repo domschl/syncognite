@@ -142,7 +142,7 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"normal"})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.01})"_json);
     int VS=txt.vocsize();
     int H=128;
     int BS=64;
