@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     int VS=txt.vocsize();
     int H=128;
     int BS=64;
-    float clip=5.0;
+    float clip=2.0;
 
     //int D=64;
     // CpParams cp0;
