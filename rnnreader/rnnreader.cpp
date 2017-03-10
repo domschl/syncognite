@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=30;
+    int T=80;
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
@@ -142,11 +142,11 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"normal"})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.1})"_json);
     int VS=txt.vocsize();
-    int H=512;
+    int H=256;
     int BS=64;
-    float clip=5.0;
+    float clip=3.0;
 
     //int D=64;
     // CpParams cp0;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=5;
+    int layer_depth=4;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
@@ -203,9 +203,9 @@ int main(int argc, char *argv[]) {
 
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":true,"nofragmentbatches":true,"epsilon":1e-8})"_json);
-    jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
+    jo["learning_rate"]=(floatN)1e-2; //2.2e-2);
 
-    floatN dep=1.0;
+    floatN dep=5.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
@@ -234,30 +234,27 @@ int main(int argc, char *argv[]) {
         t_cppl statesg{};
         plstm0->genZeroStates(&statesg, 1);
 
-        for (int g=0; g<1000; g++) {
+        int g,t,v;
+        for (g=0; g<500; g++) {
             t_cppl cache{};
 
             MatrixN probst=lb.forward(xg,&cache, &statesg);
             MatrixN probsd=MatrixN(T,VS);
-            for (int t=0; t<T; t++) {
-                for (int v=0; v<VS; v++) {
+            for (t=0; t<T; t++) {
+                for (v=0; v<VS; v++) {
                     probsd(t,v)=probst(0,t*VS+v);
                 }
             }
             int li=-1;
-            for (int t=0; t<T; t++) {
+            for (t=0; t<T; t++) {
                 vector<floatN> probs(VS);
                 vector<floatN> index(VS);
-                for (int v=0; v<VS; v++) {
+                for (v=0; v<VS; v++) {
                     probs[v]=probsd(t,v);
                     index[v]=v;
                 }
                 li=(int)index[randomChoice(index, probs)];
-
-                //wchar_t cw=txt.v2w[li];
-                //wcout << cw;
             }
-            //wcout <<  endl;
             cppl_delete(&cache);
 
             for (int t=0; t<T-1; t++) {
