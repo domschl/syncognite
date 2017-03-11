@@ -157,12 +157,19 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
         xb=x.block(x0,0,dl,x.cols());
         yb=y.block(x0,0,dl,y.cols());
         (*pstates)["y"]=&yb;
-        MatrixN yt=forward(xb, nullptr, pstates, 0);
+        MatrixN yt0=forward(xb, nullptr, pstates, 0);
+        MatrixN yt;
         if (yt.rows() != yb.rows()) {
-            cerr << "test: incompatible row count!" << endl;
-            (*pstates)["y"] = py;
-            return -1000.0;
-        }
+            cerr << "remapping function output" << endl;
+            int ncols=yt0.rows()*yt0.cols();
+            if (ncols%yb.rows()!=0) {
+                cerr << "test: incompatible row count, cannot be remapped!" << endl;
+                (*pstates)["y"] = py;
+                return -1000.0;
+            } else {
+                Eigen::Map<MatrixN> yt(yt0.data(),yb.rows(),ncols);
+            }
+        } else yt=yt0;
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
