@@ -1,4 +1,4 @@
-# LSTMs for text generation
+# RNN and LSTM for text generation
 ## Requirements
 Check the [main page](../../..) for build requirements.
 ## Build
@@ -15,6 +15,10 @@ From build directory:
 rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
 ```
 ## Output
+### LSTM network
+...
+
+### RNN network
 After about 250 epochs (three layers of RNNs with 512 neurons, 90 time-steps), about 20hrs on a recent desktop CPU (8 threads), with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
 ```
 PETRUCHIO:
