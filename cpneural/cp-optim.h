@@ -163,7 +163,8 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
             cerr << "remapping function output" << endl;
             int ncols=yt0.rows()*yt0.cols();
             if (ncols%yb.rows()!=0) {
-                cerr << "test: incompatible row count, cannot be remapped!" << endl;
+                cerr << "test: incompatible row count! Can't remap! testdata:" << yb.rows() << ", result:" << yt.rows() << endl;
+                cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt) << endl;
                 (*pstates)["y"] = py;
                 return -1000.0;
             } else {
@@ -251,6 +252,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->j.value("verbose", (bool)false);
     bool bShuffle=popti->j.value("shuffle", (bool)false);
+    float lossfactor=popti->j.value("lossfactor",(float)1.0);
     bool bPreserveStates=popti->j.value("preservestates", (bool)false);
     bool noTests=popti->j.value("notests", (bool)false);
     bool noFragmentBatches=popti->j.value("nofragmentbatches",false);
@@ -404,7 +406,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 
                 lossQueueMutex.lock();
                 while (!lossQueue.empty()) {
-                    lastloss=lossQueue.front();
+                    lastloss=lossQueue.front()*lossfactor;
                     lossQueue.pop();
                     //cerr << "lossQueue pop: " << lastloss << endl;
                     if (meanloss==0) meanloss=lastloss;
