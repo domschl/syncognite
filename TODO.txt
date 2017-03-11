@@ -1,7 +1,0 @@
-[ ] - Update readme and TODO to a minimal state for pre-Alpha
-[ ] - sane build defaults (no ViennaCL)
-[ ] - data-downloader-scripts
-[ ] - document build
-[ ] - document mnist, cifar, test
-[ ] - minimal architecture overview
-[ ] - project motivation

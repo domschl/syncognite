@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-//#include <codecvt>
+#include <codecvt>
 //#include <cstddef>
 #include <locale>
 #include <string>
@@ -65,6 +65,17 @@ public:
         return text.substr(p,len);
     }
 };
+
+void currentDateTime(wstring& timestr) {
+    time_t     now = time(0);
+    struct tm  tstruct;
+    char       buf[80];
+    tstruct = *localtime(&now);
+    // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
+    // for more information about date/time format
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    timestr=std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(buf);
+}
 
 int main(int argc, char *argv[]) {
     std::setlocale (LC_ALL, "");
@@ -264,6 +275,12 @@ int main(int argc, char *argv[]) {
             sout += txt.v2w[li];
         }
         wcout << "output: " << sout << endl;
+        wstring timestr;
+        currentDateTime(timestr);
+        std::wofstream fl("rnnreader.txt", std::ios_base::app);
+        fl << "---- " << timestr << ", ep:" << sep << " ---" << endl;
+        fl << sout << endl;
+        fl.close();
         cppl_delete(&statesg);
     }
     cpExitCompute();
