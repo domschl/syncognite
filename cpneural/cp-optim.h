@@ -149,28 +149,51 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     }
     MatrixN y = *((*pstates)["y"]);
     MatrixN *py = (*pstates)["y"];
+    int nrr=y.rows();
 
     for (int ck=0; ck<(N+bs-1)/bs; ck++) {
         int x0=ck*bs;
         int dl=bs;
-        if (x0+dl>N) dl=N-x0;
+        if (x0+dl>N) continue; // no fractional batches, problem with RNNs: dl=N-x0;
         xb=x.block(x0,0,dl,x.cols());
-        yb=y.block(x0,0,dl,y.cols());
+        //yb=y.block(x0,0,dl,y.cols());
+        MatrixN ybte=y.block(x0,0,dl,y.cols());
+        MatrixN ybtet=ybte.transpose();
+        Eigen::Map<MatrixN> ybt(ybtet.data(),dl*y.cols(),1);
+        MatrixN yb(ybt);
         (*pstates)["y"]=&yb;
-        MatrixN yt0=forward(xb, nullptr, pstates, 0);
-        MatrixN yt;
+        t_cppl cache;
+        MatrixN yt=forward(xb, &cache, pstates, 0);
         if (yt.rows() != yb.rows()) {
-            cerr << "remapping function output" << endl;
+            if (cache.find("sm1-probs")!=cache.end()) {
+                MatrixN yt1=*cache["sm1-probs"];
+                Eigen::Map<MatrixN> yt0(yt1.data(),yb.rows(),yt1.rows()*yt1.cols()/yb.rows());
+                yt=yt0;
+                //cerr << "got:" << shape(yt) << " for:" << shape(yb) << endl;
+            } else cerr << "no [sm1-probs hack!]" << endl;
+            /*
+            //cerr << "remapping function output" << endl;
+            //cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt0) << endl;
             int ncols=yt0.rows()*yt0.cols();
+            //cerr << ncols << ", " << shape(yb) << shape(yt0) << endl;
             if (ncols%yb.rows()!=0) {
+                cerr << "test: incompatible row count! Can't remap! testdata:" << yb.rows() << ", result:" << yt0.rows() << endl;
+                cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt0) << endl;
+                (*pstates)["y"] = py;
+                return -1000.0;
+            } else {
+            Eigen::Map<MatrixN> yt(yt.data(),yb.rows(),ncols/yb.rows());
+            cerr << "Remap:" << shape(yb) << shape(yt);
+        }
+            */
+            if (yt.rows() != yb.rows()) {
                 cerr << "test: incompatible row count! Can't remap! testdata:" << yb.rows() << ", result:" << yt.rows() << endl;
                 cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt) << endl;
                 (*pstates)["y"] = py;
                 return -1000.0;
-            } else {
-                Eigen::Map<MatrixN> yt(yt0.data(),yb.rows(),ncols);
             }
-        } else yt=yt0;
+        }
+        nrr=yt.rows();
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
@@ -187,8 +210,9 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
             }
             if (ji==yb(i,0)) ++co;
         }
+        cppl_delete(&cache);
     }
-    floatN err=1.0-(floatN)co/(floatN)y.rows();
+    floatN err=1.0-(floatN)co/(floatN)(nrr*bs);
     (*pstates)["y"] = py;
     return err;
 }
@@ -293,7 +317,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=(x.rows()+bs-1) / bs;
-    cerr << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+    cerr << endl << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
     cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
     bool fracend=false;
     for (int e=sepf; e<sepf+ep && !fracend; e++) {
@@ -425,7 +449,8 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     if (e+20.0<dv2) dv2=e+20.0;
                     cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << std::setprecision(2) << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << std::setprecision(4) << meanloss << def << "\r";
                     std::flush(cerr);
-                    logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << "\t" << meanloss << "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
+                    //logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << "\t" << meanloss << "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;
+                    logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << "\t" << meanloss << "\t" << m2loss << "\t" /*<< accval*/ << "\t" << /* meanacc <<*/ endl;
                     std::flush(logfile);
                     bold=b;
                 }
