@@ -206,7 +206,7 @@ public:
                 }
             }
         }
-        loss /= N; // probs.rows();
+        loss /= N; // Scaling the loss the N*T doesn't work: numerical differentiation fails.
         return loss;
     }
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {

@@ -293,7 +293,7 @@ public:
                             cont=true;
                         }
                     } else {
-                        cerr << "[" << i;
+                        cerr << endl << "[" << i;
                         if (std::isnan(xn(i))) cerr << "N"; else cerr <<"I";
                         fi=i;
                         cont=false;

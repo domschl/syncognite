@@ -158,27 +158,12 @@ public:
         (*pgrads)["bh"] = new MatrixN(dbh);
         (*pgrads)[hname0] = new MatrixN(dh);
 
-        if (maxClip != 0.0) {
-            for (int i=0; i<dx.size(); i++) {
-                if (dx(i) < -1.0 * maxClip) dx(i)=-1.0*maxClip;
-                if (dx(i) > maxClip) dx(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Wxh"]).size(); i++) {
-                if ((*(*pgrads)["Wxh"])(i) < -1.0 * maxClip) (*(*pgrads)["Wxh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Wxh"])(i) > maxClip) (*(*pgrads)["Wxh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Whh"]).size(); i++) {
-                if ((*(*pgrads)["Whh"])(i) < -1.0 * maxClip) (*(*pgrads)["Whh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Whh"])(i) > maxClip) (*(*pgrads)["Whh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["bh"]).size(); i++) {
-                if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)[hname0]).size(); i++) {
-                if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
-                if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
-            }
+        if (maxClip!=0.0) {
+            dx = dx.array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["Wxh"] = (*(*pgrads)["Wxh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["Whh"] = (*(*pgrads)["Whh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["bh"] = (*(*pgrads)["bh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)[hname0] = (*(*pgrads)[hname0]).array().min(maxClip).max(-1*maxClip);
         }
 
         return dx;

@@ -13,6 +13,7 @@ private:
     float maxClip=0.0;
     bool nohupdate;
     bool forgetGateInitOnes=true;
+    floatN forgetBias=1.0;
     string hname;
     string hname0;
     string cname;
@@ -39,6 +40,7 @@ private:
         initfactor=j.value("initfactor",(floatN)1.0);
         maxClip=j.value("clip",(float)0.0);
         forgetGateInitOnes=j.value("forgetgateinitones",true);
+        forgetBias=j.value("forgetbias",1.0);
         nohupdate=j.value("nohupdate",(bool)false);  // true for auto-diff tests
         D=inputShape[0];
         T=inputShape[1];
@@ -47,8 +49,10 @@ private:
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,4*H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,4*H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
-        if (forgetGateInitOnes)
-            params["bh"]->block(0,H,1,H).setOnes();
+        if (forgetGateInitOnes) {
+            params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array() + forgetBias;
+            cerr << "ForgetGate -> Ones" << endl;
+        }
 
         //cerr << *params["bh"] << endl;
 
@@ -185,33 +189,14 @@ public:
         (*pgrads)[hname0] = new MatrixN(dhprev);
         (*pgrads)[cname0] = new MatrixN(dcprev);
 
-        if (maxClip != 0.0) {
-            for (int i=0; i<dx.size(); i++) {
-                if (dx(i) < -1.0 * maxClip) dx(i)=-1.0*maxClip;
-                if (dx(i) > maxClip) dx(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Wxh"]).size(); i++) {
-                if ((*(*pgrads)["Wxh"])(i) < -1.0 * maxClip) (*(*pgrads)["Wxh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Wxh"])(i) > maxClip) (*(*pgrads)["Wxh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["Whh"]).size(); i++) {
-                if ((*(*pgrads)["Whh"])(i) < -1.0 * maxClip) (*(*pgrads)["Whh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["Whh"])(i) > maxClip) (*(*pgrads)["Whh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)["bh"]).size(); i++) {
-                if ((*(*pgrads)["bh"])(i) < -1.0 * maxClip) (*(*pgrads)["bh"])(i)=-1.0*maxClip;
-                if ((*(*pgrads)["bh"])(i) > maxClip) (*(*pgrads)["bh"])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)[hname0]).size(); i++) {
-                if ((*(*pgrads)[hname0])(i) < -1.0 * maxClip) (*(*pgrads)[hname0])(i)=-1.0*maxClip;
-                if ((*(*pgrads)[hname0])(i) > maxClip) (*(*pgrads)[hname0])(i)=maxClip;
-            }
-            for (int i=0; i<(*(*pgrads)[cname0]).size(); i++) {
-                if ((*(*pgrads)[cname0])(i) < -1.0 * maxClip) (*(*pgrads)[cname0])(i)=-1.0*maxClip;
-                if ((*(*pgrads)[cname0])(i) > maxClip) (*(*pgrads)[cname0])(i)=maxClip;
-            }
+        if (maxClip!=0.0) {
+            dx = dx.array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["Wxh"] = (*(*pgrads)["Wxh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["Whh"] = (*(*pgrads)["Whh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)["bh"] = (*(*pgrads)["bh"]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)[hname0] = (*(*pgrads)[hname0]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)[cname0] = (*(*pgrads)[cname0]).array().min(maxClip).max(-1*maxClip);
         }
-
         return dx;
     }
 
@@ -285,7 +270,7 @@ public:
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent LSTM-forward result: " << shape(hn) << endl;
         }
-        return hn;  // XXX return a t_cppl with cn too, preserver hn, cn as states?
+        return hn;
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
