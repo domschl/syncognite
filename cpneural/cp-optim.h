@@ -159,7 +159,8 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
         (*pstates)["y"]=&yb;
         MatrixN yt=forward(xb, nullptr, pstates, 0);
         if (yt.rows() != yb.rows()) {
-            cerr << "test: incompatible row count!" << endl;
+            cerr << "test: incompatible row count! testdata:" << yb.rows() << ", result:" << yt.rows() << endl;
+            cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt) << endl;
             (*pstates)["y"] = py;
             return -1000.0;
         }
@@ -244,6 +245,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->j.value("verbose", (bool)false);
     bool bShuffle=popti->j.value("shuffle", (bool)false);
+    float lossfactor=popti->j.value("lossfactor",(float)1.0);
     bool bPreserveStates=popti->j.value("preservestates", (bool)false);
     bool noTests=popti->j.value("notests", (bool)false);
     bool noFragmentBatches=popti->j.value("nofragmentbatches",false);
@@ -397,7 +399,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 
                 lossQueueMutex.lock();
                 while (!lossQueue.empty()) {
-                    lastloss=lossQueue.front();
+                    lastloss=lossQueue.front()*lossfactor;
                     lossQueue.pop();
                     //cerr << "lossQueue pop: " << lastloss << endl;
                     if (meanloss==0) meanloss=lastloss;

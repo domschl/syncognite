@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=80;
+    int T=32;
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
         cerr << "Math doesn't work out." << endl;
     }
 
-    cerr << n1 << " datasets" << endl;
+    cerr << n1 << " datasets, " << dn << " test-sets, " << dn << " validation-sets" << endl;
 
 /*    MatrixN X(n1,T);
     MatrixN y(n1,T);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.1})"_json);
     int VS=txt.vocsize();
-    int H=256;
+    int H=128;
     int BS=64;
     float clip=3.0;
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=4;
+    int layer_depth=2;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
@@ -213,10 +213,11 @@ int main(int argc, char *argv[]) {
     //cerr << jc.dump(4) << endl;
 
     // preseverstates no longer necessary for training!
-    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":true,"nofragmentbatches":true,"epsilon":1e-8})"_json);
+    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
+    jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
     jo["learning_rate"]=(floatN)1e-2; //2.2e-2);
 
-    floatN dep=5.0;
+    floatN dep=1.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;

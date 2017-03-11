@@ -96,6 +96,10 @@ public:
         return true;
     }
     bool addLayer(const string layerclass, const string name, json& jl, const vector<string> inputLayers) {
+        jl["layerclass"]=layerclass;
+        jl["name"]=name;
+        jl["inputlayers"]=inputLayers;
+
         if (layerMap.find(name) != layerMap.end()) {
             cerr << "Cannot add layer: " << name << ", a layer with this name is already part of block " << layerName << endl;
             return false;
@@ -170,7 +174,12 @@ public:
         cerr << layerclass << ", " << name << ", " << params << endl;
         return addLayer(layerclass, name, jl, inputLayers);
     }
-
+    bool addLayer(json& jl) {
+        const string layerclass=jl["layerclass"];
+        const string name=jl["name"];
+        const vector<string> inputLayers=jl["inputlayers"];
+        return addLayer(layerclass,name,jl,inputLayers);
+    }
     bool checkTopology(bool verbose=false) {
         if (lossLayer=="") {
             cerr << "No loss layer defined!" << endl;
