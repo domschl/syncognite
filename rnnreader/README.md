@@ -16,7 +16,21 @@ rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
 ```
 ## Output
 ### LSTM network
-...
+After about 110 epochs (four layers of LSTMs with 512 neurons, 80 time-steps) with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
+```
+GLOUCESTER:
+Look, voly not the keys and bear my head;
+And when she is the other tender presently?
+
+HORTENSIO:
+Yea, at her happy brother Clarence comes.
+This master Dever hath he that kinl'd him of bial
+And for the tongues of my mind.
+But what comes the water hath the blood we did becomes,
+And with no warpand her: not our time swears,
+And crestable here land you undertake,
+If casting it then with my brother 
+```
 
 ### RNN network
 After about 250 epochs (three layers of RNNs with 512 neurons, 90 time-steps), about 20hrs on a recent desktop CPU (8 threads), with `tiny-shakespeare.txt` from [`datasets`](../datasets/) as training text:
