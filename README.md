@@ -75,9 +75,6 @@ see [mnisttest](cpmnist/) or [cifar10test](cpcifar10/) for complete examples.
 
 ### A model that generates text via LSTMs can be defined with:
 ```
-string rnntype="LSTM"; // or "RNN"
-    cerr << "RNN-type: " << rnntype << endl;
-
     json j0;
     string oName{"OH0"};
     j0["inputShape"]=vector<int>{T};
