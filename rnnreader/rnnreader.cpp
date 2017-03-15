@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=2;
+    int layer_depth=8;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};

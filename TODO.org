@@ -1,7 +1,5 @@
 * Syncognite
 ** TODO: Save training data
 ** TODO: Save complete experiment
-
-* LSTM
-** TODO Normalize loss
-** TODO Check divergence conditions
+** TODO: recheck test evals for non-RNN cases.
+** 
