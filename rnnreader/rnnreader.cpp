@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=32;
+    int T=30;
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
@@ -155,8 +155,8 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.1})"_json);
     int VS=txt.vocsize();
-    int H=128;
-    int BS=64;
+    int H=91;
+    int BS=50;
     float clip=3.0;
 
     //int D=64;

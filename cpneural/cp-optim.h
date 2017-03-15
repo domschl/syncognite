@@ -165,28 +165,20 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
         t_cppl cache;
         MatrixN yt=forward(xb, &cache, pstates, 0);
         if (yt.rows() != yb.rows()) {
-            if (cache.find("sm1-probs")!=cache.end()) {
-                MatrixN yt1=*cache["sm1-probs"];
-                Eigen::Map<MatrixN> yt0(yt1.data(),yb.rows(),yt1.rows()*yt1.cols()/yb.rows());
-                yt=yt0;
-                //cerr << "got:" << shape(yt) << " for:" << shape(yb) << endl;
-            } else cerr << "no [sm1-probs hack!]" << endl;
-            /*
-            //cerr << "remapping function output" << endl;
-            //cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt0) << endl;
-            int ncols=yt0.rows()*yt0.cols();
-            //cerr << ncols << ", " << shape(yb) << shape(yt0) << endl;
-            if (ncols%yb.rows()!=0) {
-                cerr << "test: incompatible row count! Can't remap! testdata:" << yb.rows() << ", result:" << yt0.rows() << endl;
-                cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt0) << endl;
-                (*pstates)["y"] = py;
-                return -1000.0;
-            } else {
-            Eigen::Map<MatrixN> yt(yt.data(),yb.rows(),ncols/yb.rows());
-            cerr << "Remap:" << shape(yb) << shape(yt);
-        }
-            */
-            if (yt.rows() != yb.rows()) {
+            int BS=xb.rows();
+            int T=yb.rows()/BS;
+            int D=yt.cols()/T;
+
+            MatrixN ytn=MatrixN(BS*T,D);
+            for (int n=0; n<BS; n++) {
+                for (int t=0; t<T; t++) {
+                    for (int d=0; d<D; d++) {
+                        ytn(n*T+t,d) = yt(n,t*D+d);
+                    }
+                }
+            }
+            yt=ytn;
+            if (yt.rows() !=yb.rows()) {
                 cerr << "test: incompatible row count! Can't remap! testdata:" << yb.rows() << ", result:" << yt.rows() << endl;
                 cerr << "X:" << shape(xb) << " y:" << shape(yb) << " f(X):" << shape(yt) << endl;
                 (*pstates)["y"] = py;
