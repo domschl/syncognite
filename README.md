@@ -79,16 +79,10 @@ string rnntype="LSTM"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
 
     json j0;
+    string oName{"OH0"};
     j0["inputShape"]=vector<int>{T};
     j0["V"]=VS;
-    lb.addLayer("OneHot","OH0",j0,{"input"});
-
-    json j1;
-    j1["inputShape"]=vector<int>{VS,T};
-    j1["N"]=BS;
-    j1["H"]=H;
-    //j1["clip"]=clip;
-    lb.addLayer(rnntype,"rnn1",j1,{"OH0"});
+    lb.addLayer("OneHot",oName,j0,{"input"});
 
     int layer_depth=4;
     string nName;
