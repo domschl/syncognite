@@ -90,25 +90,21 @@ string rnntype="LSTM"; // or "RNN"
     //j1["clip"]=clip;
     lb.addLayer(rnntype,"rnn1",j1,{"OH0"});
 
-    json j2;
-    j2["inputShape"]=vector<int>{H,T};
-    j2["N"]=BS;
-    j2["H"]=H;
-    //j2["clip"]=clip;
-    lb.addLayer(rnntype,"rnn2",j2,{"rnn1"});
-
-    json j3;
-    j3["inputShape"]=vector<int>{H,T};
-    j3["N"]=BS;
-    j3["H"]=H;
-    //j3["clip"]=clip;
-    lb.addLayer(rnntype,"rnn3",j3,{"rnn2"});
-
-    json j10;
-    j10["inputShape"]=vector<int>{H,T};
-    j10["M"]=VS;
-    lb.addLayer("TemporalAffine","af1",j10,{"rnn3"});
-
+    int layer_depth=4;
+    string nName;
+    json j1;
+    j1["inputShape"]=vector<int>{VS,T};
+    j1["N"]=BS;
+    j1["H"]=H;
+    j1["forgetgateinitones"]=true;
+    j1["forgetbias"]=1.0;
+    j1["clip"]=clip;
+    for (auto l=0; l<layer_depth; l++) {
+        nName="lstm"+std::to_string(l);
+        lb.addLayer(rnntype,nName,j1,{oName});
+        oName=nName;
+    }
+    
     json j11;
     j11["inputShape"]=vector<int>{VS,T};
     lb.addLayer("TemporalSoftmax","sm1",j11,{"af1"});
