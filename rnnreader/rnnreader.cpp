@@ -219,7 +219,7 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)5e-2; //2.2e-2);
+    jo["learning_rate"]=(floatN)5e-3; //2.2e-2);
 
     floatN dep=5.0;
     floatN sep=0.0;
