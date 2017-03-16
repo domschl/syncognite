@@ -106,6 +106,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier def(Color::FG_DEFAULT);
 
     int T=30;
+
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
@@ -153,11 +154,12 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"normal","initfactor":0.1})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
     int VS=txt.vocsize();
-    int H=91;
-    int BS=50;
-    float clip=3.0;
+    int H=256;
+
+    int BS=100;
+    float clip=5.0;
 
     //int D=64;
     // CpParams cp0;
@@ -177,16 +179,18 @@ int main(int argc, char *argv[]) {
     j0["V"]=VS;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
-    int layer_depth=8;
     string nName;
     json j1;
     j1["inputShape"]=vector<int>{VS,T};
     j1["N"]=BS;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    j1["forgetbias"]=1.0;
+    j1["forgetbias"]=2.0;
     j1["clip"]=clip;
-    for (auto l=0; l<layer_depth; l++) {
+    int layer_depth1=5;
+    j1["H"]=H;
+    for (auto l=0; l<layer_depth1; l++) {
+        if (l>0) j1["inputShape"]=vector<int>{H,T};
         nName="lstm"+std::to_string(l);
         lb.addLayer(rnntype,nName,j1,{oName});
         oName=nName;
@@ -215,9 +219,9 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)1e-2; //2.2e-2);
+    jo["learning_rate"]=(floatN)5e-2; //2.2e-2);
 
-    floatN dep=1.0;
+    floatN dep=5.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;

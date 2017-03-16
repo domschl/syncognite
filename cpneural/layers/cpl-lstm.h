@@ -51,7 +51,6 @@ private:
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
         if (forgetGateInitOnes) {
             params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array() + forgetBias;
-            cerr << "ForgetGate -> Ones" << endl;
         }
 
         //cerr << *params["bh"] << endl;
