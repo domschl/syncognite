@@ -166,11 +166,8 @@ public:
         jlc["layername"]=layerName;
     }
 
-    typedef struct {
-        int index;               // index of the current object
-    } iter_info;
-
-    //       H5File file( FILE_NAME, H5F_ACC_TRUNC );
+    // H5File file( FILE_NAME, H5F_ACC_TRUNC );
+    // H5File file(FILE_NAME, H5F_ACC_RDWR);
     virtual bool saveParameters(H5::H5File* pfile) {
         string prefix=layerName+"-";
         for (auto pi : params) {
@@ -185,29 +182,43 @@ public:
             int rank=2;
             H5::DataSpace fspace( rank, fdim );
 
-            H5::DataSet dataset=pfile->createDataSet(name, H5::PredType::NATIVE_FLOAT, fspace);
-            dataset.write(pm->data(), H5::PredType::NATIVE_FLOAT);
+            H5::DataSet dataset=pfile->createDataSet(name, H5_FLOATN, fspace);
+            dataset.write(pm->data(), H5_FLOATN);
         }
+        return true;
     }
 
-    static herr_t loadEnumerator(hid_t loc_id, const char *name, void *p) {
-        iter_info *ph5info=(iter_info *)p;
-        cerr << name << endl;
-        (ph5info->index)++;
-        return (herr_t)0;
-    }
 
     virtual bool loadParameters(H5::H5File* pfile) {
-        //H5::H5File fmn((H5std_string)filename, H5F_ACC_RDONLY);
-        //pfile=&fmn;
+        string prefix=layerName+"-";
+        bool ok=true;
+        for (auto pi : params) {
+            string name=prefix+pi.first;
+            cerr << name << endl;
 
-        //int nr=fmn.getNumObjs();
-        //cerr << nr << " entries" << endl;
+            MatrixN *pm=params[pi.first];
 
-        iter_info h5info;
-        h5info.index=0;
-        pfile->iterateElems("/", NULL, loadEnumerator, &h5info);
-        return true;
+            H5::DataSet dataset=pfile->openDataSet(name);
+            H5::DataSpace filespace = dataset.getSpace();
+            int rank = filespace.getSimpleExtentNdims();
+            hsize_t dims[rank];    // dataset dimensions
+            rank = filespace.getSimpleExtentDims( dims );
+            cerr << "dataset rank = " << rank << ", dimensions; ";
+            H5::DataSpace mspace1(rank, dims);
+            auto dataClass = dataset.getTypeClass();
+            if (dataClass==H5T_FLOAT) {
+                if (dataset.getFloatType().getSize()==H5_FLOATN_SIZE) {
+                    dataset.read(pm, H5T_FLOAT, mspace1, filespace );
+                } else {
+                    cerr << "Bad float type (float vs double) for " << name << endl;
+                    ok=false;
+                }
+            } else {
+                cerr << "Bad format for " << name << endl;
+                ok=false;
+            }
+        }
+        return ok;
     }
 
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
