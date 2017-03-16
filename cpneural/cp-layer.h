@@ -166,6 +166,50 @@ public:
         jlc["layername"]=layerName;
     }
 
+    typedef struct {
+        int index;               // index of the current object
+    } iter_info;
+
+    //       H5File file( FILE_NAME, H5F_ACC_TRUNC );
+    virtual bool saveParameters(H5::H5File* pfile) {
+        string prefix=layerName+"-";
+        for (auto pi : params) {
+            string name=prefix+pi.first;
+            cerr << name << endl;
+
+            MatrixN *pm=params[pi.first];
+
+            hsize_t fdim[2];
+            fdim[0]=pm->rows(); // maybe this is cols?!
+            fdim[1]=pm->cols(); // dim sizes of ds (on disk)
+            int rank=2;
+            H5::DataSpace fspace( rank, fdim );
+
+            H5::DataSet dataset=pfile->createDataSet(name, H5::PredType::NATIVE_FLOAT, fspace);
+            dataset.write(pm->data(), H5::PredType::NATIVE_FLOAT);
+        }
+    }
+
+    static herr_t loadEnumerator(hid_t loc_id, const char *name, void *p) {
+        iter_info *ph5info=(iter_info *)p;
+        cerr << name << endl;
+        (ph5info->index)++;
+        return (herr_t)0;
+    }
+
+    virtual bool loadParameters(H5::H5File* pfile) {
+        //H5::H5File fmn((H5std_string)filename, H5F_ACC_RDONLY);
+        //pfile=&fmn;
+
+        //int nr=fmn.getNumObjs();
+        //cerr << nr << " entries" << endl;
+
+        iter_info h5info;
+        h5info.index=0;
+        pfile->iterateElems("/", NULL, loadEnumerator, &h5info);
+        return true;
+    }
+
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,

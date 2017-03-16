@@ -107,6 +107,10 @@ typedef t_param_parser<MatrixN *> t_cppl;
 #include <cublas_v2.h>
 #endif
 
+#include <H5Cpp.h>
+#include <H5File.h>
+#include <H5DataSet.h>
+
 #include "cp-tools.h"
 #include "cp-layer.h"
 #include "cp-layers.h"
