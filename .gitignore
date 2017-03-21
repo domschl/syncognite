@@ -5,3 +5,15 @@ Build/
 *.h5
 test
 datasets/originals/
+CMakeFiles/
+CMakeCache*
+Makefile
+cmake_install*
+\#*\#
+*~
+*_flymake.*
+.projectile
+.dir-locals.el
+.directory
+compile_commands.json
+
