@@ -112,7 +112,7 @@ see [rnnreader](rnnreader/) for a complete example.
 * [nlohmann_json](https://github.com/nlohmann/json), already included in source tree (cpneural/nlohmann_json).
 
 ## Build
-syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and [HDF(https://support.hdfgroup.org/HDF5/), 'hdf5-cpp-fortran'.
+syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and [HDF](https://support.hdfgroup.org/HDF5/), 'hdf5-cpp-fortran'.
 
 Clone the repository:
 ```bash
