@@ -92,13 +92,7 @@ bool trainTest(string init) {
     return allOk;
 }
 
-int main(int argc, char *argv[]) {
-    string name="test";
-    cpInitCompute(name);
-    int ret=0;
-    ret=0;
-    //doTests();
-
+void initTest() {
     cerr << "standard init=============" << endl;
     trainTest("standard");
     cerr << "normal init===============" << endl;
@@ -107,9 +101,9 @@ int main(int argc, char *argv[]) {
     trainTest("orthonormal");
     cerr << "orthogonal init==========" << endl;
     trainTest("orthogonal");
-    cpExitCompute();
-    
+}
 
+void jsonTest() {
     json j;
     j["test"]=vector<int>{3,4,5};
     j["turbo"]["traffic"]["tangente"]=3.13;
@@ -136,6 +130,48 @@ int main(int argc, char *argv[]) {
     cerr << j2["turbo"]<<endl;
     cerr << j.dump(4) << endl;
     cerr << j2.dump(4) << endl;
+}
+
+void hd5Test() {
+    int inputShapeFlat=1024;
+    int hidden=1024;
+    string inittype{"standard"};
+    floatN initfactor=1.0;
+
+    json j1;
+    j1["inputShape"]=vector<int>{inputShapeFlat};
+    j1["hidden"]=hidden;
+    j1["init"]=inittype;
+    j1["initfactor"]=initfactor;
+
+    string filepath{"minitest.h5"};
+    H5::H5File file((H5std_string)filepath, H5F_ACC_TRUNC );
+    // H5File file(FILE_NAME, H5F_ACC_RDWR);
+
+    Affine *af1=new Affine(j1);
+    af1->saveParameters(&file);
+    file.close();
+
+    Affine *af2=new Affine(j1);
+    H5::H5File filer((H5std_string)filepath, H5F_ACC_RDONLY);
+    af2->loadParameters(&filer);
+    filer.close();
+
+    if (matCompare(*af1->params["W"], *af2->params["W"], "W")) cerr << "W: ok." << endl;
+    else cerr << "W: test failure." << endl;
+
+    if (matCompare(*af1->params["b"], *af2->params["b"], "b")) cerr << "b: ok." << endl;
+    else cerr << "b: test failure." << endl;
+}
+
+int main(int argc, char *argv[]) {
+    string name="test";
+    cpInitCompute(name);
+    int ret=0;
+
+    hd5Test();
+    
+    cpExitCompute();
     return ret;
 
 }

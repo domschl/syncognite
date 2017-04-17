@@ -166,6 +166,81 @@ public:
         jlc["layername"]=layerName;
     }
 
+    // H5File file( FILE_NAME, H5F_ACC_TRUNC );
+    // H5File file(FILE_NAME, H5F_ACC_RDWR);
+    virtual bool saveParameters(H5::H5File* pfile) {
+        string prefix=layerName+"-";
+        for (auto pi : params) {
+            string name=prefix+pi.first;
+            cerr << name << endl;
+
+            MatrixN *pm=params[pi.first];
+
+            hsize_t fdim[2];
+            fdim[0]=pm->rows(); // maybe this is cols?!
+            fdim[1]=pm->cols(); // dim sizes of ds (on disk)
+            int rank=2;
+            H5::DataSpace fspace( rank, fdim );
+
+            H5::DataSet dataset=pfile->createDataSet(name, H5_FLOATN, fspace);
+            dataset.write(pm->data(), H5_FLOATN);
+        }
+        return true;
+    }
+
+
+    virtual bool loadParameters(H5::H5File* pfile) {
+        string prefix=layerName+"-";
+        bool ok=true;
+        for (auto pi : params) {
+            string name=prefix+pi.first;
+            cerr << name << endl;
+
+            MatrixN *pm=params[pi.first];
+            H5::DataSet dataset;
+            try {
+                dataset=pfile->openDataSet(name);
+            } catch (...) {
+                cerr << "Dataset " << name << " does not exist, can't restore parameter." << endl;
+                return false;
+            }
+            H5::DataSpace filespace = dataset.getSpace();
+            int rank = filespace.getSimpleExtentNdims();
+            hsize_t dims[rank];    // dataset dimensions
+            rank = filespace.getSimpleExtentDims( dims );
+            //cerr << "dataset rank = " << rank << ", dimensions: {";
+            //for (int i=0; i<rank; i++) cerr << dims[i] << " ";
+            //cerr << "}" << endl;
+            if (rank!=2) {
+                cerr << "Currently, rank of datasets " << name << " needs to be 2 for MatrixN" << endl;
+                cerr << "Don't know how to restore this." << endl;
+                return false;
+            }
+            if (dims[0] != pm->rows() || dims[1] != pm->cols()) {
+                cerr << "Incompabile dataset " << name << ", dims: (" << dims[0] << "," << dims[1] << "), model: " << shape(*pm) << endl;
+                cerr << "Don't know how to restore this." << endl;
+                return false;         
+            }
+            H5::DataSpace mspace1(rank, dims);
+            auto dataClass = dataset.getTypeClass();
+            if (dataClass==H5T_FLOAT) {
+                if (dataset.getFloatType().getSize()==H5_FLOATN_SIZE) {
+                    int d=1;
+                    for (int i=0; i<rank; i++) d *= dims[i];
+                    cerr << "Dim-nm:" << d << endl;
+                    dataset.read(pm->data(), H5_FLOATN, mspace1, filespace );
+                } else {
+                    cerr << "Bad float type (float vs double) for " << name << endl;
+                    ok=false;
+                }
+            } else {
+                cerr << "Bad format for " << name << endl;
+                ok=false;
+            }
+        }
+        return ok;
+    }
+
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
                         string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
