@@ -105,7 +105,7 @@ see [rnnreader](rnnreader/) for a complete example.
 ## Dependencies:
 * C++ 11 compiler (on Linux or Mac, Intel or ARM)
 * [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`
-* [Hdf5](https://support.hdfgroup.org/HDF5/) for model saving and sample data, `hdf5-cpp-fortran`.
+* [Hdf5](https://support.hdfgroup.org/HDF5/) c++ API for model saving and sample data, `hdf5-cpp-fortran`.
 * OpenMP (optional, for threading)
 * Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.
