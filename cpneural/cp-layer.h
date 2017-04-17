@@ -166,19 +166,15 @@ public:
         jlc["layername"]=layerName;
     }
 
-    // H5File file( FILE_NAME, H5F_ACC_TRUNC );
-    // H5File file(FILE_NAME, H5F_ACC_RDWR);
     virtual bool saveParameters(H5::H5File* pfile) {
         string prefix=layerName+"-";
         for (auto pi : params) {
             string name=prefix+pi.first;
-            cerr << name << endl;
-
             MatrixN *pm=params[pi.first];
 
             hsize_t fdim[2];
-            fdim[0]=pm->rows(); // maybe this is cols?!
-            fdim[1]=pm->cols(); // dim sizes of ds (on disk)
+            fdim[0]=pm->rows();
+            fdim[1]=pm->cols();
             int rank=2;
             H5::DataSpace fspace( rank, fdim );
 
@@ -188,14 +184,11 @@ public:
         return true;
     }
 
-
     virtual bool loadParameters(H5::H5File* pfile) {
         string prefix=layerName+"-";
         bool ok=true;
         for (auto pi : params) {
             string name=prefix+pi.first;
-            cerr << name << endl;
-
             MatrixN *pm=params[pi.first];
             H5::DataSet dataset;
             try {
@@ -208,11 +201,8 @@ public:
             int rank = filespace.getSimpleExtentNdims();
             hsize_t dims[rank];    // dataset dimensions
             rank = filespace.getSimpleExtentDims( dims );
-            //cerr << "dataset rank = " << rank << ", dimensions: {";
-            //for (int i=0; i<rank; i++) cerr << dims[i] << " ";
-            //cerr << "}" << endl;
             if (rank!=2) {
-                cerr << "Currently, rank of datasets " << name << " needs to be 2 for MatrixN" << endl;
+                cerr << "Currently, rank of datasets " << name << " needs to be 2 for MatrixN, its: " << rank << endl;
                 cerr << "Don't know how to restore this." << endl;
                 return false;
             }
@@ -225,9 +215,6 @@ public:
             auto dataClass = dataset.getTypeClass();
             if (dataClass==H5T_FLOAT) {
                 if (dataset.getFloatType().getSize()==H5_FLOATN_SIZE) {
-                    int d=1;
-                    for (int i=0; i<rank; i++) d *= dims[i];
-                    cerr << "Dim-nm:" << d << endl;
                     dataset.read(pm->data(), H5_FLOATN, mspace1, filespace );
                 } else {
                     cerr << "Bad float type (float vs double) for " << name << endl;
