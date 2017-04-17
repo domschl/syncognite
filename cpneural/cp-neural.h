@@ -57,7 +57,7 @@ using Eigen::IOFormat;
  #define CP_DEFAULT_NUM_H (1.e-6)
  #define CP_DEFAULT_NUM_EPS (1.e-9)
  #define H5_FLOATN (H5::PredType::NATIVE_DOUBLE)
- #define H5_FLOATN_SIZE 4
+ #define H5_FLOATN_SIZE 8
 #endif
 #ifdef USE_FLOAT
  using MatrixN=Eigen::MatrixXf;
@@ -69,7 +69,7 @@ using Eigen::IOFormat;
  #define CP_DEFAULT_NUM_H ((float)1.e-4)
  #define CP_DEFAULT_NUM_EPS ((float)1.e-3)
  #define H5_FLOATN (H5::PredType::NATIVE_FLOAT)
- #define H5_FLOATN_SIZE 8
+ #define H5_FLOATN_SIZE 4
 #endif
 
 using CpParams=ParamParser<floatN>;

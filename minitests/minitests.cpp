@@ -148,12 +148,20 @@ void hd5Test() {
     H5::H5File file((H5std_string)filepath, H5F_ACC_TRUNC );
     // H5File file(FILE_NAME, H5F_ACC_RDWR);
 
-    Affine *af=new Affine(j1);
-    af->saveParameters(&file);
+    Affine *af1=new Affine(j1);
+    af1->saveParameters(&file);
     file.close();
 
-    H5::H5File fmn((H5std_string)filepath, H5F_ACC_RDONLY);
+    Affine *af2=new Affine(j1);
+    H5::H5File filer((H5std_string)filepath, H5F_ACC_RDONLY);
+    af2->loadParameters(&filer);
+    filer.close();
 
+    if (matCompare(*af1->params["W"], *af2->params["W"], "W")) cerr << "W: ok." << endl;
+    else cerr << "W: test failure." << endl;
+
+    if (matCompare(*af1->params["b"], *af2->params["b"], "b")) cerr << "b: ok." << endl;
+    else cerr << "b: test failure." << endl;
 }
 
 int main(int argc, char *argv[]) {

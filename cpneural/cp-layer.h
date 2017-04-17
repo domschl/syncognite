@@ -197,18 +197,38 @@ public:
             cerr << name << endl;
 
             MatrixN *pm=params[pi.first];
-
-            H5::DataSet dataset=pfile->openDataSet(name);
+            H5::DataSet dataset;
+            try {
+                dataset=pfile->openDataSet(name);
+            } catch (...) {
+                cerr << "Dataset " << name << " does not exist, can't restore parameter." << endl;
+                return false;
+            }
             H5::DataSpace filespace = dataset.getSpace();
             int rank = filespace.getSimpleExtentNdims();
             hsize_t dims[rank];    // dataset dimensions
             rank = filespace.getSimpleExtentDims( dims );
-            cerr << "dataset rank = " << rank << ", dimensions; ";
+            //cerr << "dataset rank = " << rank << ", dimensions: {";
+            //for (int i=0; i<rank; i++) cerr << dims[i] << " ";
+            //cerr << "}" << endl;
+            if (rank!=2) {
+                cerr << "Currently, rank of datasets " << name << " needs to be 2 for MatrixN" << endl;
+                cerr << "Don't know how to restore this." << endl;
+                return false;
+            }
+            if (dims[0] != pm->rows() || dims[1] != pm->cols()) {
+                cerr << "Incompabile dataset " << name << ", dims: (" << dims[0] << "," << dims[1] << "), model: " << shape(*pm) << endl;
+                cerr << "Don't know how to restore this." << endl;
+                return false;         
+            }
             H5::DataSpace mspace1(rank, dims);
             auto dataClass = dataset.getTypeClass();
             if (dataClass==H5T_FLOAT) {
                 if (dataset.getFloatType().getSize()==H5_FLOATN_SIZE) {
-                    dataset.read(pm, H5T_FLOAT, mspace1, filespace );
+                    int d=1;
+                    for (int i=0; i<rank; i++) d *= dims[i];
+                    cerr << "Dim-nm:" << d << endl;
+                    dataset.read(pm->data(), H5_FLOATN, mspace1, filespace );
                 } else {
                     cerr << "Bad float type (float vs double) for " << name << endl;
                     ok=false;
