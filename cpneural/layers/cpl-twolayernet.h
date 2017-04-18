@@ -35,11 +35,13 @@ private:
         j1["hidden"]=hidden[0];
         j1["init"]=inittype;
         j1["initfactor"]=initfactor;
+        j1["name"]="af1";
         j2["inputShape"]=vector<int>{hidden[0]};
         j3["inputShape"]=vector<int>{hidden[0]};
         j3["hidden"]=hidden[1];
         j3["init"]=inittype;
         j3["initfactor"]=initfactor;
+        j3["name"]="af2";
         j4["inputShape"]=vector<int>{hidden[1]};
         af1=new Affine(j1);
         mlPush("af1", &(af1->params), &params);
@@ -146,6 +148,14 @@ public:
         mlPop("sm",pgrads,&g4);
         sm->update(popti,&g4, var+"2l4", pocache);
         return true;
+    }
+    virtual bool saveParameters(H5::H5File* pfile) override {
+        if (!af1->saveParameters(pfile)) return false;
+        return af2->saveParameters(pfile);
+    }
+    virtual bool loadParameters(H5::H5File* pfile) override {
+        if (!af1->loadParameters(pfile)) return false;
+        return af2->loadParameters(pfile);
     }
 
 };

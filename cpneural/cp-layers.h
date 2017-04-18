@@ -255,14 +255,6 @@ public:
         MatrixN xn;
         Timer t;
         trainMode = j.value("train", false);
-        // if (pcache!=nullptr) cppl_update(pcache, "x", new MatrixN(x));
-        /*
-        if (pstates->find("y") == pstates->end()) {
-            cerr << "blockForward: pstates does not contain y -> fatal!" << endl;
-        }
-        MatrixN y = *((*pstates)["y"]);
-        */
-        // if (pcache!=nullptr) cppl_update(pcache, "y", new MatrixN(y));
         while (!done) {
             nLay=getLayerFromInput(cLay);
             if (nLay.size()!=1) {
@@ -271,15 +263,7 @@ public:
             }
             string name=nLay[0];
             Layer *p = layerMap[name];
-            /*
-            if (pstates->find("y") == pstates->end()) {
-                if (p->layerType & LayerType::LT_LOSS) done=true;
-                continue; // Don't try loss, if
-            }
-            */
-            // not thread-safe!: p->cp.setPar("T-Steps",cp.getPar("T-Steps",0));
             t_cppl cache;
-            //cache.clear();
             if (pcache!=nullptr) mlPop(name,pcache,&cache);
             if (bench) t.startWall();
             xn=p->forward(x0,&cache, pstates, id);
@@ -359,8 +343,6 @@ public:
         while (!done) {
             t_cppl cache;
             t_cppl grads;
-            //cache.clear();
-            //grads.clear();
             Layer *pl=layerMap[cl];
             mlPop(cl,pcache,&cache);
             if (bench) t.startWall();
@@ -418,6 +400,42 @@ public:
         jlc["sublayers"]=jlayers;
         return;
     }
+
+    virtual bool saveParameters(H5::H5File* pfile) override {
+        bool done=false;
+        string cLay="input";
+        vector<string>nLay;
+        while (!done) {
+            nLay=getLayerFromInput(cLay);
+            string name=nLay[0];
+            Layer *p=layerMap[name];
+            if (!p->saveParameters(pfile)) {
+                cerr << "Saving parameters of layerblock " << layerName << " failed when trying to save sublayer " << name << ", aborting!" << endl;
+                return false;
+            }
+             cLay=nLay[0];
+            if (p->layerType & LayerType::LT_LOSS) done=true;
+        }
+        return true;
+    }
+    virtual bool loadParameters(H5::H5File* pfile) override {
+        bool done=false;
+        string cLay="input";
+        vector<string>nLay;
+        while (!done) {
+            nLay=getLayerFromInput(cLay);
+            string name=nLay[0];
+            Layer *p=layerMap[name];
+            if (!p->loadParameters(pfile)) {
+                cerr << "Loading parameters of layerblock " << layerName << " failed when trying to load sublayer " << name << ", aborting!" << endl;
+                return false;
+            }
+             cLay=nLay[0];
+            if (p->layerType & LayerType::LT_LOSS) done=true;
+        }
+        return true;
+    }
+
 
 };
 #endif

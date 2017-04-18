@@ -84,6 +84,13 @@ public:
         rl->update(popti, &tgradsre, var+"afre2-", pocache);
         return true;
     }
+    virtual bool saveParameters(H5::H5File* pfile) override {
+        return af->saveParameters(pfile);
+    }
+    virtual bool loadParameters(H5::H5File* pfile) override {
+        return af->loadParameters(pfile);
+    }
+
 };
 
 #endif
