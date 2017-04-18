@@ -82,17 +82,6 @@ bool registerTest() {
 	return allOk;
 }
 
-int tFunc(VectorN x, int c) {
-	floatN y = 0.0;
-	for (unsigned j = 0; j < x.cols(); j++) {
-		y += x(j) * x(j);
-	}
-	y = int(y * (floatN)c / 2.0) % c;
-
-	// cerr << x << ":" << y << "," << int(y) << " ";
-	return int(y);
-}
-
 bool testLayerBlock(int verbose) {
     Color::Modifier lblue(Color::FG_LIGHT_BLUE);
     Color::Modifier def(Color::FG_DEFAULT);
@@ -124,11 +113,24 @@ bool testLayerBlock(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
 	t_cppl lbstates;
 	lbstates["y"] = &yml;
-	// This is just a pain: slow:
-	res=lb.selfTest(xml, &lbstates, h, eps, verbose);
+ 
+    res=lb.selfTest(xml, &lbstates, h, eps, verbose);
     if (!res) bOk=false;
     registerTestResult("LayerBlock", "Numerical self-test", res, "");
     return bOk;
+}
+
+int tFunc(VectorN x, int c) {
+	floatN y = 0.0;
+	for (unsigned j = 0; j < x.cols(); j++) {
+		y += (1.0+x(j))/2.0;
+	}
+	y = int(y/x.cols() * (floatN)c);
+    if (y<0) y=0;
+    if (y>=c) y=c-1;
+
+	// cerr << x << ":" << y << "," << int(y) << " ";
+	return int(y);
 }
 
 bool testTrainTwoLayerNet(int verbose) {
@@ -137,19 +139,18 @@ bool testTrainTwoLayerNet(int verbose) {
 	bool bOk=true;
 	cerr << lblue << "TwoLayerNet training test: " << def << endl;
 	json j;
-	int N = 100, NV = 40, NT = 40, I = 5, H = 20, C = 4;
+	int N = 400, NV = 40, NT = 40, I = 4, H = 10, C = 4;
 	j["inputShape"]=vector<int>{I};
 	j["hidden"]=vector<int>{H, C};
 	j["init"]="normal";
-	j["initfactor"]=(floatN)0.1;
+	j["initfactor"]=(floatN)0.01;
 	TwoLayerNet tln(j);
 
-	MatrixN X(N, I); // XXX: 1-I never used by tfunc...
+	MatrixN X(N, I);
 	X.setRandom();
 	MatrixN y(N, 1);
 	for (unsigned i = 0; i < y.rows(); i++) {
-		VectorN s = X.row(i);
-		y(i, 0) = tFunc(s, C);
+		y(i, 0) = tFunc(X.row(i), C);
 	}
 
 	MatrixN Xv(NV, I);
@@ -164,7 +165,7 @@ bool testTrainTwoLayerNet(int verbose) {
 	for (unsigned i = 0; i < yt.rows(); i++)
 		yt(i, 0) = tFunc(Xt.row(i), C);
 
-	json jo=R"({"epochs":300.0,"batch_size":20,"learning_rate":5e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":1e-3,"maxthreads":4})"_json;
+	json jo=R"({"epochs":300.0,"batch_size":10,"shuffle":true,"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":7e-4,"maxthreads":4})"_json;
     if (verbose>2) jo["verbose"]=true;
     else jo["verbose"]=false;
 	floatN train_err, test_err, val_err;
@@ -176,9 +177,9 @@ bool testTrainTwoLayerNet(int verbose) {
     cerr << "  ";
 	tln.train(X, &states, Xv, &statesv, "Adam", jo);
 	// tln.train(X, y, Xv, yv, "Sdg", cpo);
-	train_err = tln.test(X, &states);
-	val_err = tln.test(Xv, &statesv);
-	test_err = tln.test(Xt, &statest);
+	train_err = tln.test(X, &states, 10);
+	val_err = tln.test(Xv, &statesv, 10);
+	test_err = tln.test(Xt, &statest, 10);
 
     if (verbose>1) {
         cerr << "  Train-test, train-err=" << train_err << endl;
