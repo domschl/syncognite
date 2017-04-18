@@ -143,7 +143,10 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     int N=shape(x)[0];
     MatrixN xb,yb;
     int co=0;
+    int nt=0;
 
+    if (x.rows() < batchsize) batchsize=x.rows();
+    
     if (pstates->find("y") == pstates->end()) {
         cerr << "Layer::test: pstates does not contain y -> fatal!" << endl;
     }
@@ -201,10 +204,12 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
                 return -1000.0;
             }
             if (ji==yb(i,0)) ++co;
+            ++nt;
         }
         cppl_delete(&cache);
     }
-    floatN err=1.0-(floatN)co/(floatN)(nrr*bs);
+    // floatN err=1.0-(floatN)co/(floatN)(nrr*bs);
+    floatN err=1.0-(floatN)co/(floatN)(nt);
     (*pstates)["y"] = py;
     return err;
 }
