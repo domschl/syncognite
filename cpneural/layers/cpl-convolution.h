@@ -28,12 +28,12 @@ private:
     bool mlverbose;
     floatN initfactor;
     void setup(const json& jx) {
-        layerName="Convolution";
+        j=jx;
+        layerName=j.value("name",(string)"Convolution");
         layerClassName="Convolution";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         if (inputShape.size()!=3) {
             retval=false;

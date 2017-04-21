@@ -7,11 +7,11 @@
 class BatchNorm : public Layer {
 private:
     void setup(const json& jx) {
-        layerName="BatchNorm";
+        j=jx;
+        layerName=j.value("name",(string)"BatchNorm");
         layerClassName="BatchNorm";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=1;
-        j=jx;
         eps = j.value("eps", (floatN)1e-5);
         momentum = j.value("momentum", (floatN)0.9);
         trainMode = j.value("train", (bool)false);

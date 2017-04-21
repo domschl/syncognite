@@ -9,11 +9,11 @@ private:
     floatN initfactor;
     void setup(const json& jx) {
         int allOk=true;
-        layerName="TemporalAffine";
+        j=jx;
+        layerName=j.value("name",(string)"TemporalAffine");
         layerClassName="TemporalAffine";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

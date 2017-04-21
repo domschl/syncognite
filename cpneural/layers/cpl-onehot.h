@@ -8,11 +8,11 @@ private:
     int T,V;
     MatrixN wVect;
     void setup(const json& jx) {
-        layerName="OneHot";
+        j=jx;
+        layerName=j.value("name",(string)"OneHot");
         layerClassName="OneHot";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

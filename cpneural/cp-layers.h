@@ -171,7 +171,7 @@ public:
     }
     bool addLayer(string layerclass, string name, string params, vector<string> inputLayers) {
         json jl=json::parse(params);
-        cerr << layerclass << ", " << name << ", " << params << endl;
+        // cerr << layerclass << ", " << name << ", " << params << endl;
         return addLayer(layerclass, name, jl, inputLayers);
     }
     bool addLayer(json& jl) {

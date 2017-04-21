@@ -82,19 +82,33 @@ bool registerTest() {
 	return allOk;
 }
 
+vector<string> failedTests{};
+
+void registerTestResult(string testcase, string subtest, bool result, string message) {
+	Color::Modifier red(Color::FG_RED);
+	Color::Modifier green(Color::FG_GREEN);
+	Color::Modifier def(Color::FG_DEFAULT);
+	if (result) {
+		if (verbose>1) cerr << "  " << green << testcase << ", " << subtest << ": Ok " << message << def << endl;
+	} else {
+		if (verbose>0) cerr << "  " << red << testcase << ", " << subtest << ": Error " << message << def << endl;
+		failedTests.push_back(testcase + ": " + subtest);
+	}
+}
+
 bool testLayerBlock(int verbose) {
     Color::Modifier lblue(Color::FG_LIGHT_BLUE);
     Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
 	cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def << endl;
-	LayerBlock lb(R"({"name": "testblock"})"_json);
+	LayerBlock lb(R"({"name": "Testblock"})"_json);
 	if (verbose>1) cerr << "  LayerName for lb: " << lb.layerName << endl;
 	lb.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});
 	lb.addLayer("Relu", "rl1", "{}", {"af1"});
 	lb.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
 	lb.addLayer("Softmax", "sm1", "{}", {"af2"});
     bool bCT=false;
-    if (verbose>2) bCT=true;
+    if (verbose>3) bCT=true;
 	bool res=lb.checkTopology(bCT);
     registerTestResult("LayerBlock", "Topology check", res, "");
     if (!res) bOk = false;
@@ -117,6 +131,43 @@ bool testLayerBlock(int verbose) {
     res=lb.selfTest(xml, &lbstates, h, eps, verbose);
     if (!res) bOk=false;
     registerTestResult("LayerBlock", "Numerical self-test", res, "");
+
+    string filepath{"layertest.h5"};
+    H5::H5File h5file((H5std_string)filepath, H5F_ACC_TRUNC );
+    lb.saveParameters(&h5file);
+    LayerBlock lb2(R"({"name": "restoreblock"})"_json);
+	lb2.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});
+	lb2.addLayer("Relu", "rl1", "{}", {"af1"});
+	lb2.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
+	lb2.addLayer("Softmax", "sm1", "{}", {"af2"});
+    h5file.close();
+    H5::H5File h5filer((H5std_string)filepath, H5F_ACC_RDONLY);
+    lb2.loadParameters(&h5filer);
+    h5filer.close();
+
+    bool done=false;
+    string cLay="input";
+    vector<string>nLay;
+    res=true;
+    while (!done) {
+        nLay=lb.getLayerFromInput(cLay);
+        string name=nLay[0];
+        Layer *p1=lb.layerMap[name];
+        Layer *p2=lb2.layerMap[name];
+
+        for (auto pi : p1->params) {
+            if (!matCompare(*p1->params[pi.first], *p2->params[pi.first], "    "+name+", "+pi.first,verbose)) {
+                cerr << name << ", " << pi.first << "load/save test failure." << endl;
+                res=false;
+            }
+        }
+        
+        cLay=nLay[0];
+        if (p1->layerType & LayerType::LT_LOSS) done=true;
+    }
+    if (!res) bOk=false;
+    registerTestResult("LayerBlock", "HDF5 load/save/compare cycle", res, "");
+
     return bOk;
 }
 
@@ -191,20 +242,6 @@ bool testTrainTwoLayerNet(int verbose) {
 		bOk = false;
     registerTestResult("TrainTest", "TwoLayerNet training", bOk, "");
 	return bOk;
-}
-
-vector<string> failedTests{};
-
-void registerTestResult(string testcase, string subtest, bool result, string message) {
-	Color::Modifier red(Color::FG_RED);
-	Color::Modifier green(Color::FG_GREEN);
-	Color::Modifier def(Color::FG_DEFAULT);
-	if (result) {
-		if (verbose>1) cerr << "  " << green << testcase << ", " << subtest << ": Ok " << message << def << endl;
-	} else {
-		if (verbose>0) cerr << "  " << red << testcase << ", " << subtest << ": Error " << message << def << endl;
-		failedTests.push_back(testcase + ": " + subtest);
-	}
 }
 
 int doTests() {

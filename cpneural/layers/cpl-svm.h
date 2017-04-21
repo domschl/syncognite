@@ -8,10 +8,10 @@
 class Svm : public Layer {
 private:
     void setup(const json& jx) {
-        layerName="Svm";
+        j=jx;
+        layerName=j.value("name",(string)"Svm");
         layerClassName="Svm";
         layerType=LayerType::LT_LOSS;
-        j=jx;
         inputShapeRang=1;
         vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;

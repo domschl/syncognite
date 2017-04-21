@@ -8,11 +8,11 @@ private:
     int hidden;
     floatN initfactor;
     void setup(const json& jx) {
-        layerName="AffineRelu";
+        j=jx;
+        layerName=j.value("name",(string)"AffineRelu");
         layerClassName="AffineRelu";
         layerType=LayerType::LT_NORMAL;
         inputShapeRang=2;
-        j=jx;
         vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

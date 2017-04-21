@@ -22,12 +22,12 @@ private:
     int C, H, W, N0;
     BatchNorm *pbn;
     void setup(const json& jx) {
-        layerName="SpatialBatchNorm";
+        j=jx;
+        layerName=j.value("name",(string)"SpatialBatchNorm");
         layerClassName="SpatialBatchNorm";
         inputShapeRang=3;
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         assert (inputShape.size()==3);
         // inputShape: C, H, W

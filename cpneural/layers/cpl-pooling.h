@@ -25,12 +25,12 @@ private:
     int HO, WO;
     int stride;
     void setup(const json& jx) {
-        layerName="Pooling";
+        j=jx;
+        layerName=j.value("name",(string)"Pooling");
         layerClassName="Pooling";
         inputShapeRang=3;  // XXX: move kernel sizes to params?
         bool retval=true;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{0});
         assert (inputShape.size()==3);
         stride = j.value("stride", 2);

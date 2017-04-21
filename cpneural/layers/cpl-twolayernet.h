@@ -10,11 +10,11 @@ private:
     floatN initfactor=0.1;
     void setup(const json& jx) {
         bool retval=true;
-        layerName="TwoLayerNet";
+        j=jx;
+        layerName=j.value("name",(string)"TwoLayerNet");
         layerClassName="TwoLayerNet";
         layerType=LayerType::LT_LOSS;
         inputShapeRang=1;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

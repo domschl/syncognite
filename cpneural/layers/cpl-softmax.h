@@ -7,10 +7,10 @@
 class Softmax : public Layer {
 private:
     void setup(const json& jx) {
-        layerName="Softmax";
+        j=jx;
+        layerName=j.value("name",(string)"Softmax");
         layerClassName="Softmax";
         layerType=LayerType::LT_LOSS;
-        j=jx;
         inputShapeRang=1;
         vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;

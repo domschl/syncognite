@@ -8,11 +8,11 @@ private:
     int T,D; //,V;
     void setup(const json& jx) {
         int allOk=true;
-        layerName="TemporalSoftmax";
+        j=jx;
+        layerName=j.value("name",(string)"TemporalSoftmax");
         layerClassName="TemporalSoftmax";
         inputShapeRang=2;
         layerType=LayerType::LT_LOSS;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

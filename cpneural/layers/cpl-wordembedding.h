@@ -24,11 +24,11 @@ private:
     MatrixN wVect;
     floatN initfactor;
     void setup(const json& jx) {
-        layerName="WordEmbedding";
+        j=jx;
+        layerName=j.value("name",(string)"WordEmbedding");
         layerClassName="WordEmbedding";
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         vector<int> inputShape=j.value("inputShape",vector<int>{});
         int inputShapeFlat=1;
         for (int j : inputShape) {

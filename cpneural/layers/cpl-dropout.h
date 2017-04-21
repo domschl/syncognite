@@ -8,10 +8,10 @@ class Dropout : public Layer {
 private:
     bool freeze;
     void setup(const json& jx) {
-        layerName="Dropout";
+        j=jx;
+        layerName=j.value("name",(string)"Dropout");
         layerClassName="Dropout";
         layerType=LayerType::LT_NORMAL;
-        j=jx;
         inputShapeRang=1;
         vector<int> inputShape=j.value("inputShape", vector<int>{});
         int inputShapeFlat=1;

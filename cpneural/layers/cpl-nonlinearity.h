@@ -26,7 +26,8 @@ private:
             inputShapeFlat *= j;
         }
         string nonlintypestr=j.value("type", (string)"relu");
-        layerName="Nonlinearity-"+nonlintypestr;
+        string layerNameS=j.value("name",(string)"Nonlin");
+        layerName=layerNameS+"-"+nonlintypestr;
         layerClassName="Nonlinearity";
         if (nonlintypestr=="relu") nonlintype=Nonlin::NL_RELU;
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
