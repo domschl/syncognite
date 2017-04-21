@@ -272,6 +272,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     int bs=popti->j.value("batch_size", (int)100); // Defaults only! are overwritten!
     floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
     bool verbose=popti->j.value("verbose", (bool)false);
+    bool verbosetitle=popti->j.value("verbosetitle", (bool)true);
     bool bShuffle=popti->j.value("shuffle", (bool)false);
     float lossfactor=popti->j.value("lossfactor",(float)1.0);
     bool bPreserveStates=popti->j.value("preservestates", (bool)false);
@@ -314,8 +315,10 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=(x.rows()+bs-1) / bs;
-    cerr << endl << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
-    cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
+    if (verbosetitle) {
+        cerr << endl << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
+        cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
+    }
     bool fracend=false;
     for (int e=sepf; e<sepf+ep && !fracend; e++) {
         std::random_shuffle(shfl.begin(), shfl.end());

@@ -89,7 +89,7 @@ void registerTestResult(string testcase, string subtest, bool result, string mes
 	Color::Modifier green(Color::FG_GREEN);
 	Color::Modifier def(Color::FG_DEFAULT);
 	if (result) {
-		if (verbose>1) cerr << "  " << green << testcase << ", " << subtest << ": Ok " << message << def << endl;
+		if (verbose>0) cerr << "  " << green << testcase << ", " << subtest << ": Ok " << message << def << endl;
 	} else {
 		if (verbose>0) cerr << "  " << red << testcase << ", " << subtest << ": Error " << message << def << endl;
 		failedTests.push_back(testcase + ": " + subtest);
@@ -156,7 +156,7 @@ bool testLayerBlock(int verbose) {
         Layer *p2=lb2.layerMap[name];
 
         for (auto pi : p1->params) {
-            if (!matCompare(*p1->params[pi.first], *p2->params[pi.first], "    "+name+", "+pi.first,verbose)) {
+            if (!matCompT(*p1->params[pi.first], *p2->params[pi.first], "    "+name+", "+pi.first,verbose)) {
                 cerr << name << ", " << pi.first << "load/save test failure." << endl;
                 res=false;
             }
@@ -217,6 +217,8 @@ bool testTrainTwoLayerNet(int verbose) {
 		yt(i, 0) = tFunc(Xt.row(i), C);
 
 	json jo=R"({"epochs":300.0,"batch_size":10,"shuffle":true,"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":7e-4,"maxthreads":4})"_json;
+    if (verbose>1) jo["verbosetitle"]=true;
+    else jo["verbosetitle"]=false;
     if (verbose>2) jo["verbose"]=true;
     else jo["verbose"]=false;
 	floatN train_err, test_err, val_err;

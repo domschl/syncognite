@@ -359,7 +359,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     }
 
     if (allOk) {
-        if (verbose>0) cerr << "  " << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
+        if (verbose>1) cerr << "  " << layerName << ": " << green << "checkLayer: Numerical gradient check tests ok!" << def << endl;
     } else {
         if (verbose>0) cerr << "  " << layerName << ": " << red << "checkLayer: Numerical gradient check ended with error!" << def << endl;
     }
