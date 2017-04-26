@@ -103,7 +103,7 @@ bool testLayerBlock(int verbose) {
 	cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def << endl;
 	LayerBlock lb(R"({"name": "Testblock"})"_json);
 	if (verbose>1) cerr << "  LayerName for lb: " << lb.layerName << endl;
-	lb.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});
+	lb.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10],"hidden":10})", {(string)"input"});
 	lb.addLayer("Relu", "rl1", "{}", {"af1"});
 	lb.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
 	lb.addLayer("Softmax", "sm1", "{}", {"af2"});
@@ -137,7 +137,7 @@ bool testLayerBlock(int verbose) {
     lb.saveLayerConfiguration(&h5file);
     lb.saveParameters(&h5file);
     LayerBlock lb2(R"({"name": "restoreblock"})"_json);
-	lb2.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});
+	lb2.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10],"hidden":10})", {(string)"input"});
 	lb2.addLayer("Relu", "rl1", "{}", {"af1"});
 	lb2.addLayer("Affine", "af2", R"({"hidden":10})", {"rl1"});
 	lb2.addLayer("Softmax", "sm1", "{}", {"af2"});

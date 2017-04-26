@@ -152,7 +152,8 @@ public:
         cerr << "(2)" << itp << endl;
         jl["init"]=itp; // jl.value("init", itp); // set init to global block value, if not set for the specific layer.
         cerr << "(3)" << endl;
-        jl["initfactor"]=jl.value("initfactor", initfactor);
+        floatN ifc=jl.value("initfactor", initfactor);
+        jl["initfactor"]=ifc;
         cerr << "(4)" << endl;
 
         layerMap[name]=CREATE_LAYER(layerclass, jl)   // Macro!
