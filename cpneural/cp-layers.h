@@ -58,8 +58,8 @@ private:
         lossLayer="";
         layerType=LayerType::LT_NORMAL;
         trainMode = j.value("train", false);
-        inittype=j.value("init", (string)"standard");
-        initfactor=j.value("initfactor",(floatN)1.0);
+        inittype=j.value("init", "standard");
+        initfactor=j.value("initfactor",1.0);
         checked=false;
     }
 public:
