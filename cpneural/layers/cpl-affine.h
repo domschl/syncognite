@@ -21,12 +21,13 @@ private:
             inputShapeFlat *= j;
         }
         hidden=j.value("hidden",1024);
-        XavierMode inittype=xavierInitType(j.value("init",(string)"standard"));
+        string inittype=j.value("init",(string)"standard");
+        XavierMode initmode=xavierInitType(inittype);
         initfactor=j.value("initfactor",(floatN)1.0);
         outputShape={hidden};
 
-        MatrixN W = xavierInit(MatrixN(inputShapeFlat,hidden),inittype,initfactor);
-        MatrixN b = xavierInit(MatrixN(1,hidden),inittype,initfactor);
+        MatrixN W = xavierInit(MatrixN(inputShapeFlat,hidden),initmode,initfactor);
+        MatrixN b = xavierInit(MatrixN(1,hidden),initmode,initfactor);
         cppl_set(&params, "W", new MatrixN(W)); // W
         cppl_set(&params, "b", new MatrixN(b)); // b
         numGpuThreads=cpGetNumGpuThreads();

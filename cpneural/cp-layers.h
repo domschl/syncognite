@@ -52,7 +52,7 @@ private:
     floatN initfactor=1.0;
     void setup(const json& jx) {
         j=jx;
-        layerName=j.value("name",(string)"block");
+        layerName=j.value("name","block");
         layerClassName="LayerBlock";
         bench=j.value("bench",false);
         lossLayer="";
@@ -145,7 +145,11 @@ public:
         }
 
         jl["name"]=name;
-        jl["init"]=jl.value("init", inittype); // set init to global block value, if not set for the specific layer.
+
+        cerr << "(1)" << inittype << endl;
+        string itp=jl.value("init", inittype);
+        cerr << "(2)" << itp << endl;
+        jl["init"]=jl.value("init", itp); // set init to global block value, if not set for the specific layer.
         jl["initfactor"]=jl.value("initfactor", initfactor);
 
         layerMap[name]=CREATE_LAYER(layerclass, jl)   // Macro!
