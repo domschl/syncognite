@@ -71,7 +71,7 @@ bool testAffineRelu(int verbose) {
 	//floatN h = 1e-5;
 	//if (h < CP_DEFAULT_NUM_H)
 	//	h = CP_DEFAULT_NUM_H;
-	h = 1e-5;
+	floatN h = 1e-5;
 
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
