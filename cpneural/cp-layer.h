@@ -166,6 +166,30 @@ public:
         jlc["layername"]=layerName;
     }
 
+    virtual bool saveLayerConfiguration(H5::H5File* pfile) {
+        hid_t		native_type;       /* Datatype ID */
+        hsize_t		dims1[] = {1};
+        int rank{1};
+        H5::DataSpace sid1(rank, dims1);
+        H5::StrType tid1(0, H5T_VARIABLE);
+        
+        if(H5T_STRING!=H5Tget_class(tid1.getId()) || !H5Tis_variable_str(tid1.getId())) {
+            cerr << "saveLayerConfiguration: not a variable length string type." << endl;
+            return false;
+        }
+        string dsname;
+        dsname="Configuration:"+layerName;
+        H5::DataSet dataset = pfile->createDataSet(dsname, tid1, sid1);
+
+        string conf=j.dump();
+        const char *pc[1];
+        pc[0]=conf.c_str();
+        dataset.write((void *)pc, tid1);
+        dataset.close();
+
+        return true;
+    }
+        
     virtual bool saveParameters(H5::H5File* pfile) {
         string prefix=layerName+"-";
         for (auto pi : params) {

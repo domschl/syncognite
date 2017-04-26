@@ -134,6 +134,7 @@ bool testLayerBlock(int verbose) {
 
     string filepath{"layertest.h5"};
     H5::H5File h5file((H5std_string)filepath, H5F_ACC_TRUNC );
+    lb.saveLayerConfiguration(&h5file);
     lb.saveParameters(&h5file);
     LayerBlock lb2(R"({"name": "restoreblock"})"_json);
 	lb2.addLayer((string)"Affine", (string)"af1", (string)R"({"inputShape":[10]})", {(string)"input"});

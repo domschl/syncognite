@@ -401,24 +401,30 @@ public:
         return;
     }
 
-    virtual bool saveLayerConfiguration(H5::H5File* pfile) {
-        json jlc;
-        getLayerConfiguration(jlc);
+    virtual bool saveLayerConfiguration(H5::H5File *pfile) override {
+        json lc;
+        getLayerConfiguration(lc);
 
         hid_t		native_type;       /* Datatype ID */
         hsize_t		dims1[] = {1};
         int rank{1};
         H5::DataSpace sid1(rank, dims1);
         H5::StrType tid1(0, H5T_VARIABLE);
+        
         if(H5T_STRING!=H5Tget_class(tid1.getId()) || !H5Tis_variable_str(tid1.getId())) {
-            cerr << "this is not a variable length string type!!!" << endl;
+            cerr << "saveLayerConfiguration: not a variable length string type." << endl;
             return false;
         }
+        string dsname;
+        dsname="Configuration:"+layerName;
+        H5::DataSet dataset = pfile->createDataSet(dsname, tid1, sid1);
 
-        H5::DataSet dataset = pfile->createDataSet("vlstr_type", tid1, sid1);
-        string conf=jlc.dump();
-        dataset.write((void*)conf.c_str(), tid1);
+        string conf=lc.dump();
+        const char *pc[1];
+        pc[0]=conf.c_str();
+        dataset.write((void *)pc, tid1);
         dataset.close();
+
         return true;
     }
         
