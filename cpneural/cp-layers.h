@@ -59,7 +59,7 @@ private:
         layerType=LayerType::LT_NORMAL;
         trainMode = j.value("train", false);
         inittype=j.value("init", "standard");
-        initfactor=j.value("initfactor",1.0);
+        initfactor=j.value("initfactor",(floatN)1.0);
         checked=false;
     }
 public:
@@ -151,7 +151,9 @@ public:
         string itp=jl.value("init", inittype);
         cerr << "(2)" << itp << endl;
         jl["init"]=itp; // jl.value("init", itp); // set init to global block value, if not set for the specific layer.
+        cerr << "(3)" << endl;
         jl["initfactor"]=jl.value("initfactor", initfactor);
+        cerr << "(4)" << endl;
 
         layerMap[name]=CREATE_LAYER(layerclass, jl)   // Macro!
         Layer *pLayer = layerMap[name];
