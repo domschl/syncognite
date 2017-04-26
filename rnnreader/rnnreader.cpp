@@ -3,6 +3,7 @@
 #include <codecvt>
 //#include <cstddef>
 #include <locale>
+#include <clocale>
 #include <string>
 #include <iomanip>
 #include <ctime>
