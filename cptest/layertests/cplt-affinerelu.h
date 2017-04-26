@@ -68,9 +68,11 @@ bool testAffineRelu(int verbose) {
     AffineRelu rx(R"({"inputShape":[2],"hidden":3})"_json);
 	MatrixN xarl(30, 2);
 	xarl.setRandom();
-	floatN h = 1e-6;
-	if (h < CP_DEFAULT_NUM_H)
-		h = CP_DEFAULT_NUM_H;
+	//floatN h = 1e-5;
+	//if (h < CP_DEFAULT_NUM_H)
+	//	h = CP_DEFAULT_NUM_H;
+	h = 1e-5;
+
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
