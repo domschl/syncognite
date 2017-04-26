@@ -103,8 +103,8 @@ see [mnisttest](cpmnist/) or [cifar10test](cpcifar10/) for complete examples.
 see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
-* C++ 11 compiler (on Linux or Mac, Intel or ARM)
-* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`
+* C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or Mac (clang), ARM(gcc))
+* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`. Note: clang-4 requires current dev-branch [3.3.90] of eigen for tensor libs to compile.
 * [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5-cpp-fortran`.
 * OpenMP (optional, for threading)
 * Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
