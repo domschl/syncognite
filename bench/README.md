@@ -14,6 +14,11 @@ make bench
 ```
 The code in [`cp-bench.cpp`](cp-bench.cpp) shows one-liner layer definitions for all network layers within `benchRecipes`, which can be used as examples of layer definitions.
 
+## Note on performance
+Syncognite in its current stage has not been optimized. Several parts of the code contain self-checks that significantly impact performance. This will be addressed once the first level of functionality is complete, and beta stage is entered.
+
+Currently, best peformance seems to be achieved with Clang 4.0. Using Clang 4 however requires the dev-branch of Eigen 3 [3.3.90] in order to compile.
+
 ## Extending the benchmarks
 New benchmarks can be added by extending `benchRecipes`:
 ```cpp
