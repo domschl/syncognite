@@ -146,6 +146,7 @@ public:
 
         jl["name"]=name;
 
+        cerr << "(0)" << name << endl;
         cerr << "(1)" << inittype << endl;
         string itp=jl.value("init", inittype);
         cerr << "(2)" << itp << endl;
