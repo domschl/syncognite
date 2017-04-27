@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=30;
+    int T=50;
 
     int N=txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
@@ -157,9 +157,9 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
     int VS=txt.vocsize();
-    int H=256;
+    int H=64;
 
-    int BS=100;
+    int BS=128;
     float clip=5.0;
 
     //int D=64;
@@ -186,9 +186,9 @@ int main(int argc, char *argv[]) {
     j1["N"]=BS;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    j1["forgetbias"]=2.0;
+    j1["forgetbias"]=0.30;
     j1["clip"]=clip;
-    int layer_depth1=5;
+    int layer_depth1=6;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -220,9 +220,9 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)5e-3; //2.2e-2);
+    jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
 
-    floatN dep=5.0;
+    floatN dep=2.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
