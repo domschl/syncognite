@@ -118,15 +118,17 @@ public:
         MatrixN tnc=cnext.array().tanh();
         MatrixN hnext=tnc.array() * o.array();
         cp[hname0]=new MatrixN(hnext);
-        if (pcache!=nullptr) cppl_set(pcache,"tnc",new MatrixN(tnc));
-        if (pcache!=nullptr) cppl_set(pcache,"xhx",new MatrixN(xhx));
-        if (pcache!=nullptr) cppl_set(pcache,hname,new MatrixN(hprev));
-        if (pcache!=nullptr) cppl_set(pcache,cname,new MatrixN(cprev));
-        if (pcache!=nullptr) cppl_set(pcache,"i",new MatrixN(i));
-        if (pcache!=nullptr) cppl_set(pcache,"f",new MatrixN(f));
-        if (pcache!=nullptr) cppl_set(pcache,"o",new MatrixN(o));
-        if (pcache!=nullptr) cppl_set(pcache,"g",new MatrixN(g));
-        if (pcache!=nullptr) cppl_set(pcache,"x",new MatrixN(x));
+        if (pcache!=nullptr) {
+            cppl_set(pcache,"tnc",new MatrixN(tnc));
+            cppl_set(pcache,"xhx",new MatrixN(xhx));
+            cppl_set(pcache,hname,new MatrixN(hprev));
+            cppl_set(pcache,cname,new MatrixN(cprev));
+            cppl_set(pcache,"i",new MatrixN(i));
+            cppl_set(pcache,"f",new MatrixN(f));
+            cppl_set(pcache,"o",new MatrixN(o));
+            cppl_set(pcache,"g",new MatrixN(g));
+            cppl_set(pcache,"x",new MatrixN(x));
+        }
         return cp;
     }
 
