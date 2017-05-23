@@ -9,7 +9,7 @@ private:
     int numGpuThreads;
     int numCpuThreads;
     floatN initfactor;
-    int T,D,H,N;
+    int T,D,H,N;  // T: time steps, D: input dimension of X, H: number of neurons, N: batch_size
     float maxClip=0.0;
     bool nocupdate;
     string hname;
