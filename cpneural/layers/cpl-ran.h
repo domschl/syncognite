@@ -105,10 +105,12 @@ public:
     t_cppl forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
         t_cppl cp;
         MatrixN cprev = *(*pstates)[cname];
-        MatrixN xhx = ((cprev * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]));
+        MatrixN xhx1 = cprev * *params["Whh"];
+        MatrixN xhx2 = (x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]);
+        MatrixN xhx = xhx1+xhx2.block(0,0,N,2*H);
         MatrixN i=Sigmoid(xhx.block(0,0,N,H));
         MatrixN f=Sigmoid(xhx.block(0,H,N,H));
-        MatrixN ctl=xhx.block(0,2*H,N,H);
+        MatrixN ctl=xhx2.block(0,2*H,N,H);
         MatrixN cnext=i.array()*ctl.array()+f.array()*cprev.array();
         MatrixN hnext=cnext.array().tanh();
     
@@ -256,6 +258,7 @@ public:
             // cp[cname]=new MatrixN(dci); // XXX: dchain should also take care of dc! -> zero-init for now.
             dxi=backward_step(cp,&cache,&states, &grads,id);
             cppl_delete(&cp);
+            cerr << shape(dx) << shape(dxi) << N << "," << T << "," << D << ";" << t << endl;
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
             dphi=*grads[hname0];
             dpci=*grads[cname0];
@@ -273,8 +276,8 @@ public:
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)[hname0] = new MatrixN(dphi);
-        //(*pgrads)[cname0] = new MatrixN(dpci);
+        //(*pgrads)[hname0] = new MatrixN(dphi);
+        (*pgrads)[cname0] = new MatrixN(dpci);
 
         return dx;
     }
