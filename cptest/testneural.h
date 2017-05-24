@@ -19,6 +19,7 @@ void registerTestResult(string testcase, string subtest, bool result, string mes
 #include "layertests/cplt-pooling.h"
 #include "layertests/cplt-relu.h"
 #include "layertests/cplt-rnn.h"
+#include "layertests/cplt-ran.h"
 #include "layertests/cplt-softmax.h"
 #include "layertests/cplt-spatialbatchnorm.h"
 #include "layertests/cplt-svm.h"

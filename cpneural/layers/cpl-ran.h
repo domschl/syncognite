@@ -12,6 +12,8 @@ private:
     int T,D,H,N;  // T: time steps, D: input dimension of X, H: number of neurons, N: batch_size
     float maxClip=0.0;
     bool nocupdate;
+    string cname;
+    string cname0;
     string hname;
     string hname0;
     void setup(const json& jx) {
@@ -20,6 +22,8 @@ private:
         layerClassName="RAN";
         cname=layerName+"-c";
         cname0=layerName+"-c0";
+        hname=layerName+"-h";
+        hname0=layerName+"-h0";
 
         inputShapeRang=1;
         layerType=LayerType::LT_NORMAL | LayerType::LT_EXTERNALSTATE;
@@ -98,7 +102,8 @@ public:
         }
     }
     
-    virtual MatrixN forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
+    t_cppl forward_step(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) {
+        t_cppl cp;
         MatrixN cprev = *(*pstates)[cname];
         MatrixN xhx = ((cprev * *params["Whh"] + x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]));
         MatrixN i=Sigmoid(xhx.block(0,0,N,H));
@@ -110,25 +115,47 @@ public:
         if (pcache != nullptr) {
             (*pcache)["x"] = new MatrixN(x);
             (*pcache)["xhx"] = new MatrixN(xhx);
-            (*pcache)["hprev"] = new MatrixN(hprev);
+            (*pcache)["cprev"] = new MatrixN(cprev);
+            (*pcache)["cnext"] = new MatrixN(cnext);
             (*pcache)["i"] = new MatrixN(i);
             (*pcache)["f"] = new MatrixN(f);
             (*pcache)["ctl"] = new MatrixN(ctl);
         }
-        return hnext;
+        cp[cname0]=new MatrixN(cnext);
+        cp[hname0]=new MatrixN(hnext);
+        return cp;
     }
 
-    virtual MatrixN backward_step(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
+    virtual MatrixN backward_step(t_cppl cp, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) {
         if (pcache->find("x") == pcache->end()) {
             cerr << "cache does not contain x -> fatal!" << endl;
         }
         MatrixN x(*(*pcache)["x"]);
-        MatrixN hprev(*(*pcache)["hprev"]);
-        MatrixN hnext(*(*pcache)["hnext"]);
+        MatrixN xhx(*(*pcache)["xhx"]);
+        MatrixN cprev(*(*pcache)["cprev"]);
+        MatrixN cnext(*(*pcache)["cnext"]);
+        MatrixN i(*(*pcache)["i"]);
+        MatrixN f(*(*pcache)["f"]);
+        MatrixN ctl(*(*pcache)["ctl"]);
         MatrixN Wxh(*params["Wxh"]);
         MatrixN Whh(*params["Whh"]);
         MatrixN bh(*params["bh"]);
 
+        MatrixN dcnext=*cp[cname]; // dhnext
+        MatrixN dhnext;
+        if (cp.find(hname)!=cp.end()) {
+            dhnext=*cp[hname]; // dhnext
+        } else {
+            dhnext=*cp[cname]; // zero-fake init
+            dhnext.setZero(); 
+        }
+
+        MatrixN dx;
+        MatrixN dWxh;
+        MatrixN dWhh;
+        MatrixN dbh;
+        MatrixN dc;
+        /*
         MatrixN hsq = hnext.array() * hnext.array();
         MatrixN hone = MatrixN(hnext);
         hone.setOnes();
@@ -140,24 +167,28 @@ public:
         MatrixN dWxh=(t1t * x).transpose();
         MatrixN dh=(Whh * t1t).transpose();
         MatrixN dWhh=hprev.transpose() * t1;
-
+        */
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
-        (*pgrads)[hname0] = new MatrixN(dh);
+        (*pgrads)[cname0] = new MatrixN(dc);
 
         if (maxClip!=0.0) {
             dx = dx.array().min(maxClip).max(-1*maxClip);
             *(*pgrads)["Wxh"] = (*(*pgrads)["Wxh"]).array().min(maxClip).max(-1*maxClip);
             *(*pgrads)["Whh"] = (*(*pgrads)["Whh"]).array().min(maxClip).max(-1*maxClip);
             *(*pgrads)["bh"] = (*(*pgrads)["bh"]).array().min(maxClip).max(-1*maxClip);
-            *(*pgrads)[hname0] = (*(*pgrads)[hname0]).array().min(maxClip).max(-1*maxClip);
+            *(*pgrads)[cname0] = (*(*pgrads)[cname0]).array().min(maxClip).max(-1*maxClip);
         }
-
+        
         return dx;
     }
 
+
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id=0) override {
+        MatrixN hn(N,T*H);
+        MatrixN cn(N,T*H);
+
         if (x.cols() != D*T) {
             cerr << layerName << ": " << "Forward: dimension mismatch in x:" << shape(x) << " D*T:" << D*T << ", D:" << D << ", T:" << T << ", H:" << H << endl;
             MatrixN h(0,0);
@@ -165,26 +196,32 @@ public:
         }
         int N=shape(x)[0];
 
-        if (pstates->find(hname)==pstates->end()) {
-            genZeroStates(pstates, N);  // If states[hname] is not defined, initialize to zero!
+        if (pstates->find(cname)==pstates->end()) {
+            MatrixN *pc= new MatrixN(N,H);
+            pc->setZero();
+            cppl_set(pstates, cname, pc);
         }
 
-        MatrixN ht=*(*pstates)[hname];
+        MatrixN ct=*(*pstates)[cname];
+        MatrixN ht;
 
-        MatrixN hn(N,T*H);
         for (int t=0; t<T; t++) {
             t_cppl cache{};
             t_cppl states{};
-            states[hname]=&ht;
+            states[cname]=&ct;
             MatrixN xi=tensorchunk(x,{N,T,D},t);
-            ht = forward_step(xi,&cache,&states, id);
+            t_cppl cp = forward_step(xi,&cache,&states, id);
+            ht = *cp[hname0];
+            ct = *cp[cname0];
+            cppl_delete(&cp);
             tensorchunkinsert(&hn, ht, {N,T,H}, t);
+            tensorchunkinsert(&cn, ct, {N,T,H}, t);
             if (pcache!=nullptr) {
                 string name="t"+std::to_string(t);
                 mlPush(name,&cache,pcache);
             } else cppl_delete(&cache);
         }
-        cppl_update(pstates,hname,&ht);
+        cppl_update(pstates,cname,&ct);
         if (hn.cols() != (T*H)) {
             cerr << "Inconsistent RAN-forward result: " << shape(hn) << endl;
         }
@@ -192,11 +229,12 @@ public:
     }
 
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
+        MatrixN dx(N,T*D);
+
         MatrixN dWxh,dWhh,dbh;
         string name;
         int N=shape(dchain)[0];
-        MatrixN dhi,dxi,dphi;
-        MatrixN dx(N,T*D);
+        MatrixN dhi,dci,dxi,dphi,dpci;
         dx.setZero();
         for (int t=T-1; t>=0; t--) {
             t_cppl cache{};
@@ -204,14 +242,23 @@ public:
             t_cppl states{};
             if (t==T-1) {
                 dhi=tensorchunk(dchain,{N,T,H},t);
+                dci=dhi; // That should also be set by dchain!!
+                dci.setZero();
             } else {
                 dhi=tensorchunk(dchain,{N,T,H},t) + dphi;
+                dci=dpci;
             }
             name="t"+std::to_string(t);
             mlPop(name,pcache,&cache);
-            dxi=backward_step(dhi,&cache,&states, &grads,id);
+            t_cppl cp;
+            cp[hname]=new MatrixN(dhi);
+            cp[cname]=new MatrixN(dci);
+            // cp[cname]=new MatrixN(dci); // XXX: dchain should also take care of dc! -> zero-init for now.
+            dxi=backward_step(cp,&cache,&states, &grads,id);
+            cppl_delete(&cp);
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
             dphi=*grads[hname0];
+            dpci=*grads[cname0];
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
                 dWhh=*grads["Whh"];
@@ -227,8 +274,11 @@ public:
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
         (*pgrads)[hname0] = new MatrixN(dphi);
+        //(*pgrads)[cname0] = new MatrixN(dpci);
+
         return dx;
     }
+
 };
 
 #endif

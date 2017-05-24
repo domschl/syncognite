@@ -281,6 +281,7 @@ int doTests() {
     if (checkForTest("TwoLayerNet")) if (!testTwoLayerNet(verbose)) allOk=false;
     if (checkForTest("RNN")) if (!testRNN(verbose)) allOk=false;
     if (checkForTest("LSTM")) if (!testLSTM(verbose)) allOk=false;
+    if (checkForTest("RAN")) if (!testRAN(verbose)) allOk=false;
     if (checkForTest("WordEmbedding")) if (!testWordEmbedding(verbose)) allOk=false;
     if (checkForTest("TemporalAffine")) if (!testTemporalAffine(verbose)) allOk=false;
     if (checkForTest("TemporalSoftmax")) if (!testTemporalSoftmax(verbose)) allOk=false;
