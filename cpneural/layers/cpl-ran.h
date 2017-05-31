@@ -143,13 +143,13 @@ public:
         MatrixN Whh(*params["Whh"]);
         MatrixN bh(*params["bh"]);
 
-        MatrixN dcnext=*cp[cname]; // dhnext
-        MatrixN dhnext;
-        if (cp.find(hname)!=cp.end()) {
-            dhnext=*cp[hname]; // dhnext
+        MatrixN dhnext=*cp[hname]; // XXX: dhnext
+        MatrixN dcnext;
+        if (cp.find(cname)!=cp.end()) {
+            dcnext=*cp[cname]; // dhnext
         } else {
-            dhnext=*cp[cname]; // zero-fake init
-            dhnext.setZero(); 
+            dcnext=*cp[hname]; // zero-fake init
+            dcnext.setZero(); 
         }
 
         MatrixN dx;
@@ -157,6 +157,41 @@ public:
         MatrixN dWhh;
         MatrixN dbh;
         MatrixN dc;
+
+        // MatrixN hnext=cnext.array().tanh();
+        MatrixN csq = cnext.array() * cnext.array();
+        dcnext = dcnext.array() + (1.0-csq.array()) * dhnext.array();
+
+        // MatrixN cnext=i.array()*ctl.array()+f.array()*cprev.array();
+        MatrixN di=ctl.array() * dcnext.array();
+        MatrixN dctl=i.array() * dcnext.array();
+        MatrixN df=cprev.array() * dcnext.array();
+        MatrixN dcprev=f.array() * dcnext.array();
+
+        // MatrixN ctl=xhx2.block(0,2*H,N,H);
+        MatrixN dxhx2b=dctl;
+
+        // MatrixN f=Sigmoid(xhx.block(0,H,N,H));
+        MatrixN dxhx1b=(1-f.array()*f.array())*df.array();
+
+        // MatrixN i=Sigmoid(xhx.block(0,0,N,H));
+        MatrixN dxhx0b=(1-i.array()*i.array())*di.array();
+
+        MatrixN dxhx(N,3*H);
+        dxhx << dxhx0b, dxhx1b, dxhx2b;
+        
+        // MatrixN xhx = xhx1+xhx2.block(0,0,N,2*H);
+        MatrixN dxhx1=dxhx;
+        //        MatrixN xhx2
+
+        // MatrixN xhx2 = (x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]);
+
+        // MatrixN xhx1 = cprev * *params["Whh"];
+        
+        // MatrixN cprev = *(*pstates)[cname];
+
+
+        
         /*
         MatrixN hsq = hnext.array() * hnext.array();
         MatrixN hone = MatrixN(hnext);
