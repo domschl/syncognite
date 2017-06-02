@@ -151,25 +151,19 @@ public:
             dhnext=*cp[cname]; // zero-fake init
             dhnext.setZero(); 
         }
-
-        MatrixN dx;
-        MatrixN dWxh;
-        MatrixN dWhh;
-        MatrixN dbh;
-        MatrixN dc;
-        /*
-        MatrixN hsq = hnext.array() * hnext.array();
-        MatrixN hone = MatrixN(hnext);
-        hone.setOnes();
-
-        MatrixN t1=(hone-hsq).array() * dchain.array();
+        
+        MatrixN csq = cnext.array() * cnext.array();
+        MatrixN cone = MatrixN(cnext);
+        cone.setOnes();
+        MatrixN t1=(cone-csq).array() * dcnext.array(); // dchain.array();
         MatrixN t1t=t1.transpose();
         MatrixN dbh=t1.colwise().sum();
+        
         MatrixN dx=(Wxh * t1t).transpose();
         MatrixN dWxh=(t1t * x).transpose();
-        MatrixN dh=(Whh * t1t).transpose();
-        MatrixN dWhh=hprev.transpose() * t1;
-        */
+        MatrixN dc=(Whh * t1t).transpose();
+        MatrixN dWhh=cprev.transpose() * t1;
+        
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
