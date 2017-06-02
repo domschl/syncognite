@@ -152,12 +152,6 @@ public:
             dcnext.setZero(); 
         }
 
-        MatrixN dx;
-        MatrixN dWxh;
-        MatrixN dWhh;
-        MatrixN dbh;
-        MatrixN dc;
-
         // MatrixN hnext=cnext.array().tanh();
         MatrixN csq = cnext.array() * cnext.array();
         dcnext = dcnext.array() + (1.0-csq.array()) * dhnext.array();
@@ -182,15 +176,22 @@ public:
         
         // MatrixN xhx = xhx1+xhx2.block(0,0,N,2*H);
         MatrixN dxhx1=dxhx;
-        //        MatrixN xhx2
+        MatrixN dxhx2=dxhx.block(0,0,N,2*H);
 
         // MatrixN xhx2 = (x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]);
+        // cerr << shape(*params["Wxh"]) << shape(dxhx.transpose()) << shape(x) << endl;
+        MatrixN dx=(*params["Wxh"]*dxhx.transpose()).transpose();
+        cerr << shape(x) << shape(dxhx) << shape(*params["Wxh"]) << endl;
+        MatrixN dWxh=x.transpose()*dxhx;
+        MatrixN dbh=dxhx.colwise().sum();
 
         // MatrixN xhx1 = cprev * *params["Whh"];
+        cerr << shape(*params["Whh"]) << shape(dxhx1) << shape(dcnext) << endl;
+        MatrixN dc=(*params["Whh"]*dxhx2.transpose()).transpose();
+        cerr << shape(cprev) << shape(dxhx1) << shape(*params["Whh"]) << endl;
+        MatrixN dWhh=cprev.transpose()*dxhx2;
         
         // MatrixN cprev = *(*pstates)[cname];
-
-
         
         /*
         MatrixN hsq = hnext.array() * hnext.array();
