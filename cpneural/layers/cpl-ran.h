@@ -201,12 +201,11 @@ public:
         MatrixN t1=(hone-hsq).array() * dchain.array();
         MatrixN t1t=t1.transpose();
         MatrixN dbh=t1.colwise().sum();
-        
         MatrixN dx=(Wxh * t1t).transpose();
         MatrixN dWxh=(t1t * x).transpose();
-        MatrixN dc=(Whh * t1t).transpose();
-        MatrixN dWhh=cprev.transpose() * t1;
-        */        
+        MatrixN dh=(Whh * t1t).transpose();
+        MatrixN dWhh=hprev.transpose() * t1;
+        */
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
