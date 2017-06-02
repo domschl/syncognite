@@ -143,19 +143,62 @@ public:
         MatrixN Whh(*params["Whh"]);
         MatrixN bh(*params["bh"]);
 
-        MatrixN dcnext=*cp[cname]; // dhnext
-        MatrixN dhnext;
-        if (cp.find(hname)!=cp.end()) {
-            dhnext=*cp[hname]; // dhnext
+        MatrixN dhnext=*cp[hname]; // XXX: dhnext
+        MatrixN dcnext;
+        if (cp.find(cname)!=cp.end()) {
+            dcnext=*cp[cname]; // dhnext
         } else {
-            dhnext=*cp[cname]; // zero-fake init
-            dhnext.setZero(); 
+            dcnext=*cp[hname]; // zero-fake init
+            dcnext.setZero(); 
         }
-        
+
+        // MatrixN hnext=cnext.array().tanh();
         MatrixN csq = cnext.array() * cnext.array();
-        MatrixN cone = MatrixN(cnext);
-        cone.setOnes();
-        MatrixN t1=(cone-csq).array() * dcnext.array(); // dchain.array();
+        dcnext = dcnext.array() + (1.0-csq.array()) * dhnext.array();
+
+        // MatrixN cnext=i.array()*ctl.array()+f.array()*cprev.array();
+        MatrixN di=ctl.array() * dcnext.array();
+        MatrixN dctl=i.array() * dcnext.array();
+        MatrixN df=cprev.array() * dcnext.array();
+        MatrixN dcprev=f.array() * dcnext.array();
+
+        // MatrixN ctl=xhx2.block(0,2*H,N,H);
+        MatrixN dxhx2b=dctl;
+
+        // MatrixN f=Sigmoid(xhx.block(0,H,N,H));
+        MatrixN dxhx1b=(1-f.array()*f.array())*df.array();
+
+        // MatrixN i=Sigmoid(xhx.block(0,0,N,H));
+        MatrixN dxhx0b=(1-i.array()*i.array())*di.array();
+
+        MatrixN dxhx(N,3*H);
+        dxhx << dxhx0b, dxhx1b, dxhx2b;
+        
+        // MatrixN xhx = xhx1+xhx2.block(0,0,N,2*H);
+        MatrixN dxhx1=dxhx;
+        MatrixN dxhx2=dxhx.block(0,0,N,2*H);
+
+        // MatrixN xhx2 = (x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]);
+        // cerr << shape(*params["Wxh"]) << shape(dxhx.transpose()) << shape(x) << endl;
+        MatrixN dx=(*params["Wxh"]*dxhx.transpose()).transpose();
+        cerr << shape(x) << shape(dxhx) << shape(*params["Wxh"]) << endl;
+        MatrixN dWxh=x.transpose()*dxhx;
+        MatrixN dbh=dxhx.colwise().sum();
+
+        // MatrixN xhx1 = cprev * *params["Whh"];
+        cerr << shape(*params["Whh"]) << shape(dxhx1) << shape(dcnext) << endl;
+        MatrixN dc=(*params["Whh"]*dxhx2.transpose()).transpose();
+        cerr << shape(cprev) << shape(dxhx1) << shape(*params["Whh"]) << endl;
+        MatrixN dWhh=cprev.transpose()*dxhx2;
+        
+        // MatrixN cprev = *(*pstates)[cname];
+        
+        /*
+        MatrixN hsq = hnext.array() * hnext.array();
+        MatrixN hone = MatrixN(hnext);
+        hone.setOnes();
+
+        MatrixN t1=(hone-hsq).array() * dchain.array();
         MatrixN t1t=t1.transpose();
         MatrixN dbh=t1.colwise().sum();
         
@@ -163,7 +206,7 @@ public:
         MatrixN dWxh=(t1t * x).transpose();
         MatrixN dc=(Whh * t1t).transpose();
         MatrixN dWhh=cprev.transpose() * t1;
-        
+        */        
         (*pgrads)["Wxh"] = new MatrixN(dWxh);
         (*pgrads)["Whh"] = new MatrixN(dWhh);
         (*pgrads)["bh"] = new MatrixN(dbh);
