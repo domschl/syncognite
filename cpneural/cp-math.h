@@ -90,7 +90,7 @@ int randomChoice(vector<T> data, vector<T> probabilities) {
     }
     cerr << "Your probablity distribution wasn't a probablity (sum dist !=1): " << cumul << endl;
     //cerr << probabilities << endl;
-    return data.size()-1;
+    return (int)data.size()-1;
 }
 
 #endif

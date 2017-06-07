@@ -72,7 +72,7 @@ public:
             return y;
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
-        int N=x.rows();
+        int N=(int)x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt(N*T, D);
         for (int n=0; n<N; n++) {
@@ -111,7 +111,7 @@ public:
     """
     */
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
-        int N=dchain.rows();
+        int N=(int)dchain.rows();
         MatrixN dchaint(N*T,M);
         for (int n=0; n<N; n++) {
             for (int t=0; t<T; t++) {

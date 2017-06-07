@@ -58,7 +58,7 @@ public:
     }
     int vocsize() {
         if (!isinit) return 0;
-        return v2w.size();
+        return (int)v2w.size();
     }
 
     wstring sample(int len) {
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
 
     int T=50;
 
-    int N=txt.text.size() / (T+1);
+    int N=(int)txt.text.size() / (T+1);
     cerr << N << " Max datassets" << endl;
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
@@ -149,8 +149,9 @@ int main(int argc, char *argv[]) {
     MatrixN yv=yr.block(n1,0,dn,T);
     MatrixN Xt=Xr.block(n1+dn,0,dn,T);
     MatrixN yt=yr.block(n1+dn,0,dn,T);
-
-    std::srand(std::time(0));
+    
+    unsigned int ctm=(unsigned int)std::time(0);
+    std::srand(ctm);
 
     cpInitCompute("Rnnreader");
     registerLayers();
@@ -233,7 +234,7 @@ int main(int argc, char *argv[]) {
         t_cppl statesv;
         states["y"] = new MatrixN(y);
         statesv["y"] = new MatrixN(yv);
-        floatN cAcc=lb.train(X, &states, Xv, &statesv, "Adam", jo);
+        lb.train(X, &states, Xv, &statesv, "Adam", jo);
         cppl_delete(&states);
         cppl_delete(&statesv);
 
