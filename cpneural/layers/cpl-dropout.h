@@ -23,7 +23,10 @@ private:
         trainMode = j.value("train", (bool)false);
         freeze = j.value("freeze", (bool)false);
         if (freeze) srand(123);
-        else srand(time(nullptr));
+        else {
+            unsigned int ctm=(unsigned int)time(nullptr);
+            srand(ctm);
+        }
         layerInit=true;
     }
 public:

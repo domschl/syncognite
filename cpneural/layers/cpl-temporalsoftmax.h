@@ -70,7 +70,7 @@ public:
             MatrixN probs(0,0);
             return probs;
         }
-        int N=x.rows();
+        int N=(int)x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt=MatrixN(N*T, D);
         for (int n=0; n<N; n++) {
@@ -175,7 +175,7 @@ public:
         MatrixN mask;
         // XXX: int N=probs.rows()/T;
 
-        int N=y.rows();
+        int N=(int)y.rows();
 
         if (pcache->find("mask")==pcache->end()) {
             mask=MatrixN(N,T);
@@ -217,7 +217,7 @@ public:
             cerr << "TSM-bw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
-        int N=y.rows();
+        int N=(int)y.rows();
         if (pcache->find("mask")==pcache->end()) {
             mask=MatrixN(N,T);
             mask.setOnes();

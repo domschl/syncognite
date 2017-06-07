@@ -408,7 +408,6 @@ public:
         json lc;
         getLayerConfiguration(lc);
 
-        hid_t		native_type;       /* Datatype ID */
         hsize_t		dims1[] = {1};
         int rank{1};
         H5::DataSpace sid1(rank, dims1);

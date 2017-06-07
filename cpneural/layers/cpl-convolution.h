@@ -238,7 +238,7 @@ public:
         MatrixN xx(N,F*HO*WO);
         int py=0,px=0;
         int sx=0,sy=0;
-        int MX=y2c.cols();
+        int MX=(int)y2c.cols();
         int NX=HO*WO;
         int c=0;
         for (int i=0; i<y2c.size(); i++) {
@@ -312,7 +312,7 @@ public:
         MatrixN iy(F,N*HO*WO);
         int py=0,px=0;
         int sx=0,sy=0;
-        int MX=dy.cols();
+        int MX=(int)dy.cols();
         int NX=HO*WO;
         int c=0;
 

@@ -145,14 +145,14 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     int co=0;
     int nt=0;
 
-    if (x.rows() < batchsize) batchsize=x.rows();
+    if ((int)x.rows() < batchsize) batchsize=(int)x.rows();
     
     if (pstates->find("y") == pstates->end()) {
         cerr << "Layer::test: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN y = *((*pstates)["y"]);
     MatrixN *py = (*pstates)["y"];
-    int nrr=y.rows();
+    int nrr=(int)y.rows();
 
     for (int ck=0; ck<(N+bs-1)/bs; ck++) {
         int x0=ck*bs;
@@ -168,9 +168,9 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
         t_cppl cache;
         MatrixN yt=forward(xb, &cache, pstates, 0);
         if (yt.rows() != yb.rows()) {
-            int BS=xb.rows();
-            int T=yb.rows()/BS;
-            int D=yt.cols()/T;
+            int BS=(int)xb.rows();
+            int T=(int)yb.rows()/BS;
+            int D=(int)yt.cols()/T;
 
             MatrixN ytn=MatrixN(BS*T,D);
             for (int n=0; n<BS; n++) {
@@ -188,7 +188,7 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
                 return -1000.0;
             }
         }
-        nrr=yt.rows();
+        nrr=(int)yt.rows();
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
@@ -314,7 +314,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     Timer tw;
     popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
-    int chunks=(x.rows()+bs-1) / bs;
+    int chunks=((int)x.rows()+bs-1) / bs;
     if (verbosetitle) {
         cerr << endl << "Training net: data-size: " << x.rows() << ", chunks: " << chunks << ", batch_size: " << bs;
         cerr << ", threads: " << nt << " (bz*ch): " << chunks*bs << endl;
@@ -336,10 +336,11 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             int bi=b%nt;
             int y0,dy;
             y0=b*bs;
-            if (y0>=x.rows()) continue;
-            if (y0+bs > x.rows()) dy=x.rows()-y0;
+            if (y0>=(int)x.rows()) continue;
+            int xrws=(int)x.rows();
+            if (y0+bs > xrws) dy=xrws-y0;
             else dy=bs;
-            if (y0+dy>x.rows() || dy<=0) {
+            if (y0+dy>(int)x.rows() || dy<=0) {
                 cerr << "Muuuh" << y0+dy << " " << y0 << " " << dy << endl;
             }
             //cerr << "[" << y0 << "," << y0+dy-1 << "] ";

@@ -118,7 +118,7 @@ void colprint(floatN f) {
 
 bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     Timer tcpu;
-    float tcus, tcusn, tfn, tf,tb, tfx, tbx;
+    float tcus, tfn, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
@@ -126,7 +126,7 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     floatN htf,htb;
 
     int row=row0+1;
-    int N=X.rows();
+    int N=(int)X.rows();
     states["y"] = new MatrixN(y);
 
     cerr.precision(3);
@@ -208,7 +208,7 @@ int doBench() {
             string name=j.value("benchName",it.first);
             move(row+1,0); printw(name.c_str());
             if (row+1 > maxrow) maxrow=row+1;
-            t_layer_props_entry te=_syncogniteLayerFactory.mapprops[classname];
+            // t_layer_props_entry te=_syncogniteLayerFactory.mapprops[classname];
             int bs=j.value("benchN",(int)0);
             if (bs==0) {
                 cerr << "No benchN batch size defined in recipe for layer " << it.first << endl;
