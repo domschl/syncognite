@@ -181,14 +181,15 @@ public:
         // MatrixN xhx2 = (x * *params["Wxh"]).rowwise() + RowVectorN(*params["bh"]);
         // cerr << shape(*params["Wxh"]) << shape(dxhx.transpose()) << shape(x) << endl;
         MatrixN dx=(*params["Wxh"]*dxhx.transpose()).transpose();
+        cerr << "dx:" << shape(x) << shape(dx) << endl;
         cerr << shape(x) << shape(dxhx) << shape(*params["Wxh"]) << endl;
         MatrixN dWxh=x.transpose()*dxhx;
         MatrixN dbh=dxhx.colwise().sum();
 
         // MatrixN xhx1 = cprev * *params["Whh"];
-        cerr << shape(*params["Whh"]) << shape(dxhx1) << shape(dcnext) << endl;
+        cerr << "dc:" << shape(*params["Whh"]) << shape(dxhx1) << shape(dcnext) << endl;
         MatrixN dc=(*params["Whh"]*dxhx2.transpose()).transpose();
-        cerr << shape(cprev) << shape(dxhx1) << shape(*params["Whh"]) << endl;
+        cerr << "dWhh:" << shape(cprev) << shape(dxhx1) << shape(*params["Whh"]) << endl;
         MatrixN dWhh=cprev.transpose()*dxhx2;
         
         // MatrixN cprev = *(*pstates)[cname];
@@ -272,7 +273,7 @@ public:
         MatrixN dWxh,dWhh,dbh;
         string name;
         int N=shape(dchain)[0];
-        MatrixN dhi,dci,dxi,dphi,dpci;
+        MatrixN dci,dxi,dpci,dhi,dphi;
         dx.setZero();
         for (int t=T-1; t>=0; t--) {
             t_cppl cache{};
@@ -283,7 +284,10 @@ public:
                 dci=dhi; // That should also be set by dchain!!
                 dci.setZero();
             } else {
-                dhi=tensorchunk(dchain,{N,T,H},t) + dphi;
+                MatrixN tmp;
+                tmp=tensorchunk(dchain,{N,T,H},t);
+                cerr << "dhi:" << shape(tmp) << shape(dphi) << endl;
+                dhi=tmp + dphi;
                 dci=dpci;
             }
             name="t"+std::to_string(t);
@@ -294,9 +298,9 @@ public:
             // cp[cname]=new MatrixN(dci); // XXX: dchain should also take care of dc! -> zero-init for now.
             dxi=backward_step(cp,&cache,&states, &grads,id);
             cppl_delete(&cp);
-            cerr << shape(dx) << shape(dxi) << N << "," << T << "," << D << ";" << t << endl;
+            cerr << "dx,dxi,N,T,D:" << shape(dx) << shape(dxi) << N << "," << T << "," << D << ";" << t << endl;
             tensorchunkinsert(&dx, dxi, {N,T,D}, t);
-            dphi=*grads[hname0];
+            dphi=dhi; // dxi; //*grads[hname0];
             dpci=*grads[cname0];
             if (t==T-1) {
                 dWxh=*grads["Wxh"];
