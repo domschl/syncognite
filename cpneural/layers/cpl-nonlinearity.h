@@ -105,24 +105,24 @@ public:
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
         MatrixN y=x;
         switch (nonlintype) {
-            case Nonlin::NL_RELU:
-                y=Relu(x);
-                break;
-            case Nonlin::NL_SIGMOID:
-                y=Sigmoid(x);
-                if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-                break;
-            case Nonlin::NL_TANH:
-                y=Tanh(x);
-                if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-                break;
+        case Nonlin::NL_RELU:
+            y=Relu(x);
+            break;
+        case Nonlin::NL_SIGMOID:
+            y=Sigmoid(x);
+            if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+            break;
+        case Nonlin::NL_TANH:
+            y=Tanh(x);
+            if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+            break;
         case Nonlin::NL_SELU:
-                y=Selu(x);
-                if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-                break;
-            default:
-                cerr << "Bad initialization for nonlinearity, no known type!" << endl;
-                break;
+            y=Selu(x);
+            if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+            break;
+        default:
+            cerr << "Bad initialization for nonlinearity, no known type!" << endl;
+            break;
         }
         return y;
     }
