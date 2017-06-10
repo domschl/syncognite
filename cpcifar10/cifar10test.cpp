@@ -176,32 +176,32 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         lb.addLayer("Softmax","sm1","{}",{"af3"});
     } else if (mode==1) {
         lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
-        lb.addLayer("Nonlinearity","nl1",R"({type=selu})",{"cv1"});
+        lb.addLayer("Nonlinearity","nl1",R"({"type":"selu"})",{"cv1"});
         lb.addLayer("Dropout","doc1",R"({"drop":0.5})",{"nl1"});
         lb.addLayer("Convolution", "cv2", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"doc1"});
-        lb.addLayer("Nonlinearity","nl2",R"({type=selu})",{"cv2"});
+        lb.addLayer("Nonlinearity","nl2",R"({"type":"selu"})",{"cv2"});
         lb.addLayer("Convolution", "cv3", R"({"kernel":[128,3,3],"stride":2,"pad":1})",{"nl2"});
-        lb.addLayer("Nonlinearity","nl3",R"({type=selu})",{"cv3"});
-        lb.addLayer("Dropout","doc2",R"({"drop":0.8})",{"nl3"});
+        lb.addLayer("Nonlinearity","nl3",R"({"type":"selu"})",{"cv3"});
+        lb.addLayer("Dropout","doc2",R"({"drop":0.6})",{"nl3"});
         lb.addLayer("Convolution", "cv4", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"doc2"});
-        lb.addLayer("Nonlinearity","nl4",R"({type=selu})",{"cv4"});
+        lb.addLayer("Nonlinearity","nl4",R"({"type":"selu"})",{"cv4"});
         lb.addLayer("Convolution", "cv5", R"({"kernel":[256,3,3],"stride":2,"pad":1})",{"nl4"});
-        lb.addLayer("Nonlinearity","nl5",R"({type=selu})",{"cv5"});
+        lb.addLayer("Nonlinearity","nl5",R"({"type":"selu"})",{"cv5"});
         lb.addLayer("Dropout","doc3",R"({"drop":0.6})",{"nl5"});
         lb.addLayer("Convolution", "cv6", R"({"kernel":[256,3,3],"stride":1,"pad":1})",{"doc3"});
-        lb.addLayer("Nonlinearity","nl6",R"({type=selu})",{"cv6"});
+        lb.addLayer("Nonlinearity","nl6",R"({"type":"selu"})",{"cv6"});
         lb.addLayer("Dropout","doc4",R"({"drop":0.6})",{"nl6"});
         lb.addLayer("Convolution", "cv7", R"({"kernel":[512,3,3],"stride":2,"pad":1})",{"doc4"});
-        lb.addLayer("Nonlinearity","nl7",R"({type=selu})",{"cv7"});
+        lb.addLayer("Nonlinearity","nl7",R"({"type":"selu"})",{"cv7"});
         lb.addLayer("Dropout","doc5",R"({"drop":0.6})",{"nl7"});
         lb.addLayer("Convolution", "cv8", R"({"kernel":[512,3,3],"stride":1,"pad":1})",{"doc5"});
-        lb.addLayer("Nonlinearity","nl8",R"({type=selu})",{"cv8"});
+        lb.addLayer("Nonlinearity","nl8",R"({"type":"selu"})",{"cv8"});
 
         lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
-        lb.addLayer("Nonlinearity","nla1",R"({type=selu})",{"af1"});
+        lb.addLayer("Nonlinearity","nla1",R"({"type":"selu"})",{"af1"});
         lb.addLayer("Dropout","do1",R"({"drop":0.7})",{"nla1"});
         lb.addLayer("Affine","af2",R"({"hidden":512})",{"do1"});
-        lb.addLayer("Nonlinearity","nla2",R"({type=selu})",{"af2"});
+        lb.addLayer("Nonlinearity","nla2",R"({"type":"selu"})",{"af2"});
         lb.addLayer("Dropout","do2",R"({"drop":0.7})",{"nla2"});
         lb.addLayer("Affine","af3",R"({"hidden":10})",{"do2"});
         lb.addLayer("Softmax","sm1","{}",{"af3"});
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) {
     }
     getcifar10Data(argv[1]);
     int mode=0;
-    if (argc>2) mode=atoi(argv[2]);
+    if (argc>2) mode=std::stoi(argv[2]);
     if (mode<0 || mode>1) {
         cerr << "bad nonlin mode %d, " << mode << endl;
         exit(-1);
@@ -296,17 +296,17 @@ int main(int argc, char *argv[]) {
 
     floatN bReg, bLearn;
     if (autoOpt) {
-        //vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; -> 1e-5
-        //vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; -> 1e-2
-        vector<floatN> regi{1e-1,5e-2,1e-2,5e-3,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
-        vector<floatN> learni{1e-2,5e-3,1e-3}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
-        jo["epochs"]=(floatN)2.0;
+        vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; // -> 1e-5
+        vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; // -> 1e-2
+        //vector<floatN> regi{1e-1,5e-2,1e-2,5e-3,1e-3,1e-4,1e-5,1e-6,1e-7,1e-8}; // -> 2e-5 (2nd: 4e-5, 3rd 2e-5)
+        //vector<floatN> learni{1e-2,5e-3,1e-3}; // -> 1e-2 (2nd: 6e-3, 3rd 3e-3)
+        jo["epochs"]=(floatN)0.1;
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {
             jo["learning_rate"]=learn;
             for (auto reg : regi) {
                 jo["regularization"]=reg;
-                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt);
+                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
                 if (cAcc > cmAcc) {
                     bReg=reg;
                     bLearn=learn;
@@ -319,14 +319,14 @@ int main(int argc, char *argv[]) {
         }
         cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=1.e-3;
-        bReg=1.e-6;
+        bLearn=2.e-3;
+        bReg=2.e-5;
     }
 
     jo["learning_rate"]=bLearn;
     jo["regularization"]=bReg;
     jo["epochs"]=(floatN)40.0;
-    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true);
+    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
 
     for (auto it : cpcifar10Data) {
          free(it.second);
