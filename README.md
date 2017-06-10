@@ -10,11 +10,12 @@ Current state: **alpha**
 * Convolutional layers
 * Recurrent nets (RNNs)
 * Long-term short-term memory nets (LSTMs)
-* ReLu, Sigmoid and TanH nonlinearities
+* ReLu, Sigmoid, TanH, and SELU<sup>(1)</sup> nonlinearities
 * BatchNorm, SpatialBatchNorm, Dropout layers
 * Softmax, SVM loss
 * TemporalAffine and TemporalSoftmax layers for RNNs
 
+[1]: "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
 ## Sample
 ### Model
 Example: C++ definition of a deep convolutional net with batch-norm, dropout and fully connected layers:
