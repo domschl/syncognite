@@ -22,6 +22,7 @@ For live logging of the training progress, use gnuplot:
 gnuplot ../plots/liveplot.gnu
 ```
 ![after 7 episodes](../doc/images/cifar10-7.png)
+
 Note: Currently, this works only after 1. episode is complete.
 
 ## output
