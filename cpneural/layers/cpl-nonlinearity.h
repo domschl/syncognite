@@ -8,7 +8,8 @@ namespace Nonlin {
         NL_INVALID = 0,
         NL_RELU = 1,
         NL_SIGMOID = 2,
-        NL_TANH = 3
+        NL_TANH = 3,
+        NL_SELU = 4
     };
 }
 
@@ -32,6 +33,7 @@ private:
         if (nonlintypestr=="relu") nonlintype=Nonlin::NL_RELU;
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
         else if (nonlintypestr=="tanh") nonlintype=Nonlin::NL_TANH;
+        else if (nonlintypestr=="selu") nonlintype=Nonlin::NL_SELU;
         outputShape=inputShape;
         if (nonlintype!=Nonlin::NL_INVALID) layerInit=true;
         else cerr << "Invalid type for nonlinearity: " << nonlintypestr << endl;
@@ -67,6 +69,29 @@ public:
         }
         return y;
     }
+    MatrixN Selu(const MatrixN& x) {
+        // "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
+        floatN alpha = 1.6732632423543772848170429916717;
+        floatN scale = 1.0507009873554804934193349852946;
+        MatrixN y=x;
+        // return scale*np.where(x>=0.0, x, alpha*np.exp(x)-alpha)
+        for (unsigned int i=0; i<(unsigned int)y.size(); i++) {
+            if (y(i)<0.0) y(i)=alpha*exp(y(i))-alpha;
+        }
+        y=y*scale;
+        return y;
+    }
+    MatrixN dSelu(const MatrixN& x) {
+        // "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
+        MatrixN y=x;
+        floatN alpha = 1.6732632423543772848170429916717;
+        floatN scale = 1.0507009873554804934193349852946;
+        for (unsigned int i=0; i<(unsigned int)y.size(); i++) {
+            if (y(i)>=0) y(i)=scale;
+            else y(i)=alpha*exp(y(i))*scale;
+        }
+        return y;
+    }
     Nonlinearity(const json& jx) {
         setup(jx);
     }
@@ -91,6 +116,10 @@ public:
                 y=Tanh(x);
                 if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
                 break;
+        case Nonlin::NL_SELU:
+                y=Selu(x);
+                if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+                break;
             default:
                 cerr << "Bad initialization for nonlinearity, no known type!" << endl;
                 break;
@@ -112,6 +141,10 @@ public:
             case Nonlin::NL_TANH:
                 y=*((*pcache)["y"]);
                 dxc=dTanh(y);
+                break;
+            case Nonlin::NL_SELU:
+                y=*((*pcache)["x"]);
+                dxc=dSelu(y);
                 break;
             default:
                 cerr << "Bad initialization for nonlinearity, no known type!" << endl;
