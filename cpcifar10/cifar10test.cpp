@@ -137,7 +137,7 @@ bool  getcifar10Data(string filepath) {
 
 
 floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false, int mode=0) {
-    LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
+    LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal","initfactor":0.1})"_json);
     if (mode==0) {
         lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
         lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
