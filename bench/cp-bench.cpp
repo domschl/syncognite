@@ -118,7 +118,7 @@ void colprint(floatN f) {
 
 bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     Timer tcpu;
-    float tcus, tfn, tf,tb, tfx, tbx;
+    float tcus, tf,tb, tfx, tbx;
     t_cppl cache;
     t_cppl grads;
     t_cppl states;
@@ -132,7 +132,8 @@ bool benchLayer(string name, Layer* player, MatrixN &X, MatrixN &y, int row0) {
     cerr.precision(3);
     cerr << fixed;
 
-    tfn=1e8; tf=1e8; tb=1e8;
+    //tfn=1e8;
+    tf=1e8; tb=1e8;
     floatN ptf=0.0; floatN ptb=0.0;
 
     tcpu.startCpu();

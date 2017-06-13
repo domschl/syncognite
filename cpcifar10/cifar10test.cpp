@@ -37,7 +37,7 @@ herr_t cp_cifar10_get_all_groups(hid_t loc_id, const char *name, void *opdata)
     if (obj_type == H5G_DATASET) {
         H5::DataSet dataset = cp_cifar10_pfile->openDataSet(name);
         H5::DataSpace filespace = dataset.getSpace();
-        int rank = filespace.getSimpleExtentNdims();
+        int rank; // = filespace.getSimpleExtentNdims();
         // cerr << "rank: " << rank << endl;
         hsize_t dims[10];    // dataset dimensions
         rank = filespace.getSimpleExtentDims( dims );
