@@ -12,14 +12,17 @@ Use the [script download_cifar10.py](../datasets/) to download the CIFAR10 train
 ## Training
 From build directory:
 ```
-cpcifar10/cifar10test ../datasets/cifar10.h5
+cpcifar10/cifar10test ../datasets/cifar10.h5 [mode]
 ```
+`mode`: `0`: train with RELU nonlinearities, `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515)
+
 ## Logging
 For live logging of the training progress, use gnuplot:
 ```
 gnuplot ../plots/liveplot.gnu
 ```
 ![after 7 episodes](../doc/images/cifar10-7.png)
+
 Note: Currently, this works only after 1. episode is complete.
 
 ## output

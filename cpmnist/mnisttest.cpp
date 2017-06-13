@@ -23,7 +23,7 @@ herr_t cp_mnist_get_all_groups(hid_t loc_id, const char *name, void *opdata)
 	if (obj_type == H5G_DATASET) {
 		H5::DataSet dataset = cp_Mnist_pfile->openDataSet(name);
 		H5::DataSpace filespace = dataset.getSpace();
-		int rank = filespace.getSimpleExtentNdims();
+        int rank; // = filespace.getSimpleExtentNdims();
 		hsize_t dims[2];    // dataset dimensions
 		rank = filespace.getSimpleExtentDims( dims );
 		if (rank==1) dims[1]=1;

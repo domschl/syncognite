@@ -145,14 +145,14 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
     int co=0;
     int nt=0;
 
-    if ((int)x.rows() < batchsize) batchsize=(int)x.rows();
+    //if ((int)x.rows() < batchsize) batchsize=(int)x.rows();
     
     if (pstates->find("y") == pstates->end()) {
         cerr << "Layer::test: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN y = *((*pstates)["y"]);
     MatrixN *py = (*pstates)["y"];
-    int nrr=(int)y.rows();
+    //int nrr=(int)y.rows();
 
     for (int ck=0; ck<(N+bs-1)/bs; ck++) {
         int x0=ck*bs;
@@ -188,7 +188,7 @@ floatN Layer::test(const MatrixN& x, t_cppl* pstates, int batchsize=100)  {
                 return -1000.0;
             }
         }
-        nrr=(int)yt.rows();
+        //nrr=(int)yt.rows();
         for (int i=0; i<yt.rows(); i++) {
             int ji=-1;
             floatN pr=-10000;
@@ -446,8 +446,8 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
                     floatN eta=twt/1000000.0-ett;
                     floatN chtr=twt/1000.0/(floatN)(b*bs);
-                    if (e+5.0<dv1) dv1=e+5.0;
-                    if (e+20.0<dv2) dv2=e+20.0;
+                    //if (e+5.0<dv1) dv1=e+5.0;
+                    //if (e+20.0<dv2) dv2=e+20.0;
                     cerr << gray << "At: " << std::fixed << std::setw(4) << green << (int)((floatN)b/(floatN)chunks*100.0) << "\%" << gray << " of epoch " << green << e+1 << gray <<", " << std::setprecision(2) << chtr << " ms/data, ett: " << (int)ett << "s, eta: " << (int)eta << "s, loss: " << std::setprecision(4) << meanloss << def << "\r";
                     std::flush(cerr);
                     //logfile << e+(floatN)b/(floatN)chunks << "\t" << lastloss << "\t" << meanloss << "\t" << m2loss << "\t" << accval << "\t" << meanacc << endl;

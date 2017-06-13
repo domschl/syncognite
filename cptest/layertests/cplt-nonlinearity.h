@@ -131,7 +131,7 @@ bool testNonlinearity(int verbose) {
 	bool bOk=true;
 	t_cppl s1 {};
     cerr << lblue << "Nonlinearity Layers: " << def << endl;
-    vector<string> nls = {"relu", "sigmoid", "tanh"};
+    vector<string> nls = {"relu", "sigmoid", "tanh", "selu"};
     for (string nlsi : nls) {
         json j(R"({"inputShape":[20]})"_json);
         j["type"]=(string)nlsi;
