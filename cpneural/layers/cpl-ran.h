@@ -119,6 +119,7 @@ public:
             (*pcache)["xhx"] = new MatrixN(xhx);
             (*pcache)["cprev"] = new MatrixN(cprev);
             (*pcache)["cnext"] = new MatrixN(cnext);
+            (*pcache)["hnext"] = new MatrixN(hnext);
             (*pcache)["i"] = new MatrixN(i);
             (*pcache)["f"] = new MatrixN(f);
             (*pcache)["ctl"] = new MatrixN(ctl);
@@ -136,6 +137,7 @@ public:
         MatrixN xhx(*(*pcache)["xhx"]);
         MatrixN cprev(*(*pcache)["cprev"]);
         MatrixN cnext(*(*pcache)["cnext"]);
+        MatrixN hnext(*(*pcache)["hnext"]);
         MatrixN i(*(*pcache)["i"]);
         MatrixN f(*(*pcache)["f"]);
         MatrixN ctl(*(*pcache)["ctl"]);
@@ -153,7 +155,7 @@ public:
         }
 
         // MatrixN hnext=cnext.array().tanh();
-        MatrixN csq = cnext.array() * cnext.array();
+        MatrixN csq = hnext.array() * hnext.array();
         dcnext = dcnext.array() + (1.0-csq.array()) * dhnext.array();
 
         // MatrixN cnext=i.array()*ctl.array()+f.array()*cprev.array();
