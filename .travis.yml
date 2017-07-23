@@ -1,0 +1,16 @@
+# Install dependencies
+  - sudo apt-get -qq update
+  - sudo apt-get install -y hdf5
+
+# Enable C++ support
+language: cpp
+
+# Compiler selection
+compiler:
+  - gcc
+  
+# Build steps
+script:
+  - mkdir build
+  - cd build
+  - cmake .. && make
