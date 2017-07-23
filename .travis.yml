@@ -1,20 +1,18 @@
 # Enable C++ support
 language: cpp
+compiler: gcc
+dist: trusty
 
 # Install dependencies
 before_install:
-  - sudo apt-get -qq update
   - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get -qq update
   - sudo apt-get install -y libhdf5-dev
 
 install:
-  - sudo apt-get install -qq g++5.1
-  - export CXX="g++5.1"
+  - sudo apt-get install -qq g++6
+  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 
-# Compiler selection
-compiler:
-  - gcc
-  
 # Build steps
 script:
   - mkdir build
