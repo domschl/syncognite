@@ -16,3 +16,4 @@ cmake_install*
 .dir-locals.el
 .directory
 compile_commands.json
+.vscode
