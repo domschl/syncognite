@@ -108,18 +108,22 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
 * C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or Mac (clang), ARM(gcc))
-* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`, already (in default configuration) included in the source tree as submodule. Note: clang-4 requires current dev-branch [3.3.90] of eigen for tensor libs to compile.
-* [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5`.
-* optional: Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 * CMake build system.
+* [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5` or `libhdf5-dev`.
+### Optional dependencies:
+* Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
+### External libraries that are included in the source tree:
+* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`, already (in default configuration) included in the source tree as submodule. Note: clang-4 requires current dev-branch [3.3.90] of eigen for tensor libs to compile.
 * [nlohmann_json](https://github.com/nlohmann/json), already included in source tree (cpneural/nlohmann_json).
 
 ## Build
-syncognite uses the CMake build system. You will need [Eigen 3.3](http://eigen.tuxfamily.org/index.php?title=Main_Page) and [HDF5](https://support.hdfgroup.org/HDF5/), 'hdf5-cpp-fortran'.
+syncognite uses the CMake build system.
 
 Clone the repository:
 ```bash
 git clone git://github.com/domschl/syncognite
+git submodule init
+git submodule update    # This gets the in-tree Eigen3
 ```
 Create a ```Build``` directory within the syncognite directory and configure the build:
 ```bash
