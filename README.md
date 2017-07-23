@@ -1,10 +1,13 @@
 # syncognite - A neural network library inspired by Stanford's CS231n course
 
+[![Build Status](https://travis-ci.org/domschl/syncognite.svg?branch=master)](https://travis-ci.org/domschl/syncognite)
+
 A neural network library for convolutional, fully connected nets and RNNs in C++.
 
 This library implements some of the assignments from Stanfords's [CS231n](http://cs231n.stanford.edu/index.html) 2016 course by Andrej Karpathy, Fei-Fei Li, Justin Johnson and [CS224d](http://cs224d.stanford.edu/index.html) by Richard Socher as C++ framework.
 
 Current state: **alpha**
+
 ### Features
 * Fully connected networks
 * Convolutional layers
