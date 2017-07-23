@@ -1,7 +1,7 @@
 # Install dependencies
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y hdf5
+  - sudo apt-get install -y libhdf5-dev
 
 # Enable C++ support
 language: cpp
