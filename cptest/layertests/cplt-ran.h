@@ -18,7 +18,9 @@ bool testRAN(int verbose) {
 	t_cppl lsstates;
 	MatrixN cl0(ranN, 6);
 	xran.setRandom();
+	xran.setZero(); // XXX: must be removed!
 	cl0.setRandom();
+	cl0.setZero(); // XXX: must be removed!
 	lsstates["ran-c"] = &cl0;
 	// lsstates["ran-h"] = &cl0;
 	//                                     D,T
