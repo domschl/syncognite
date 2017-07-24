@@ -17,3 +17,7 @@ cmake_install*
 .directory
 compile_commands.json
 .vscode
+GPATH
+GTAGS
+GRTAGS
+
