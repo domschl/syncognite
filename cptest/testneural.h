@@ -7,7 +7,8 @@ bool matCompT(MatrixN &m0, MatrixN &m1, string msg, floatN eps, int verbose);
 bool matComp(MatrixN &m0, MatrixN &m1, string msg, floatN eps) {
     return matCompT(m0, m1, msg, eps, 3);
 }
-void registerTestResult(string testcase, string subtest, bool result, string message);
+void registerTestResult(string testcase, string subtest, bool result,
+                        string message);
 
 #include "layertests/cplt-affine.h"
 #include "layertests/cplt-affinerelu.h"
@@ -19,7 +20,8 @@ void registerTestResult(string testcase, string subtest, bool result, string mes
 #include "layertests/cplt-pooling.h"
 #include "layertests/cplt-relu.h"
 #include "layertests/cplt-rnn.h"
-#include "layertests/cplt-ran.h"
+// XXX disabled until rewrite:
+// #include "layertests/cplt-ran.h"
 #include "layertests/cplt-softmax.h"
 #include "layertests/cplt-spatialbatchnorm.h"
 #include "layertests/cplt-svm.h"
@@ -31,9 +33,9 @@ void registerTestResult(string testcase, string subtest, bool result, string mes
 using std::cerr;
 using std::endl;
 
-
 const vector<string> additionaltestcases{
-    "LayerBlock", "TrainTwoLayerNet",
+    "LayerBlock",
+    "TrainTwoLayerNet",
 };
 
 #endif
