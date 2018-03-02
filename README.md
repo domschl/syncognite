@@ -162,9 +162,9 @@ make
 
 * 2018-03-02: Removed faulty RAN layer, switched to official eigen3 github-mirror at: [Github eigen3](https://github.com/eigenteam/eigen-git-mirror), fixes for eigen-dev stricted type-checking.
 
-Things that should work:
+## Subprojects:
 
-Subprojects:
+Things that should work:
 
 * [testneural](cptest/) (cptest subproject, consistency tests for all layers using testdata and numerical differentials)
 * [bench](bench/) (benchmark subproject, benchmarks for all layers)
