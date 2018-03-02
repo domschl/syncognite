@@ -1,4 +1,5 @@
 # Tests for all network layers
+
 This tests all currently implemented neural network layers.
 
 Affine, Relu, Nonlinearity, AffineRelu, BatchNorm, Dropout, Convolution, Pooling,
@@ -6,20 +7,28 @@ SpatialBatchNorm, RNN, LSTM, WordEmbedding, TemporalAffine, TemporalSoftmax, Sof
 TwoLayerNet.
 
 ## Requirements
+
 Check the [main page](../../..) for build requirements.
+
 ## Build
+
 After configuration of CMake, the mnist part can be built directly by:
+
 ```bash
 make testneural
 ```
+
 ## Usage
+
 ```bash
 cptest/testneural [-v[v[v]]] <optional-list-of-module-names>
 ```
+
 * `-v`, `-vv`, `-vvv` verbose to very, very verbose output
 * If no module name(s) are given, all modules are tested. Possible modules are (displayed, when called with no arguments): `Affine AffineRelu BatchNorm Convolution Dropout LSTM Nonlinearity OneHot Pooling RNN Relu Softmax SpatialBatchNorm Svm TemporalAffine TemporalSoftmax TwoLayerNet WordEmbedding LayerBlock TrainTwoLayerNet`.
 
 ## Output
+
 ```bash
 $ cptest/testneural -vv
 

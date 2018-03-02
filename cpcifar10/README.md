@@ -1,32 +1,46 @@
 # Training with CIFAR10 images
+
 ## Requirements
+
 Check the [main page](../../..) for build requirements.
+
 ## Build
+
 After configuration of CMake, the cifar10 part can be built directly by:
-```
+
+```bash
 make cifar10test
 ```
+
 ## Dataset
+
 Use the [script download_cifar10.py](../datasets/) to download the CIFAR10 training data in HDF5 format.
 
 ## Training
+
 From build directory:
-```
+
+```bash
 cpcifar10/cifar10test ../datasets/cifar10.h5 [mode]
 ```
+
 `mode`: `0`: train with RELU nonlinearities, `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515)
 
 ## Logging
+
 For live logging of the training progress, use gnuplot:
-```
+
+```bash
 gnuplot ../plots/liveplot.gnu
 ```
+
 ![after 7 episodes](../doc/images/cifar10-7.png)
 
 Note: Currently, this works only after 1. episode is complete.
 
-## output
-```
+## Output
+
+```bash
 $ cpcifar10/cifar10test ../datasets/cifar10.h5
 Reading: test-data dataset rank = 4, dimensions; 10000 x 3 x 32 x 32 int
 test-labels dataset rank = 1, dimensions; 10000 int
