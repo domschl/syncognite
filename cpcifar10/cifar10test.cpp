@@ -220,19 +220,19 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         lb.addLayer("Nonlinearity","nl4",R"({"type":"resilu"})",{"cv4"});
         lb.addLayer("Convolution", "cv5", R"({"kernel":[256,3,3],"stride":2,"pad":1})",{"nl4"});
         lb.addLayer("Nonlinearity","nl5",R"({"type":"resilu"})",{"cv5"});
-        /*
+        
         lb.addLayer("Dropout","doc3",R"({"drop":0.6})",{"nl5"});
         lb.addLayer("Convolution", "cv6", R"({"kernel":[256,3,3],"stride":1,"pad":1})",{"doc3"});
-        lb.addLayer("Nonlinearity","nl6",R"({"type":"resilu"})",{"cv6"});
+        lb.addLayer("BatchNorm","sb22","{}",{"cv6"});
+        lb.addLayer("Nonlinearity","nl6",R"({"type":"resilu"})",{"sb22"});
         lb.addLayer("Dropout","doc4",R"({"drop":0.6})",{"nl6"});
         lb.addLayer("Convolution", "cv7", R"({"kernel":[512,3,3],"stride":2,"pad":1})",{"doc4"});
         lb.addLayer("Nonlinearity","nl7",R"({"type":"resilu"})",{"cv7"});
         lb.addLayer("Dropout","doc5",R"({"drop":0.6})",{"nl7"});
         lb.addLayer("Convolution", "cv8", R"({"kernel":[512,3,3],"stride":1,"pad":1})",{"doc5"});
         lb.addLayer("Nonlinearity","nl8",R"({"type":"resilu"})",{"cv8"});
-        */
-        //lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
-        lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl5"});
+        
+        lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
         lb.addLayer("BatchNorm","bn1","{}",{"af1"});
         lb.addLayer("Nonlinearity","nla1",R"({"type":"resilu"})",{"bn1"});
         lb.addLayer("Dropout","do1",R"({"drop":0.7})",{"nla1"});
