@@ -9,7 +9,8 @@ namespace Nonlin {
         NL_RELU = 1,
         NL_SIGMOID = 2,
         NL_TANH = 3,
-        NL_SELU = 4
+        NL_SELU = 4,
+        NL_RESILU = 5
     };
 }
 
@@ -34,6 +35,7 @@ private:
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
         else if (nonlintypestr=="tanh") nonlintype=Nonlin::NL_TANH;
         else if (nonlintypestr=="selu") nonlintype=Nonlin::NL_SELU;
+        else if (nonlintypestr=="resilu") nonlintype=Nonlin::NL_RESILU;
         outputShape=inputShape;
         if (nonlintype!=Nonlin::NL_INVALID) layerInit=true;
         else cerr << "Invalid type for nonlinearity: " << nonlintypestr << endl;
@@ -92,6 +94,16 @@ public:
         }
         return y;
     }
+    MatrixN Resilu(const MatrixN& x) {
+        // XXX c.f. num instable: y=((mn.array()/2.0).tanh()-1.0)/2.0+1.0;
+        return x.array()/(1.0-(x.array() * -1.0).exp());
+    }
+    MatrixN dResilu(const MatrixN& x) {
+        MatrixN e=x.array().exp();
+        MatrixN e1 = e.array()-1.0;
+        return e.array()*(e.array()-x.array()-1)/e1.array()/e1.array();
+    }
+
     Nonlinearity(const json& jx) {
         setup(jx);
     }
@@ -120,6 +132,10 @@ public:
             y=Selu(x);
             if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
             break;
+        case Nonlin::NL_RESILU:
+            y=Resilu(x);
+            if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+            break;
         default:
             cerr << "Bad initialization for nonlinearity, no known type!" << endl;
             break;
@@ -145,6 +161,10 @@ public:
             case Nonlin::NL_SELU:
                 y=*((*pcache)["x"]);
                 dxc=dSelu(y);
+                break;
+            case Nonlin::NL_RESILU:
+                y=*((*pcache)["x"]);
+                dxc=dResilu(y);
                 break;
             default:
                 cerr << "Bad initialization for nonlinearity, no known type!" << endl;
