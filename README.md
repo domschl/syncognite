@@ -15,12 +15,13 @@ Current state: **alpha**
 * Convolutional layers
 * Recurrent nets (RNNs)
 * Long-term short-term memory nets (LSTMs)
-* ReLu, Sigmoid, TanH, and SELU<sup>(1)</sup> nonlinearities
+* ReLu, Sigmoid, TanH, SELU<sup>(1)</sup>, resilu<sup>(2)</sup> nonlinearities
 * BatchNorm, SpatialBatchNorm, Dropout layers
 * Softmax, SVM loss
 * TemporalAffine and TemporalSoftmax layers for RNNs
 
 [1]: "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
+[2]: "resilu residual & relu nonlinearity (s.b.)
 
 ## Sample
 
@@ -161,6 +162,7 @@ make
 
 ## History
 
+* 2020-07-05: Tests with resilu (non-)linearity
 * 2018-03-02: Removed faulty RAN layer, switched to official eigen3 github-mirror at: [Github eigen3](https://github.com/eigenteam/eigen-git-mirror), fixes for eigen-dev stricted type-checking.
 
 ## Subprojects:
@@ -172,3 +174,22 @@ Things that should work:
 * [mnisttest](cpmnist/) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/).)
 * [cifar10test](cpcifar10/) (cpcifar10 subproject, cifar10 image recognition with a convolutional network, requires [dataset download](datasets/).)
 * [rnnreader](rnnreader/) (rnnreader subproject, text generation via RNN/LSTMs, similar to char-rnn.)
+
+
+## Appendix
+
+### Resilu (non-) linearity
+
+$$
+rsi(x)=\frac{x}{1-e^{-x}}
+$$
+
+$rsi(x)$ can be rewritten as:
+
+$$
+rsi(x)=\frac{x}{e^{x}-1}+x
+$$
+
+thus can be interpreted as a residual combination of linearity and non-linearity via addition.
+
+Since $rsi(x)$ shows a phase-transition instability at $x=0$, a taylor O(4) approximation is used for $rsi(x)$ and $\nabla rsi(x)$ for $-h<x<h$.
