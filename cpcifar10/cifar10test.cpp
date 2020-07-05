@@ -207,17 +207,20 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         lb.addLayer("Softmax","sm1","{}",{"af3"});
     } else if (mode==2) {
         lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
-        lb.addLayer("Nonlinearity","nl1",R"({"type":"resilu"})",{"cv1"});
+        lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
+        lb.addLayer("Nonlinearity","nl1",R"({"type":"resilu"})",{"sb1"});
         lb.addLayer("Dropout","doc1",R"({"drop":0.5})",{"nl1"});
         lb.addLayer("Convolution", "cv2", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"doc1"});
         lb.addLayer("Nonlinearity","nl2",R"({"type":"resilu"})",{"cv2"});
         lb.addLayer("Convolution", "cv3", R"({"kernel":[128,3,3],"stride":2,"pad":1})",{"nl2"});
-        lb.addLayer("Nonlinearity","nl3",R"({"type":"resilu"})",{"cv3"});
+        lb.addLayer("BatchNorm","sb2","{}",{"cv3"});
+        lb.addLayer("Nonlinearity","nl3",R"({"type":"resilu"})",{"sb2"});
         lb.addLayer("Dropout","doc2",R"({"drop":0.6})",{"nl3"});
         lb.addLayer("Convolution", "cv4", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"doc2"});
         lb.addLayer("Nonlinearity","nl4",R"({"type":"resilu"})",{"cv4"});
         lb.addLayer("Convolution", "cv5", R"({"kernel":[256,3,3],"stride":2,"pad":1})",{"nl4"});
         lb.addLayer("Nonlinearity","nl5",R"({"type":"resilu"})",{"cv5"});
+        /*
         lb.addLayer("Dropout","doc3",R"({"drop":0.6})",{"nl5"});
         lb.addLayer("Convolution", "cv6", R"({"kernel":[256,3,3],"stride":1,"pad":1})",{"doc3"});
         lb.addLayer("Nonlinearity","nl6",R"({"type":"resilu"})",{"cv6"});
@@ -227,9 +230,11 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         lb.addLayer("Dropout","doc5",R"({"drop":0.6})",{"nl7"});
         lb.addLayer("Convolution", "cv8", R"({"kernel":[512,3,3],"stride":1,"pad":1})",{"doc5"});
         lb.addLayer("Nonlinearity","nl8",R"({"type":"resilu"})",{"cv8"});
-
-        lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
-        lb.addLayer("Nonlinearity","nla1",R"({"type":"resilu"})",{"af1"});
+        */
+        //lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
+        lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl5"});
+        lb.addLayer("BatchNorm","bn1","{}",{"af1"});
+        lb.addLayer("Nonlinearity","nla1",R"({"type":"resilu"})",{"bn1"});
         lb.addLayer("Dropout","do1",R"({"drop":0.7})",{"nla1"});
         lb.addLayer("Affine","af2",R"({"hidden":512})",{"do1"});
         lb.addLayer("Nonlinearity","nla2",R"({"type":"resilu"})",{"af2"});
