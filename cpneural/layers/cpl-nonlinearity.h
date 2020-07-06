@@ -9,7 +9,8 @@ namespace Nonlin {
         NL_RELU = 1,
         NL_SIGMOID = 2,
         NL_TANH = 3,
-        NL_SELU = 4
+        NL_SELU = 4,
+        NL_RESILU = 5
     };
 }
 
@@ -34,6 +35,7 @@ private:
         else if (nonlintypestr=="sigmoid") nonlintype=Nonlin::NL_SIGMOID;
         else if (nonlintypestr=="tanh") nonlintype=Nonlin::NL_TANH;
         else if (nonlintypestr=="selu") nonlintype=Nonlin::NL_SELU;
+        else if (nonlintypestr=="resilu") nonlintype=Nonlin::NL_RESILU;
         outputShape=inputShape;
         if (nonlintype!=Nonlin::NL_INVALID) layerInit=true;
         else cerr << "Invalid type for nonlinearity: " << nonlintypestr << endl;
@@ -92,6 +94,31 @@ public:
         }
         return y;
     }
+    MatrixN Resilu(const MatrixN& x) {
+        // Resilu should combine a non-linearity (similar to relu) and a residual, linear connection
+        // r(x) = 1/(1-exp(-x/a)). Variing a limits in relu. r(x) can be rewritten as r(x)=x/(exp(x)-1) + x  (the linear, additive residual part)
+        // Problem: phase-transition at 0, hence:
+        // approximate with taylor-expansion up to O(4) for -h<x<h
+        floatN h=0.01;
+        MatrixN y=x.array()/(1.0-(x.array() * -1.0).exp());
+        for (unsigned int i=0; i<(unsigned int)x.size(); i++) {
+            if (x(i) < h && x(i) > -1.0 * h ) y(i)=1.0+x(i)/2.0+x(i)*x(i)/12.0-x(i)*x(i)*x(i)*x(i)/720.0;
+        }
+        return y; 
+    }
+    MatrixN dResilu(const MatrixN& x) {
+        // approximate with taylor-expansion up to O(4) for -h<x<h
+        floatN h=0.01;
+        MatrixN e=x.array().exp();
+        MatrixN e1 = e.array()-1.0;
+        MatrixN y = e.array()*(e.array()-x.array()-1.0)/e1.array()/e1.array();
+        for (unsigned int i=0; i<(unsigned int)x.size(); i++) {
+            if (x(i) < h && x(i) > -1.0 * h ) y(i)=0.5+x(i)/6.0-4.0*x(i)*x(i)*x(i)/720.0; //  //x(i)/6.0+0.5819767068693265;  // 0.58.. == 1/(e-1)
+        }
+        return y; 
+
+    }
+
     Nonlinearity(const json& jx) {
         setup(jx);
     }
@@ -120,6 +147,10 @@ public:
             y=Selu(x);
             if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
             break;
+        case Nonlin::NL_RESILU:
+            y=Resilu(x);
+            if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
+            break;
         default:
             cerr << "Bad initialization for nonlinearity, no known type!" << endl;
             break;
@@ -145,6 +176,10 @@ public:
             case Nonlin::NL_SELU:
                 y=*((*pcache)["x"]);
                 dxc=dSelu(y);
+                break;
+            case Nonlin::NL_RESILU:
+                y=*((*pcache)["x"]);
+                dxc=dResilu(y);
                 break;
             default:
                 cerr << "Bad initialization for nonlinearity, no known type!" << endl;
