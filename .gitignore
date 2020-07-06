@@ -1,4 +1,5 @@
 Build/
+doc/.ipynb_checkpoints/
 *.gch
 *.o
 *.pch
