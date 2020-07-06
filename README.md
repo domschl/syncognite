@@ -180,16 +180,15 @@ Things that should work:
 
 ### Resilu (non-) linearity
 
-$$
-rsi(x)=\frac{x}{1-e^{-x}}
-$$
+<!-- the folloing uses the hack from https://gist.github.com/a-rodin/fef3f543412d6e1ec5b6cf55bf197d7b to display latex. Seriously. -->
+<!-- Good code generator latex -> github: https://jsfiddle.net/8ndx694g/ -->
 
-$rsi(x)$ can be rewritten as:
+<img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{1-e^{-x}}">
 
-$$
-rsi(x)=\frac{x}{e^{x}-1}+x
-$$
+<img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> can be rewritten as:
+
+<img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{e^{x}-1}%2Bx">
 
 thus can be interpreted as a residual combination of linearity and non-linearity via addition.
 
-Since $rsi(x)$ shows a phase-transition instability at $x=0$, a taylor O(4) approximation is used for $rsi(x)$ and $\nabla rsi(x)$ for $-h<x<h$.
+Since <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> shows a phase-transition instability at <img src="https://render.githubusercontent.com/render/math?math=x=0">, a taylor <img src="https://render.githubusercontent.com/render/math?math=O(4)"> approximation is used for <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> and <img src="https://render.githubusercontent.com/render/math?math=%5Cnabla rsi(x)"> for <img src="https://render.githubusercontent.com/render/math?math=-h%20%3C%200%20%3C%20h">.
