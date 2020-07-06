@@ -21,7 +21,8 @@ Current state: **alpha**
 * TemporalAffine and TemporalSoftmax layers for RNNs
 
 [1]: "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
-[2]: "resilu residual & relu nonlinearity (s.b.)
+
+[2]: "resilu residual & relu nonlinearity + linearity (linear skip connection combined with non-linearity) (s.b.)
 
 ## Sample
 
