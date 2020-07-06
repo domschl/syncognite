@@ -205,6 +205,36 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         lb.addLayer("Dropout","do2",R"({"drop":0.7})",{"nla2"});
         lb.addLayer("Affine","af3",R"({"hidden":10})",{"do2"});
         lb.addLayer("Softmax","sm1","{}",{"af3"});
+    } else if (mode==2) {
+        lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
+        lb.addLayer("Nonlinearity","nl1s",R"({"type":"resilu"})",{"cv1"});
+        lb.addLayer("BatchNorm","sb1","{}",{"nl1s"});
+        lb.addLayer("Convolution", "cv2", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"sb1"});
+        lb.addLayer("Nonlinearity","nl2",R"({"type":"resilu"})",{"cv2"});
+        lb.addLayer("Convolution", "cv3", R"({"kernel":[128,3,3],"stride":2,"pad":1})",{"nl2"});
+        lb.addLayer("Nonlinearity","nl3",R"({"type":"resilu"})",{"cv3"});
+        lb.addLayer("BatchNorm","sb2","{}",{"nl3"});
+        lb.addLayer("Convolution", "cv4", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"sb2"});
+        lb.addLayer("Nonlinearity","nl4",R"({"type":"resilu"})",{"cv4"});
+        lb.addLayer("Convolution", "cv5", R"({"kernel":[256,3,3],"stride":2,"pad":1})",{"nl4"});
+        lb.addLayer("Nonlinearity","nl5",R"({"type":"resilu"})",{"cv5"});
+        lb.addLayer("BatchNorm","sb21","{}",{"nl5"});
+        
+        lb.addLayer("Convolution", "cv6", R"({"kernel":[256,3,3],"stride":1,"pad":1})",{"sb21"});
+        lb.addLayer("Nonlinearity","nl6",R"({"type":"resilu"})",{"cv6"});
+        lb.addLayer("Convolution", "cv7", R"({"kernel":[512,3,3],"stride":2,"pad":1})",{"nl6"});
+        lb.addLayer("Nonlinearity","nl7",R"({"type":"resilu"})",{"cv7"});
+        lb.addLayer("BatchNorm","sb22","{}",{"nl7"});
+        lb.addLayer("Convolution", "cv8", R"({"kernel":[512,3,3],"stride":1,"pad":1})",{"sb22"});
+        lb.addLayer("Nonlinearity","nl8",R"({"type":"resilu"})",{"cv8"});
+        
+        lb.addLayer("Affine","af1",R"({"hidden":1024})",{"nl8"});
+        lb.addLayer("Nonlinearity","nla1",R"({"type":"resilu"})",{"af1"});
+        lb.addLayer("BatchNorm","bn1","{}",{"nla1"});
+        lb.addLayer("Affine","af2",R"({"hidden":512})",{"bn1"});
+        lb.addLayer("Nonlinearity","nla2",R"({"type":"resilu"})",{"af2"});
+        lb.addLayer("Affine","af3",R"({"hidden":10})",{"nla2"});
+        lb.addLayer("Softmax","sm1","{}",{"af3"});
     } else {
         cerr << "Bad mode for evalMultilayer! " << mode << endl;
         exit(-1);
@@ -256,13 +286,13 @@ int main(int argc, char *argv[]) {
 
     if (argc<2) {
         cerr << "cifar10test <path-cifar10.h5-file> [nonlinmode]" << endl;
-        cerr << "nonlinmode=0: relu+batchnorm, 1: only SELU (https://arxiv.org/abs/1706.02515)" << endl;
+        cerr << "nonlinmode=0: relu+batchnorm, 1: only SELU (https://arxiv.org/abs/1706.02515), 2: resilu" << endl;
         exit(-1);
     }
     getcifar10Data(argv[1]);
     int mode=0;
     if (argc>2) mode=std::stoi(argv[2]);
-    if (mode<0 || mode>1) {
+    if (mode<0 || mode>2) {
         cerr << "bad nonlin mode %d, " << mode << endl;
         exit(-1);
     }
@@ -285,9 +315,9 @@ int main(int argc, char *argv[]) {
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
     json jo(R"({"verbose":true,"shuffle":true,"epsion":1e-8})"_json);
-    jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
+    jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
     jo["lr_decay"]=(floatN)1.0;
-    jo["regularization"]=(floatN)1e-5;
+    jo["regularization"]=(floatN)1e-6;
 
     jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
@@ -319,8 +349,8 @@ int main(int argc, char *argv[]) {
         }
         cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=2.e-3;
-        bReg=2.e-5;
+        bLearn=5.e-4;
+        bReg=1.e-6;
     }
 
     jo["learning_rate"]=bLearn;

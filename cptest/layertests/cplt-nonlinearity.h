@@ -126,24 +126,29 @@ bool checkNonlinearityBackward(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 }
 
 bool testNonlinearity(int verbose) {
-    Color::Modifier lblue(Color::FG_LIGHT_BLUE);
-    Color::Modifier def(Color::FG_DEFAULT);
+     Color::Modifier lblue(Color::FG_LIGHT_BLUE);
+     Color::Modifier def(Color::FG_DEFAULT);
 	bool bOk=true;
+     bool res=false;
 	t_cppl s1 {};
-    cerr << lblue << "Nonlinearity Layers: " << def << endl;
-    vector<string> nls = {"relu", "sigmoid", "tanh", "selu"};
-    for (string nlsi : nls) {
-        json j(R"({"inputShape":[20]})"_json);
-        j["type"]=(string)nlsi;
-        Nonlinearity nlr(j);
-        MatrixN xnl(10, 20);
-        xnl.setRandom();
-        bool res=nlr.selfTest(xnl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
-        registerTestResult("Nonlinearity", nlsi+", numerical gradient", res, "");
-    	if (!res) bOk = false;
-    }
+     cerr << lblue << "Nonlinearity Layers: " << def << endl;
+     vector<string> nls = {"relu", "sigmoid", "tanh", "selu", "resilu"};
+     for (string nlsi : nls) {
+          json j(R"({"inputShape":[20]})"_json);
+          j["type"]=(string)nlsi;
+          Nonlinearity nlr(j);
+          MatrixN xnl(10, 20);
+          xnl.setRandom();
+          if (nlsi == "resilu") {
+               res=nlr.selfTest(xnl, &s1, 0.0001, 0.001, verbose);
+          } else {
+               res=nlr.selfTest(xnl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
+          }
+          registerTestResult("Nonlinearity", nlsi+", numerical gradient", res, "");
+         	if (!res) bOk = false;
+     }
 
-	bool res=checkNonlinearityForward(CP_DEFAULT_NUM_EPS, verbose);
+	res=checkNonlinearityForward(CP_DEFAULT_NUM_EPS, verbose);
 	registerTestResult("Nonlinearity", "Forward (with test-data)", res, "");
 	if (!res) bOk = false;
 

@@ -9,6 +9,7 @@ Check the [main page](../../..) for build requirements.
 After configuration of CMake, the cifar10 part can be built directly by:
 
 ```bash
+# use Ninja or Xcode, if the main project had been configured correspondingly
 make cifar10test
 ```
 
@@ -24,14 +25,17 @@ From build directory:
 cpcifar10/cifar10test ../datasets/cifar10.h5 [mode]
 ```
 
-`mode`: `0`: train with RELU nonlinearities, `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515)
+`mode`: 
+- `0`: train with RELU nonlinearities,
+- `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515), 
+- `2` train with [resilu](https://github.com/domschl/syncognite/tree/master#resilu-non--linearity) linearity and non-linearity.
 
 ## Logging
 
 For live logging of the training progress, use gnuplot:
 
 ```bash
-gnuplot ../plots/liveplot.gnu
+gnuplot ../plot/liveplot.gnu
 ```
 
 ![after 7 episodes](../doc/images/cifar10-7.png)

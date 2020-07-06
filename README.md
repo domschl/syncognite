@@ -15,12 +15,14 @@ Current state: **alpha**
 * Convolutional layers
 * Recurrent nets (RNNs)
 * Long-term short-term memory nets (LSTMs)
-* ReLu, Sigmoid, TanH, and SELU<sup>(1)</sup> nonlinearities
+* ReLu, Sigmoid, TanH, SELU<sup>(1)</sup>, resilu<sup>(2)</sup> nonlinearities
 * BatchNorm, SpatialBatchNorm, Dropout layers
 * Softmax, SVM loss
 * TemporalAffine and TemporalSoftmax layers for RNNs
 
 [1]: "scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515
+
+[2]: "resilu residual & relu nonlinearity + linearity" (linear skip connection combined with non-linearity) ([s.b.](https://github.com/domschl/syncognite#resilu-non--linearity))
 
 ## Sample
 
@@ -147,20 +149,30 @@ git submodule update    # This gets the in-tree Eigen3
 Create a ```Build``` directory within the syncognite directory and configure the build:
 
 ```bash
-# in sycognite/Build:
-cmake ..
+# in sycognite/Build, default is make-build-system, but Ninja can also be used:
+cmake [-G Ninja] ..
 # optionally use ccmake to configure options and paths:
 ccmake ..
+```
+
+macOS users might want to configure for building with Xcode:
+
+```
+cmake -G Xcode ..
 ```
 
 Build the project:
 
 ```bash
 make
+# or
+ninja
+# or (macOS) start Xcode and load the generated project file.
 ```
 
 ## History
 
+* 2020-07-05: Tests with resilu (non-)linearity
 * 2018-03-02: Removed faulty RAN layer, switched to official eigen3 github-mirror at: [Github eigen3](https://github.com/eigenteam/eigen-git-mirror), fixes for eigen-dev stricted type-checking.
 
 ## Subprojects:
@@ -172,3 +184,23 @@ Things that should work:
 * [mnisttest](cpmnist/) (cpmnist subproject, MNIST handwritten digit recognition with a convolutional network, requires [dataset download](datasets/).)
 * [cifar10test](cpcifar10/) (cpcifar10 subproject, cifar10 image recognition with a convolutional network, requires [dataset download](datasets/).)
 * [rnnreader](rnnreader/) (rnnreader subproject, text generation via RNN/LSTMs, similar to char-rnn.)
+
+
+## Appendix
+
+### Resilu (non-) linearity
+
+<!-- the folloing uses the hack from https://gist.github.com/a-rodin/fef3f543412d6e1ec5b6cf55bf197d7b to display latex. Seriously. -->
+<!-- Good code generator latex -> github: https://jsfiddle.net/8ndx694g/ -->
+
+(1) <img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{1-e^{-x}}">
+
+<img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> can be rewritten as:
+
+(2) <img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{e^{x}-1}%2Bx">
+
+thus can be interpreted as a residual combination of linearity and non-linearity via addition.
+
+Since <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> shows a phase-transition instability at <img src="https://render.githubusercontent.com/render/math?math=x=0">, a taylor <img src="https://render.githubusercontent.com/render/math?math=O(4)"> approximation is used for <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> and <img src="https://render.githubusercontent.com/render/math?math=%5Cnabla rsi(x)"> for <img src="https://render.githubusercontent.com/render/math?math=-h%20%3C%200%20%3C%20h">.
+
+Both <img src="https://render.githubusercontent.com/render/math?math=e%5E%7Bx%7D"> quotients (1) and (2) have as limit relu(x) or, in case of (2): -relu(x), if <img src="https://render.githubusercontent.com/render/math?math=e%5E%7Bx%7D"> is replaced by <img src="https://render.githubusercontent.com/render/math?math=e%5E%7B%5Cfrac%7Bx%7D%7Ba%7D%7D"> for small constants a.
