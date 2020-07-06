@@ -98,22 +98,30 @@ public:
         // Resilu should combine a non-linearity (similar to relu) and a residual, linear connection
         // r(x) = 1/(1-exp(-x/a)). Variing a limits in relu. r(x) can be rewritten as r(x)=x/(exp(x)-1) + x  (the linear, additive residual part)
         // Problem: phase-transition at 0, hence:
-        // approximate with taylor-expansion up to O(4) for -h<x<h
-        floatN h=0.01;
+        // approximate with taylor-expansion up to O(6) for -h<x<h
+        floatN h=0.001;
+        floatN x2;
         MatrixN y=x.array()/(1.0-(x.array() * -1.0).exp());
         for (unsigned int i=0; i<(unsigned int)x.size(); i++) {
-            if (x(i) < h && x(i) > -1.0 * h ) y(i)=1.0+x(i)/2.0+x(i)*x(i)/12.0-x(i)*x(i)*x(i)*x(i)/720.0;
+            if (x(i) < h && x(i) > -1.0 * h ) {
+                x2=x(i)*x(i);
+                y(i)=1.0+x(i)/2.0+x2/12.0-x2*x2/720.0+x2*x2*x2/30240.0;
+            }
         }
         return y; 
     }
     MatrixN dResilu(const MatrixN& x) {
-        // approximate with taylor-expansion up to O(4) for -h<x<h
-        floatN h=0.01;
+        // approximate with taylor-expansion up to O(6) for -h<x<h
+        floatN h=0.001;
+        floatN x2;
         MatrixN e=x.array().exp();
         MatrixN e1 = e.array()-1.0;
         MatrixN y = e.array()*(e.array()-x.array()-1.0)/e1.array()/e1.array();
         for (unsigned int i=0; i<(unsigned int)x.size(); i++) {
-            if (x(i) < h && x(i) > -1.0 * h ) y(i)=0.5+x(i)/6.0-4.0*x(i)*x(i)*x(i)/720.0; //  //x(i)/6.0+0.5819767068693265;  // 0.58.. == 1/(e-1)
+            if (x(i) < h && x(i) > -1.0 * h ) {
+                x2 = x(i)*x(i);
+                y(i)=0.5+x(i)/6.0-x2*x(i)/180.0+x2*x2*x(i)/5040.0-x2*x2*x2*x(i)/151200; //  //x(i)/6.0+0.5819767068693265;  // 0.58.. == 1/(e-1)
+            }
         }
         return y; 
 

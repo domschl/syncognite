@@ -140,7 +140,7 @@ bool testNonlinearity(int verbose) {
           MatrixN xnl(10, 20);
           xnl.setRandom();
           if (nlsi == "resilu") {
-               res=nlr.selfTest(xnl, &s1, 0.0001, 0.001, verbose);
+               res=nlr.selfTest(xnl, &s1, 0.00005, 0.001, verbose);
           } else {
                res=nlr.selfTest(xnl, &s1, CP_DEFAULT_NUM_H, CP_DEFAULT_NUM_EPS, verbose);
           }

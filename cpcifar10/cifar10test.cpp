@@ -315,9 +315,9 @@ int main(int argc, char *argv[]) {
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
     json jo(R"({"verbose":true,"shuffle":true,"epsion":1e-8})"_json);
-    jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
+    // (s.b.) jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
     jo["lr_decay"]=(floatN)1.0;
-    jo["regularization"]=(floatN)1e-6;
+    // (s.b.) jo["regularization"]=(floatN)1e-6;
 
     jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
