@@ -355,7 +355,7 @@ int main(int argc, char *argv[]) {
 
     jo["learning_rate"]=bLearn;
     jo["regularization"]=bReg;
-    jo["epochs"]=(floatN)40.0;
+    jo["epochs"]=(floatN)100.0;
     evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
 
     for (auto it : cpcifar10Data) {
