@@ -25,7 +25,7 @@ From build directory:
 cpcifar10/cifar10test ../datasets/cifar10.h5 [mode]
 ```
 
-`mode`: `0`: train with RELU nonlinearities, `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515), `2` train with [resilu](https://github.com/domschl/syncognite/tree/resilu-tests#resilu-non--linearity)
+`mode`: `0`: train with RELU nonlinearities, `1`: use SELU ("scaled exponential linear units" (SELUs), https://arxiv.org/abs/1706.02515), `2` train with [resilu](https://github.com/domschl/syncognite/tree/master#resilu-non--linearity)
 
 ## Logging
 
