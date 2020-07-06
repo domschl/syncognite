@@ -9,6 +9,7 @@ Check the [main page](../../..) for build requirements.
 After configuration of CMake, the cifar10 part can be built directly by:
 
 ```bash
+# use Ninja or Xcode, if the main project had been configured correspondingly
 make cifar10test
 ```
 
@@ -31,7 +32,7 @@ cpcifar10/cifar10test ../datasets/cifar10.h5 [mode]
 For live logging of the training progress, use gnuplot:
 
 ```bash
-gnuplot ../plots/liveplot.gnu
+gnuplot ../plot/liveplot.gnu
 ```
 
 ![after 7 episodes](../doc/images/cifar10-7.png)
