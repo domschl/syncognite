@@ -149,16 +149,25 @@ git submodule update    # This gets the in-tree Eigen3
 Create a ```Build``` directory within the syncognite directory and configure the build:
 
 ```bash
-# in sycognite/Build:
-cmake ..
+# in sycognite/Build, default is make-build-system, but Ninja can also be used:
+cmake [-G Ninja] ..
 # optionally use ccmake to configure options and paths:
 ccmake ..
+```
+
+macOS users might want to configure for building with Xcode:
+
+```
+cmake -G Xcode ..
 ```
 
 Build the project:
 
 ```bash
 make
+# or
+ninja
+# or (macOS) start Xcode and load the generated project file.
 ```
 
 ## History
