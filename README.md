@@ -190,6 +190,8 @@ Things that should work:
 
 ### Resilu (non-) linearity
 
+See [jupyter notebook](https://github.com/domschl/syncognite/blob/master/doc/resilu-linearity.ipynb) for visualization and more discussions of resilu function.
+
 <!-- the folloing uses the hack from https://gist.github.com/a-rodin/fef3f543412d6e1ec5b6cf55bf197d7b to display latex. Seriously. -->
 <!-- Good code generator latex -> github: https://jsfiddle.net/8ndx694g/ -->
 
