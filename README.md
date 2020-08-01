@@ -121,9 +121,14 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
 
-* C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or Mac (clang), ARM(gcc))
+* C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or macOS (clang x86-64 and Apple silicon (clang 12)), Raspberry ARM(gcc))
 * CMake build system.
 * [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5` or `libhdf5-dev`.
+
+### Apple silicon beta notes for hdf5
+
+* macOS 11 (ARM) currently [07-2020] requires building the HDF5 libraries from source
+* additionally, the python dataset download tools require h5py, which also currently needs to be built from source for Apple silicon.
 
 ### Optional dependencies:
 
@@ -131,7 +136,7 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ### External libraries that are included in the source tree:
 
-* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`, already (in default configuration) included in the source tree as submodule. Note: clang-4 requires current dev-branch [3.3.90] of eigen for tensor libs to compile.
+* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`, already (in default configuration) included in the source tree as submodule. 
 * [nlohmann_json](https://github.com/nlohmann/json), already included in source tree (cpneural/nlohmann_json).
 
 ## Build
@@ -172,6 +177,7 @@ ninja
 
 ## History
 
+* 2020-07-31: Apple ARM tested ok.
 * 2020-07-05: Tests with resilu (non-)linearity
 * 2018-03-02: Removed faulty RAN layer, switched to official eigen3 github-mirror at: [Github eigen3](https://github.com/eigenteam/eigen-git-mirror), fixes for eigen-dev stricted type-checking.
 
