@@ -22,12 +22,21 @@ option(WITH_VIENNACL "Use ViennaCL library" OFF)
 option(WITH_CUDA "Use Nvidia CUDA libraries" OFF)
 option(WITH_OPENCL "Use OpenCL libraries" OFF)
 option(USE_SYSTEM_EIGEN "Use system version of Eigen3 instead of project's version" OFF)
+option(USE_SYSTEM_BLAS "Configure eigen3 to use BLAS" OFF)
+SET(BLA_VENDOR "" CACHE STRING "Set BLAS vendor (see FindBLAS) e.g. OpenBlas, Apple, Generic")
 
 if (APPLE)
     include_directories("/usr/local/include")
+    SET(BLA_VENDOR "Apple")
 endif()
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR})
+
+if(USE_SYSTEM_BLAS)
+    add_definitions(-DEIGEN_USE_BLAS)
+    find_package(BLAS REQUIRED)
+    message(STATUS "Eigen3 will use system BLAS libraries")
+endif()
 
 if (USE_SYSTEM_EIGEN)
     find_package(Eigen3 REQUIRED)
