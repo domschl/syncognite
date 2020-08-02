@@ -303,7 +303,6 @@ int main(int argc, char *argv[]) {
         cerr << it.first << " tensor-4" <<  endl;
     }
 
-
     cpInitCompute("Cifar10");
     registerLayers();
 
