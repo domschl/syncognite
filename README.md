@@ -177,6 +177,7 @@ ninja
 
 ## History
 
+* 2020-11-12: Switched eigen3 submodule to [gitlab](https://gitlab.com/libeigen/eigen), tracks 3.3 branch
 * 2020-07-31: Apple ARM tested ok.
 * 2020-07-05: Tests with resilu (non-)linearity
 * 2018-03-02: Removed faulty RAN layer, switched to official eigen3 github-mirror at: [Github eigen3](https://github.com/eigenteam/eigen-git-mirror), fixes for eigen-dev stricted type-checking.
