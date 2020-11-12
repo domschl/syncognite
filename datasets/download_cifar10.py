@@ -136,12 +136,12 @@ def encodeCifar(cfdict, h5path, batchpath):
 
     hf = h5py.File(destname, 'w')
 
-    hf.create_dataset('train-data', data=X, compression='gzip')
-    hf.create_dataset('train-labels', data=y.astype(np.int32),
-                      compression='gzip')
-    hf.create_dataset('test-data', data=Xt, compression='gzip')
-    hf.create_dataset('test-labels', data=yt.astype(np.int32),
-                      compression='gzip')
+    hf.create_dataset('train-data', data=X) #, compression='gzip')
+    hf.create_dataset('train-labels', data=y.astype(np.int32)) #,
+                      # compression='gzip')
+    hf.create_dataset('test-data', data=Xt) #, compression='gzip')
+    hf.create_dataset('test-labels', data=yt.astype(np.int32)) #,
+                      # compression='gzip')
     hf.close()
 
     return True

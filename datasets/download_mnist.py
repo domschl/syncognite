@@ -126,8 +126,8 @@ def encodeOriginalsToH5(datadict, zippath, h5path):
                         di[y, x] = float(data[offs+y*w+x]) / du["norm"]
             offs += du["datasets"][ds] * du["entrysize"]
             # print(ds, shape, dtype)
-            dset = hf.create_dataset(ds, shape, dtype=dtype,
-                                     compression='gzip')
+            dset = hf.create_dataset(ds, shape, dtype=dtype) #,
+#                                     compression='gzip')
             dset[...] = di
     hf.close()
     return True
