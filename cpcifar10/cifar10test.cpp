@@ -319,7 +319,7 @@ int main(int argc, char *argv[]) {
     jo["lr_decay"]=(floatN)1.0;
     // (s.b.) jo["regularization"]=(floatN)1e-6;
 
-    jo["epochs"]=(floatN)40.0;
+    // (s.b.) jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
 
     bool autoOpt=false;
