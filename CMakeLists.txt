@@ -27,6 +27,7 @@ SET(BLA_VENDOR "" CACHE STRING "Set BLAS vendor (see FindBLAS) e.g. OpenBlas, Ap
 
 if (APPLE)
     include_directories("/usr/local/include")
+    include_directories("/opt/homebrew/include")
     SET(BLA_VENDOR "Apple")
 endif()
 
@@ -98,7 +99,16 @@ if ((";${gcc_like_compilers};" MATCHES ";${CMAKE_CXX_COMPILER_ID};") AND
     endif()
 endif()
 
+set(arm_archs aarch64 arm64)
 
+if (";${arm_archs};" MATCHES ";${CMAKE_SYSTEM_PROCESSOR};")
+    option(USE_ARM_OPT "Enable ARM64 optimization" ON)
+    if (USE_ARM_OPT)
+        add_definitions(-Ofast)
+        add_definitions(-DEIGEN_MAX_ALIGN_BYTES=16)
+        message("ARM64 opt enabled")
+    endif()
+endif()
 # if (WITH_OPENMP)
 #     find_package(OpenMP)
 #     if (OPENMP_FOUND)
