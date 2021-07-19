@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=96;
+    int T=64;
 
     int N=(int)txt.text.size() / (T+1);
     cerr << N << " Max datasets" << endl;
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
     jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
 
-    floatN dep=2.0;
+    floatN dep=10.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
