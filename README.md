@@ -7,7 +7,7 @@ A neural network library for convolutional, fully connected nets and RNNs in C++
 
 This library implements some of the assignments from Stanfords's [CS231n](http://cs231n.stanford.edu/index.html) 2016 course by Andrej Karpathy, Fei-Fei Li, Justin Johnson and [CS224d](http://cs224d.stanford.edu/index.html) by Richard Socher as C++ framework.
 
-Current state: **alpha**
+Current state: **beta**
 
 ### Features
 
@@ -125,8 +125,9 @@ see [rnnreader](rnnreader/) for a complete example.
 * CMake build system.
 * [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5` or `libhdf5-dev`.
 
-### Apple silicon beta notes for hdf5
+### Apple silicon notes
 
+* use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`, which instructs eigen to use M1's hardware accelerators. `rnnreader` sees dramatic 6x speedup, single thread benchmarks in `bench` see 200%-400% improvements! [Testet on macOS 12 beta 3 - 2021-07-19]
 * macOS 11 (ARM) currently [07-2020] requires building the HDF5 libraries from source
 * additionally, the python dataset download tools require h5py, which also currently needs to be built from source for Apple silicon.
 

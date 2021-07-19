@@ -8,6 +8,9 @@ Check the [main page](../../..) for build requirements.
 
 After configuration of CMake, `rnnreader` can be built directly by:
 
+Note: M1 users should use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`. This uses the M1 hardware accelerators for matrix multiplication
+and leads to 6x speedup.
+
 ```bash
 make rnnreader
 ```
