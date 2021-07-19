@@ -22,3 +22,5 @@ GPATH
 GTAGS
 GRTAGS
 log.txt
+.ccls-cache/
+FindHDFS.cmake
