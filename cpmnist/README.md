@@ -17,7 +17,7 @@ cpmnist/mnisttest ../datasets/mnist.h5
 ## Logging
 For live logging of the training progress, use gnuplot:
 ```bash
-gnuplot ../plots/liveplot.gnu
+gnuplot ../plot/liveplot.gnu
 ```
 ![after 6 episodes](../doc/images/mnist6.png)
 Note: Currently, this works only after 1. episode is complete.

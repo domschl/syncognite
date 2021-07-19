@@ -127,7 +127,8 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ### Apple silicon notes
 
-* use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`, which instructs eigen to use M1's hardware accelerators. `rnnreader` sees dramatic 6x speedup, single thread benchmarks in `bench` see 200%-400% improvements! [Testet on macOS 12 beta 3 - 2021-07-19]
+* use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`, which instructs eigen to use M1's hardware accelerators. `rnnreader` sees dramatic 3x-6x speedup, single thread benchmarks in `bench` see 200%-400% improvements! [Testet on macOS 12 beta 3 - 2021-07-19]
+* Memory: macOS simply doesn't give processes all available memory. Expect swapping (and significant speed decrease) when allocating more than 4-5GB, even on 16GB M1 machines.
 * macOS 11 (ARM) currently [07-2020] requires building the HDF5 libraries from source
 * additionally, the python dataset download tools require h5py, which also currently needs to be built from source for Apple silicon.
 
