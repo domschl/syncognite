@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=64;
+    int T=80;
 
     int N=(int)txt.text.size() / (T+1);
     cerr << N << " Max datasets" << endl;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
     int VS=txt.vocsize();
-    int H=256;
+    int H=512;
 
     int BS=128;
     float clip=5.0;
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     j1["forgetbias"]=0.30;
     j1["clip"]=clip;
-    int layer_depth1=3;
+    int layer_depth1=4;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
