@@ -137,7 +137,7 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ### External libraries that are included in the source tree:
 
-* [Eigen](http://eigen.tuxfamily.org/) v3.3 `eigen3`, already (in default configuration) included in the source tree as submodule. 
+* [Eigen](http://eigen.tuxfamily.org/) v3.4 `eigen3`, already (in default configuration) included in the source tree as submodule. 
 * [nlohmann_json](https://github.com/nlohmann/json), already included in source tree (cpneural/nlohmann_json).
 
 ## Build
@@ -178,6 +178,7 @@ ninja
 
 ## History
 
+* 2021-07-19: eigen update to 3.4rc1
 * 2021-07-19: Dramatic speed improvements when configuring eigen to use system blas (using `ccmake`) with Apple M1, seems to use M1's magic hardware accelerators.
 * 2020-11-12: Switched eigen3 submodule to [gitlab](https://gitlab.com/libeigen/eigen), tracks 3.3 branch
 * 2020-07-31: Apple ARM tested ok.
