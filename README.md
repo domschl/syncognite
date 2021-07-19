@@ -177,6 +177,7 @@ ninja
 
 ## History
 
+* 2021-07-19: Dramatic speed improvements when configuring eigen to use system blas (using `ccmake`) with Apple M1, seems to use M1's magic hardware accelerators.
 * 2020-11-12: Switched eigen3 submodule to [gitlab](https://gitlab.com/libeigen/eigen), tracks 3.3 branch
 * 2020-07-31: Apple ARM tested ok.
 * 2020-07-05: Tests with resilu (non-)linearity

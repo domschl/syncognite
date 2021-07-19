@@ -21,7 +21,7 @@ private:
         if (!txtfile.is_open()) {
             return false;
         }
-        txtfile.imbue(std::locale("en_US.UTF8"));
+        txtfile.imbue(std::locale("en_US.UTF-8"));
         wstring ttext((std::istreambuf_iterator<wchar_t>(txtfile)),
                      std::istreambuf_iterator<wchar_t>());
         txtfile.close();
@@ -79,12 +79,17 @@ void currentDateTime(wstring& timestr) {
 }
 
 int main(int argc, char *argv[]) {
-    std::setlocale (LC_ALL, "");
+#ifndef __APPLE__
+    std::setlocale(LC_ALL, "");
+#else
+    setlocale(LC_ALL, "");
+    std::wcout.imbue(std::locale("en_US.UTF-8"));
+#endif
     wcout << L"Rnn-Readär" << std::endl;
 
     bool allOk=true;
     if (argc!=2) {
-        cerr << "rnnreader <path-to-text-file>" << endl;
+        cerr << L"rnnreader <path-to-text-file>" << endl;
         exit(-1);
     }
     Text txt(argv[1]);
@@ -106,10 +111,10 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=50;
+    int T=96;
 
     int N=(int)txt.text.size() / (T+1);
-    cerr << N << " Max datassets" << endl;
+    cerr << N << " Max datasets" << endl;
     MatrixN Xr(N,T);
     MatrixN yr(N,T);
 
@@ -158,7 +163,7 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
     int VS=txt.vocsize();
-    int H=64;
+    int H=256;
 
     int BS=128;
     float clip=5.0;
@@ -189,7 +194,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     j1["forgetbias"]=0.30;
     j1["clip"]=clip;
-    int layer_depth1=6;
+    int layer_depth1=3;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
