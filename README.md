@@ -178,6 +178,7 @@ ninja
 
 ## History
 
+* 2021-08-21: eigen update to 3.4 release
 * 2021-07-19: eigen update to 3.4rc1
 * 2021-07-19: Dramatic speed improvements when configuring eigen to use system blas (using `ccmake`) with Apple M1, seems to use M1's magic hardware accelerators.
 * 2020-11-12: Switched eigen3 submodule to [gitlab](https://gitlab.com/libeigen/eigen), tracks 3.3 branch
