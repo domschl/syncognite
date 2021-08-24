@@ -163,9 +163,8 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
     int VS=txt.vocsize();
-    int H=384;
-
-    int BS=128;
+    int H=512;
+    int BS=96;
     float clip=5.0;
 
     //int D=64;
@@ -194,7 +193,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     j1["forgetbias"]=0.30;
     j1["clip"]=clip;
-    int layer_depth1=4;
+    int layer_depth1=8;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -226,7 +225,7 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
+    jo["learning_rate"]=(floatN)5e-3; //2.2e-2);
 
     floatN dep=25.0;
     floatN sep=0.0;
