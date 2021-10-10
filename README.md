@@ -121,7 +121,7 @@ see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
 
-* C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or macOS (clang x86-64 and Apple silicon (clang 12)), Raspberry ARM(gcc))
+* C++ 11 compiler (on Linux (tested: clang, gcc, Intel icpc) or macOS (clang x86-64 and Apple silicon (clang 12, 13)), Raspberry ARM(gcc))
 * CMake build system.
 * [Hdf5](https://support.hdfgroup.org/HDF5/) [C++ API](https://support.hdfgroup.org/HDF5/doc/cpplus_RM/) for model saving and sample data, `hdf5` or `libhdf5-dev`.
 
