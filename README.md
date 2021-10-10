@@ -1,6 +1,5 @@
 # syncognite - A neural network library inspired by Stanford's CS231n course
 
-[![Build Status](https://travis-ci.org/domschl/syncognite.svg?branch=master)](https://travis-ci.org/domschl/syncognite)
 [![Cmake](https://github.com/domschl/syncognite/workflows/CMake/badge.svg)](https://github.com/domschl/syncognite/actions)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
 
@@ -179,6 +178,7 @@ ninja
 
 ## History
 
+* 2021-10-10: Moved CI from travis (defunct) to github workflows. Valgrind currently disabled.
 * 2021-08-21: eigen update to 3.4 release
 * 2021-07-19: eigen update to 3.4rc1
 * 2021-07-19: Dramatic speed improvements when configuring eigen to use system blas (using `ccmake`) with Apple M1, seems to use M1's magic hardware accelerators.
