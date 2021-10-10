@@ -1,6 +1,7 @@
 # syncognite - A neural network library inspired by Stanford's CS231n course
 
 [![Build Status](https://travis-ci.org/domschl/syncognite.svg?branch=master)](https://travis-ci.org/domschl/syncognite)
+[![Cmake](https://github.com/domschl/syncognite/workflows/CMake/badge.svg)](https://github.com/domschl/syncognite/actions)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
 
 A neural network library for convolutional, fully connected nets and RNNs in C++.
