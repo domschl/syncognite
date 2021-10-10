@@ -58,4 +58,5 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         ./cptest/testneural
-        valgrind --leak-check=full ./cptest/testneural
+        # Valgrind fails with unrecognized instructions on AMD, disabled for now.
+        # valgrind --leak-check=full ./cptest/testneural
