@@ -1,6 +1,2 @@
 add_executable(testneural testneural.cpp)
-if (OpenCL_FOUND)
-    target_link_libraries(testneural LINK_PUBLIC Threads::Threads ${HDF5_LIBRARIES} ${OpenCL_LIBRARY} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
-else()
-    target_link_libraries(testneural LINK_PUBLIC Threads::Threads ${HDF5_LIBRARIES} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES} ${BLAS_LIBRARIES})
-endif()
+target_link_libraries(testneural LINK_PUBLIC Threads::Threads ${HDF5_LIBRARIES} ${BLAS_LIBRARIES})

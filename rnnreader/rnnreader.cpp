@@ -294,5 +294,4 @@ int main(int argc, char *argv[]) {
         fl.close();
         cppl_delete(&statesg);
     }
-    cpExitCompute();
 }

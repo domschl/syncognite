@@ -18,7 +18,6 @@ Returns a tuple of:
 */
 class WordEmbedding : public Layer {
   private:
-    int numGpuThreads;
     int numCpuThreads;
     int T, D, V;
     MatrixN wrVect;
@@ -49,8 +48,6 @@ class WordEmbedding : public Layer {
         // cppl_set(&params, "V", new MatrixN(wrVect));   // XXX: we are
         // implying to learn a better word vector repr. That was not done in
         // CS231
-
-        numGpuThreads = cpGetNumGpuThreads();
         numCpuThreads = cpGetNumCpuThreads();
 
         /*

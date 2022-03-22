@@ -7,7 +7,6 @@
 
 class RAN : public Layer {
   private:
-    int numGpuThreads;
     int numCpuThreads;
     floatN initfactor;
     int T, D, H, N;  // T: time steps, D: input dimension of X, H: number of
@@ -55,8 +54,6 @@ class RAN : public Layer {
         cppl_set(
             &params, "bh",
             new MatrixN(xavierInit(MatrixN(1, 3 * H), inittype, initfactor)));
-
-        numGpuThreads = cpGetNumGpuThreads();
         numCpuThreads = cpGetNumCpuThreads();
 
         layerInit = true;

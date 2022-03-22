@@ -75,42 +75,6 @@ using Eigen::IOFormat;
 using CpParams=ParamParser<floatN>;
 typedef t_param_parser<MatrixN *> t_cppl;
 
-#if defined (USE_VIENNACL) || (USE_CUDA)
-#define USE_GPU
-#endif
-
-#ifdef USE_VIENNACL
-#define VIENNACL_HAVE_EIGEN
-#ifdef USE_OPENCL
-#define VIENNACL_WITH_OPENCL
-//#pragma message("Eigen is active with ViennaCl and OpenCL")
-#else
-#error "VIENNACL currently requires WITH_OPENCL Cmake option to be set."
-#endif
-#ifdef USE_CUDA
-#define VIENNACL_WITH_CUDA
-#error "CUDA option with ViennaCL currently does not work!"
-#endif
-#endif
-
-#ifdef USE_VIENNACL
-#include <viennacl/scalar.hpp>
-#include <viennacl/vector.hpp>
-#include <viennacl/matrix.hpp>
-#include <viennacl/linalg/prod.hpp>
-#endif
-
-#ifdef USE_VIENNACL
-#include <viennacl/ocl/device.hpp>
-#include <viennacl/ocl/platform.hpp>
-#include <viennacl/ocl/backend.hpp>
-#endif
-
-#ifdef USE_CUDA
-#include <cuda_runtime_api.h>
-#include <cublas_v2.h>
-#endif
-
 #include <H5Cpp.h>
 #include <H5File.h>
 #include <H5DataSet.h>

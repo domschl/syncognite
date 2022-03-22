@@ -19,7 +19,6 @@ class Pooling : public Layer {
     //   WO: output width
     //   HO: output height
 private:
-    int numGpuThreads;
     int numCpuThreads;
     int C, H, W, HH, WW;
     int HO, WO;
@@ -43,7 +42,6 @@ private:
         }
         // W: F, C, HH, WW
         //cppl_set(&params, "Wb", new MatrixN(F,C*HH*WW+1)); // Wb, b= +1!
-        numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         HO = (H-HH)/stride+1;

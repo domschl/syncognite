@@ -367,7 +367,5 @@ int main() {
     registerLayers();
     int ret = 0;
     ret = doBench();
-
-    cpExitCompute();
     return ret;
 }

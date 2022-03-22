@@ -282,7 +282,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN regularization = popti->j.value("regularization", (floatN)0.0); // Default only!
     //cerr << ep << " " << bs << " " << lr << endl;
 
-    int nt=cpGetNumCpuThreads() + cpGetNumGpuThreads(); // popti->cp.getPar("threads",(int)1); // Default only!
+    int nt=cpGetNumCpuThreads();
     int maxThreads=popti->j.value("maxthreads",(int)0);
     if (maxThreads>1 && bPreserveStates) {
         cerr << "ERROR: cannnot preserve states, if thread-count > 1, reducint to 1." << endl;
