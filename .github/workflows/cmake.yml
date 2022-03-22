@@ -62,4 +62,4 @@ jobs:
       run: |
         ./cptest/testneural
         # Valgrind fails with unrecognized instructions on AMD, disabled for now.
-        valgrind --leak-check=full ./cptest/testneural
+        # valgrind --leak-check=full ./cptest/testneural
