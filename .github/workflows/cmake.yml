@@ -23,7 +23,9 @@ jobs:
 
     - name: Install hdf5
       shell: bash
-      run: sudo apt install libhdf5-dev
+      run: |
+        sudo apt update
+        sudo apt install libhdf5-dev
 
     - name: Create Build Environment
       # Some projects don't allow in-source building, so create a separate build directory
@@ -48,8 +50,10 @@ jobs:
 
     - name: Install valgrind
       shell: bash
-      run: sudo apt install valgrind
-      
+      run: |
+        sudo apt update
+        sudo apt install --fix-missing valgrind
+    
     - name: Test
       working-directory: ${{github.workspace}}/build
       shell: bash
