@@ -48,8 +48,10 @@ jobs:
 
     - name: Install valgrind
       shell: bash
-      run: sudo apt install --fix-missing valgrind
-      
+      run: |
+        sudo apt update
+        sudo apt install --fix-missing valgrind
+    
     - name: Test
       working-directory: ${{github.workspace}}/build
       shell: bash
@@ -58,4 +60,4 @@ jobs:
       run: |
         ./cptest/testneural
         # Valgrind fails with unrecognized instructions on AMD, disabled for now.
-        # valgrind --leak-check=full ./cptest/testneural
+        valgrind --leak-check=full ./cptest/testneural
