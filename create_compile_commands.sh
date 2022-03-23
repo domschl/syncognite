@@ -6,7 +6,8 @@ BUILD_DIR=build
 if [[ -d "$BUILD_DIR" ]]; then
     cd $BUILD_DIR
     cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=YES ..
-    echo "Compile commands exported to $BUILD_DIR/compile_commands.json"
+    cp compile_commands.json ..
+    echo "Compile commands exported to $BUILD_DIR/compile_commands.json and copied to root directory"
 else
     echo "No build directory <$BUILD_DIR> found"
 fi
