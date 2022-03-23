@@ -151,14 +151,21 @@ git submodule init
 git submodule update    # This gets the in-tree Eigen3
 ```
 
-Create a ```Build``` directory within the syncognite directory and configure the build:
+Create a ```build``` directory within the syncognite directory and configure the build:
 
 ```bash
-# in sycognite/Build, default is make-build-system, but Ninja can also be used:
+# in sycognite/build, default is make-build-system, but Ninja can also be used:
 cmake [-G Ninja] ..
 # optionally use ccmake to configure options and paths:
 ccmake ..
 ```
+
+To configure your editor / ide for include paths use (in `build`):
+
+```
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=YES ..
+```
+or simply execute the helper `create_compile_commands.sh`.
 
 macOS users might want to configure for building with Xcode:
 

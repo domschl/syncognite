@@ -1,5 +1,19 @@
-#ifndef _CP_NEURAL_H
-#define _CP_NEURAL_H
+#pragma once
+
+/*! \mainpage Syncognite neural network library in C++
+\section Introduction
+
+Syncognite is a header-only library for neural networks in C++.using Eigen3 for matrix operations.
+
+Layers are implemented with manual forward and backward propagation (so no autodiff).
+
+This is the main header file for the library.
+
+In addition to this include file, you may want to include the required layers.
+
+\section Reference
+<a href="https://github.com/domschl/syncognite">syncognite github repository</a>
+*/
 
 #include <iostream>
 #include <fstream>
@@ -84,5 +98,3 @@ typedef t_param_parser<MatrixN *> t_cppl;
 #include "cp-layers.h"
 #include "cp-layer-tests.h"
 #include "cp-optim.h"
-
-#endif
