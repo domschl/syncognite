@@ -178,6 +178,7 @@ ninja
 
 ## History
 
+* 2022-03-23: Archive-branch for the previous version of Syncognite that included some CUDA and OpenCL code, which is being removed for v2.
 * 2021-10-10: Moved CI from travis (defunct) to github workflows. Valgrind currently disabled.
 * 2021-08-21: eigen update to 3.4 release
 * 2021-07-19: eigen update to 3.4rc1
