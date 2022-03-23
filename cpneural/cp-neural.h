@@ -15,6 +15,8 @@ In addition to this include file, you may want to include the required layers.
 <a href="https://github.com/domschl/syncognite">syncognite github repository</a>
 */
 
+/** @file */
+
 #include <iostream>
 #include <fstream>
 #include <cctype>
@@ -52,16 +54,20 @@ using Eigen::IOFormat;
 #include "cp-timer.h"
 
 //#define USE_DOUBLE
+/** Define either USE_FLOAT (default) or USE_DOUBLE to determine the precision of the matrix and math operations.
+ * All other main types (like \ref MatrixN or \ref VectorN ) are derrived from those definitions */
 #ifndef USE_DOUBLE
  #ifndef USE_FLOAT
   #define USE_FLOAT
  #endif
 #endif
 
+
 #ifdef USE_DOUBLE
  #ifdef USE_FLOAT
   #error CONFIGURATION MESS: either USE_DOUBLE or USE_FLOAT, not both!
  #endif
+/** MatrixN is the standard type for matrices in syncognite. It's either float or double, depending on the definition of USE_FLOAT or USE_DOUBLE */
  using MatrixN=Eigen::MatrixXd;
  using VectorN=Eigen::VectorXd;
  using RowVectorN=Eigen::RowVectorXd;
@@ -74,7 +80,7 @@ using Eigen::IOFormat;
  #define H5_FLOATN_SIZE 8
 #endif
 #ifdef USE_FLOAT
- using MatrixN=Eigen::MatrixXf;
+/** MatrixN is the standard type for matrices in syncognite. It's either float or double, depending on the definition of USE_FLOAT or USE_DOUBLE */ using MatrixN=Eigen::MatrixXf;
  using VectorN=Eigen::VectorXf;
  using RowVectorN=Eigen::RowVectorXf;
  using ColVectorN=Eigen::VectorXf;
