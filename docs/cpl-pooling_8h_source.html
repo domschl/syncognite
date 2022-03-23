@@ -134,16 +134,16 @@ $(function() {
 <div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span>        cppl_delete(&amp;params);</div>
 <div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span>    }</div>
 <div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span> </div>
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keyword">virtual</span> MatrixN forward(<span class="keyword">const</span> MatrixN&amp; x, t_cppl* pcache, t_cppl* pstates, <span class="keywordtype">int</span> <span class="keywordtype">id</span>=0)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> forward(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&amp; x, t_cppl* pcache, t_cppl* pstates, <span class="keywordtype">int</span> <span class="keywordtype">id</span>=0)<span class="keyword"> override </span>{</div>
 <div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>        <span class="comment">// XXX cache x2c and use allocated memory for im2col call!</span></div>
 <div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span>        <span class="keyword">auto</span> N=shape(x)[0];</div>
 <div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span>        <span class="keywordflow">if</span> (shape(x)[1]!=(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)C*W*H) {</div>
 <div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span>            cerr &lt;&lt; <span class="stringliteral">&quot;PoolFw: Invalid input data x: expected C*H*W=&quot;</span> &lt;&lt; C*H*W &lt;&lt; <span class="stringliteral">&quot;, got: &quot;</span> &lt;&lt; shape(x)[1] &lt;&lt; endl;</div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>            <span class="keywordflow">return</span> MatrixN(0,0);</div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span>            <span class="keywordflow">return</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(0,0);</div>
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>        }</div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        MatrixN *pmask = <span class="keyword">new</span> MatrixN(N, C*H*W);</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pmask = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(N, C*H*W);</div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>        pmask-&gt;setZero();</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        MatrixN y(N,C*WO*HO);</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> y(N,C*WO*HO);</div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        y.setZero();</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        floatN mx;</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>        <span class="keywordtype">int</span> chw,chowo,px0,iy0;</div>
@@ -187,19 +187,19 @@ $(function() {
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        <span class="comment">//cerr &lt;&lt; &quot;x:&quot; &lt;&lt; endl &lt;&lt; x &lt;&lt; endl;</span></div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        <span class="comment">//cerr &lt;&lt; &quot;mask:&quot; &lt;&lt; endl &lt;&lt; *pmask &lt;&lt; endl;</span></div>
 <div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span> </div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <span class="keywordflow">if</span> (pcache!=<span class="keyword">nullptr</span>) cppl_set(pcache, <span class="stringliteral">&quot;x&quot;</span>, <span class="keyword">new</span> MatrixN(x)); <span class="comment">// XXX where do we need x?</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <span class="keywordflow">if</span> (pcache!=<span class="keyword">nullptr</span>) cppl_set(pcache, <span class="stringliteral">&quot;x&quot;</span>, <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(x)); <span class="comment">// XXX where do we need x?</span></div>
 <div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        <span class="keywordflow">if</span> (pcache!=<span class="keyword">nullptr</span>) cppl_set(pcache, <span class="stringliteral">&quot;mask&quot;</span>, pmask);</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
 <div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        <span class="keywordflow">if</span> (pcache==<span class="keyword">nullptr</span>) <span class="keyword">delete</span> pmask;</div>
 <div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        <span class="keywordflow">return</span> y;</div>
 <div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>    }</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keyword">virtual</span> MatrixN backward(<span class="keyword">const</span> MatrixN&amp; dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, <span class="keywordtype">int</span> <span class="keywordtype">id</span>=0)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> backward(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&amp; dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, <span class="keywordtype">int</span> <span class="keywordtype">id</span>=0)<span class="keyword"> override </span>{</div>
 <div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        <span class="keywordtype">int</span> N=shape(dchain)[0];</div>
 <div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        <span class="keywordflow">if</span> (shape(dchain)[1]!=(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)C*HO*WO) {</div>
 <div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span>            cerr &lt;&lt; <span class="stringliteral">&quot;PoolBw: Invalid input data dchain: expected C*HO*WO=&quot;</span> &lt;&lt; C*HO*WO &lt;&lt; <span class="stringliteral">&quot;, got: &quot;</span> &lt;&lt; shape(dchain)[1] &lt;&lt; endl;</div>
-<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>            <span class="keywordflow">return</span> MatrixN(0,0);</div>
+<div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>            <span class="keywordflow">return</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(0,0);</div>
 <div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>        }</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        MatrixN dx(N,C*W*H);</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dx(N,C*W*H);</div>
 <div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>        dx.setZero();</div>
 <div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>        <span class="keywordtype">int</span> chw,chowo,px0,py0,ix0;</div>
 <div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>        <span class="keywordtype">int</span> xs, ys, px, py;</div>
@@ -220,7 +220,7 @@ $(function() {
 <div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>                                <span class="keywordflow">if</span> (xs&gt;=W) <span class="keywordflow">continue</span>;</div>
 <div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>                                px=px0+xs;</div>
 <div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>                                py=py0+ix;</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>                                MatrixN *pmask=(*pcache)[<span class="stringliteral">&quot;mask&quot;</span>];</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>                                <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pmask=(*pcache)[<span class="stringliteral">&quot;mask&quot;</span>];</div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>                                dx(n, px) += dchain(n,py) * (*pmask)(n, px);</div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>                            }</div>
 <div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>                        }</div>
@@ -235,6 +235,7 @@ $(function() {
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclass_layer_html"><div class="ttname"><a href="class_layer.html">Layer</a></div><div class="ttdef"><b>Definition:</b> cp-layer.h:122</div></div>
 <div class="ttc" id="aclass_pooling_html"><div class="ttname"><a href="class_pooling.html">Pooling</a></div><div class="ttdef"><b>Definition:</b> cpl-pooling.h:8</div></div>
+<div class="ttc" id="acp-neural_8h_html_ac7ab0189fb9240290671d6cd8aaacdee"><div class="ttname"><a href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a></div><div class="ttdeci">Eigen::MatrixXf MatrixN</div><div class="ttdef"><b>Definition:</b> cp-neural.h:83</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

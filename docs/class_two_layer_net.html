@@ -88,11 +88,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac1bfbf105d6ade4fda913e4728a2563e"><td class="memItemLeft" align="right" valign="top"><a id="ac1bfbf105d6ade4fda913e4728a2563e" name="ac1bfbf105d6ade4fda913e4728a2563e"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>TwoLayerNet</b> (const string conf)</td></tr>
 <tr class="separator:ac1bfbf105d6ade4fda913e4728a2563e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6992651b03390b2ff66d3cb793553831"><td class="memItemLeft" align="right" valign="top">virtual MatrixN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a6992651b03390b2ff66d3cb793553831">forward</a> (const MatrixN &amp;x, t_cppl *pcache, t_cppl *pstates, int id=0) override</td></tr>
+<tr class="memitem:a6992651b03390b2ff66d3cb793553831"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a6992651b03390b2ff66d3cb793553831">forward</a> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pcache, t_cppl *pstates, int id=0) override</td></tr>
 <tr class="separator:a6992651b03390b2ff66d3cb793553831"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16c014a09c7ce65bffe82d70c02a02e9"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a16c014a09c7ce65bffe82d70c02a02e9">loss</a> (t_cppl *pcache, t_cppl *pstates) override</td></tr>
 <tr class="separator:a16c014a09c7ce65bffe82d70c02a02e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8bb21f501f13170b8abf1ebcf54d0822"><td class="memItemLeft" align="right" valign="top">virtual MatrixN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a8bb21f501f13170b8abf1ebcf54d0822">backward</a> (const MatrixN &amp;y, t_cppl *pcache, t_cppl *pstates, t_cppl *pgrads, int id=0) override</td></tr>
+<tr class="memitem:a8bb21f501f13170b8abf1ebcf54d0822"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a8bb21f501f13170b8abf1ebcf54d0822">backward</a> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pcache, t_cppl *pstates, t_cppl *pgrads, int id=0) override</td></tr>
 <tr class="separator:a8bb21f501f13170b8abf1ebcf54d0822"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c99d64166dd18fcf3dd70da309cff9d"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_two_layer_net.html#a3c99d64166dd18fcf3dd70da309cff9d">update</a> (<a class="el" href="class_optimizer.html">Optimizer</a> *popti, t_cppl *pgrads, string var, t_cppl *pocache) override</td></tr>
 <tr class="separator:a3c99d64166dd18fcf3dd70da309cff9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -116,22 +116,22 @@ virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>getLayerConfi
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>saveLayerConfiguration</b> (H5::H5File *pfile)</td></tr>
 <tr class="separator:a7b2d5fa330ac4458496211ead119d6a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac984d6eaa7fd9befe7f327aa92102ab8"><td class="memItemLeft" align="right" valign="top"><a id="ac984d6eaa7fd9befe7f327aa92102ab8" name="ac984d6eaa7fd9befe7f327aa92102ab8"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const MatrixN &amp;x, t_cppl *pstates, const MatrixN &amp;xv, t_cppl *pstatesv, string optimizer, const json &amp;j)</td></tr>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xv, t_cppl *pstatesv, string optimizer, const json &amp;j)</td></tr>
 <tr class="separator:ac984d6eaa7fd9befe7f327aa92102ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a72fa4067def88cf2b68ee201a6557721"><td class="memItemLeft" align="right" valign="top"><a id="a72fa4067def88cf2b68ee201a6557721" name="a72fa4067def88cf2b68ee201a6557721"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const MatrixN &amp;x, const MatrixN &amp;y, const MatrixN &amp;xv, const MatrixN &amp;yv, string optimizer, const json &amp;j)</td></tr>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xv, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yv, string optimizer, const json &amp;j)</td></tr>
 <tr class="separator:a72fa4067def88cf2b68ee201a6557721"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a011a25b8fde594a83954836b18db1bda"><td class="memItemLeft" align="right" valign="top"><a id="a011a25b8fde594a83954836b18db1bda" name="a011a25b8fde594a83954836b18db1bda"></a>
-retdict&#160;</td><td class="memItemRight" valign="bottom"><b>workerThread</b> (MatrixN *pxb, t_cppl *pstates, int id)</td></tr>
+retdict&#160;</td><td class="memItemRight" valign="bottom"><b>workerThread</b> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pxb, t_cppl *pstates, int id)</td></tr>
 <tr class="separator:a011a25b8fde594a83954836b18db1bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a352715ad397e918f1290dfe165be9fc3"><td class="memItemLeft" align="right" valign="top"><a id="a352715ad397e918f1290dfe165be9fc3" name="a352715ad397e918f1290dfe165be9fc3"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const MatrixN &amp;x, t_cppl *pstates, int batchsize)</td></tr>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, int batchsize)</td></tr>
 <tr class="separator:a352715ad397e918f1290dfe165be9fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bfaf6d7c631cb4c2a489a237d0dff98"><td class="memItemLeft" align="right" valign="top"><a id="a5bfaf6d7c631cb4c2a489a237d0dff98" name="a5bfaf6d7c631cb4c2a489a237d0dff98"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const MatrixN &amp;x, const MatrixN &amp;y, int batchsize)</td></tr>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, int batchsize)</td></tr>
 <tr class="separator:a5bfaf6d7c631cb4c2a489a237d0dff98"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af4dc2a8140f48d9b6b3e55d560660d51"><td class="memItemLeft" align="right" valign="top"><a id="af4dc2a8140f48d9b6b3e55d560660d51" name="af4dc2a8140f48d9b6b3e55d560660d51"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>selfTest</b> (const MatrixN &amp;x, t_cppl *pstates, floatN h, floatN eps, int verbose)</td></tr>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>selfTest</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, floatN h, floatN eps, int verbose)</td></tr>
 <tr class="separator:af4dc2a8140f48d9b6b3e55d560660d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -190,9 +190,9 @@ std::queue&lt; floatN &gt;&#160;</td><td class="memItemRight" valign="bottom"><b
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual MatrixN TwoLayerNet::backward </td>
+          <td class="memname">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> TwoLayerNet::backward </td>
           <td>(</td>
-          <td class="paramtype">const MatrixN &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
           <td class="paramname"><em>y</em>, </td>
         </tr>
         <tr>
@@ -246,9 +246,9 @@ std::queue&lt; floatN &gt;&#160;</td><td class="memItemRight" valign="bottom"><b
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual MatrixN TwoLayerNet::forward </td>
+          <td class="memname">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> TwoLayerNet::forward </td>
           <td>(</td>
-          <td class="paramtype">const MatrixN &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
           <td class="paramname"><em>x</em>, </td>
         </tr>
         <tr>

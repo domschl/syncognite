@@ -119,13 +119,13 @@ $(function() {
 <div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span> </div>
 <div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span>        cppl_set(</div>
 <div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span>            &amp;params, <span class="stringliteral">&quot;Wxh&quot;</span>,</div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <span class="keyword">new</span> MatrixN(xavierInit(MatrixN(D, 3 * H), inittype, initfactor)));</div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span>            <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(xavierInit(<a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(D, 3 * H), inittype, initfactor)));</div>
 <div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span>        cppl_set(</div>
 <div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span>            &amp;params, <span class="stringliteral">&quot;Whh&quot;</span>,</div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>            <span class="keyword">new</span> MatrixN(xavierInit(MatrixN(H, 2 * H), inittype, initfactor)));</div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span>            <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(xavierInit(<a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(H, 2 * H), inittype, initfactor)));</div>
 <div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span>        cppl_set(</div>
 <div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span>            &amp;params, <span class="stringliteral">&quot;bh&quot;</span>,</div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>            <span class="keyword">new</span> MatrixN(xavierInit(MatrixN(1, 3 * H), inittype, initfactor)));</div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span>            <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(xavierInit(<a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(1, 3 * H), inittype, initfactor)));</div>
 <div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span>        numCpuThreads = cpGetNumCpuThreads();</div>
 <div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span> </div>
 <div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span>        layerInit = <span class="keyword">true</span>;</div>
@@ -143,14 +143,14 @@ $(function() {
 <div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span>    }</div>
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> genZeroStates(t_cppl *pstates, <span class="keywordtype">int</span> N)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        MatrixN *pc = <span class="keyword">new</span> MatrixN(N, H);</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pc = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(N, H);</div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span>        pc-&gt;setZero();</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>        cppl_set(pstates, cname, pc);</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span>    }</div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span> </div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    MatrixN Sigmoid(<span class="keyword">const</span> MatrixN &amp;m) {</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        MatrixN mn(m);</div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        MatrixN y;</div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>    <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> Sigmoid(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;m) {</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> mn(m);</div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> y;</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span>        <span class="comment">// Standard sigmoid is not numerically stable (large -x instable)</span></div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>        <span class="comment">// y=(1.0/(1.0+(mn.array() * -1.0).exp()));</span></div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <span class="comment">// Alternative via tanh is stable and doesn&#39;t need case distinctions for</span></div>
@@ -160,10 +160,10 @@ $(function() {
 <div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span>        <span class="keywordflow">return</span> y;</div>
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>    }</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    MatrixN tensorchunk(<span class="keyword">const</span> MatrixN &amp;x, vector&lt;int&gt; dims, <span class="keywordtype">int</span> b) {</div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span>    <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> tensorchunk(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, vector&lt;int&gt; dims, <span class="keywordtype">int</span> b) {</div>
 <div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span>        <span class="keywordtype">int</span> A = dims[0];</div>
 <div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span>        <span class="keywordtype">int</span> C = dims[2];</div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        MatrixN xi(A, C);</div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xi(A, C);</div>
 <div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span>        <span class="keywordtype">int</span> a, c;</div>
 <div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span>        <span class="keywordflow">for</span> (a = 0; a &lt; A; a++) {</div>
 <div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span>            <span class="keywordflow">for</span> (c = 0; c &lt; C; c++) {</div>
@@ -172,7 +172,7 @@ $(function() {
 <div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span>        }</div>
 <div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span>        <span class="keywordflow">return</span> xi;</div>
 <div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span>    }</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keywordtype">void</span> tensorchunkinsert(MatrixN *ph, MatrixN &amp;ht, vector&lt;int&gt; dims, <span class="keywordtype">int</span> b) {</div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>    <span class="keywordtype">void</span> tensorchunkinsert(<a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *ph, <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;ht, vector&lt;int&gt; dims, <span class="keywordtype">int</span> b) {</div>
 <div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        <span class="keywordtype">int</span> A = dims[0];</div>
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>        <span class="keywordtype">int</span> C = dims[2];</div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        <span class="keywordtype">int</span> a, c;</div>
@@ -183,54 +183,54 @@ $(function() {
 <div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>        }</div>
 <div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    }</div>
 <div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span> </div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    t_cppl forward_step(<span class="keyword">const</span> MatrixN &amp;x, t_cppl *pcache, t_cppl *pstates,</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    t_cppl forward_step(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pcache, t_cppl *pstates,</div>
 <div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>                        <span class="keywordtype">int</span> <span class="keywordtype">id</span> = 0) {</div>
 <div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>        t_cppl cp;</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        MatrixN cprev = *(*pstates)[cname];</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        MatrixN xhx1 = cprev * *params[<span class="stringliteral">&quot;Whh&quot;</span>];</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        MatrixN xhx2 =</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> cprev = *(*pstates)[cname];</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xhx1 = cprev * *params[<span class="stringliteral">&quot;Whh&quot;</span>];</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xhx2 =</div>
 <div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>            (x * *params[<span class="stringliteral">&quot;Wxh&quot;</span>]).rowwise() + RowVectorN(*params[<span class="stringliteral">&quot;bh&quot;</span>]);</div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        MatrixN xhx = xhx1 + xhx2.block(0, 0, N, 2 * H);</div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        MatrixN i = Sigmoid(xhx.block(0, 0, N, H));</div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        MatrixN f = Sigmoid(xhx.block(0, H, N, H));</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        MatrixN ctl = xhx2.block(0, 2 * H, N, H);</div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        MatrixN cnext = i.array() * ctl.array() + f.array() * cprev.array();</div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        MatrixN hnext = cnext.array().tanh();</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xhx = xhx1 + xhx2.block(0, 0, N, 2 * H);</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> i = Sigmoid(xhx.block(0, 0, N, H));</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> f = Sigmoid(xhx.block(0, H, N, H));</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> ctl = xhx2.block(0, 2 * H, N, H);</div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> cnext = i.array() * ctl.array() + f.array() * cprev.array();</div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> hnext = cnext.array().tanh();</div>
 <div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span> </div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span>        <span class="keywordflow">if</span> (pcache != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>            (*pcache)[<span class="stringliteral">&quot;x&quot;</span>] = <span class="keyword">new</span> MatrixN(x);</div>
-<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>            (*pcache)[<span class="stringliteral">&quot;xhx&quot;</span>] = <span class="keyword">new</span> MatrixN(xhx);</div>
-<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>            (*pcache)[<span class="stringliteral">&quot;cprev&quot;</span>] = <span class="keyword">new</span> MatrixN(cprev);</div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>            (*pcache)[<span class="stringliteral">&quot;cnext&quot;</span>] = <span class="keyword">new</span> MatrixN(cnext);</div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>            (*pcache)[<span class="stringliteral">&quot;hnext&quot;</span>] = <span class="keyword">new</span> MatrixN(hnext);</div>
-<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>            (*pcache)[<span class="stringliteral">&quot;i&quot;</span>] = <span class="keyword">new</span> MatrixN(i);</div>
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            (*pcache)[<span class="stringliteral">&quot;f&quot;</span>] = <span class="keyword">new</span> MatrixN(f);</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            (*pcache)[<span class="stringliteral">&quot;ctl&quot;</span>] = <span class="keyword">new</span> MatrixN(ctl);</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno">  129</span>            (*pcache)[<span class="stringliteral">&quot;x&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(x);</div>
+<div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span>            (*pcache)[<span class="stringliteral">&quot;xhx&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(xhx);</div>
+<div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span>            (*pcache)[<span class="stringliteral">&quot;cprev&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(cprev);</div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span>            (*pcache)[<span class="stringliteral">&quot;cnext&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(cnext);</div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span>            (*pcache)[<span class="stringliteral">&quot;hnext&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(hnext);</div>
+<div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span>            (*pcache)[<span class="stringliteral">&quot;i&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(i);</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno">  135</span>            (*pcache)[<span class="stringliteral">&quot;f&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(f);</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>            (*pcache)[<span class="stringliteral">&quot;ctl&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(ctl);</div>
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>        }</div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>        cp[cname0] = <span class="keyword">new</span> MatrixN(cnext);</div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        cp[hname0] = <span class="keyword">new</span> MatrixN(hnext);</div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span>        cp[cname0] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(cnext);</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span>        cp[hname0] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(hnext);</div>
 <div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span>        <span class="keywordflow">return</span> cp;</div>
 <div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span>    }</div>
 <div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <span class="keyword">virtual</span> MatrixN backward_step(t_cppl cp, t_cppl *pcache, t_cppl *pstates,</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> backward_step(t_cppl cp, t_cppl *pcache, t_cppl *pstates,</div>
 <div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>                                  t_cppl *pgrads, <span class="keywordtype">int</span> <span class="keywordtype">id</span> = 0) {</div>
 <div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>        <span class="keywordflow">if</span> (pcache-&gt;find(<span class="stringliteral">&quot;x&quot;</span>) == pcache-&gt;end()) {</div>
 <div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>            cerr &lt;&lt; <span class="stringliteral">&quot;cache does not contain x -&gt; fatal!&quot;</span> &lt;&lt; endl;</div>
 <div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>        }</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        MatrixN x(*(*pcache)[<span class="stringliteral">&quot;x&quot;</span>]);</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        MatrixN xhx(*(*pcache)[<span class="stringliteral">&quot;xhx&quot;</span>]);</div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        MatrixN cprev(*(*pcache)[<span class="stringliteral">&quot;cprev&quot;</span>]);</div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        MatrixN cnext(*(*pcache)[<span class="stringliteral">&quot;cnext&quot;</span>]);</div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        MatrixN hnext(*(*pcache)[<span class="stringliteral">&quot;hnext&quot;</span>]);</div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>        MatrixN i(*(*pcache)[<span class="stringliteral">&quot;i&quot;</span>]);</div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>        MatrixN f(*(*pcache)[<span class="stringliteral">&quot;f&quot;</span>]);</div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        MatrixN ctl(*(*pcache)[<span class="stringliteral">&quot;ctl&quot;</span>]);</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        MatrixN Wxh(*params[<span class="stringliteral">&quot;Wxh&quot;</span>]);</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        MatrixN Whh(*params[<span class="stringliteral">&quot;Whh&quot;</span>]);</div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>        MatrixN bh(*params[<span class="stringliteral">&quot;bh&quot;</span>]);</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> x(*(*pcache)[<span class="stringliteral">&quot;x&quot;</span>]);</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xhx(*(*pcache)[<span class="stringliteral">&quot;xhx&quot;</span>]);</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> cprev(*(*pcache)[<span class="stringliteral">&quot;cprev&quot;</span>]);</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> cnext(*(*pcache)[<span class="stringliteral">&quot;cnext&quot;</span>]);</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> hnext(*(*pcache)[<span class="stringliteral">&quot;hnext&quot;</span>]);</div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> i(*(*pcache)[<span class="stringliteral">&quot;i&quot;</span>]);</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> f(*(*pcache)[<span class="stringliteral">&quot;f&quot;</span>]);</div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> ctl(*(*pcache)[<span class="stringliteral">&quot;ctl&quot;</span>]);</div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> Wxh(*params[<span class="stringliteral">&quot;Wxh&quot;</span>]);</div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> Whh(*params[<span class="stringliteral">&quot;Whh&quot;</span>]);</div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> bh(*params[<span class="stringliteral">&quot;bh&quot;</span>]);</div>
 <div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span> </div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        MatrixN dhnext = *cp[hname];  <span class="comment">// XXX: dhnext</span></div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>        MatrixN dcnext;</div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dhnext = *cp[hname];  <span class="comment">// XXX: dhnext</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dcnext;</div>
 <div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        <span class="keywordflow">if</span> (cp.find(cname) != cp.end()) {</div>
 <div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>            dcnext = *cp[cname];  <span class="comment">// dhnext</span></div>
 <div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span>        } <span class="keywordflow">else</span> {</div>
@@ -239,47 +239,47 @@ $(function() {
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span>        }</div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span> </div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span>        <span class="comment">// MatrixN hnext=cnext.array().tanh();</span></div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>        MatrixN csq = hnext.array() * hnext.array();</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> csq = hnext.array() * hnext.array();</div>
 <div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span>        dcnext = dcnext.array() + (1.0 - csq.array()) * dhnext.array();</div>
 <div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span> </div>
 <div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span>        <span class="comment">// MatrixN cnext=i.array()*ctl.array()+f.array()*cprev.array();</span></div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>        MatrixN di = ctl.array() * dcnext.array();</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>        MatrixN dctl = i.array() * dcnext.array();</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        MatrixN df = cprev.array() * dcnext.array();</div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        MatrixN dcprev = f.array() * dcnext.array();</div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> di = ctl.array() * dcnext.array();</div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dctl = i.array() * dcnext.array();</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> df = cprev.array() * dcnext.array();</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dcprev = f.array() * dcnext.array();</div>
 <div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span> </div>
 <div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span>        <span class="comment">// MatrixN ctl=xhx2.block(0,2*H,N,H);</span></div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>        MatrixN dxhx2b = dctl;</div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx2b = dctl;</div>
 <div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span> </div>
 <div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span>        <span class="comment">// MatrixN f=Sigmoid(xhx.block(0,H,N,H));</span></div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        MatrixN dxhx1b = (1 - f.array() * f.array()) * df.array();</div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx1b = (1 - f.array() * f.array()) * df.array();</div>
 <div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span> </div>
 <div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>        <span class="comment">// MatrixN i=Sigmoid(xhx.block(0,0,N,H));</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        MatrixN dxhx0b = (1 - i.array() * i.array()) * di.array();</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx0b = (1 - i.array() * i.array()) * di.array();</div>
 <div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span> </div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        MatrixN dxhx(N, 3 * H);</div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx(N, 3 * H);</div>
 <div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        dxhx &lt;&lt; dxhx0b, dxhx1b, dxhx2b;</div>
 <div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span> </div>
 <div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>        <span class="comment">// MatrixN xhx = xhx1+xhx2.block(0,0,N,2*H);</span></div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        MatrixN dxhx1 = dxhx;</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>        MatrixN dxhx2 = dxhx.block(0, 0, N, 2 * H);</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx1 = dxhx;</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dxhx2 = dxhx.block(0, 0, N, 2 * H);</div>
 <div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
 <div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>        <span class="comment">// MatrixN xhx2 = (x * *params[&quot;Wxh&quot;]).rowwise() +</span></div>
 <div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>        <span class="comment">// RowVectorN(*params[&quot;bh&quot;]); cerr &lt;&lt; shape(*params[&quot;Wxh&quot;]) &lt;&lt;</span></div>
 <div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>        <span class="comment">// shape(dxhx.transpose()) &lt;&lt; shape(x) &lt;&lt; endl;</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>        MatrixN dx = (*params[<span class="stringliteral">&quot;Wxh&quot;</span>] * dxhx.transpose()).transpose();</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dx = (*params[<span class="stringliteral">&quot;Wxh&quot;</span>] * dxhx.transpose()).transpose();</div>
 <div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>        cerr &lt;&lt; <span class="stringliteral">&quot;dx:&quot;</span> &lt;&lt; shape(x) &lt;&lt; shape(dx) &lt;&lt; endl;</div>
 <div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>        cerr &lt;&lt; shape(x) &lt;&lt; shape(dxhx) &lt;&lt; shape(*params[<span class="stringliteral">&quot;Wxh&quot;</span>]) &lt;&lt; endl;</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        MatrixN dWxh = x.transpose() * dxhx;</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        MatrixN dbh = dxhx.colwise().sum();</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dWxh = x.transpose() * dxhx;</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dbh = dxhx.colwise().sum();</div>
 <div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span> </div>
 <div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>        <span class="comment">// MatrixN xhx1 = cprev * *params[&quot;Whh&quot;];</span></div>
 <div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>        cerr &lt;&lt; <span class="stringliteral">&quot;dc:&quot;</span> &lt;&lt; shape(*params[<span class="stringliteral">&quot;Whh&quot;</span>]) &lt;&lt; shape(dxhx1) &lt;&lt; shape(dcnext)</div>
 <div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>             &lt;&lt; endl;</div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        MatrixN dc = (*params[<span class="stringliteral">&quot;Whh&quot;</span>] * dxhx2.transpose()).transpose();</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dc = (*params[<span class="stringliteral">&quot;Whh&quot;</span>] * dxhx2.transpose()).transpose();</div>
 <div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>        cerr &lt;&lt; <span class="stringliteral">&quot;dWhh:&quot;</span> &lt;&lt; shape(cprev) &lt;&lt; shape(dxhx1) &lt;&lt; shape(*params[<span class="stringliteral">&quot;Whh&quot;</span>])</div>
 <div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>             &lt;&lt; endl;</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        MatrixN dWhh = cprev.transpose() * dxhx2;</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dWhh = cprev.transpose() * dxhx2;</div>
 <div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span> </div>
 <div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>        <span class="comment">// MatrixN cprev = *(*pstates)[cname];</span></div>
 <div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span> </div>
@@ -296,10 +296,10 @@ $(function() {
 <div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="comment">        MatrixN dh=(Whh * t1t).transpose();</span></div>
 <div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment">        MatrixN dWhh=hprev.transpose() * t1;</span></div>
 <div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">        */</span></div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>        (*pgrads)[<span class="stringliteral">&quot;Wxh&quot;</span>] = <span class="keyword">new</span> MatrixN(dWxh);</div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        (*pgrads)[<span class="stringliteral">&quot;Whh&quot;</span>] = <span class="keyword">new</span> MatrixN(dWhh);</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>        (*pgrads)[<span class="stringliteral">&quot;bh&quot;</span>] = <span class="keyword">new</span> MatrixN(dbh);</div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        (*pgrads)[cname0] = <span class="keyword">new</span> MatrixN(dc);</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>        (*pgrads)[<span class="stringliteral">&quot;Wxh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dWxh);</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>        (*pgrads)[<span class="stringliteral">&quot;Whh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dWhh);</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>        (*pgrads)[<span class="stringliteral">&quot;bh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dbh);</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span>        (*pgrads)[cname0] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dc);</div>
 <div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span> </div>
 <div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        <span class="keywordflow">if</span> (maxClip != 0.0) {</div>
 <div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span>            dx = dx.array().min(maxClip).max(-1 * maxClip);</div>
@@ -316,35 +316,35 @@ $(function() {
 <div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span>        <span class="keywordflow">return</span> dx;</div>
 <div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>    }</div>
 <div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span> </div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="keyword">virtual</span> MatrixN forward(<span class="keyword">const</span> MatrixN &amp;x, t_cppl *pcache, t_cppl *pstates,</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> forward(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pcache, t_cppl *pstates,</div>
 <div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>                            <span class="keywordtype">int</span> <span class="keywordtype">id</span> = 0)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>        MatrixN hn(N, T * H);</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        MatrixN cn(N, T * H);</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> hn(N, T * H);</div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> cn(N, T * H);</div>
 <div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
 <div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span>        <span class="keywordflow">if</span> (x.cols() != D * T) {</div>
 <div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>            cerr &lt;&lt; layerName &lt;&lt; <span class="stringliteral">&quot;: &quot;</span></div>
 <div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>                 &lt;&lt; <span class="stringliteral">&quot;Forward: dimension mismatch in x:&quot;</span> &lt;&lt; shape(x)</div>
 <div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>                 &lt;&lt; <span class="stringliteral">&quot; D*T:&quot;</span> &lt;&lt; D * T &lt;&lt; <span class="stringliteral">&quot;, D:&quot;</span> &lt;&lt; D &lt;&lt; <span class="stringliteral">&quot;, T:&quot;</span> &lt;&lt; T</div>
 <div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>                 &lt;&lt; <span class="stringliteral">&quot;, H:&quot;</span> &lt;&lt; H &lt;&lt; endl;</div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>            MatrixN h(0, 0);</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>            <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> h(0, 0);</div>
 <div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>            <span class="keywordflow">return</span> h;</div>
 <div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span>        }</div>
 <div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>        <span class="keywordtype">int</span> N = shape(x)[0];</div>
 <div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span> </div>
 <div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>        <span class="keywordflow">if</span> (pstates-&gt;find(cname) == pstates-&gt;end()) {</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>            MatrixN *pc = <span class="keyword">new</span> MatrixN(N, H);</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>            <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pc = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(N, H);</div>
 <div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>            pc-&gt;setZero();</div>
 <div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>            cppl_set(pstates, cname, pc);</div>
 <div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        }</div>
 <div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span> </div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>        MatrixN ct = *(*pstates)[cname];</div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        MatrixN ht;</div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> ct = *(*pstates)[cname];</div>
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> ht;</div>
 <div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span> </div>
 <div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> t = 0; t &lt; T; t++) {</div>
 <div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>            t_cppl cache{};</div>
 <div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>            t_cppl states{};</div>
 <div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>            states[cname] = &amp;ct;</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>            MatrixN xi = tensorchunk(x, {N, T, D}, t);</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>            <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> xi = tensorchunk(x, {N, T, D}, t);</div>
 <div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>            t_cppl cp = forward_step(xi, &amp;cache, &amp;states, <span class="keywordtype">id</span>);</div>
 <div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span>            ht = *cp[hname0];</div>
 <div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>            ct = *cp[cname0];</div>
@@ -364,15 +364,15 @@ $(function() {
 <div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span>        <span class="keywordflow">return</span> hn;</div>
 <div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>    }</div>
 <div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span> </div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    <span class="keyword">virtual</span> MatrixN backward(<span class="keyword">const</span> MatrixN &amp;dchain, t_cppl *pcache,</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> backward(<span class="keyword">const</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dchain, t_cppl *pcache,</div>
 <div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>                             t_cppl *pstates, t_cppl *pgrads,</div>
 <div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>                             <span class="keywordtype">int</span> <span class="keywordtype">id</span> = 0)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>        MatrixN dx(N, T * D);</div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dx(N, T * D);</div>
 <div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span> </div>
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>        MatrixN dWxh, dWhh, dbh;</div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dWxh, dWhh, dbh;</div>
 <div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>        <span class="keywordtype">string</span> name;</div>
 <div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>        <span class="keywordtype">int</span> N = shape(dchain)[0];</div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        MatrixN dci, dxi, dpci, dhi, dphi;</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>        <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> dci, dxi, dpci, dhi, dphi;</div>
 <div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>        dx.setZero();</div>
 <div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span>        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> t = T - 1; t &gt;= 0; t--) {</div>
 <div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>            t_cppl cache{};</div>
@@ -383,7 +383,7 @@ $(function() {
 <div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>                dci = dhi;  <span class="comment">// That should also be set by dchain!!</span></div>
 <div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span>                dci.setZero();</div>
 <div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span>            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>                MatrixN tmp;</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>                <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> tmp;</div>
 <div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>                tmp = tensorchunk(dchain, {N, T, H}, t);</div>
 <div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>                cerr &lt;&lt; <span class="stringliteral">&quot;dhi:&quot;</span> &lt;&lt; shape(tmp) &lt;&lt; shape(dphi) &lt;&lt; endl;</div>
 <div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>                dhi = tmp + dphi;</div>
@@ -392,8 +392,8 @@ $(function() {
 <div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>            name = <span class="stringliteral">&quot;t&quot;</span> + std::to_string(t);</div>
 <div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span>            mlPop(name, pcache, &amp;cache);</div>
 <div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span>            t_cppl cp;</div>
-<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>            cp[hname] = <span class="keyword">new</span> MatrixN(dhi);</div>
-<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>            cp[cname] = <span class="keyword">new</span> MatrixN(dci);</div>
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span>            cp[hname] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dhi);</div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>            cp[cname] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dci);</div>
 <div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>            <span class="comment">// cp[cname]=new MatrixN(dci); // XXX: dchain should also take care</span></div>
 <div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span>            <span class="comment">// of dc! -&gt; zero-init for now.</span></div>
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>            dxi = backward_step(cp, &amp;cache, &amp;states, &amp;grads, <span class="keywordtype">id</span>);</div>
@@ -414,11 +414,11 @@ $(function() {
 <div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>            }</div>
 <div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>            cppl_delete(&amp;grads);</div>
 <div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>        }</div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>        (*pgrads)[<span class="stringliteral">&quot;Wxh&quot;</span>] = <span class="keyword">new</span> MatrixN(dWxh);</div>
-<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>        (*pgrads)[<span class="stringliteral">&quot;Whh&quot;</span>] = <span class="keyword">new</span> MatrixN(dWhh);</div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>        (*pgrads)[<span class="stringliteral">&quot;bh&quot;</span>] = <span class="keyword">new</span> MatrixN(dbh);</div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>        (*pgrads)[<span class="stringliteral">&quot;Wxh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dWxh);</div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>        (*pgrads)[<span class="stringliteral">&quot;Whh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dWhh);</div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>        (*pgrads)[<span class="stringliteral">&quot;bh&quot;</span>] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dbh);</div>
 <div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>        <span class="comment">//(*pgrads)[hname0] = new MatrixN(dphi);</span></div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>        (*pgrads)[cname0] = <span class="keyword">new</span> MatrixN(dpci);</div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>        (*pgrads)[cname0] = <span class="keyword">new</span> <a class="code hl_typedef" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>(dpci);</div>
 <div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span> </div>
 <div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>        <span class="keywordflow">return</span> dx;</div>
 <div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span>    }</div>
@@ -427,6 +427,7 @@ $(function() {
 <div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclass_layer_html"><div class="ttname"><a href="class_layer.html">Layer</a></div><div class="ttdef"><b>Definition:</b> cp-layer.h:122</div></div>
 <div class="ttc" id="aclass_r_a_n_html"><div class="ttname"><a href="class_r_a_n.html">RAN</a></div><div class="ttdef"><b>Definition:</b> cpl-ran.h:8</div></div>
+<div class="ttc" id="acp-neural_8h_html_ac7ab0189fb9240290671d6cd8aaacdee"><div class="ttname"><a href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a></div><div class="ttdeci">Eigen::MatrixXf MatrixN</div><div class="ttdef"><b>Definition:</b> cp-neural.h:83</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
