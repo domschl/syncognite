@@ -30,7 +30,6 @@ private:
         MatrixN b = xavierInit(MatrixN(1,hidden),initmode,initfactor);
         cppl_set(&params, "W", new MatrixN(W)); // W
         cppl_set(&params, "b", new MatrixN(b)); // b
-        numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         layerInit=true;
@@ -53,54 +52,17 @@ public:
         }
         if (pcache!=nullptr) cppl_set(pcache, "x", new MatrixN(x));
 
-        #ifdef USE_GPU
-        int algo=1;
-        #else
-        int algo=0;
-        #endif
-        MatrixN y;
-        if (algo==0 || id>=numGpuThreads) {
-            y=(x * (*(params["W"]))).rowwise() + RowVectorN(*params["b"]);
-        } else {
-            #ifdef USE_GPU
-            MatrixN x1(x.rows(),x.cols()+1);
-            MatrixN xp1(x.rows(),1);
-            xp1.setOnes();
-            x1 << x, xp1;
-            MatrixN Wb((*params["W"]).rows()+1,(*params["W"]).cols());
-            Wb<<*params["W"], *params["b"];
-            MatrixN y2;
-            y=matmul(&x1,&Wb,id);
-            #endif
-        }
+        MatrixN y=(x * (*(params["W"]))).rowwise() + RowVectorN(*params["b"]);
         return y;
     }
     virtual MatrixN backward(const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
-        #ifdef USE_GPU
-        int algo=1;
-        #else
-        int algo=0;
-        #endif
         MatrixN x(*(*pcache)["x"]);
         MatrixN dx(x.rows(),x.cols());
         MatrixN W(*params["W"]);
         MatrixN dW(W.rows(),W.cols());
-        if (algo==0 || id>=numGpuThreads) {
-            dx = dchain * (*params["W"]).transpose(); // dx
-            cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
-            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-        } else {
-            #ifdef USE_GPU
-            MatrixN Wt;
-            Wt=W.transpose();
-            MatrixN xt;
-            xt=x.transpose();
-            MatrixN dc=dchain;
-            dx=matmul(&dc,&Wt,id);
-            cppl_set(pgrads, "W", new MatrixN(matmul(&xt,&dc,id)));
-            cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
-            #endif
-        }
+        dx = dchain * (*params["W"]).transpose(); // dx
+        cppl_set(pgrads, "W", new MatrixN((*(*pcache)["x"]).transpose() * dchain)); //dW
+        cppl_set(pgrads, "b", new MatrixN(dchain.colwise().sum())); //db
         return dx;
     }
 };

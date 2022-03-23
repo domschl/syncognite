@@ -414,7 +414,6 @@ int main(int argc, char *argv[]) {
     getTestCases();
 
     if (!getArgs(argc, argv)) {
-        cpExitCompute();
         exit(-1);
     }
 
@@ -427,6 +426,5 @@ int main(int argc, char *argv[]) {
 
     int ret = 0;
     ret = doTests();
-    cpExitCompute();
     return ret;
 }

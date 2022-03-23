@@ -6,7 +6,6 @@
 
 class RNN : public Layer {
 private:
-    int numGpuThreads;
     int numCpuThreads;
     floatN initfactor;
     int T,D,H,N;
@@ -41,7 +40,6 @@ private:
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,H),inittype,initfactor)));
         cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,H),inittype,initfactor)));
-        numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         layerInit=true;

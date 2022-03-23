@@ -1,4 +1,3 @@
-
 #ifndef _CP_TOOLS_H
 #define _CP_TOOLS_H
 
@@ -127,227 +126,19 @@ void peekMat(const string label, const MatrixN& m) {
 
 #define MAX_NUMTHREADS 256
 #define MAX_CPUTHREADS 256
-#ifdef USE_CUDA
-#define MAX_GPUTHREADS 64
-cublasHandle_t *cuHandles;
-float *cuScratch1[MAX_GPUTHREADS];
-float *cuScratch2[MAX_GPUTHREADS];
-float *cuScratch3[MAX_GPUTHREADS];
-long maxCuScratch=0;
 
-#define CUDA_THRESHOLD 30
-#define CUDA_SCRATCH_SIZE 330000000
-
-void checkScratch(long n, bool verbose=false) {
-    if (n > maxCuScratch) {
-        maxCuScratch=n;
-        if (verbose) cerr << "maxCuScratch:" << maxCuScratch << endl;
-        if (maxCuScratch > CUDA_SCRATCH_SIZE) {
-            cerr << "Internal error, CUDA_SCRATCH_SIZE exceeded: " << maxCuScratch << " > " << CUDA_SCRATCH_SIZE << endl;
-            exit(-1);
-        }
-    }
-}
-#endif
-
-#ifdef USE_VIENNACL
-#define MAX_GPUTHREADS 64
-#define VIENNACL_THRESHOLD 600
-#endif
-
-MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose=false) {
-    Timer t,t1;
-    #ifdef USE_CUDA
-    // Create a handle for CUBLAS
-
-    if (a->rows() + a->cols() + b->cols()<CUDA_THRESHOLD) {
-        if (verbose) t.startWall();
-        MatrixN y= *a * (*b);
-        if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
-        return y;
-    } else {
-
-        const floatN alpha=1;
-        const floatN beta=0;
-
-        #ifdef USE_FLOAT
-        if (verbose) t.startWall();
-        MatrixN c(a->rows(), b->cols());
-        float *ca, *cb, *cc;
-        //cerr << shape(*a) << " x " << shape(*b) << endl;
-        //t.startWall();
-/*        cudaMalloc((void **)&ca,a->rows()*(a->cols())*sizeof(float));
-        cudaMalloc((void **)&cb,b->rows()*(b->cols())*sizeof(float));
-        cudaMalloc((void **)&cc,a->rows()*(b->cols())*sizeof(float));
-*/      //  cerr << "  cAlloc:" << t.stopWallMicro() << endl;
-
-        if (verbose) t1.startWall();
-        checkScratch(a->rows() * (a->cols()) * sizeof(float), verbose);
-        checkScratch(b->rows() * (b->cols()) * sizeof(float), verbose);
-        checkScratch(a->rows() * (b->cols()) * sizeof(float), verbose);
-
-        cudaError_t cudaStat;
-        cudaStat=cudaMemcpy(cuScratch1[contextId],a->data(),a->rows()*(a->cols())*sizeof(float),cudaMemcpyHostToDevice);
-        if (cudaStat != cudaSuccess) {
-            cerr << "cudaMemcpy1 failed: " << cudaStat << endl;
-            exit(-1);
-        }
-        int sz=b->rows()*(b->cols())*sizeof(float);
-        cudaStat=cudaMemcpy(cuScratch2[contextId],b->data(),sz,cudaMemcpyHostToDevice);
-        if (cudaStat != cudaSuccess) {
-            cerr << "cudaMemcpy2 failed:" << cudaStat << "Size: " << sz << endl;
-            switch (cudaStat) {
-                case cudaErrorInvalidValue:
-                    cerr << "InvVal";
-                    break;
-                case cudaErrorInvalidPitchValue:
-                    cerr << "InvPitch";
-                    break;
-                case cudaErrorInvalidDevicePointer:
-                    cerr << "InvDevPtr";
-                    break;
-                case cudaErrorInvalidMemcpyDirection:
-                    cerr << "InvDir";
-                    break;
-                default:
-                    cerr << "Undocumented error";
-                    break;
-            }
-            cerr << endl;
-            exit(-1);
-        }
-        if (verbose) cerr << "  cMemcpy:" << t1.stopWallMicro() << endl;
-
-        if (verbose) t1.startWall();
-        if (cublasSgemm(cuHandles[contextId], CUBLAS_OP_N, CUBLAS_OP_N, a->rows(), b->cols(), a->cols(), &alpha,
-                    cuScratch1[contextId], a->rows(), cuScratch2[contextId], b->rows(), &beta,
-                    cuScratch3[contextId], c.rows()) != CUBLAS_STATUS_SUCCESS) {
-            cerr << "cublasSgemm failed!" << endl;
-            exit(-1);
-
-        }
-        if (verbose) cerr << "  cMathML:" << t1.stopWallMicro() << endl;
-
-        if (verbose) t1.startWall();
-        cudaStat=cudaMemcpy(c.data(),cuScratch3[contextId],a->rows()*b->cols()*sizeof(float),cudaMemcpyDeviceToHost);
-        if (cudaStat != cudaSuccess) {
-            cerr << "cudaMemcpy3 failed:" << cudaStat << endl;
-            exit(-1);
-        }
-        if (verbose) cerr << "  cMemcp2:" << t1.stopWallMicro() << endl;
-
-        //t.startWall();
-/*        cudaFree(ca);
-        cudaFree(cb);
-        cudaFree(cc);
-*/       // cerr << "  cFree:" << t.stopWallMicro() << endl;
-
-        if (verbose) cerr << "Cuda matmul " << shape(*a) << shape(*b) << ": " << t.stopWallMicro() << endl;
-        #else
-        #error "USE_DOUBLE not supported with USE_CUDA"
-        #endif
-
-        return c;
-    }
-
-    #else
-    #ifdef USE_VIENNACL
-    if (a->rows()+a->cols()+b->cols() < VIENNACL_THRESHOLD) {
-        t.startWall();
-        MatrixN y= *a* (*b);
-        if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
-        return y;
-    } else {
-        viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(contextId)));
-        viennacl::matrix<float>vi_b(b->rows(), b->cols(), ctx);
-        viennacl::matrix<float>vi_a(a->rows(), a->cols(), ctx);
-        viennacl::matrix<float>vi_y(a->rows(), b->cols(), ctx);
-        viennacl::copy(b, vi_b);
-        viennacl::copy(a, vi_a);
-        vi_y = viennacl::linalg::prod(vi_a, vi_b);
-        viennacl::copy(vi_y, y);
-        return y;
-    }
-    #else
+MatrixN matmul(MatrixN *a, MatrixN *b, int contextId, bool verbose = false) {
+    Timer t, t1;
     t.startWall();
-    MatrixN y= *a* (*b);
-    if (verbose) cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
+    MatrixN y = *a * (*b);
+    if (verbose)
+        cerr << "Eigen matmul " << shape(*a) << shape(*b) << "->" << t.stopWallMicro() << endl;
     return y;
-    #endif
-    #endif
 }
 
-int cpNumGpuThreads=1;
 int cpNumEigenThreads=1;
 int cpNumCpuThreads=1;
 
-bool threadContextInit(unsigned int numThreads, int verbose) {
-    #ifdef USE_VIENNACL
-    if (numThreads > MAX_GPUTHREADS) numThreads=MAX_GPUTHREADS;
-    if (viennacl::ocl::get_platforms().size() == 0) {
-        std::cerr << "Error: No ViennaClplatform found!" << std::endl;
-        return false;
-    }
-    viennacl::ocl::platform pf = viennacl::ocl::get_platforms()[0];
-    std::vector<viennacl::ocl::device> const & devices = pf.devices();
-    int nrDevs = pf.devices().size();
-    cerr << nrDevs << " devices found." << endl;
-    for (unsigned int i=0; i<numThreads; i++) {
-        viennacl::ocl::setup_context(i, devices[i%nrDevs]); // XXX support for multiple devices is a bit basic.
-        if (verbose > 1) cerr << "Context " << i << " on: " << viennacl::ocl::get_context(i).devices()[0].name() << endl;
-    }
-    // Set context to 0 for main program, 1-numThreads for threads
-    //viennacl::context ctx(viennacl::ocl::get_context(static_cast<long>(0)));
-    //cerr << "Contexts created, got context 0 for main program." << endl;
-    #else
-    #ifdef USE_CUDA
-    cuHandles=(cublasContext **)malloc(sizeof(cublasHandle_t) * cpNumGpuThreads);
-    for (int i=0; i<cpNumGpuThreads; i++) {
-        cublasCreate(&(cuHandles[i]));
-        if (verbose>1) cerr << "Context " << i << " on: cublas" << endl;
-        //cudaHostAlloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
-        //cudaHostAlloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
-        //cudaHostAlloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE, cudaHostAllocDefault);
-
-        // cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
-        // cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocWriteCombined);
-        // cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE); //, cudaHostAllocDefault);
-        if (cudaMalloc((void **)&(cuScratch1[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cerr << "cudaMallocHost failed!" << endl;
-            exit(-1);
-        }
-        if (cudaMalloc((void **)&(cuScratch2[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cerr << "cudaMallocHost failed!" << endl;
-            exit(-1);
-        }
-        if (cudaMalloc((void **)&(cuScratch3[i]), CUDA_SCRATCH_SIZE)!=cudaSuccess) {
-            cerr << "cudaMallocHost failed!" << endl;
-            exit(-1);
-        }
-    }
-    cudaSetDeviceFlags(cudaDeviceScheduleAuto); //BlockingSync); //ScheduleYield); //Spin); //cudaDeviceScheduleBlockingSync
-    #endif
-    #endif
-    return true;
-}
-
-bool threadContextDestroy() {
-    #ifdef USE_CUDA
-    for (int i=0; i<cpNumGpuThreads; i++) {
-        cudaFreeHost(&(cuScratch1[i]));
-        cudaFreeHost(&(cuScratch2[i]));
-        cudaFreeHost(&(cuScratch3[i]));
-        cublasDestroy(cuHandles[i]);
-    }
-    free(cuHandles);
-    cuHandles=nullptr;
-    #endif
-    return true;
-}
-
-int cpGetNumGpuThreads() {
-    return cpNumGpuThreads;
-}
 int cpGetNumEigenThreads() {
     return cpNumEigenThreads;
 }
@@ -371,19 +162,8 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
         cp.setString(conf);
         cfile.close();
     } else {
-        if (verbose>0) cerr << "New configureation, '" << conffile << "' not found." << endl;
+        if (verbose>0) cerr << "New configuration, '" << conffile << "' not found." << endl;
     }
-    // omp_set_num_threads(n)
-    // Eigen::setNbThreads(n);
-    // n=Eigen::nbThreads();
-// myfile << "Writing this to a file.\n";
-
-
-    #ifdef USE_GPU
-    cpNumGpuThreads=cp.getPar("NumGpuThreads", 4);
-    #else
-    cpNumGpuThreads=0;
-    #endif
     cpNumEigenThreads=cp.getPar("NumEigenThreads", 1);
     int numHWThreads=std::thread::hardware_concurrency();
     cpNumCpuThreads=cp.getPar("NumCpuThreads", numHWThreads);
@@ -396,19 +176,6 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
 
     // Eigen::initParallel();
     Eigen::setNbThreads(cpNumEigenThreads);
-
-    #ifdef USE_VIENNACL
-    options += "VIENNACL ";
-    threadContextInit(cpNumGpuThreads, verbose);
-    #ifdef USE_OPENCL
-    options += "OPENCL ";
-    #endif
-    #endif
-
-    #ifdef USE_CUDA
-    options += "CUDA ";
-    threadContextInit(cpNumGpuThreads, verbose);
-    #endif
 
     #ifdef USE_FLOAT
     options+="FLOAT ";
@@ -429,7 +196,6 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
     options += "OPENMP ";
     #endif
 
-
     std::ofstream c2file(conffile);
     if (c2file.is_open()) {
         string line;
@@ -437,8 +203,8 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
         c2file << line << endl;
         c2file.close();
     }
-    if (cpNumCpuThreads + cpNumGpuThreads > MAX_NUMTHREADS) {
-        cerr << "Number of Gpu+CPU threads must not be > " << MAX_NUMTHREADS << endl;
+    if (cpNumCpuThreads > MAX_NUMTHREADS) {
+        cerr << "Number of CPU threads must not be > " << MAX_NUMTHREADS << endl;
         cerr << "INVALID CONFIGURATION" << endl;
         return false;
     }
@@ -446,15 +212,8 @@ bool cpInitCompute(string name, CpParams* poptions=nullptr, int verbose=1) {
         cerr << "Compile-time options: " << options << endl;
         cerr << "Eigen is using:      " << cpNumEigenThreads << " threads." << endl;
         cerr << "CpuPool is using:    " << cpNumCpuThreads << " threads." << endl;
-        cerr << "Cpu+GpuPool is using:    " << cpNumGpuThreads << " threads." << endl;
     }
     return true;
-}
-
-void cpExitCompute() {
-    #ifdef USE_GPU
-    threadContextDestroy();
-    #endif
 }
 
 #endif

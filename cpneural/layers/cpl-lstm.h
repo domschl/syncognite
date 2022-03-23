@@ -6,7 +6,6 @@
 
 class LSTM : public Layer {
 private:
-    int numGpuThreads;
     int numCpuThreads;
     floatN initfactor;
     int T,D,H,N;
@@ -53,9 +52,6 @@ private:
             params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array() + forgetBias;
         }
 
-        //cerr << *params["bh"] << endl;
-
-        numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         layerInit=true;

@@ -5,6 +5,10 @@
 
 A neural network library for convolutional, fully connected nets and RNNs in C++.
 
+The current `v2`-branch has the following objectives:
+* remove CUDA and other external graphics card libs (since for good performance they need to rely on blackbox-libs)
+* implement full support for graphs (not only sequenctial)
+
 This library implements some of the assignments from Stanfords's [CS231n](http://cs231n.stanford.edu/index.html) 2016 course by Andrej Karpathy, Fei-Fei Li, Justin Johnson and [CS224d](http://cs224d.stanford.edu/index.html) by Richard Socher as C++ framework.
 
 Current state: **beta**
@@ -116,7 +120,6 @@ json j11;
 j11["inputShape"]=vector<int>{VS,T};
 lb.addLayer("TemporalSoftmax","sm1",j11,{"af1"});
 ```
-
 see [rnnreader](rnnreader/) for a complete example.
 
 ## Dependencies:
@@ -130,10 +133,6 @@ see [rnnreader](rnnreader/) for a complete example.
 * use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`, which instructs eigen to use M1's hardware accelerators. `rnnreader` sees dramatic 3x-6x speedup, single thread benchmarks in `bench` see 200%-400% improvements! [Testet on macOS 12 beta 3 - 2021-07-19]
 * Memory: macOS simply doesn't give processes all available memory. Expect swapping (and significant speed decrease) when allocating more than 4-5GB, even on 16GB M1 machines.
 * The hdf5 libraries are available for ARM64 (`brew install hdf5`).
-
-### Optional dependencies:
-
-* Cuda, OpenCL, ViennaCL (experimental, optional for BLAS speedups)
 
 ### External libraries that are included in the source tree:
 
@@ -152,14 +151,21 @@ git submodule init
 git submodule update    # This gets the in-tree Eigen3
 ```
 
-Create a ```Build``` directory within the syncognite directory and configure the build:
+Create a ```build``` directory within the syncognite directory and configure the build:
 
 ```bash
-# in sycognite/Build, default is make-build-system, but Ninja can also be used:
+# in sycognite/build, default is make-build-system, but Ninja can also be used:
 cmake [-G Ninja] ..
 # optionally use ccmake to configure options and paths:
 ccmake ..
 ```
+
+To configure your editor / ide for include paths use (in `build`):
+
+```
+cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=YES ..
+```
+or simply execute the helper `create_compile_commands.sh`.
 
 macOS users might want to configure for building with Xcode:
 
@@ -178,6 +184,7 @@ ninja
 
 ## History
 
+* 2022-03-22: Started v2-branch Removed CUDA and other external graphics libs.
 * 2021-10-10: Moved CI from travis (defunct) to github workflows. Valgrind currently disabled.
 * 2021-08-21: eigen update to 3.4 release
 * 2021-07-19: eigen update to 3.4rc1

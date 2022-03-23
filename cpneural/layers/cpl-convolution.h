@@ -60,9 +60,6 @@ private:
         cppl_set(&params, "W", new MatrixN(xavierInit(MatrixN(F,C*HH*WW),inittype,initfactor))); // W
         cppl_set(&params, "b", new MatrixN(xavierInit(MatrixN(F,1),inittype,initfactor))); // b
 
-        //cppl_set(&params, "W", new MatrixN(F,C*HH*WW));
-        //cppl_set(&params, "b", new MatrixN(F,1));
-        numGpuThreads=cpGetNumGpuThreads();
         numCpuThreads=cpGetNumCpuThreads();
 
         stride = j.value("stride", 1);
@@ -378,14 +375,7 @@ public:
 */
         if (mlverbose) t.startWall();
         MatrixN y2c;
-        #ifdef USE_GPU
-        algo=1;
-        #endif
-        if (algo==0 || id>=numGpuThreads) {
-            y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
-        } else {
-            y2c=matmul(params["W"], px2c, id, mlverbose).colwise() + ColVectorN(*params["b"]);
-        }
+        y2c=((*params["W"]) * (*px2c)).colwise() + ColVectorN(*params["b"]);
         if (mlverbose) {
             y2c=dummy(y2c);
             cerr << "matmul:"<<t.stopWallMicro()<<"µs"<<endl;
@@ -403,46 +393,22 @@ public:
             cerr << "ConvBw: Invalid input data dchain: expected F*HO*WO=" << F*HO*WO << ", got: " << shape(dchain)[1] << endl;
             return MatrixN(0,0);
         }
-        int algo=0;
         Timer t;
-        #ifdef  USE_GPU
-        algo=1;
-        #endif
-        /*
-        cerr << "dchain:" << shape(dchain) << endl;
-        cerr << "W:" << shape(*params["W"]) << endl;
-        cerr << "x:" << shape(*(*pcache)["x"]) << endl;
-        cerr << "x2c:" << shape(*(*pcache)["x2c"]) << endl;
-        cerr << "WO:" << WO << "," << "HO:" << HO << endl;
-        */
         if (mlverbose) t.startWall();
         MatrixN dc2=icol2im(dchain,N);
         if (mlverbose) cerr << "icol2im:"<<t.stopWallMicro()<<"µs"<<endl;
 
         MatrixN dx;
-        if (algo==0 || id>=numGpuThreads) {
-            if (mlverbose) t.startWall();
-            MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
-            if (mlverbose) cerr << "bw-m1:"<<t.stopWallMicro()<<"µs"<<endl;
-            if (mlverbose) t.startWall();
-            dx=iim2col(dx2c.transpose(), N);
-            if (mlverbose) cerr << "iim2col:"<<t.stopWallMicro()<<"µs"<<endl;
-            if (mlverbose) t.startWall();
-            cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
-            cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
-            if (mlverbose) cerr << "bw-m2:"<<t.stopWallMicro()<<"µs"<<endl;
-        } else {
-            MatrixN dc2t;
-            dc2t=dc2.transpose();
-            MatrixN W=*params["W"];
-            MatrixN dx2c=matmul(&dc2t,&W,id,mlverbose);
-            dx=iim2col(dx2c.transpose(), N);
-
-            MatrixN x2ct=(*(*pcache)["x2c"]).transpose();
-            MatrixN dW=matmul(&dc2,&x2ct,id,mlverbose);
-            cppl_set(pgrads, "W", new MatrixN(dW));
-            cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
-        }
+        if (mlverbose) t.startWall();
+        MatrixN dx2c = dc2.transpose() * (*params["W"]); // dx
+        if (mlverbose) cerr << "bw-m1:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) t.startWall();
+        dx=iim2col(dx2c.transpose(), N);
+        if (mlverbose) cerr << "iim2col:"<<t.stopWallMicro()<<"µs"<<endl;
+        if (mlverbose) t.startWall();
+        cppl_set(pgrads, "W", new MatrixN(dc2 * (*(*pcache)["x2c"]).transpose())); //dW
+        cppl_set(pgrads, "b", new MatrixN(dc2.rowwise().sum())); //db
+        if (mlverbose) cerr << "bw-m2:"<<t.stopWallMicro()<<"µs"<<endl;
         return dx;
     }
 };
