@@ -1,5 +1,6 @@
 # syncognite - A neural network library inspired by Stanford's CS231n course
 
+[![Dev Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://domschl.github.io/syncognite/index.html)
 [![Cmake](https://github.com/domschl/syncognite/workflows/CMake/badge.svg)](https://github.com/domschl/syncognite/actions)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE)
 
