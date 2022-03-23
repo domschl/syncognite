@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['syncognite_20_2d_20a_20neural_20network_20library_20inspired_20by_20stanford_27s_20cs231n_20course_0',['syncognite - A neural network library inspired by Stanford&apos;s CS231n course',['../md__r_e_a_d_m_e.html',1,'']]]
+  ['syncognite_20neural_20network_20library_20in_20c_2b_2b_0',['Syncognite neural network library in C++',['../index.html',1,'']]]
 ];
