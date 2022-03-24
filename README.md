@@ -187,6 +187,7 @@ ninja
 
 ## History
 
+* 2022-03-24: Serious bug fixed in stateful optimizers (incl. Adam): state was lost on each call, causing slow convergence.
 * 2022-03-22: Started v2-branch Removed CUDA and other external graphics libs.
 * 2021-10-10: Moved CI from travis (defunct) to github workflows. Valgrind currently disabled.
 * 2021-08-21: eigen update to 3.4 release
