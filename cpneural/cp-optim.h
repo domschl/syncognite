@@ -2,16 +2,31 @@
 
 #include "cp-neural.h"
 
-class Sdg : public Optimizer {
+/** @brief Stochastic gradient descent optimizer.
+ *
+ */
+class SDG : public Optimizer {
     floatN lr;
 public:
-    Sdg(const json& jx) {
+    SDG(const json& jx) {
+        /** Most simple optimizer: stochastic gradient descent.
+         *
+         * @param jx JSON object that should contain "learning_rate".
+         */
         j=jx;
     }
-    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pcache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pCache) override {
+        /** Update the parameters of the neural network.
+         *
+         * @param w Matrix of parameters.
+         * @param dw Gradient of the loss function.
+         * @param wName Name of the parameter w. (Unused for SDG, since no state)
+         * @param pCache Pointer to the state-cache for the optimizer. (Unused for SDG, since no state)
+         * @return Updated parameters.
+         */
         lr=j.value("learning_rate", (floatN)1e-2);
-        x=x-lr*dx;
-        return x;
+        w=w-lr*dw;
+        return w;
     }
 };
 
@@ -22,11 +37,11 @@ public:
   - momentum: Scalar between 0 and 1 giving the momentum value.
     Setting momentum = 0 reduces to sgd.
 */
-class SdgMomentum : public Optimizer {
+class SDGmomentum : public Optimizer {
     floatN lr;
     floatN mm;
 public:
-    SdgMomentum(const json& jx) {
+    SDGmomentum(const json& jx) {
         j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
@@ -51,11 +66,11 @@ public:
 
 //  Uses the RMSProp update rule, which uses a moving average of squared gradient
 //  values to set adaptive per-parameter learning rates. [CS231]
-class RmsProp : public Optimizer {
+class RMSprop : public Optimizer {
     floatN lr;
     floatN dc,ep;
 public:
-    RmsProp(const json& jx) {
+    RMSprop(const json& jx) {
         j=jx;
     }
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
@@ -128,9 +143,9 @@ public:
 };
 
 Optimizer *optimizerFactory(string name, const json& j) {
-    if (name=="Sdg") return (Optimizer *)new Sdg(j);
-    if (name=="SdgMomentum") return (Optimizer *)new SdgMomentum(j);
-    if (name=="RmsProp") return (Optimizer *)new RmsProp(j);
+    if (name=="SDG") return (Optimizer *)new SDG(j);
+    if (name=="SDGmomentum") return (Optimizer *)new SDGmomentum(j);
+    if (name=="RMSprop") return (Optimizer *)new RMSprop(j);
     if (name=="Adam") return (Optimizer *)new Adam(j);
     cerr << "optimizerFactory called for unknown optimizer " << name << "." << endl;
     return nullptr;

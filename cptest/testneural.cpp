@@ -258,7 +258,7 @@ bool testTrainTwoLayerNet(int verbose) {
     statest["y"] = &yt;
     cerr << "  ";
     tln.train(X, &states, Xv, &statesv, "Adam", jo);
-    // tln.train(X, y, Xv, yv, "Sdg", cpo);
+    // tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err = tln.test(X, &states, 10);
     val_err = tln.test(Xv, &statesv, 10);
     test_err = tln.test(Xt, &statest, 10);

@@ -80,7 +80,7 @@ bool trainTest(string init) {
     floatN train_err,test_err,val_err;
 
     tln.train(X, y, Xv, yv, "Adam", jo);
-    //tln.train(X, y, Xv, yv, "Sdg", cpo);
+    //tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err=tln.test(X, y);
     val_err=tln.test(Xv, yv);
     test_err=tln.test(Xt, yt);
