@@ -104,3 +104,5 @@ typedef t_param_parser<MatrixN *> t_cppl;
 #include "cp-layers.h"
 #include "cp-layer-tests.h"
 #include "cp-optim.h"
+#include "cp-loss.h"
+

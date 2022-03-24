@@ -16,8 +16,6 @@
 #include "layers/cpl-twolayernet.h"
 #include "layers/cpl-rnn.h"
 #include "layers/cpl-lstm.h"
-// XXX: disabled until rewrite:
-// #include "layers/cpl-ran.h"
 #include "layers/cpl-wordembedding.h"
 #include "layers/cpl-temporalaffine.h"
 #include "layers/cpl-temporalsoftmax.h"
@@ -36,8 +34,6 @@ void registerLayers() {
     REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
     REGISTER_LAYER("RNN", RNN, 1)
     REGISTER_LAYER("LSTM", LSTM, 1)
-    // XXX disabled until rewrite:
-    // REGISTER_LAYER("RAN", RAN, 1)
     REGISTER_LAYER("WordEmbedding", WordEmbedding, 1)
     REGISTER_LAYER("TemporalAffine", TemporalAffine, 1)
     REGISTER_LAYER("TemporalSoftmax", TemporalSoftmax, 1)

@@ -59,6 +59,13 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
     return wo;
 }
 
+class Loss {
+public:
+    json j;
+    virtual ~Loss() {}; // Otherwise destructor of derived classes is never called!
+    virtual floatN loss(MatrixN& y, MatrixN& yhat) {return 1001.0;};
+};
+
 class Optimizer {
 public:
     json j;
@@ -137,6 +144,7 @@ public:
     virtual void genZeroStates(t_cppl* pstates, int N) { return; }
     virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id) { MatrixN d(0,0); return d;}
     virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    // XXX TODO: remove
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) { return 1001.0; }
     virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
         for (auto it : params) {
@@ -265,6 +273,7 @@ private:
     bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps, int verbose);
     MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h, int verbose);
     MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h, int verbose);
+    // XXX: rework lossFkt parameter
     bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt, int verbose);
     bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt, int verbose);
     bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt, int verbose);

@@ -6,12 +6,13 @@
 
 A neural network library for convolutional, fully connected nets and RNNs in C++.
 
-The current `v2`-version of the project has the following objectives:
-* remove CUDA and other external graphics card libs (since for good performance they need to rely on blackbox-libs)
-* implement full support for graphs (not only sequenctial)
-* This will be work-in-progress for considerable time. The previous version is archived in branch [`v1`](https://github.com/domschl/syncognite/tree/v1).
-
 This library implements some of the assignments from Stanfords's [CS231n](http://cs231n.stanford.edu/index.html) 2016 course by Andrej Karpathy, Fei-Fei Li, Justin Johnson and [CS224d](http://cs224d.stanford.edu/index.html) by Richard Socher as C++ framework.
+
+The current `v2`-version of the project has the following objectives:
+* implement full support for graphs (not only sequential)
+* cleanup & documentation
+* This will be work-in-progress for considerable time. The previous version is archived in branch [`v1`](https://github.com/domschl/syncognite/tree/v1).
+* CUDA support and other external graphics card libs have been removed (since for good performance they need to rely on blackbox-libs)
 
 Current state: **beta**
 
