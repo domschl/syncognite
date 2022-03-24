@@ -63,7 +63,7 @@ class Loss {
 public:
     json j;
     virtual ~Loss() {}; // Otherwise destructor of derived classes is never called!
-    virtual floatN loss(MatrixN& y, MatrixN& yhat) {return 1001.0;};
+    virtual floatN loss(MatrixN& yhat, MatrixN& y, t_cppl *pParams) {return 1001.0;};
 };
 
 class Optimizer {
