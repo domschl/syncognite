@@ -103,6 +103,35 @@ class TemporalCrossEntropyLoss : public Loss {
     }
 };
 
+/** @brief Mean squared error loss function.
+ *
+ */
+class MeanSquaredErrorLoss : public Loss {
+  public:
+    MeanSquaredErrorLoss(const json &jx) {
+        /** Mean squared error loss function.
+         * @param jx - JSON object with configuration parameters. Not used.
+         */
+        j = jx;
+    }
+
+    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) {
+        /** Compute the loss for a batch of predictions and targets.
+         * @param yhat - predictions (e.g. output of softmax layer)
+         * @param y - targets, same shape as yhat
+         * @returns loss - mean square loss, normalized by the number of samples
+         */
+        floatN loss = 0.0;
+        MatrixN diff = yhat - y;
+        for (unsigned int i = 0; i < diff.rows(); i++) {
+            for (unsigned int j = 0; j < diff.cols(); j++) {
+                loss += diff(i, j) * diff(i, j);
+            }
+        }
+        loss /= yhat.rows();
+        return loss;
+    }
+};
 
 /** @brief Loss Factory: generate a loss class by name */
 Loss *lossFactory(string name, const json& j) {
@@ -113,6 +142,7 @@ Loss *lossFactory(string name, const json& j) {
      */
     if (name=="SparseCategoricalCrossEntropy") return (Loss *)new SparseCategoricalCrossEntropyLoss(j);
     if (name=="TemporalCrossEntropy") return (Loss *)new TemporalCrossEntropyLoss(j);
+    if (name=="MeanSquaredError") return (Loss *)new MeanSquaredErrorLoss(j);
     cerr << "lossFactory called for unknown loss " << name << "." << endl;
     return nullptr;
 }
