@@ -76,14 +76,16 @@ Inheritance diagram for Loss:</div>
  <div class="center">
   <img src="class_loss.png" usemap="#Loss_map" alt=""/>
   <map id="Loss_map" name="Loss_map">
-<area href="class_sparse_categorical_cross_entropy_loss.html" title="Categorical cross-entropy loss function." alt="SparseCategoricalCrossEntropyLoss" shape="rect" coords="0,56,220,80"/>
+<area href="class_mean_squared_error_loss.html" title="Mean squared error loss function." alt="MeanSquaredErrorLoss" shape="rect" coords="0,56,220,80"/>
+<area href="class_sparse_categorical_cross_entropy_loss.html" title="Categorical cross-entropy loss function." alt="SparseCategoricalCrossEntropyLoss" shape="rect" coords="230,56,450,80"/>
+<area href="class_temporal_cross_entropy_loss.html" title="Temporal cross-entropy loss function." alt="TemporalCrossEntropyLoss" shape="rect" coords="460,56,680,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a4e17b35785f1e4813ec29469087283c5"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_loss.html#a4e17b35785f1e4813ec29469087283c5">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat)</td></tr>
-<tr class="separator:a4e17b35785f1e4813ec29469087283c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace693ccac213cc419f56109e95d06780"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_loss.html#ace693ccac213cc419f56109e95d06780">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams)</td></tr>
+<tr class="separator:ace693ccac213cc419f56109e95d06780"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -92,8 +94,8 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 <tr class="separator:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4e17b35785f1e4813ec29469087283c5" name="a4e17b35785f1e4813ec29469087283c5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4e17b35785f1e4813ec29469087283c5">&#9670;&nbsp;</a></span>loss()</h2>
+<a id="ace693ccac213cc419f56109e95d06780" name="ace693ccac213cc419f56109e95d06780"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ace693ccac213cc419f56109e95d06780">&#9670;&nbsp;</a></span>loss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -105,13 +107,19 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
           <td class="memname">virtual floatN Loss::loss </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>y</em>, </td>
+          <td class="paramname"><em>yhat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>yhat</em>&#160;</td>
+          <td class="paramname"><em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">t_cppl *&#160;</td>
+          <td class="paramname"><em>pParams</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -126,7 +134,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Reimplemented in <a class="el" href="class_sparse_categorical_cross_entropy_loss.html#acc8af07e13f2cbf82e5648a565ec4519">SparseCategoricalCrossEntropyLoss</a>.</p>
+<p>Reimplemented in <a class="el" href="class_temporal_cross_entropy_loss.html#abe33cf240c89c34395fadba09cf921fb">TemporalCrossEntropyLoss</a>, and <a class="el" href="class_mean_squared_error_loss.html#ab7dcad4fe915c9a732dccec40f0c9c4d">MeanSquaredErrorLoss</a>.</p>
 
 </div>
 </div>

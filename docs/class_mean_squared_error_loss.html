@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Syncognite: Adam Class Reference</title>
+<title>Syncognite: MeanSquaredErrorLoss Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -66,43 +66,43 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="class_adam-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Adam Class Reference</div></div>
+<a href="class_mean_squared_error_loss-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">MeanSquaredErrorLoss Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p><a class="el" href="class_adam.html" title="Adam optimizer. Algorithm based on CS231 course notes.">Adam</a> optimizer. Algorithm based on CS231 course notes.  
- <a href="class_adam.html#details">More...</a></p>
+<p>Mean squared error loss function.  
+ <a href="class_mean_squared_error_loss.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="cp-optim_8h_source.html">cp-optim.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="cp-loss_8h_source.html">cp-loss.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for Adam:</div>
+Inheritance diagram for MeanSquaredErrorLoss:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="class_adam.png" usemap="#Adam_map" alt=""/>
-  <map id="Adam_map" name="Adam_map">
-<area href="class_optimizer.html" alt="Optimizer" shape="rect" coords="0,0,65,24"/>
+  <img src="class_mean_squared_error_loss.png" usemap="#MeanSquaredErrorLoss_map" alt=""/>
+  <map id="MeanSquaredErrorLoss_map" name="MeanSquaredErrorLoss_map">
+<area href="class_loss.html" alt="Loss" shape="rect" coords="0,0,147,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:afb6ab522d5d7df60bdeaf0551362ad65"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adam.html#afb6ab522d5d7df60bdeaf0551362ad65">Adam</a> (const json &amp;jx)</td></tr>
-<tr class="separator:afb6ab522d5d7df60bdeaf0551362ad65"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3779895a833e3a574e276e5b7ba6f3b2"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adam.html#a3779895a833e3a574e276e5b7ba6f3b2">update</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;w, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dw, string wName, t_cppl *pStateCache) override</td></tr>
-<tr class="separator:a3779895a833e3a574e276e5b7ba6f3b2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a48b99d4a1246fcf654fd02258f6e9817"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_mean_squared_error_loss.html#a48b99d4a1246fcf654fd02258f6e9817">MeanSquaredErrorLoss</a> (const json &amp;jx)</td></tr>
+<tr class="separator:a48b99d4a1246fcf654fd02258f6e9817"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab7dcad4fe915c9a732dccec40f0c9c4d"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_mean_squared_error_loss.html#ab7dcad4fe915c9a732dccec40f0c9c4d">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams)</td></tr>
+<tr class="separator:ab7dcad4fe915c9a732dccec40f0c9c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a88d4c8763f58b438c8a469786459dd2c"><td class="memItemLeft" align="right" valign="top"><a id="a88d4c8763f58b438c8a469786459dd2c" name="a88d4c8763f58b438c8a469786459dd2c"></a>
+<tr class="memitem:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memItemLeft" align="right" valign="top"><a id="a24ca2b3f4564faf1f5ad41e7225f63d8" name="a24ca2b3f4564faf1f5ad41e7225f63d8"></a>
 json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
-<tr class="separator:a88d4c8763f58b438c8a469786459dd2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="separator:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p ><a class="el" href="class_adam.html" title="Adam optimizer. Algorithm based on CS231 course notes.">Adam</a> optimizer. Algorithm based on CS231 course notes. </p>
+<div class="textblock"><p >Mean squared error loss function. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="afb6ab522d5d7df60bdeaf0551362ad65" name="afb6ab522d5d7df60bdeaf0551362ad65"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afb6ab522d5d7df60bdeaf0551362ad65">&#9670;&nbsp;</a></span>Adam()</h2>
+<a id="a48b99d4a1246fcf654fd02258f6e9817" name="a48b99d4a1246fcf654fd02258f6e9817"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48b99d4a1246fcf654fd02258f6e9817">&#9670;&nbsp;</a></span>MeanSquaredErrorLoss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -111,7 +111,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Adam::Adam </td>
+          <td class="memname">MeanSquaredErrorLoss::MeanSquaredErrorLoss </td>
           <td>(</td>
           <td class="paramtype">const json &amp;&#160;</td>
           <td class="paramname"><em>jx</em></td><td>)</td>
@@ -124,11 +124,9 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >epsilon </p>
-<p ><a class="el" href="class_adam.html" title="Adam optimizer. Algorithm based on CS231 course notes.">Adam</a> optimizer.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p >Mean squared error loss function. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">jx</td><td>JSON object that should contain "learning_rate", "beta1" and "beta2".</td></tr>
+    <tr><td class="paramname">jx</td><td>- JSON object with configuration parameters. Not used.</td></tr>
   </table>
   </dd>
 </dl>
@@ -136,8 +134,8 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a3779895a833e3a574e276e5b7ba6f3b2" name="a3779895a833e3a574e276e5b7ba6f3b2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3779895a833e3a574e276e5b7ba6f3b2">&#9670;&nbsp;</a></span>update()</h2>
+<a id="ab7dcad4fe915c9a732dccec40f0c9c4d" name="ab7dcad4fe915c9a732dccec40f0c9c4d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab7dcad4fe915c9a732dccec40f0c9c4d">&#9670;&nbsp;</a></span>loss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -146,28 +144,22 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> Adam::update </td>
+          <td class="memname">virtual floatN MeanSquaredErrorLoss::loss </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>w</em>, </td>
+          <td class="paramname"><em>yhat</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>dw</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">string&#160;</td>
-          <td class="paramname"><em>wName</em>, </td>
+          <td class="paramname"><em>y</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">t_cppl *&#160;</td>
-          <td class="paramname"><em>pStateCache</em>&#160;</td>
+          <td class="paramname"><em>pParams</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -177,28 +169,25 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Update the parameters of the neural network.</p>
-<dl class="params"><dt>Parameters</dt><dd>
+<p >Compute the loss for a batch of predictions and targets. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">w</td><td>Matrix of parameters. </td></tr>
-    <tr><td class="paramname">dw</td><td>Gradient of the loss function. </td></tr>
-    <tr><td class="paramname">wName</td><td>Name of the parameter w. (used for naming the cache-state of optimizer state parameters) </td></tr>
-    <tr><td class="paramname">pStateCache</td><td>Pointer to the state-cache for the optimizer. (will hold optimizer state parameter cache) </td></tr>
+    <tr><td class="paramname">yhat</td><td>- predictions (e.g. output of softmax layer) </td></tr>
+    <tr><td class="paramname">y</td><td>- targets, same shape as yhat </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Updated parameters.</dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>loss - mean square loss, normalized by the number of samples</dd></dl>
 
-<p>Reimplemented from <a class="el" href="class_optimizer.html">Optimizer</a>.</p>
+<p>Reimplemented from <a class="el" href="class_loss.html">Loss</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>cpneural/<a class="el" href="cp-optim_8h_source.html">cp-optim.h</a></li>
+<li>cpneural/<a class="el" href="cp-loss_8h_source.html">cp-loss.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

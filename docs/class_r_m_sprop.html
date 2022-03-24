@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Syncognite: Optimizer Class Reference</title>
+<title>Syncognite: RMSprop Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -66,27 +66,31 @@ $(function() {
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="class_optimizer-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">Optimizer Class Reference</div></div>
+<a href="class_r_m_sprop-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">RMSprop Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>RMSProp optimizer. Algorithm based on CS231 course notes.  
+ <a href="class_r_m_sprop.html#details">More...</a></p>
+
+<p><code>#include &lt;<a class="el" href="cp-optim_8h_source.html">cp-optim.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for Optimizer:</div>
+Inheritance diagram for RMSprop:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="class_optimizer.png" usemap="#Optimizer_map" alt=""/>
-  <map id="Optimizer_map" name="Optimizer_map">
-<area href="class_adam.html" title="Adam optimizer. Algorithm based on CS231 course notes." alt="Adam" shape="rect" coords="0,56,96,80"/>
-<area href="class_r_m_sprop.html" title="RMSProp optimizer. Algorithm based on CS231 course notes." alt="RMSprop" shape="rect" coords="106,56,202,80"/>
-<area href="class_s_d_g.html" title="Stochastic gradient descent optimizer." alt="SDG" shape="rect" coords="212,56,308,80"/>
-<area href="class_s_d_gmomentum.html" title="Stochastic gradient descent optimizer with momentum. Algorithm based on CS231 course notes." alt="SDGmomentum" shape="rect" coords="318,56,414,80"/>
+  <img src="class_r_m_sprop.png" usemap="#RMSprop_map" alt=""/>
+  <map id="RMSprop_map" name="RMSprop_map">
+<area href="class_optimizer.html" alt="Optimizer" shape="rect" coords="0,0,65,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:acdf6c99fe24442e253e10207523ce8e7"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_optimizer.html#acdf6c99fe24442e253e10207523ce8e7">update</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dx, string var, t_cppl *pcache)</td></tr>
-<tr class="separator:acdf6c99fe24442e253e10207523ce8e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac689324295324fde1743c43ce6a6c064"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_m_sprop.html#ac689324295324fde1743c43ce6a6c064">RMSprop</a> (const json &amp;jx)</td></tr>
+<tr class="separator:ac689324295324fde1743c43ce6a6c064"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adcec39abe94c8d052126365ec1d7ff14"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_m_sprop.html#adcec39abe94c8d052126365ec1d7ff14">update</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;w, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dw, string wName, t_cppl *pStateCache) override</td></tr>
+<tr class="separator:adcec39abe94c8d052126365ec1d7ff14"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -94,9 +98,11 @@ Public Attributes</h2></td></tr>
 json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 <tr class="separator:a88d4c8763f58b438c8a469786459dd2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="acdf6c99fe24442e253e10207523ce8e7" name="acdf6c99fe24442e253e10207523ce8e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acdf6c99fe24442e253e10207523ce8e7">&#9670;&nbsp;</a></span>update()</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p >RMSProp optimizer. Algorithm based on CS231 course notes. </p>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<a id="ac689324295324fde1743c43ce6a6c064" name="ac689324295324fde1743c43ce6a6c064"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac689324295324fde1743c43ce6a6c064">&#9670;&nbsp;</a></span>RMSprop()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -105,28 +111,63 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> Optimizer::update </td>
+          <td class="memname">RMSprop::RMSprop </td>
+          <td>(</td>
+          <td class="paramtype">const json &amp;&#160;</td>
+          <td class="paramname"><em>jx</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p >epsilon </p>
+<p >RMSProp optimizer.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">jx</td><td>JSON object that should contain "learning_rate", "decay_rate" and "epsilon".</td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="adcec39abe94c8d052126365ec1d7ff14" name="adcec39abe94c8d052126365ec1d7ff14"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adcec39abe94c8d052126365ec1d7ff14">&#9670;&nbsp;</a></span>update()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> RMSprop::update </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>x</em>, </td>
+          <td class="paramname"><em>w</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
-          <td class="paramname"><em>dx</em>, </td>
+          <td class="paramname"><em>dw</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">string&#160;</td>
-          <td class="paramname"><em>var</em>, </td>
+          <td class="paramname"><em>wName</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">t_cppl *&#160;</td>
-          <td class="paramname"><em>pcache</em>&#160;</td>
+          <td class="paramname"><em>pStateCache</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -136,17 +177,28 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
+<p >Update the parameters of the neural network.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">w</td><td>Matrix of parameters. </td></tr>
+    <tr><td class="paramname">dw</td><td>Gradient of the loss function. </td></tr>
+    <tr><td class="paramname">wName</td><td>Name of the parameter w. (used for naming the cache-state of moving average) </td></tr>
+    <tr><td class="paramname">pStateCache</td><td>Pointer to the state-cache for the optimizer. (will hold moving average state) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Updated parameters.</dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_s_d_g.html#a34e2528f4768fa9a8170e115a2c8a3da">SDG</a>, <a class="el" href="class_s_d_gmomentum.html#afafb5f04d1fa9f97dae9d6f737da89b5">SDGmomentum</a>, <a class="el" href="class_r_m_sprop.html#adcec39abe94c8d052126365ec1d7ff14">RMSprop</a>, and <a class="el" href="class_adam.html#a3779895a833e3a574e276e5b7ba6f3b2">Adam</a>.</p>
+<p>Reimplemented from <a class="el" href="class_optimizer.html">Optimizer</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>cpneural/<a class="el" href="cp-layer_8h_source.html">cp-layer.h</a></li>
+<li>cpneural/<a class="el" href="cp-optim_8h_source.html">cp-optim.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
