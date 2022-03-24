@@ -37,29 +37,46 @@ public:
   - momentum: Scalar between 0 and 1 giving the momentum value.
     Setting momentum = 0 reduces to sgd.
 */
+/** @brief Stochastic gradient descent optimizer with momentum.
+ * Algorithm based on CS231 course notes.
+ */
 class SDGmomentum : public Optimizer {
     floatN lr;
     floatN mm;
 public:
     SDGmomentum(const json& jx) {
+        /** Stochastic gradient descent with momentum.
+         *
+         * Momentum should be between 0 and 1, a value of 0 gives SDG.
+         *
+         * @param jx JSON object that should contain "learning_rate" and "momentum".
+         */
         j=jx;
     }
-    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl* pocache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pStateCache) override {
+        /** Update the parameters of the neural network.
+         *
+         * @param w Matrix of parameters.
+         * @param dw Gradient of the loss function.
+         * @param wName Name of the parameter w. (used for naming the cache-state of momentum)
+         * @param pStateCache Pointer to the state-cache for the optimizer. (will hold momentum state)
+         * @return Updated parameters.
+         */
         lr=j.value("learning_rate", (floatN)1e-2);
         mm=j.value("momentum",(floatN)0.9);
-        string cname=var+"-velocity";
-        if (pocache->find("cname_v")==pocache->end()) {
-            MatrixN z=MatrixN(x);
+        string vName=wName+"-velocity";
+        if (pStateCache->find(vName)==pStateCache->end()) {
+            MatrixN z=MatrixN(w);
             z.setZero();
-            cppl_update(pocache, cname, &z);
+            cppl_update(pStateCache, vName, &z);
         }
-        MatrixN dxw;
+        MatrixN dwm;
         MatrixN v;
-        v=*(*pocache)[cname];
-        dxw = lr*dx - mm*v;
-        *(*pocache)[cname]= (-1.0) * dxw;
-        x=x-dxw;
-        return x;
+        v=*(*pStateCache)[vName];
+        dwm = lr*dw - mm*v;
+        *(*pStateCache)[vName]= (-1.0) * dwm;
+        w=w-dwm;
+        return w;
     }
 };
 
