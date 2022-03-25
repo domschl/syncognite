@@ -178,11 +178,11 @@ int main(int argc, char *argv[]) {
 		if (verbose) cerr << "Topology-check for MultiLayer: ok." << endl;
 	}
 
-	json jo(R"({"verbose":true,"shuffle":true,"lr_decay":0.95,"epsilon":1e-8})"_json);
+	json jo(R"({"verbose":true,"shuffle":true})"_json);
 	jo["epochs"]=(floatN)40.0;
 	jo["batch_size"]=50;
-	jo["learning_rate"]=(floatN)5e-4;
-	jo["regularization"]=(floatN)1e-8;
+	jo["learning_rate"]=(floatN)2e-3;
+	jo["regularization"]=(floatN)2e-8;
 
 	lb.train(X, y, Xv, yv, "Adam", jo);
 
