@@ -111,4 +111,5 @@ Ep: 40, Time: 164s, (20s test) loss:0.0043 err(val):0.0104 acc(val):0.9896
 Final results on MNIST after 40.0000 epochs:
       Train-error: 0.0007 train-acc: 0.9993
  Validation-error: 0.0104   val-acc: 0.9896
-       Test-error: 0.0088  test-acc: 0.9912```
+       Test-error: 0.0088  test-acc: 0.9912
+```
