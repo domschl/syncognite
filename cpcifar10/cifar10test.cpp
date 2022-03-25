@@ -348,13 +348,13 @@ int main(int argc, char *argv[]) {
         }
         cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=5.e-4;
-        bReg=1.e-6;
+        bLearn=1.e-3;
+        bReg=3.e-8;
     }
 
     jo["learning_rate"]=bLearn;
     jo["regularization"]=bReg;
-    jo["epochs"]=(floatN)100.0;
+    jo["epochs"]=(floatN)40.0;
     evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
 
     for (auto it : cpcifar10Data) {
