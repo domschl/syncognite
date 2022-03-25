@@ -1,23 +1,38 @@
-#ifndef _CP_LAYER_H
-#define _CP_LAYER_H
+#pragma once
 
 #include "cp-neural.h"
 
-enum XavierMode { XAV_STANDARD, XAV_NORMAL, XAV_ORTHONORMAL, XAV_ORTHOGONAL};
+/** Modes for Xavier initialization */
+enum XavierMode { XAV_STANDARD, /** default Xavier with linear distribution */ 
+    XAV_NORMAL, /** Xavier with normal distribution */
+    XAV_ORTHONORMAL, /** Xavier with orthonormal distribution */
+    XAV_ORTHOGONAL, /** Xavier with orthogonal distribution */
+};
 
-XavierMode xavierInitType(string stype) {
+XavierMode xavierInitType(string xavierStyle) {
+    /** @brief Returns the Xavier initialization type.
+     * @param xavierStyle Name of Xavier style (e.g. "standard", "normal", "orthonormal", "orthogonal")
+     * @return Xavier initialization type \ref XavierMode
+     */
     XavierMode type=XavierMode::XAV_STANDARD;
-    string ltype(stype);
-    std::transform(ltype.begin(), ltype.end(), ltype.begin(), ::tolower);
+    string trXavierStyle(xavierStyle);
+    std::transform(trXavierStyle.begin(), trXavierStyle.end(), trXavierStyle.begin(), ::tolower);
 
-    if (ltype=="standard") type=XavierMode::XAV_STANDARD;
-    else if (ltype=="normal") type=XavierMode::XAV_NORMAL;
-    else if (ltype=="orthonormal") type=XavierMode::XAV_ORTHONORMAL;
-    else if (ltype=="orthogonal") type=XavierMode::XAV_ORTHOGONAL;
+    if (trXavierStyle=="standard") type=XavierMode::XAV_STANDARD;
+    else if (trXavierStyle=="normal") type=XavierMode::XAV_NORMAL;
+    else if (trXavierStyle=="orthonormal") type=XavierMode::XAV_ORTHONORMAL;
+    else if (trXavierStyle=="orthogonal") type=XavierMode::XAV_ORTHOGONAL;
     return type;
 }
 
-MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD, floatN initfactor=1.0) {
+MatrixN xavierInit(const MatrixN &w, XavierMode xavierMode=XavierMode::XAV_STANDARD, floatN initfactor=1.0) {
+    /** @brief Initializes weights with Xavier initialization.
+     * Xavier init: 2.0/sqrt(w.cols+w.rows) * initfactor
+     * @param w Matrix to initialize
+     * @param xavierMode \ref XavierMode
+     * @param initfactor Initialization factor >0.0, used to scale the initialization values.
+     * @return initialized MatrixN
+     */
     if (initfactor == 0.0) {
         cerr << "Initfactor=0.0 is invalid! Setting to 1.0" << endl;
         initfactor=1.0;
@@ -29,7 +44,7 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavMode=XavierMode::XAV_STANDARD
     MatrixN wot(w);
     std::default_random_engine rde;
     std::normal_distribution<float> distn(mean, std);
-    switch (xavMode) {
+    switch (xavierMode) {
         case XavierMode::XAV_NORMAL:
             for (int i=0; i<wo.size(); i++) wo(i)=distn(rde);
         break;
@@ -279,4 +294,3 @@ private:
     bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt, int verbose);
 };
 
-#endif
