@@ -161,11 +161,11 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal","initfactor":0.03})"_json);
+    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
-    int H=512;
-    int BS=96;
-    float clip=5.0;
+    int H=256;
+    int BS=256;
+    float clip=15.0;
 
     //int D=64;
     // CpParams cp0;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     j1["forgetbias"]=0.30;
     j1["clip"]=clip;
-    int layer_depth1=8;
+    int layer_depth1=4;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -225,14 +225,14 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
+    jo["learning_rate"]=(floatN)4e-4; //2.2e-2);
 
-    floatN dep=25.0;
+    floatN dep=100.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
 
-    for (int i=0; i<10000; i++) {
+    for (int i=0; i<1; i++) {
         jo["startepoch"]=(floatN)sep;
         t_cppl states;
         t_cppl statesv;
@@ -257,7 +257,7 @@ int main(int argc, char *argv[]) {
         plstm0->genZeroStates(&statesg, 1);
 
         int g,t,v;
-        for (g=0; g<500; g++) {
+        for (g=0; g<2500; g++) {
             t_cppl cache{};
 
             MatrixN probst=lb.forward(xg,&cache, &statesg);
