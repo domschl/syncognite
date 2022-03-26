@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     //j1["forgetbias"]=0.10;
     j1["clip"]=clip;
-    int layer_depth1=4;
+    int layer_depth1=6;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -227,12 +227,12 @@ int main(int argc, char *argv[]) {
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
     jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
 
-    floatN dep=200.0;
+    floatN dep=100.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
 
-    for (int i=0; i<1; i++) {
+    for (int i=0; i<10; i++) {
         jo["startepoch"]=(floatN)sep;
         t_cppl states;
         t_cppl statesv;
