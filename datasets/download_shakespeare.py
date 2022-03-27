@@ -1,7 +1,7 @@
 try:
     from ml_indie_tools.Gutenberg_Dataset import Gutenberg_Dataset
 except ImportError:
-    print("Please install ml_indie_tools: pip install ml_indie_tools")
+    print("Please install ml-indie-tools: pip install ml-indie-tools, see https://github.com/domschl/ml-indie-tools")
     exit(1)
 
 gd = Gutenberg_Dataset()
