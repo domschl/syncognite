@@ -23,12 +23,12 @@ To download the Complete Collected Works of William Shakespeare (5x the size of 
 In directory `datasets`:
 
 ```bash
-pip install -U ml_indie_tools
+pip install -U ml-indie-tools
 python download_shakespeare.py
 ```
 
 This uses [`ml-indie-tools`](https://github.com/domschl/ml-indie-tools) to download the Complete Works from Project Gutenberg.
-The library can be used to download arbitrary book-collections from Project Gutenberg, see [Documentation](https://domschl.github.io/ml-indie-tools/_build/html/index.html#readme-file).
+The library can be used to download arbitrary book-collections from Project Gutenberg, see [Documentation](https://github.com/domschl/ml-indie-tools#gutenberg_dataset).
 
 ## Training
 
@@ -36,6 +36,12 @@ From build directory:
 
 ```bash
 rnnreader/rnnreader ../datasets/tiny-shakespeare.txt
+```
+
+or, if you have downloaded the full Works:
+
+```bash
+rnnreader/rnnreader ../datasets/shakespeare.txt
 ```
 
 ## Output
