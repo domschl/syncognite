@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=64;
+    int T=96;
 
     int N=(int)txt.text.size() / (T+1);
     cerr << N << " Max datasets" << endl;
@@ -163,9 +163,9 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
-    int H=256;
-    int BS=256;
-    float clip=15.0;
+    int H=400;
+    int BS=96;
+    float clip=5.0;
 
     //int D=64;
     // CpParams cp0;
@@ -191,9 +191,9 @@ int main(int argc, char *argv[]) {
     j1["N"]=BS;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    j1["forgetbias"]=0.30;
+    //j1["forgetbias"]=0.10;
     j1["clip"]=clip;
-    int layer_depth1=4;
+    int layer_depth1=6;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -225,15 +225,17 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)4e-4; //2.2e-2);
+    jo["learning_rate"]=(floatN)1e-1; //2.2e-2);
 
-    floatN dep=100.0;
+    floatN dep=70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
+    floatN lr_decay = 0.15;
 
-    for (int i=0; i<1; i++) {
+    for (int i=0; i<10; i++) {
         jo["startepoch"]=(floatN)sep;
+        jo["learning_rate"] = floatN(jo["learning_rate"]) * lr_decay;
         t_cppl states;
         t_cppl statesv;
         states["y"] = new MatrixN(y);
@@ -250,7 +252,7 @@ int main(int argc, char *argv[]) {
         MatrixN xg(1,T);
         for (int i=0; i<T; i++) {
             xg(0,i)=txt.w2v[instr[i]];
-        }
+       }
         wstring sout{};
         Layer* plstm0=lb.layerMap["lstm0"];
         t_cppl statesg{};
