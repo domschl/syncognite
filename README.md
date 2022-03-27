@@ -182,7 +182,8 @@ Build the project:
 make
 # or
 ninja
-# or (macOS) start Xcode and load the generated project file.
+# or (macOS) start Xcode and load the generated project file, or:
+xcodebuild -configuration Release
 ```
 
 ## History
