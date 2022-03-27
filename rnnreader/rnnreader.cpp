@@ -163,8 +163,8 @@ int main(int argc, char *argv[]) {
 
     LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
-    int H=384;
-    int BS=128;
+    int H=400;
+    int BS=96;
     float clip=5.0;
 
     //int D=64;
@@ -225,15 +225,17 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)2e-2; //2.2e-2);
+    jo["learning_rate"]=(floatN)1e-1; //2.2e-2);
 
-    floatN dep=100.0;
+    floatN dep=70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
+    floatN lr_decay = 0.15;
 
     for (int i=0; i<10; i++) {
         jo["startepoch"]=(floatN)sep;
+        jo["learning_rate"] = floatN(jo["learning_rate"]) * lr_decay;
         t_cppl states;
         t_cppl statesv;
         states["y"] = new MatrixN(y);
