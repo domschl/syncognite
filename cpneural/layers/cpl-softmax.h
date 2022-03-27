@@ -35,11 +35,11 @@ class Softmax : public Layer {
         if (pcache != nullptr)
             cppl_set(pcache, "x", new MatrixN(x));
         // if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-        if (pstates->find("y") == pstates->end()) {
-            cerr << "SM-fw: pstates does not contain y -> fatal!" << endl;
-            exit(-1);
-        }
-        MatrixN y = *((*pstates)["y"]);
+        //if (pstates->find("y") == pstates->end()) {
+        //    cerr << "SM-fw: pstates does not contain y -> fatal!" << endl;
+        //    exit(-1);
+        //}
+        //MatrixN y = *((*pstates)["y"]);
         VectorN mxc = x.rowwise().maxCoeff();
         MatrixN xn = x;
         xn.colwise() -= mxc;

@@ -96,6 +96,7 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     MatrixN yb=*((*pstates)["y"]);
     forward(*pxb, &cache, pstates, id);
     floatN thisloss=loss(&cache, pstates);
+    //floatN thisloss=lossFunction(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
@@ -109,8 +110,7 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                string optimizer, const json& j) {
-    Optimizer* popti=optimizerFactory(optimizer, j);
+                Optimizer *popti, Loss *pLoss, const json& j) {
     t_cppl optiCache;
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
@@ -252,6 +252,14 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             pxbi[bi] = new MatrixN(xb);
             MatrixN *pxb = pxbi[bi];
             t_cppl *pst = &(states[bi]);
+            /*
+            T_LOSSFUNC lossFunction;
+            if (pLoss == nullptr) {
+                lossFunction = loss;
+            } else {
+                lossFunction = pLoss->loss;
+            }
+            */
             retFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
@@ -356,13 +364,36 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     return lastAcc;
 }
 
+// Legacy interface
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                 string optimizer, const json& j) {
     t_cppl states, statesv;
+    Optimizer* pOptimizer=optimizerFactory(optimizer, j);
     states["y"]=new MatrixN(y);
     statesv["y"]=new MatrixN(yv);
-    auto loss = train(x, &states, xv, &statesv, optimizer, j);
+    auto loss = train(x, &states, xv, &statesv, pOptimizer, nullptr, j);
     cppl_delete(&states);
     cppl_delete(&statesv);
+    // XXX cleanup optimizer
+    return loss;
+}
+
+floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, const MatrixN& y_val,
+        Optimizer *pOptimizer, Loss *pLoss, const json& job_parameters) {
+    t_cppl states, states_val;
+    states["y"]=new MatrixN(y);
+    states_val["y"]=new MatrixN(y_val);
+    auto loss = train(x, &states, x_val, &states_val, pOptimizer, pLoss, job_parameters);
+    cppl_delete(&states);
+    cppl_delete(&states_val);
+    return loss;
+}
+
+// legacy interface
+floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl *pStatesVal,
+        string optimizer, const json& j) {
+    Optimizer* pOptimizer=optimizerFactory(optimizer, j);
+    auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, nullptr, j);
+    // XXX cleanup optimizer
     return loss;
 }
