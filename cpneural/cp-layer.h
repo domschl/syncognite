@@ -74,9 +74,6 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavierMode=XavierMode::XAV_STAND
     return wo;
 }
 
-
-typedef std::function<floatN(MatrixN& yhat, MatrixN& y, t_cppl *pParams)> T_LOSSFUNC;
-
 class Loss {
 public:
     json j;
@@ -285,7 +282,7 @@ public:
                         string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                         Optimizer *pOptimizer, Loss *pLoss, const json& j);
-    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id, T_LOSSFUNC lossFct);
+    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps, int verbose);
