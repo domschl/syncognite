@@ -364,9 +364,10 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
                 string optimizer, const json& j) {
     t_cppl states, statesv;
     Optimizer* pOptimizer=optimizerFactory(optimizer, j);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
     states["y"]=new MatrixN(y);
     statesv["y"]=new MatrixN(yv);
-    auto loss = train(x, &states, xv, &statesv, pOptimizer, nullptr, j);
+    auto loss = train(x, &states, xv, &statesv, pOptimizer, pLoss, j);
     cppl_delete(&states);
     cppl_delete(&statesv);
     // XXX cleanup optimizer
@@ -388,7 +389,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, co
 floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl *pStatesVal,
         string optimizer, const json& j) {
     Optimizer* pOptimizer=optimizerFactory(optimizer, j);
-    auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, nullptr, j);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
+    auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, pLoss, j);
     // XXX cleanup optimizer
     return loss;
 }
