@@ -285,7 +285,7 @@ public:
                         string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                         Optimizer *pOptimizer, Loss *pLoss, const json& j);
-    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id);
+    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id, T_LOSSFUNC lossFct);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
     bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps, int verbose);

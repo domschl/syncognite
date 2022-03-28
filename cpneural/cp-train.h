@@ -86,7 +86,7 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
-retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
+retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, T_LOSSFUNC lossFct) {
     t_cppl cache;
     t_cppl grads;
     retdict rd;
@@ -95,7 +95,7 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
     }
     MatrixN yb=*((*pstates)["y"]);
     forward(*pxb, &cache, pstates, id);
-    floatN thisloss=loss(&cache, pstates);
+    floatN thisloss=lossFct(&cache, pstates);
     //floatN thisloss=lossFunction(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
@@ -252,15 +252,17 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             pxbi[bi] = new MatrixN(xb);
             MatrixN *pxb = pxbi[bi];
             t_cppl *pst = &(states[bi]);
+            
             /*
             T_LOSSFUNC lossFunction;
             if (pLoss == nullptr) {
-                lossFunction = loss;
+                auto lossFunction = (T_LOSSFUNC)loss;
             } else {
-                lossFunction = pLoss->loss;
+                auto lossFunction = pLoss->loss;
             }
             */
-            retFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
+           
+            retFut.push_back(std::async(std::launch::async, [pxb, pst, bi, loss]{ return this->workerThread(pxb, pst, bi, loss); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
