@@ -355,7 +355,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         }
 */    }
     cppl_delete(&optiCache);
-    delete popti;
     return lastAcc;
 }
 
@@ -370,7 +369,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     auto loss = train(x, &states, xv, &statesv, pOptimizer, pLoss, j);
     cppl_delete(&states);
     cppl_delete(&statesv);
-    // XXX cleanup optimizer
+    delete pLoss;
+    delete pOptimizer;
     return loss;
 }
 
@@ -391,6 +391,7 @@ floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl
     Optimizer* pOptimizer=optimizerFactory(optimizer, j);
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
     auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, pLoss, j);
-    // XXX cleanup optimizer
+    delete pLoss;
+    delete pOptimizer;
     return loss;
 }
