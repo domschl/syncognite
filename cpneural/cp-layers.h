@@ -363,6 +363,7 @@ class LayerBlock : public Layer {
         }
         return xn;
     }
+    /*
     virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
         t_cppl cache;
         if (lossLayer == "") {
@@ -374,6 +375,7 @@ class LayerBlock : public Layer {
         floatN ls = pl->loss(&cache, pstates);
         return ls;
     }
+    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
         if (lossLayer == "") {

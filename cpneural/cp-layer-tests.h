@@ -3,7 +3,8 @@
 
 #include "cp-neural.h"
 
-bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
+bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, 
+                         floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk=true;
     MatrixN yt;
     MatrixN y;
@@ -51,7 +52,8 @@ bool Layer::checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floa
     return allOk;
 }
 
-bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
+bool Layer::checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, 
+                          floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     bool allOk =true;
     IOFormat CleanFmt(2, 0, ", ", "\n", "[", "]");
     t_cppl cache;
@@ -213,7 +215,9 @@ MatrixN Layer::calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* p
     return grad;
 }
 
-MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h=CP_DEFAULT_NUM_H, int verbose=1) {
+MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, 
+                               string var, floatN h=CP_DEFAULT_NUM_H, int verbose=1,
+                               Loss *pLoss=nullptr) {
     MatrixN *pm;
     MatrixN x=xorg;
     MatrixN y=*((*pstates)["y"]);
@@ -230,11 +234,15 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
         pxold = (*pm)(i);
         (*pm)(i) = (*pm)(i) - h;
         y0 = forward(x, &cache, pstates, 0);
-        sy0 = loss(&cache, pstates);
+        MatrixN yhat = y0; // name cleanup
+        cerr << "This implementation is incomplete and wrong" << endl;
+        // XXX this is a hack to get the loss working
+        sy0 = pLoss->loss(yhat, y, pstates);
         cppl_delete(&cache);
         (*pm)(i) = pxold + h;
         y1 = forward(x, &cache, pstates, 0);
-        sy1 = loss(&cache, pstates);
+        yhat = y1; // name cleanup
+        sy1 = pLoss->loss(yhat, y, pstates);
         cppl_delete(&cache);
         (*pm)(i) = pxold;
 
@@ -245,7 +253,10 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
     return grad;
 }
 
-bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false, int verbose=1) {
+bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, 
+                         t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, 
+                         floatN h=CP_DEFAULT_NUM_H, bool lossFkt=false, int verbose=1,
+                         Loss *pLoss=nullptr) {
     for (auto it : *pgrads) {
         MatrixN g;
         if (!lossFkt) {
@@ -258,7 +269,10 @@ bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache
     return true;
 }
 
-bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1){
+bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, 
+                           t_cppl *pcache, t_cppl *pstates, floatN h=CP_DEFAULT_NUM_H, 
+                           floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1,
+                           Loss *pLoss=nullptr) {
     bool allOk=true;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
     Color::Modifier lred(Color::FG_LIGHT_RED);
@@ -275,7 +289,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     cppl_copy(pstates, &st);
     if (lossFkt) {
         yt=forward(x, pcache, &st, 0);
-        loss(pcache,&st);
+        pLoss->loss(pcache,&st);
         dx=backward(y, pcache, &st, &grads, 0);
     } else {
         yt=forward(x, pcache, &st, 0);
@@ -287,7 +301,7 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
 
     t_cppl numGrads;
     cppl_copy(pstates, &st);
-    calcNumGrads(x, dchain, pcache, &st, &grads, &numGrads, h, lossFkt);
+    calcNumGrads(x, dchain, pcache, &st, &grads, &numGrads, h, lossFkt, verbose, pLoss);
     cppl_delete(&st);
 
     for (auto it : grads) {
@@ -312,7 +326,10 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     return allOk;
 }
 
-bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1) {
+bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, 
+                       t_cppl *pcache, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, 
+                       floatN eps=CP_DEFAULT_NUM_EPS, bool lossFkt=false, int verbose=1,
+                       Loss *pLoss=nullptr) {
     // XXX: y parameter?
     bool allOk=true, ret;
     IOFormat CleanFmt(4, 0, ", ", "\n", "[", "]");
@@ -349,7 +366,7 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
 
     if (verbose>2) cerr << "  check numerical gradients " << layerName << "..." << endl;
     t_cppl cache2;
-    ret=checkGradients(x, y, dchain, &cache2, pstates, h, eps, lossFkt, verbose);
+    ret=checkGradients(x, y, dchain, &cache2, pstates, h, eps, lossFkt, verbose, pLoss);
     cppl_delete(&cache2);
     if (!ret) {
         if (verbose>0) cerr << "  " << layerName << ": " << red << "Gradient numerical test failed!" << def << endl;
@@ -366,7 +383,8 @@ bool Layer::checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain
     return allOk;
 }
 
-bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
+bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_H, 
+                     floatN eps=CP_DEFAULT_NUM_EPS, int verbose=1, Loss *pLoss=nullptr) {
     bool lossFkt=false, ret;
     MatrixN dchain;
     t_cppl cache;
@@ -390,7 +408,7 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
         dchain = y;
         lossFkt=true;
     }
-    ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt, verbose);
+    ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt, verbose, pLoss);
     cppl_delete(&cache);
     return ret;
 }
