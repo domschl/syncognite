@@ -143,7 +143,7 @@ bool testLayerBlock(int verbose) {
     t_cppl lbstates;
     lbstates["y"] = &yml;
 
-    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", "{}");
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", "{}"_json);
     res = lb.selfTest(xml, &lbstates, h, eps, verbose, pLoss);
     if (!res)
         bOk = false;
