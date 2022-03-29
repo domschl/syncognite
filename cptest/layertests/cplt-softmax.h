@@ -50,7 +50,11 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN probs0=sm.forward(x, &cache, &states);
     bool ret=matCompT(probs,probs0,"Softmax probabilities",eps,verbose);
     if (!ret) allOk=false;
-    floatN loss0=sm.loss(&cache, &states);
+    json j(R"({})"_json);
+    t_cppl lossStates;
+    Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j);
+    floatN loss0=pLoss->loss(probs, y, &lossStates);
+    // floatN loss0=sm.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -66,6 +70,8 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     if (!ret) allOk=false;
     cppl_delete(&grads);
     cppl_delete(&cache);
+    cppl_delete(&lossStates);
+    delete pLoss;
     return allOk;
 }
 

@@ -57,6 +57,7 @@ class Softmax : public Layer {
             cppl_set(pcache, "probs", new MatrixN(probs));
         return probs;
     }
+    /*
     virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
         if (pstates->find("y") == pstates->end()) {
             cerr << "SM-loss: pstates does not contain y -> fatal!" << endl;
@@ -90,6 +91,7 @@ class Softmax : public Layer {
         loss /= probs.rows();
         return loss;
     }
+    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
         if (pstates->find("y") == pstates->end()) {

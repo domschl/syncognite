@@ -21,10 +21,15 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
     cppl_set(&cache,"mask",new MatrixN(mask));
     t_cppl states;
     states["y"] = &y;
-    tsm.forward(x,&cache, &states);
+    MatrixN yhat=tsm.forward(x,&cache, &states);
     float loss;
-    loss=tsm.loss(&cache, &states);
+    t_cppl lossStates;
+    Loss *pLoss=lossFactory("temporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &lossStates);
+    //loss=tsm.loss(&cache, &states);
     cppl_delete(&cache);
+    cppl_delete(&lossStates);
+    delete pLoss;
     return loss;
 }
 
@@ -326,9 +331,13 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     t_cppl states;
     cppl_set(&cache,"mask",new MatrixN(mask));
     states["y"]=&y;
-    tsm.forward(x,&cache,&states);
+    MatrixN yhat = tsm.forward(x,&cache,&states);
     float loss;
-    loss=tsm.loss(&cache, &states);
+    t_cppl lossStates;
+    Loss *pLoss=lossFactory("temporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &lossStates);
+    cppl_delete(&lossStates);
+    delete pLoss;
 
     bool allOk=true;
 

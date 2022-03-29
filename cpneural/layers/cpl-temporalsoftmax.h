@@ -181,6 +181,8 @@ class TemporalSoftmax : public Layer {
     dx = dx_flat.reshape(N, T, V)
     return loss, dx
     */
+
+    /*
     virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
         if (pstates->find("y") == pstates->end()) {
             cerr << "TSM-loss: pstates does not contain y -> fatal!" << endl;
@@ -198,15 +200,6 @@ class TemporalSoftmax : public Layer {
         } else {
             mask = *((*pcache)["mask"]);
         }
-        /*
-            if (y.rows() != probs.rows() || y.cols() != 1) {
-            cerr << layerName << ": "  << "Loss, dimension mismatch in
-        Softmax(x), Probs: "; cerr << shape(probs) << " y:" << shape(y) << "
-        y.cols=" << y.cols() << "(should be 1)" << endl; return 1000.0;
-        }
-        */
-        // if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-
         floatN loss = 0.0;
         for (int n = 0; n < N; n++) {
             for (int t = 0; t < T; t++) {
@@ -225,6 +218,7 @@ class TemporalSoftmax : public Layer {
                     // differentiation fails.
         return loss;
     }
+    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
         MatrixN probs = *((*pcache)["probs"]);

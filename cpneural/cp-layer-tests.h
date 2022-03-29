@@ -289,7 +289,10 @@ bool Layer::checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dc
     cppl_copy(pstates, &st);
     if (lossFkt) {
         yt=forward(x, pcache, &st, 0);
-        pLoss->loss(pcache,&st);
+        //pLoss->loss(pcache,&st);
+        MatrixN yhat = yt; // XXX name cleanup
+        MatrixN ync = y;
+        floatN loss = pLoss->loss(yhat, ync, &st);
         dx=backward(y, pcache, &st, &grads, 0);
     } else {
         yt=forward(x, pcache, &st, 0);

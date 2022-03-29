@@ -133,6 +133,24 @@ class MeanSquaredErrorLoss : public Loss {
     }
 };
 
+/** @brief SVM margin loss function.
+ *
+ */
+class SVMMarginLoss : public Loss {
+  public:
+    SVMMarginLoss(const json &jx) {
+        /** SVM margin loss function.
+         * @param jx - JSON object with configuration parameters. Not used.
+         */
+        j = jx;
+    }
+    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) {
+        MatrixN margins = yhat; // *((*pcache)["margins"]);
+        floatN loss = margins.sum() / margins.rows();
+        return loss;
+    }
+};
+
 /** @brief Loss Factory: generate a loss class by name */
 Loss *lossFactory(string name, const json& j) {
     /** Factory function to create a loss by name.
@@ -143,6 +161,7 @@ Loss *lossFactory(string name, const json& j) {
     if (name=="SparseCategoricalCrossEntropy") return (Loss *)new SparseCategoricalCrossEntropyLoss(j);
     if (name=="TemporalCrossEntropy") return (Loss *)new TemporalCrossEntropyLoss(j);
     if (name=="MeanSquaredError") return (Loss *)new MeanSquaredErrorLoss(j);
+    if (name=="SVMMargin") return (Loss *)new SVMMarginLoss(j);
     cerr << "lossFactory called for unknown loss " << name << "." << endl;
     return nullptr;
 }

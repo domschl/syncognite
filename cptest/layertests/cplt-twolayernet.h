@@ -69,7 +69,10 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 
     // XXX reg parameter
     floatN reg=0.0;
-    floatN ls = tln.loss(&cache, &states);
+    json jl(R"({})"_json);
+    t_cppl lossStates;
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy",jl);
+    floatN ls = pLoss->loss(sc0, yc, &lossStates);
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
@@ -98,6 +101,8 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 
     cppl_delete(&cache);
     cppl_delete(&grads);
+    cppl_delete(&lossStates);
+    delete pLoss;
     return allOk;
 }
 

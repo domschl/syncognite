@@ -291,7 +291,7 @@ private:
     bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps, int verbose);
     bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps, int verbose);
     MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h, int verbose);
-    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h, int verbose);
+    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h, int verbose,Loss *pLoss);
     // XXX: rework lossFkt parameter
     bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt, int verbose, Loss *pLoss);
     bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt, int verbose, Loss *pLoss);
