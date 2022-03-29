@@ -23,12 +23,10 @@ float getTemporalSMLoss(int N, int T, int V, float p) {
     states["y"] = &y;
     MatrixN yhat=tsm.forward(x,&cache, &states);
     float loss;
-    t_cppl lossStates;
-    Loss *pLoss=lossFactory("temporalCrossEntropy", j);
-    loss=pLoss->loss(yhat, y, &lossStates);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &cache);
     //loss=tsm.loss(&cache, &states);
     cppl_delete(&cache);
-    cppl_delete(&lossStates);
     delete pLoss;
     return loss;
 }
@@ -333,10 +331,8 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     states["y"]=&y;
     MatrixN yhat = tsm.forward(x,&cache,&states);
     float loss;
-    t_cppl lossStates;
-    Loss *pLoss=lossFactory("temporalCrossEntropy", j);
-    loss=pLoss->loss(yhat, y, &lossStates);
-    cppl_delete(&lossStates);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &cache);
     delete pLoss;
 
     bool allOk=true;
@@ -383,7 +379,8 @@ bool testTemporalSoftmax(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
 	t_cppl states;
 	states["y"] = &ty;
-	bool res=tmx.selfTest(txmx, &states, h, eps, verbose);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+	bool res=tmx.selfTest(txmx, &states, h, eps, verbose, pLoss);
 	registerTestResult("TemporalSoftmax", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

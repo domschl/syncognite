@@ -123,6 +123,7 @@ bool testLayerBlock(int verbose) {
     if (verbose > 3)
         bCT = true;
     bool res = lb.checkTopology(bCT);
+    cerr << "  Topology check: " << res << endl;
     registerTestResult("LayerBlock", "Topology check", res, "");
     if (!res)
         bOk = false;
@@ -142,7 +143,8 @@ bool testLayerBlock(int verbose) {
     t_cppl lbstates;
     lbstates["y"] = &yml;
 
-    res = lb.selfTest(xml, &lbstates, h, eps, verbose);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", "{}");
+    res = lb.selfTest(xml, &lbstates, h, eps, verbose, pLoss);
     if (!res)
         bOk = false;
     registerTestResult("LayerBlock", "Numerical self-test", res, "");

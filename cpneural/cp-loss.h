@@ -17,7 +17,7 @@ class SparseCategoricalCrossEntropyLoss : public Loss {
         j=jx;
     }
 
-    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl &pParams) {
+    virtual floatN loss(MatrixN& yhat, MatrixN& y, t_cppl *pParams) override {
         /** Compute the loss for a batch of predictions and targets.
          * @param yhat - predictions (output of softmax layer)
          * @param y - targets, integer class labels i are in y(i,0)
@@ -67,7 +67,7 @@ class TemporalCrossEntropyLoss : public Loss {
         T = inputShape[1];
     }
 
-    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) {
+    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) override {
         /** Compute the loss for a batch of predictions and targets.
          * @param yhat - predictions (output of softmax layer)
          * @param y - targets, integer class labels i are in y(i,0)
@@ -115,7 +115,7 @@ class MeanSquaredErrorLoss : public Loss {
         j = jx;
     }
 
-    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) {
+    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) override {
         /** Compute the loss for a batch of predictions and targets.
          * @param yhat - predictions (e.g. output of softmax layer)
          * @param y - targets, same shape as yhat
@@ -144,7 +144,7 @@ class SVMMarginLoss : public Loss {
          */
         j = jx;
     }
-    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) {
+    virtual floatN loss(MatrixN &yhat, MatrixN &y, t_cppl *pParams) override {
         MatrixN margins = yhat; // *((*pcache)["margins"]);
         floatN loss = margins.sum() / margins.rows();
         return loss;

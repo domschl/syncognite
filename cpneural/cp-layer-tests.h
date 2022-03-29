@@ -234,15 +234,13 @@ MatrixN Layer::calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* psta
         pxold = (*pm)(i);
         (*pm)(i) = (*pm)(i) - h;
         y0 = forward(x, &cache, pstates, 0);
-        MatrixN yhat = y0; // name cleanup
-        cerr << "This implementation is incomplete and wrong" << endl;
-        // XXX this is a hack to get the loss working
-        sy0 = pLoss->loss(yhat, y, pstates);
+        // that ... works. Astonishing.
+        sy0 = pLoss->loss(y0, y, pstates);
         cppl_delete(&cache);
         (*pm)(i) = pxold + h;
         y1 = forward(x, &cache, pstates, 0);
-        yhat = y1; // name cleanup
-        sy1 = pLoss->loss(yhat, y, pstates);
+
+        sy1 = pLoss->loss(y1, y, pstates);
         cppl_delete(&cache);
         (*pm)(i) = pxold;
 
@@ -262,7 +260,7 @@ bool Layer::calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache
         if (!lossFkt) {
             g = calcNumGrad(x, dchain, pcache, pstates, it.first, h, verbose);
         } else {
-            g = calcNumGradLoss(x, pcache, pstates, it.first, h, verbose);
+            g = calcNumGradLoss(x, pcache, pstates, it.first, h, verbose, pLoss);
         }
         cppl_set(pnumGrads, it.first, new MatrixN(g));
     }
