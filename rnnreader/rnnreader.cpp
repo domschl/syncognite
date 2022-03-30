@@ -225,22 +225,28 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)1e-1; //2.2e-2);
-
+    json j_opt(R"({"learning_rate":2.2e-2})"_json);
+    j_opt["inputShape"]=vector<int>{H,T};
+    json j_loss(R"({"name":"temporalsoftmax"})"_json);
+    j_loss["inputShape"]=vector<int>{H,T};
     floatN dep=70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
     floatN lr_decay = 0.15;
 
+    Optimizer *pOpt=optimizerFactory("Adam",j_opt);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
+
     for (int i=0; i<10; i++) {
         jo["startepoch"]=(floatN)sep;
-        jo["learning_rate"] = floatN(jo["learning_rate"]) * lr_decay;
+        j_opt["learning_rate"] = floatN(j_opt["learning_rate"]) * lr_decay;
+        pOpt->updateOptimizerParameters(j_opt);
         t_cppl states;
         t_cppl statesv;
         states["y"] = new MatrixN(y);
         statesv["y"] = new MatrixN(yv);
-        lb.train(X, &states, Xv, &statesv, "Adam", jo);
+        lb.train(X, &states, Xv, &statesv, pOpt, pLoss, jo);
         cppl_delete(&states);
         cppl_delete(&statesv);
 
@@ -296,4 +302,6 @@ int main(int argc, char *argv[]) {
         fl.close();
         cppl_delete(&statesg);
     }
+    delete pOpt;
+    delete pLoss;
 }
