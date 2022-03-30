@@ -145,6 +145,7 @@ bool testLayerBlock(int verbose) {
 
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", "{}"_json);
     res = lb.selfTest(xml, &lbstates, h, eps, verbose, pLoss);
+    delete pLoss;
     if (!res)
         bOk = false;
     registerTestResult("LayerBlock", "Numerical self-test", res, "");
@@ -264,6 +265,8 @@ bool testTrainTwoLayerNet(int verbose) {
     Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j_loss);
     cerr << "  ";
     tln.train(X, &states, Xv, &statesv, pOptimizer, pLoss, jo);
+    delete pOptimizer;
+    delete pLoss;
     // tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err = tln.test(X, &states, 10);
     val_err = tln.test(Xv, &statesv, 10);
