@@ -129,11 +129,11 @@ public:
  *  Algorithm based on CS231 course notes. 
  */
 class Adam : public Optimizer {
-    floatN lr; /** learning rate */
     floatN b1; /** beta1: decay rate for first moment */
     floatN b2; /** beta2: decay rate for second moment */
     floatN ep; /** epsilon */
 public:
+    floatN lr; /** learning rate */
     Adam(const json& jx) {
         /** Adam optimizer.
          *

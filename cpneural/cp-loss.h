@@ -59,9 +59,9 @@ class SparseCategoricalCrossEntropyLoss : public Loss {
                 return 1002.0;
             }
             floatN pr_i = yhat(i, (int)y(i, 0));
-            if (pr_i == 0.0) {
+            if (pr_i <= 0.0) {
                 if (!hasErr) {
-                    cerr << "SparseCategoricalCrossEntropy: Invalid zero log-probability at " << i << endl;
+                    cerr << "SparseCategoricalCrossEntropy: Invalid <= zero log-probability at " << i << endl;
                     hasErr = true;
                 }
                 loss += 10000.0;

@@ -153,6 +153,7 @@ class TemporalSoftmax : public Layer {
         if (pcache != nullptr)
             cppl_set(pcache, "probs", new MatrixN(probs));
 
+        // XXX this morph is no longer needed:
         // probst: [(N * T), D] -> [N, (T * D)]
         MatrixN probst = MatrixN(N, T * D);
         for (int n = 0; n < N; n++) {

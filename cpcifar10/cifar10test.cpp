@@ -136,7 +136,9 @@ bool  getcifar10Data(string filepath) {
 }
 
 
-floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false, int mode=0) {
+floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, 
+                      Optimizer *pOpt, Loss *pLoss, 
+                      bool evalFinal=false, bool verbose=false, int mode=0) {
     LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal","initfactor":0.1})"_json);
     if (mode==0) {
         lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
@@ -247,7 +249,7 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         if (verbose) cerr << "Topology-check for LayerBLock: ok." << endl;
     }
 
-    floatN cAcc=lb.train(X, y, Xv, yv, "Adam", jo);
+    floatN cAcc=lb.train(X, y, Xv, yv, pOpt, pLoss, jo);
 
     floatN train_err, val_err, test_err;
     if (evalFinal) {
@@ -321,6 +323,12 @@ int main(int argc, char *argv[]) {
     // (s.b.) jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
 
+    json j_opt(R"({"type":"Adam"})"_json);
+    json j_loss(R"({"type":"CrossEntropy"})"_json);
+
+    Optimizer *pOpt=optimizerFactory("Adam", j_opt);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
+
     bool autoOpt=false;
 
     floatN bReg, bLearn;
@@ -332,10 +340,11 @@ int main(int argc, char *argv[]) {
         jo["epochs"]=(floatN)0.1;
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {
-            jo["learning_rate"]=learn;
+            j_opt["learning_rate"]=learn;
+            pOpt->updateOptimizerParameters(j_opt);
             for (auto reg : regi) {
                 jo["regularization"]=reg;
-                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
+                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, pLoss, true, true, mode);
                 if (cAcc > cmAcc) {
                     bReg=reg;
                     bLearn=learn;
@@ -352,17 +361,20 @@ int main(int argc, char *argv[]) {
         bReg=3.e-8;
     }
 
-    jo["learning_rate"]=bLearn;
+    j_opt["learning_rate"]=bLearn;
+    pOpt->updateOptimizerParameters(j_opt);
     jo["regularization"]=bReg;
     jo["epochs"]=(floatN)40.0;
-    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
+    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, pLoss, true, true, mode);
 
     for (auto it : cpcifar10Data) {
          free(it.second);
          it.second=nullptr;
-     }
-     return 0;
- }
+    }
+    delete pOpt;
+    delete pLoss;
+    return 0;
+}
 
  /*    int id=15;
      cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;

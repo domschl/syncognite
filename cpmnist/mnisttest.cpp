@@ -181,10 +181,18 @@ int main(int argc, char *argv[]) {
 	json jo(R"({"verbose":true,"shuffle":true})"_json);
 	jo["epochs"]=(floatN)40.0;
 	jo["batch_size"]=50;
-	jo["learning_rate"]=(floatN)2e-3;
 	jo["regularization"]=(floatN)2e-8;
 
-	lb.train(X, y, Xv, yv, "Adam", jo);
+    json j_opt(R"({"name":"Adam","beta1":0.9,"beta2":0.999,"epsilon":1e-8})"_json);
+	j_opt["learning_rate"]=(floatN)2e-3;
+    json j_loss(R"({"name":"CrossEntropy"})"_json);
+    Optimizer *pOptimizer=optimizerFactory("Adam", j_opt);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
+
+	lb.train(X, y, Xv, yv, pOptimizer, pLoss, jo);
+
+    delete pOptimizer;
+    delete pLoss;
 
 	floatN train_err, val_err, test_err;
 	train_err=lb.test(X, y, jo.value("batch_size", 50));
