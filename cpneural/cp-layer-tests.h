@@ -409,6 +409,9 @@ bool Layer::selfTest(const MatrixN& x, t_cppl* pstates, floatN h=CP_DEFAULT_NUM_
         dchain = y;
         lossFkt=true;
     }
+    if (pLoss == nullptr && lossFkt) {
+        cerr << "  selfTest: pLoss == nullptr -> fatal!" << endl;
+    }
     ret=checkLayer(x, y, dchain, &cache, pstates, h , eps, lossFkt, verbose, pLoss);
     cppl_delete(&cache);
     return ret;

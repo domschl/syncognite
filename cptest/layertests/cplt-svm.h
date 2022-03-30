@@ -108,6 +108,7 @@ bool testSvm(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
     Loss *pLoss=lossFactory("SVMMargin", R"({})");
 	bool res=sv.selfTest(xsv, &svmstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("SVM", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

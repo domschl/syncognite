@@ -135,6 +135,7 @@ bool testTwoLayerNet(int verbose) {
 	tlstates["y"] = &y2;
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy",j);
 	bool res=tl.selfTest(xtl, &tlstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("TwoLayerNet", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

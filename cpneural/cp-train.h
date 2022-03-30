@@ -97,11 +97,6 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss) 
     MatrixN yhat = forward(*pxb, &cache, pstates, id);
     //MatrixN yhat=*((*pstates)["probs"]); // XXX: just use return of forward()? old: ["y"]);
     floatN thisloss=pLoss->loss(yhat, yb, pstates);
-
-
-    cerr << "WT" << thisloss << endl;
-
-    //floatN thisloss=lossFunction(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
@@ -120,8 +115,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
     
-    cerr << "Jobparams: " << job_params << endl;
-
     setFlag("train",true);
     floatN lastAcc;
     Color::Modifier red(Color::FG_RED);
@@ -155,8 +148,6 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     
     floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
     
-    cerr << "Ep: " << ep << " MaxEp: " << epf << " St-Ep: " << sepf << " bs: " << bs << " lr: " << lr << endl;
-
     int nt=cpGetNumCpuThreads();
     int maxThreads=popti->j.value("maxthreads",(int)0);
     if (maxThreads>1 && bPreserveStates) {
@@ -309,26 +300,13 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 lossQueueMutex.lock();
                 while (!lossQueue.empty()) {
                     lastloss=lossQueue.front()*lossfactor;
-                    if (std::isnan(meanloss)) {
-                        cerr << "Mean loss is nan!" << endl;
-                        exit(1);
-                    }
                     lossQueue.pop();
                     if (meanloss==0) meanloss=lastloss;
                     else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
                     if (m2loss==0) m2loss=lastloss;
                     else m2loss=((dv2-1.0)*m2loss+lastloss)/dv2;
-                    
-                    cerr << "MT" << lastloss << " ML " << meanloss << " ML2 " << m2loss << endl;
-                    if (std::isnan(lastloss) || std::isnan(meanloss) || std::isnan(m2loss)) {
-                        cerr << "NAN!" << endl;
-                        exit(-1);
-                    }
                 }
                 lossQueueMutex.unlock();
-
-                cerr << "ML " << meanloss << " " << m2loss << " " << dv1 << " " << dv2 << endl;
-
                 if (verbose && b-bold>=5) {
                     floatN twt=tw.stopWallMicro();
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;

@@ -86,7 +86,7 @@ class TemporalCrossEntropyLoss : public Loss {
   public:
     TemporalCrossEntropyLoss(const json &jx) {
         /** Temporal cross entropy loss for sequence classification.
-         * @param jx - JSON object with configuration parameters. Should contain vector[int] 'D' and 'T'.
+         * @param jx - JSON object with configuration parameters. Should contain inputShape with vector[int] 'D' and 'T'.
           */
         j = jx;
         vector<int> inputShape = j.value("inputShape", vector<int>{});
@@ -114,13 +114,16 @@ class TemporalCrossEntropyLoss : public Loss {
             mask = *((*pParams)["mask"]);
         }
 
+        // cerr << "yhat: " << shape(yhat) << " N: " << N << " T: " << T << endl;
+        // cerr << "y: " << shape(y) << " max: " << y.maxCoeff() << " min: " << y.minCoeff() << endl;
         floatN curLoss = 0.0;
         for (int n = 0; n < N; n++) {
             for (int t = 0; t < T; t++) {
                 floatN pr_i = yhat(n * T + t, (int)y(n, t));
-                if (pr_i == 0.0) {
+                // floatN pr_i = yhat(n, (int)y(n, 0));
+                if (pr_i <= 0.0) {
                     cerr << "Invalid zero log-probability at n=" << n
-                         << "t=" << t << endl;
+                         << " t=" << t << " pri=" << pr_i << endl;
                     curLoss += 10000.0;
                 } else {
                     // cerr << "[" << pr_i << "," << mask(n,t) << "]";

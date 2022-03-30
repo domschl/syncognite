@@ -102,6 +102,7 @@ bool testSoftmax(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", R"({"inputShape":[5]})"_json);
 	bool res=mx.selfTest(xmx, &smstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("Softmax", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

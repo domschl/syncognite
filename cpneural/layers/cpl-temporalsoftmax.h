@@ -5,7 +5,7 @@
 
 class TemporalSoftmax : public Layer {
   private:
-    int T, D;  //,V;
+    int T, D;  
     void setup(const json &jx) {
         int allOk = true;
         j = jx;
@@ -20,7 +20,6 @@ class TemporalSoftmax : public Layer {
         }
         D = inputShape[0];  // cp.getPar("D",128);
         T = inputShape[1];  // cp.getPar("T",128);
-        // V=cp.getPar("V",10);
         outputShape = {T};
 
         layerInit = allOk;
@@ -67,7 +66,8 @@ class TemporalSoftmax : public Layer {
             cerr << "TSM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
-*/ if (x.cols() != D * T) {
+       */ 
+        if (x.cols() != D * T) {
             cerr << layerName << ": "
                  << "Forward: dimension mismatch TemporalSoftmax in x(cols):"
                  << x.cols() << " D*T:" << D * T << endl;
@@ -162,7 +162,7 @@ class TemporalSoftmax : public Layer {
                 }
             }
         }
-        return probst;
+        return probs; // probst;   // this is NT,D vs N,TD
     }
     /*
     N, T, V = x.shape
