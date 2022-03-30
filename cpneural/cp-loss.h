@@ -10,11 +10,15 @@
  */
 class SparseCategoricalCrossEntropyLoss : public Loss {
   public:
+      bool hasErr = false;
+      string name;
     SparseCategoricalCrossEntropyLoss(const json &jx) {
         /** Sparse categorical cross entropy loss for multi-class classification.
          * @param jx - JSON object with configuration parameters. Not used.
+         *     Optional content: "name": (string) name of this loss function instance.
          */
         j=jx;
+        name = j.value("name", (string)"SparseCategoricalCrossEntropyLoss");
     }
 
     virtual floatN loss(MatrixN& yhat, MatrixN& y, t_cppl *pParams) override {
@@ -23,16 +27,43 @@ class SparseCategoricalCrossEntropyLoss : public Loss {
          * @param y - targets, integer class labels i are in y(i,0)
          * @returns loss - cross entropy loss, normalized by the number of samples
          */
+        if (y.rows() != yhat.rows() || y.cols() != 1) {
+            if (!hasErr) {
+                cerr << name << ": "
+                     << "SparseCategoricalCrossEntropy Loss, dimension mismatch in Softmax(x), yhat: ";
+                cerr << shape(yhat) << " y:" << shape(y) << " y.cols=" << y.cols()
+                     << "(should be 1)" << endl;
+            hasErr = true;
+            }
+            return 1003.0;
+        }
+        if (y.maxCoeff() > yhat.cols()) {
+            if (!hasErr) {
+                cerr << name << ": "
+                     << "SparseCategoricalCrossEntropy Loss, y out of range in Softmax(x), yhat: ";
+                cerr << shape(yhat) << " y:" << y << endl;
+                hasErr = true;
+            }
+            return 1004.0;
+        }
         floatN loss = 0.0;
         for (unsigned int i = 0; i < yhat.rows(); i++) {
             if (y(i, 0) >= yhat.cols()) {
-                cerr << "internal error: y(" << i << ",0) >= " << yhat.cols()
-                     << endl;
+                if (!hasErr) {
+                    cerr << "SparseCategoricalCrossEntropy: internal error: y(" << i << ",0) >= " << yhat.cols()
+                         << endl;
+                    cerr << "yhat: " << shape(yhat) << endl;
+                    cerr << "y: " << shape(y) << endl;
+                    hasErr = true;
+                }
                 return 1002.0;
             }
             floatN pr_i = yhat(i, (int)y(i, 0));
             if (pr_i == 0.0) {
-                cerr << "Invalid zero log-probability at " << i << endl;
+                if (!hasErr) {
+                    cerr << "SparseCategoricalCrossEntropy: Invalid zero log-probability at " << i << endl;
+                    hasErr = true;
+                }
                 loss += 10000.0;
             } else {
                 loss -= log(pr_i);

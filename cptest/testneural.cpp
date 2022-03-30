@@ -243,7 +243,7 @@ bool testTrainTwoLayerNet(int verbose) {
         yt(i, 0) = tFunc(Xt.row(i), C);
 
     json jo =
-        R"({"epochs":300.0,"batch_size":10,"shuffle":true,"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":7e-4,"maxthreads":4})"_json;
+        R"({"epochs":300.0,"batch_size":10,"shuffle":true,"regularization":7e-4,"maxthreads":1})"_json;
     if (verbose > 1)
         jo["verbosetitle"] = true;
     else
@@ -258,8 +258,12 @@ bool testTrainTwoLayerNet(int verbose) {
     states["y"] = &y;
     statesv["y"] = &yv;
     statest["y"] = &yt;
+    json j_opt = R"({"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8})"_json;
+    Optimizer *pOptimizer = optimizerFactory("Adam", j_opt);
+    json j_loss = R"({"name":"SparseCategoricalCrossEntropy"})"_json;
+    Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j_loss);
     cerr << "  ";
-    tln.train(X, &states, Xv, &statesv, "Adam", jo);
+    tln.train(X, &states, Xv, &statesv, pOptimizer, pLoss, jo);
     // tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err = tln.test(X, &states, 10);
     val_err = tln.test(Xv, &statesv, 10);
@@ -340,8 +344,6 @@ int doTests() {
     if (checkForTest("LSTM"))
         if (!testLSTM(verbose))
             allOk = false;
-    // XXX: Faulty implementation requires rewrite:
-    // if (checkForTest("RAN")) if (!testRAN(verbose)) allOk=false;
     if (checkForTest("WordEmbedding"))
         if (!testWordEmbedding(verbose))
             allOk = false;
@@ -383,6 +385,8 @@ bool getArgs(int argc, char *argv[]) {
                 verbose = 2;
             else if (opt == "vvv")
                 verbose = 3;
+            else if (opt == "vvvv")
+                verbose = 4;
             else {
                 cerr << "Invalid option: " << opt << endl;
                 cerr << "Valid options are: -v -vv -vvv (increasing verbosity)"

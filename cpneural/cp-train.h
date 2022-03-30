@@ -94,9 +94,13 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss) 
         cerr << "workerThread: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN yb=*((*pstates)["y"]);
-    forward(*pxb, &cache, pstates, id);
-    MatrixN yhat=*((*pstates)["y"]);
+    MatrixN yhat = forward(*pxb, &cache, pstates, id);
+    //MatrixN yhat=*((*pstates)["probs"]); // XXX: just use return of forward()? old: ["y"]);
     floatN thisloss=pLoss->loss(yhat, yb, pstates);
+
+
+    cerr << "WT" << thisloss << endl;
+
     //floatN thisloss=lossFunction(&cache, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
@@ -111,10 +115,12 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss) 
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                Optimizer *popti, Loss *pLoss, const json& j) {
+                Optimizer *popti, Loss *pLoss, const json& job_params) {
     t_cppl optiCache;
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
+    
+    cerr << "Jobparams: " << job_params << endl;
 
     setFlag("train",true);
     floatN lastAcc;
@@ -132,21 +138,24 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     }
     MatrixN yv = *((*pstatesv)["y"]);
 
-    float epf=popti->j.value("epochs", (float)1.0); //Default only!
+    float epf=job_params.value("epochs", (float)1.0); //Default only!
     int ep=(int)ceil(epf);
-    float sepf=popti->j.value("startepoch", (float)0.0);
-    int bs=popti->j.value("batch_size", (int)100); // Defaults only! are overwritten!
-    floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
-    bool verbose=popti->j.value("verbose", (bool)false);
-    bool verbosetitle=popti->j.value("verbosetitle", (bool)true);
-    bool bShuffle=popti->j.value("shuffle", (bool)false);
-    float lossfactor=popti->j.value("lossfactor",(float)1.0);
-    bool bPreserveStates=popti->j.value("preservestates", (bool)false);
-    bool noTests=popti->j.value("notests", (bool)false);
-    bool noFragmentBatches=popti->j.value("nofragmentbatches",false);
+    float sepf=job_params.value("startepoch", (float)0.0);
+    int bs=job_params.value("batch_size", (int)100); // Defaults only! are overwritten!
+    floatN lr_decay=job_params.value("lr_decay", (floatN)1.0); //Default only!
+    bool verbose=job_params.value("verbose", (bool)false);
+    bool verbosetitle=job_params.value("verbosetitle", (bool)true);
+    bool bShuffle=job_params.value("shuffle", (bool)false);
+    bool bPreserveStates=job_params.value("preservestates", (bool)false);
+    bool noTests=job_params.value("notests", (bool)false);
+    bool noFragmentBatches=job_params.value("nofragmentbatches",false);
+    
+    floatN regularization = job_params.value("regularization", (floatN)0.0); // Default only!
+    float lossfactor=job_params.value("lossfactor",(float)1.0);
+    
     floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
-    floatN regularization = popti->j.value("regularization", (floatN)0.0); // Default only!
-    //cerr << ep << " " << bs << " " << lr << endl;
+    
+    cerr << "Ep: " << ep << " MaxEp: " << epf << " St-Ep: " << sepf << " bs: " << bs << " lr: " << lr << endl;
 
     int nt=cpGetNumCpuThreads();
     int maxThreads=popti->j.value("maxthreads",(int)0);
@@ -294,20 +303,31 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                 cppl_delete(&sgrad);
                 retFut.clear();
 
-                float dv1=10.0;
-                float dv2=50.0;
+                floatN dv1=10.0;
+                floatN dv2=50.0;
 
                 lossQueueMutex.lock();
                 while (!lossQueue.empty()) {
                     lastloss=lossQueue.front()*lossfactor;
+                    if (std::isnan(meanloss)) {
+                        cerr << "Mean loss is nan!" << endl;
+                        exit(1);
+                    }
                     lossQueue.pop();
-                    //cerr << "lossQueue pop: " << lastloss << endl;
                     if (meanloss==0) meanloss=lastloss;
                     else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
                     if (m2loss==0) m2loss=lastloss;
                     else m2loss=((dv2-1.0)*m2loss+lastloss)/dv2;
+                    
+                    cerr << "MT" << lastloss << " ML " << meanloss << " ML2 " << m2loss << endl;
+                    if (std::isnan(lastloss) || std::isnan(meanloss) || std::isnan(m2loss)) {
+                        cerr << "NAN!" << endl;
+                        exit(-1);
+                    }
                 }
                 lossQueueMutex.unlock();
+
+                cerr << "ML " << meanloss << " " << m2loss << " " << dv1 << " " << dv2 << endl;
 
                 if (verbose && b-bold>=5) {
                     floatN twt=tw.stopWallMicro();
@@ -362,6 +382,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                 string optimizer, const json& j) {
     t_cppl states, statesv;
+    cerr << "train: legacy interface (1) called, using default optimizer and losses" << endl;
     Optimizer* pOptimizer=optimizerFactory(optimizer, j);
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
     states["y"]=new MatrixN(y);
@@ -379,6 +400,8 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, co
     t_cppl states, states_val;
     states["y"]=new MatrixN(y);
     states_val["y"]=new MatrixN(y_val);
+
+
     auto loss = train(x, &states, x_val, &states_val, pOptimizer, pLoss, job_parameters);
     cppl_delete(&states);
     cppl_delete(&states_val);
@@ -388,6 +411,7 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, co
 // legacy interface
 floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl *pStatesVal,
         string optimizer, const json& j) {
+    cerr << "train: legacy interface (2) called, using default optimizer and losses" << endl;
     Optimizer* pOptimizer=optimizerFactory(optimizer, j);
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
     auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, pLoss, j);
