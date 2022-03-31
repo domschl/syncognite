@@ -60,31 +60,6 @@ bool checkForTest(string tc) {
     }
 }
 
-bool registerTest() {
-    bool allOk = true;
-    cerr << "Registered Layers:" << endl;
-    int nr = 1;
-    for (auto it : _syncogniteLayerFactory.mapl) {
-        cerr << nr << ".: " << it.first << " ";
-        t_layer_props_entry te = _syncogniteLayerFactory.mapprops[it.first];
-        json j;
-        j["inputShape"] = std::vector<int>(te);
-        Layer *l = CREATE_LAYER(it.first, j) if (l->layerType == LT_NORMAL) {
-            cerr << "normal layer" << endl;
-        }
-        else if (l->layerType == LT_LOSS) {
-            cerr << "loss-layer (final)" << endl;
-        }
-        else {
-            cerr << "unspecified layer -- ERROR!" << endl;
-            allOk = false;
-        }
-        delete l;
-        ++nr;
-    }
-    return allOk;
-}
-
 vector<string> failedTests{};
 
 void registerTestResult(string testcase, string subtest, bool result,

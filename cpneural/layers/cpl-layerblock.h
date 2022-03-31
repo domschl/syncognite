@@ -1,49 +1,8 @@
-#ifndef _CP_LAYERS_H
-#define _CP_LAYERS_H
+#pragma once
 
 #include "cp-neural.h"
 
-#include "layers/cpl-affine.h"
-#include "layers/cpl-relu.h"
-#include "layers/cpl-affinerelu.h"
-#include "layers/cpl-batchnorm.h"
-#include "layers/cpl-dropout.h"
-#include "layers/cpl-convolution.h"
-#include "layers/cpl-pooling.h"
-#include "layers/cpl-spatialbatchnorm.h"
-#include "layers/cpl-svm.h"
-#include "layers/cpl-softmax.h"
-#include "layers/cpl-twolayernet.h"
-#include "layers/cpl-rnn.h"
-#include "layers/cpl-lstm.h"
-#include "layers/cpl-wordembedding.h"
-#include "layers/cpl-temporalaffine.h"
-#include "layers/cpl-temporalsoftmax.h"
-#include "layers/cpl-nonlinearity.h"
-#include "layers/cpl-onehot.h"
-
-void registerLayers() {
-    REGISTER_LAYER("Affine", Affine, 1)
-    REGISTER_LAYER("Relu", Relu, 1)
-    REGISTER_LAYER("Nonlinearity", Nonlinearity, 1)
-    REGISTER_LAYER("AffineRelu", AffineRelu, 1)
-    REGISTER_LAYER("BatchNorm", BatchNorm, 1)
-    REGISTER_LAYER("Dropout", Dropout, 1)
-    REGISTER_LAYER("Convolution", Convolution, 3)
-    REGISTER_LAYER("Pooling", Pooling, 3)
-    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
-    REGISTER_LAYER("RNN", RNN, 1)
-    REGISTER_LAYER("LSTM", LSTM, 1)
-    REGISTER_LAYER("WordEmbedding", WordEmbedding, 1)
-    REGISTER_LAYER("TemporalAffine", TemporalAffine, 1)
-    REGISTER_LAYER("TemporalSoftmax", TemporalSoftmax, 1)
-    REGISTER_LAYER("Softmax", Softmax, 1)
-    REGISTER_LAYER("Svm", Svm, 1)
-    REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
-    REGISTER_LAYER("OneHot", OneHot, 1)
-}
-
-class LayerBlockOldStyle : public Layer {
+class LayerBlock : public Layer {
   private:
     bool bench;
     string inittype{"standard"};
@@ -51,7 +10,7 @@ class LayerBlockOldStyle : public Layer {
     void setup(const json &jx) {
         j = jx;
         layerName = j.value("name", "block");
-        layerClassName = "LayerBlockOldStyle";
+        layerClassName = "LayerBlock";
         bench = j.value("bench", false);
         lossLayer = "";
         layerType = LayerType::LT_NORMAL;
@@ -68,14 +27,14 @@ class LayerBlockOldStyle : public Layer {
     bool checked;
     bool trainMode;
 
-    LayerBlockOldStyle(const json &jx) {
+    LayerBlock(const json &jx) {
         setup(jx);
     }
-    LayerBlockOldStyle(const string conf) {
+    LayerBlock(const string conf) {
         setup(json::parse(conf));
         layerInit = true;
     }
-    ~LayerBlockOldStyle() {
+    ~LayerBlock() {
         for (auto pli : layerMap) {
             if (pli.second != nullptr) {
                 delete pli.second;
@@ -525,4 +484,3 @@ class LayerBlockOldStyle : public Layer {
         return true;
     }
 };
-#endif

@@ -107,3 +107,4 @@ typedef t_param_parser<MatrixN *> t_cppl;
 #include "cp-loss.h"
 #include "cp-train.h"
 
+#include "layers/cpl-layerblock.h"
