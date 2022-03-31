@@ -28,11 +28,16 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
            0.3,  0.4;
     MatrixN b2(1,C);
     b2 << -0.9,  0.1;
-
-    MatrixN sc(N,C); // Scores
+    /*
+    MatrixN sc(N,C); // Scores WITHOUT softmax (somehow old version of 2lnet used those for tests, changed to softmax)
     sc << -0.88621554,  2.56401003,
          -0.69824561,  2.46626566,
          -0.51027569,  2.3685213;
+    */
+    MatrixN sc(N,C); // Scores WITH softmax
+    sc << 0.03076,  0.9692,
+          0.04052,  0.9595,
+          0.05321,  0.9468;
 
     json j;
     j["inputShape"]=vector<int>{D};

@@ -96,7 +96,7 @@ public:
         t_cppl c4;
         MatrixN yu=sm->forward(yo,&c4, pstates, id);
         mlPush("sm",&c4,pcache);
-        return yo;
+        return yu;
     }
     /*
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
