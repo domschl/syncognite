@@ -179,7 +179,8 @@ int main(int argc, char *argv[]) {
 	json jo(R"({"verbose":true,"shuffle":true, "lr_decay": 0.9})"_json);
 	jo["epochs"]=(floatN)40.0;
 	jo["batch_size"]=50;
-	jo["regularization"]=(floatN)2e-8;
+	jo["regularization"]=(floatN)1e-4;
+    jo["regularization_decay"]=(floatN)0.87;
 
     json j_opt(R"({"name":"Adam","beta1":0.9,"beta2":0.999,"epsilon":1e-8})"_json);
 	j_opt["learning_rate"]=(floatN)2e-2;

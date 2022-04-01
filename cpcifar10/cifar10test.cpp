@@ -326,8 +326,9 @@ int main(int argc, char *argv[]) {
 
     bool autoOpt=true; // false;
 
-    floatN bReg, bLearn, bDecay;
-    bDecay=0.9;
+    floatN regularization, regularization_decay, learning_rate, lr_decay;
+    lr_decay=0.9;
+    regularization_decay=0.88;
     if (autoOpt) {
         vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; // -> 1e-5
         vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; // -> 1e-2
@@ -344,25 +345,26 @@ int main(int argc, char *argv[]) {
                 cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
                 cppl_delete(&OptimizerState);
                 if (cAcc > cmAcc) {
-                    bReg=reg;
-                    bLearn=learn;
+                    regularization=reg;
+                    learning_rate=learn;
                     cmAcc=cAcc;
-                    cerr << green << "Best: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+                    cerr << green << "Best: Acc:" << cmAcc << ", Reg:" << regularization << ", Learn:" << learning_rate << def << endl;
                 } else {
                     cerr << red << "      Acc:" << cAcc << ", Reg:" << reg << ", Learn:" << learn << def << endl;
                 }
             }
         }
-        cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+        cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << regularization << ", Learn:" << learning_rate << def << endl;
     } else {
-        bLearn=1.e-2;
-        bReg=3.e-8;
+        learning_rate=1.e-2;
+        regularization=3.e-8;
     }
 
-    j_opt["learning_rate"]=bLearn;
+    j_opt["learning_rate"]=learning_rate;
     pOpt->updateOptimizerParameters(j_opt);
-    jo["regularization"]=bReg;
-    jo["lr_decay"]=(floatN)bDecay;
+    jo["regularization"]=regularization;
+    jo["lr_decay"]=(floatN)lr_decay;
+    jo["regularization_decay"]=(floatN)regularization_decay;
     jo["epochs"]=(floatN)200.0;
     t_cppl OptimizerState{};
     evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
