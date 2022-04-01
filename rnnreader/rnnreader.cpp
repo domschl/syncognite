@@ -233,7 +233,7 @@ int main(int argc, char *argv[]) {
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
-    floatN lr_decay = 0.15;
+    floatN lr_decay = 1.0; // 0.15;
 
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
