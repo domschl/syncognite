@@ -85,7 +85,7 @@ bool testLayerBlock(int verbose) {
     bool bOk = true;
     cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def
          << endl;
-    LayerBlock lb(R"({"name": "Testblock"})"_json);
+    LayerBlockOldStyle lb(R"({"name": "Testblock"})"_json);
     if (verbose > 1)
         cerr << "  LayerName for lb: " << lb.layerName << endl;
     lb.addLayer((string) "Affine", (string) "af1",
@@ -129,7 +129,7 @@ bool testLayerBlock(int verbose) {
     H5::H5File h5file((H5std_string)filepath, H5F_ACC_TRUNC);
     lb.saveLayerConfiguration(&h5file);
     lb.saveParameters(&h5file);
-    LayerBlock lb2(R"({"name": "restoreblock"})"_json);
+    LayerBlockOldStyle lb2(R"({"name": "restoreblock"})"_json);
     lb2.addLayer((string) "Affine", (string) "af1",
                  (string) R"({"inputShape":[10],"hidden":10})",
                  {(string) "input"});

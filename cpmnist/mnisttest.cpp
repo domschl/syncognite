@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 	MatrixN Xt=*(cpMnistData["x_test"]);
 	MatrixN yt=*(cpMnistData["t_test"]);
 
-	LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
+	LayerBlockOldStyle lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
 
 	lb.addLayer("Convolution", "cv1", R"({"inputShape":[1,28,28],"kernel":[48,5,5],"stride":1,"pad":2})",{"input"});
 	lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
