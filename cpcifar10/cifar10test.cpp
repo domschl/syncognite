@@ -324,9 +324,11 @@ int main(int argc, char *argv[]) {
     Optimizer *pOpt=optimizerFactory("Adam", j_opt);
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
 
-    bool autoOpt=true; // false;
+    bool autoOpt=false;
 
     floatN regularization, regularization_decay, learning_rate, lr_decay;
+    learning_rate=1.e-2;
+    regularization=1.e-4;
     lr_decay=0.9;
     regularization_decay=0.88;
     if (autoOpt) {
@@ -355,9 +357,6 @@ int main(int argc, char *argv[]) {
             }
         }
         cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << regularization << ", Learn:" << learning_rate << def << endl;
-    } else {
-        learning_rate=1.e-2;
-        regularization=3.e-8;
     }
 
     j_opt["learning_rate"]=learning_rate;
