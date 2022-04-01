@@ -233,12 +233,12 @@ int main(int argc, char *argv[]) {
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
-    floatN lr_decay = 1.0; // 0.15;
+    floatN lr_decay = 0.99; // 0.15;
 
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
-    for (int i=0; i<10; i++) {
+    for (int i=0; i<1000; i++) {
         jo["startepoch"]=(floatN)sep;
         j_opt["learning_rate"] = floatN(j_opt["learning_rate"]) * lr_decay;
         pOpt->updateOptimizerParameters(j_opt);
