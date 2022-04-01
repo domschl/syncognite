@@ -143,6 +143,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     bool noFragmentBatches=job_params.value("nofragmentbatches",false);
     
     floatN regularization = job_params.value("regularization", (floatN)0.0); // Default only!
+    floatN regularization_decay = job_params.value("regularization_decay", (floatN)1.0); // Default only!
     float lossfactor=job_params.value("lossfactor",(float)1.0);
     
     floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
@@ -344,6 +345,9 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         if (lr_decay!=1.0) {
             lr *= lr_decay;
             popti->j["learning_rate"]=lr;
+        }
+        if (regularization_decay!=1.0) {
+            regularization *= regularization_decay;
         }
 /*        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {

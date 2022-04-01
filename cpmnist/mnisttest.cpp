@@ -155,8 +155,6 @@ int main(int argc, char *argv[]) {
 	lb.addLayer("Dropout","doc3",R"({"drop":0.8})",{"rl5"});
 	lb.addLayer("Convolution", "cv6", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"doc3"});
 	lb.addLayer("Relu","rl6","{}",{"cv6"});
-	//lb.addLayer("Convolution", "cv7", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"rl6"});
-	//lb.addLayer("Relu","rl7","{}",{"cv7"});
 
 	lb.addLayer("Affine","af1",R"({"hidden":1024})",{"rl6"});
 	lb.addLayer("BatchNorm","bn1","{}",{"af1"});

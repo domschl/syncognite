@@ -162,9 +162,9 @@ int main(int argc, char *argv[]) {
     int ret=0;
 
     doTests();
-    initTest();
     jsonTest();
     hd5Test();
+    initTest();
     return ret;
 
 }
