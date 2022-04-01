@@ -236,6 +236,7 @@ int main(int argc, char *argv[]) {
     floatN lr_decay = 0.99; // 0.15;
 
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
+    t_cppl OptimizerState{};
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
     for (int i=0; i<1000; i++) {
@@ -246,7 +247,7 @@ int main(int argc, char *argv[]) {
         t_cppl statesv;
         states["y"] = new MatrixN(y);
         statesv["y"] = new MatrixN(yv);
-        lb.train(X, &states, Xv, &statesv, pOpt, pLoss, jo);
+        lb.train(X, &states, Xv, &statesv, pOpt, &OptimizerState, pLoss, jo);
         cppl_delete(&states);
         cppl_delete(&statesv);
 
@@ -309,5 +310,6 @@ int main(int argc, char *argv[]) {
         cppl_delete(&statesg);
     }
     delete pOpt;
+    cppl_delete(&OptimizerState);
     delete pLoss;
 }

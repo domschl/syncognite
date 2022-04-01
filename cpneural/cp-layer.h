@@ -280,14 +280,14 @@ public:
         return ok;
     }
 
+    //floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
+    //                    string optimizer, const json& j);
     floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                        string optimizer, const json& j);
-    floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                        Optimizer* pOptimizer, Loss* pLoss, const json& j);
+                        Optimizer* pOptimizer, t_cppl* pOptimizerState, Loss* pLoss, const json& j);
+    //floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
+    //                    string optimizer, const json& j);
     floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
-                        string optimizer, const json& j);
-    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
-                        Optimizer *pOptimizer, Loss *pLoss, const json& j);
+                        Optimizer *pOptimizer, t_cppl* pOptimizerState, Loss *pLoss, const json& j);
     retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss);
     floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);

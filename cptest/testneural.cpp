@@ -239,7 +239,8 @@ bool testTrainTwoLayerNet(int verbose) {
     json j_loss = R"({"name":"SparseCategoricalCrossEntropy"})"_json;
     Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j_loss);
     cerr << "  ";
-    tln.train(X, &states, Xv, &statesv, pOptimizer, pLoss, jo);
+    t_cppl OptimizerState{};
+    tln.train(X, &states, Xv, &statesv, pOptimizer, &OptimizerState, pLoss, jo);
     delete pOptimizer;
     delete pLoss;
     // tln.train(X, y, Xv, yv, "SDG", cpo);
@@ -256,6 +257,7 @@ bool testTrainTwoLayerNet(int verbose) {
         test_err < -10.0 || val_err < -10.0 || train_err < -10.0)
         bOk = false;
     registerTestResult("TrainTest", "TwoLayerNet training", bOk, "");
+    cppl_delete(&OptimizerState);
     return bOk;
 }
 

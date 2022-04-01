@@ -110,8 +110,7 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss) 
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                Optimizer *popti, Loss *pLoss, const json& job_params) {
-    t_cppl optiCache;
+                Optimizer *popti, t_cppl* pOptimizerState, Loss *pLoss, const json& job_params) {
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
     
@@ -290,7 +289,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                         *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
                     }
                 }
-                update(popti, &sgrad, "", &optiCache);
+                update(popti, &sgrad, "", pOptimizerState);
                 cppl_delete(&sgrad);
                 retFut.clear();
 
@@ -352,11 +351,11 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             }
         }
 */    }
-    cppl_delete(&optiCache);
     return lastAcc;
 }
 
 // Legacy interface
+/*
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                 string optimizer, const json& j) {
     t_cppl states, statesv;
@@ -372,21 +371,22 @@ floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const
     delete pOptimizer;
     return loss;
 }
-
+*/
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, const MatrixN& y_val,
-        Optimizer *pOptimizer, Loss *pLoss, const json& job_parameters) {
+        Optimizer *pOptimizer, t_cppl *pOptimizerState, Loss *pLoss, const json& job_parameters) {
     t_cppl states, states_val;
     states["y"]=new MatrixN(y);
     states_val["y"]=new MatrixN(y_val);
 
 
-    auto loss = train(x, &states, x_val, &states_val, pOptimizer, pLoss, job_parameters);
+    auto loss = train(x, &states, x_val, &states_val, pOptimizer, pOptimizerState, pLoss, job_parameters);
     cppl_delete(&states);
     cppl_delete(&states_val);
     return loss;
 }
 
 // legacy interface
+/*
 floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl *pStatesVal,
         string optimizer, const json& j) {
     cerr << "train: legacy interface (2) called, using default optimizer and losses" << endl;
@@ -397,3 +397,4 @@ floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl
     delete pOptimizer;
     return loss;
 }
+*/
