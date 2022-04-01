@@ -75,11 +75,23 @@ bool trainTest(string init) {
     MatrixN yt(NT,1);
     for (unsigned i=0; i<yt.rows(); i++) yt(i,0)=tFunc(Xt(i,0),C);
 
-    json jo(R"({"verbose":false,"epochs":100.0,"batch_size":20,"learning_rate":1e-2,"lr_decay":1.0,"momentum":0.9,"decay_rate":0.98,"epsilon":1e-8,"threads":2})"_json);
+    json jo(R"({"verbose":true, "epochs":100.0, "batch_size":20, "lr_decay":1.0, "threads":2})"_json);
+	jo["regularization"]=(floatN)2e-8;
+
+    json j_opt(R"({"name":"Adam","beta1":0.9,"beta2":0.999,"epsilon":1e-8})"_json);
+	j_opt["learning_rate"]=(floatN)1e-2;
+    json j_loss(R"({"name":"CrossEntropy"})"_json);
+    Optimizer *pOptimizer=optimizerFactory("Adam", j_opt);
+    t_cppl OptimizerState{};
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
+
+	tln.train(X, y, Xv, yv, pOptimizer, &OptimizerState, pLoss, jo);
+
+    delete pOptimizer;
+    cppl_delete(&OptimizerState);
+    delete pLoss;
 
     floatN train_err,test_err,val_err;
-
-    tln.train(X, y, Xv, yv, "Adam", jo);
     //tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err=tln.test(X, y);
     val_err=tln.test(Xv, yv);
