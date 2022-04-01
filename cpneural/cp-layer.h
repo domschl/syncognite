@@ -91,7 +91,7 @@ public:
         }
         //j = opt_params;
     };
-    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pcache) {return x;};
+    virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pCache) {return x;};
 };
 
 enum LayerType {
@@ -162,18 +162,18 @@ public:
 
     virtual ~Layer() {}; // Otherwise destructor of derived classes is never called!
     virtual vector<int> getOutputShape() { return outputShape;}
-    virtual void genZeroStates(t_cppl* pstates, int N) { return; }
-    virtual MatrixN forward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, int id) { MatrixN d(0,0); return d;}
-    virtual MatrixN backward(const MatrixN& dy, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id) { MatrixN d(0,0); return d;}
+    virtual void genZeroStates(t_cppl* pStates, int N) { return; }
+    virtual MatrixN forward(const MatrixN& x, t_cppl* pCache, t_cppl* pStates, int id) { MatrixN d(0,0); return d;}
+    virtual MatrixN backward(const MatrixN& dy, t_cppl* pCache, t_cppl* pStates, t_cppl* pGrads, int id) { MatrixN d(0,0); return d;}
     // XXX TODO: remove
-    //virtual floatN loss(t_cppl* pcache, t_cppl* pstates) { return 1001.0; }
-    virtual bool update(Optimizer *popti, t_cppl* pgrads, string var, t_cppl* pocache) {
+    //virtual floatN loss(t_cppl* pCache, t_cppl* pStates) { return 1001.0; }
+    virtual bool update(Optimizer *pOptimizer, t_cppl* pGrads, string var, t_cppl* pOptimizerState) {
         for (auto it : params) {
             string key = it.first;
-            if (pgrads->find(key)==pgrads->end()) {
+            if (pGrads->find(key)==pGrads->end()) {
                 cerr << "Internal error on update of layer: " << layerName << " at key: " << key << endl;
                 cerr << "Grads-vars: ";
-                for (auto gi : *pgrads) cerr << gi.first << " ";
+                for (auto gi : *pGrads) cerr << gi.first << " ";
                 cerr << endl;
                 cerr << "Params-vars: ";
                 for (auto pi : params) cerr << pi.first << " ";
@@ -181,7 +181,7 @@ public:
                 cerr << "Irrecoverable internal error, ABORT";
                 exit(-1);
             } else {
-                *params[key] = popti->update(*params[key],*((*pgrads)[key]), var+key, pocache);
+                *params[key] = pOptimizer->update(*params[key],*((*pGrads)[key]), var+key, pOptimizerState);
             }
         }
         return true;
@@ -280,27 +280,27 @@ public:
         return ok;
     }
 
-    //floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
+    //floatN train(const MatrixN& x, t_cppl* pStates, const MatrixN &xVal, t_cppl* pStatesVal,
     //                    string optimizer, const json& j);
-    floatN train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
+    floatN train(const MatrixN& x, t_cppl* pStates, const MatrixN &xVal, t_cppl* pStatesVal,
                         Optimizer* pOptimizer, t_cppl* pOptimizerState, Loss* pLoss, const json& j);
-    //floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
+    //floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xVal, const MatrixN& yVal,
     //                    string optimizer, const json& j);
-    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
+    floatN train(const MatrixN& x, const MatrixN& y, const MatrixN &xVal, const MatrixN& yVal,
                         Optimizer *pOptimizer, t_cppl* pOptimizerState, Loss *pLoss, const json& j);
-    retdict workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss);
-    floatN test(const MatrixN& x, t_cppl* pstates, int batchsize);
+    retdict workerThread(MatrixN *pxb, t_cppl* pStates, int id, Loss *pLoss);
+    floatN test(const MatrixN& x, t_cppl* pStates, int batchsize);
     floatN test(const MatrixN& x, const MatrixN& y, int batchsize);
-    bool selfTest(const MatrixN& x, t_cppl *pstates, floatN h, floatN eps, int verbose, Loss *pLoss);
+    bool selfTest(const MatrixN& x, t_cppl *pStates, floatN h, floatN eps, int verbose, Loss *pLoss);
 
 private:
-    bool checkForward(const MatrixN& x, t_cppl* pcache, t_cppl* pstates, floatN eps, int verbose);
-    bool checkBackward(const MatrixN& x, t_cppl *pcache, t_cppl* pstates, floatN eps, int verbose);
-    MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pcache, t_cppl* pstates, string var, floatN h, int verbose);
-    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pcache, t_cppl* pstates, string var, floatN h, int verbose,Loss *pLoss);
+    bool checkForward(const MatrixN& x, t_cppl* pCache, t_cppl* pStates, floatN eps, int verbose);
+    bool checkBackward(const MatrixN& x, t_cppl *pCache, t_cppl* pStates, floatN eps, int verbose);
+    MatrixN calcNumGrad(const MatrixN& xorg, const MatrixN& dchain, t_cppl* pCache, t_cppl* pStates, string var, floatN h, int verbose);
+    MatrixN calcNumGradLoss(const MatrixN& xorg, t_cppl *pCache, t_cppl* pStates, string var, floatN h, int verbose,Loss *pLoss);
     // XXX: rework lossFkt parameter
-    bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, t_cppl *pgrads, t_cppl *pnumGrads, floatN h, bool lossFkt, int verbose, Loss *pLoss);
-    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl *pstates, floatN h, floatN eps, bool lossFkt, int verbose, Loss *pLoss);
-    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pcache, t_cppl* pstates, floatN h, floatN eps, bool lossFkt, int verbose, Loss *pLoss);
+    bool calcNumGrads(const MatrixN& x, const MatrixN& dchain, t_cppl *pCache, t_cppl* pStates, t_cppl *pGrads, t_cppl *pnumGrads, floatN h, bool lossFkt, int verbose, Loss *pLoss);
+    bool checkGradients(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pCache, t_cppl *pStates, floatN h, floatN eps, bool lossFkt, int verbose, Loss *pLoss);
+    bool checkLayer(const MatrixN& x, const MatrixN& y, const MatrixN& dchain, t_cppl *pCache, t_cppl* pStates, floatN h, floatN eps, bool lossFkt, int verbose, Loss *pLoss);
 };
 
