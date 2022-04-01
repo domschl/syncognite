@@ -314,12 +314,8 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    json jo(R"({"verbose":true,"shuffle":true,"epsion":1e-8})"_json);
-    // (s.b.) jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
+    json jo(R"({"verbose":true,"shuffle":true})"_json);
     jo["lr_decay"]=(floatN)1.0;
-    // (s.b.) jo["regularization"]=(floatN)1e-6;
-
-    // (s.b.) jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
 
     json j_opt(R"({"type":"Adam"})"_json);
@@ -328,9 +324,10 @@ int main(int argc, char *argv[]) {
     Optimizer *pOpt=optimizerFactory("Adam", j_opt);
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
 
-    bool autoOpt=false;
+    bool autoOpt=true; // false;
 
-    floatN bReg, bLearn;
+    floatN bReg, bLearn, bDecay;
+    bDecay=0.9;
     if (autoOpt) {
         vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; // -> 1e-5
         vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; // -> 1e-2
@@ -358,14 +355,15 @@ int main(int argc, char *argv[]) {
         }
         cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
     } else {
-        bLearn=1.e-3;
+        bLearn=1.e-2;
         bReg=3.e-8;
     }
 
     j_opt["learning_rate"]=bLearn;
     pOpt->updateOptimizerParameters(j_opt);
     jo["regularization"]=bReg;
-    jo["epochs"]=(floatN)40.0;
+    jo["lr_decay"]=(floatN)bDecay;
+    jo["epochs"]=(floatN)200.0;
     t_cppl OptimizerState{};
     evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
 
