@@ -187,11 +187,13 @@ int main(int argc, char *argv[]) {
 	j_opt["learning_rate"]=(floatN)2e-3;
     json j_loss(R"({"name":"CrossEntropy"})"_json);
     Optimizer *pOptimizer=optimizerFactory("Adam", j_opt);
+    t_cppl OptimizerState{};
     Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
 
-	lb.train(X, y, Xv, yv, pOptimizer, pLoss, jo);
+	lb.train(X, y, Xv, yv, pOptimizer, &OptimizerState, pLoss, jo);
 
     delete pOptimizer;
+    cppl_delete(&OptimizerState);
     delete pLoss;
 
 	floatN train_err, val_err, test_err;

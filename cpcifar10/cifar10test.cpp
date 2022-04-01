@@ -137,7 +137,7 @@ bool  getcifar10Data(string filepath) {
 
 
 floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, 
-                      Optimizer *pOpt, Loss *pLoss, 
+                      Optimizer *pOpt, t_cppl *pOptimizerState, Loss *pLoss, 
                       bool evalFinal=false, bool verbose=false, int mode=0) {
     LayerBlockOldStyle lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal","initfactor":0.1})"_json);
     if (mode==0) {
@@ -249,8 +249,7 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         if (verbose) cerr << "Topology-check for LayerBLock: ok." << endl;
     }
 
-    floatN cAcc=lb.train(X, y, Xv, yv, pOpt, pLoss, jo);
-
+    floatN cAcc=lb.train(X, y, Xv, yv, pOpt, pOptimizerState, pLoss, jo);
     floatN train_err, val_err, test_err;
     if (evalFinal) {
         train_err=lb.test(X, y, jo.value("batch_size", 50));
@@ -344,7 +343,9 @@ int main(int argc, char *argv[]) {
             pOpt->updateOptimizerParameters(j_opt);
             for (auto reg : regi) {
                 jo["regularization"]=reg;
-                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, pLoss, true, true, mode);
+                t_cppl OptimizerState{};
+                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
+                cppl_delete(&OptimizerState);
                 if (cAcc > cmAcc) {
                     bReg=reg;
                     bLearn=learn;
@@ -365,13 +366,15 @@ int main(int argc, char *argv[]) {
     pOpt->updateOptimizerParameters(j_opt);
     jo["regularization"]=bReg;
     jo["epochs"]=(floatN)40.0;
-    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, pLoss, true, true, mode);
+    t_cppl OptimizerState{};
+    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
 
     for (auto it : cpcifar10Data) {
          free(it.second);
          it.second=nullptr;
     }
     delete pOpt;
+    cppl_delete(&OptimizerState);
     delete pLoss;
     return 0;
 }
