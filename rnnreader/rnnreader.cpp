@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
         plstm0->genZeroStates(&statesg, 1);
 
         int g,t,v;
-        for (g=0; g<2500; g++) {
+        for (g=0; g<300; g++) {
             t_cppl cache{};
 
             /* MatrixN probs_xx=*/ lb.forward(xg,&cache, &statesg);
