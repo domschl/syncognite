@@ -66,7 +66,8 @@ class TemporalSoftmax : public Layer {
             cerr << "TSM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
-       */ 
+       */
+        int n,t,d;
         if (x.cols() != D * T) {
             cerr << layerName << ": "
                  << "Forward: dimension mismatch TemporalSoftmax in x(cols):"
@@ -77,9 +78,9 @@ class TemporalSoftmax : public Layer {
         int N = (int)x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt = MatrixN(N * T, D);
-        for (int n = 0; n < N; n++) {
-            for (int t = 0; t < T; t++) {
-                for (int d = 0; d < D; d++) {
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
                     xt(n * T + t, d) = x(n, t * D + d);
                 }
             }
@@ -153,16 +154,20 @@ class TemporalSoftmax : public Layer {
         if (pcache != nullptr)
             cppl_set(pcache, "probs", new MatrixN(probs));
 
-        // XXX this morph is no longer needed:
+        // XXX this morph is no longer needed? Genertor uses is, but that needs to be checked:
         // probst: [(N * T), D] -> [N, (T * D)]
         MatrixN probst = MatrixN(N, T * D);
-        for (int n = 0; n < N; n++) {
-            for (int t = 0; t < T; t++) {
-                for (int d = 0; d < D; d++) {
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
                     probst(n, t * D + d) = probs(n * T + t, d);
                 }
             }
         }
+        if (pcache != nullptr)
+            cppl_set(pcache, "probst", new MatrixN(probst));
+        else
+            cerr << "TSM-fw: pcache is nullptr -> fatal!" << endl;
         return probs; // probst;   // this is NT,D vs N,TD
     }
     /*

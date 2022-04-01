@@ -161,10 +161,10 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
+    LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
-    int H=400;
-    int BS=96;
+    int H=128; // 400;
+    int BS=64; // 96;
     float clip=5.0;
 
     //int D=64;
@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     //j1["forgetbias"]=0.10;
     j1["clip"]=clip;
-    int layer_depth1=6;
+    int layer_depth1=2; // 6;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,T};
@@ -229,7 +229,7 @@ int main(int argc, char *argv[]) {
     j_opt["inputShape"]=vector<int>{H,T};
     json j_loss(R"({"name":"temporalsoftmax"})"_json);
     j_loss["inputShape"]=vector<int>{H,T};
-    floatN dep=70.0;
+    floatN dep=3.0; // 70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
@@ -268,14 +268,20 @@ int main(int argc, char *argv[]) {
         for (g=0; g<2500; g++) {
             t_cppl cache{};
 
-            MatrixN probst=lb.forward(xg,&cache, &statesg);
+            /* MatrixN probs_xx=*/ lb.forward(xg,&cache, &statesg);
+            // Forward generates the 'wrong' permutation of output. QUick-hack is abusing the 'cache' to get the permutation.
+            if (cache.find("sm1-probst")==cache.end()) {
+                cerr << "probst didn't make it, FATAL" << endl;
+                exit(1);
+            }
+            MatrixN probst=*(cache["sm1-probst"]); // XXX check if temporal softmax uses redundant morpher!
             MatrixN probsd=MatrixN(T,VS);
             for (t=0; t<T; t++) {
                 for (v=0; v<VS; v++) {
                     probsd(t,v)=probst(0,t*VS+v);
                 }
             }
-            int li=-1;
+            int li = -1;
             for (t=0; t<T; t++) {
                 vector<floatN> probs(VS);
                 vector<floatN> index(VS);
