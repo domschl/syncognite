@@ -21,7 +21,7 @@ gnuplot ../plot/liveplot.gnu
 ```
 ![40 epochs](../doc/images/mnist-graph.png)
 
-Note: Currently, gnuplot can only show graphs after 1. episode is complete.
+Note: `gnuplot` can only show graphs after 1. episode is complete.
 
 ## Output
 ```bash
@@ -68,48 +68,48 @@ sm1: (10)[10] -> (1)[1]
 Topology-check for MultiLayer: ok.
 
 Training net: data-size: 50000, chunks: 1000, batch_size: 50, threads: 8 (bz*ch): 50000
-Ep: 1, Time: 161s, (20s test) loss:0.0924 err(val):0.0203 acc(val):0.9797
-Ep: 2, Time: 161s, (20s test) loss:0.0623 err(val):0.0162 acc(val):0.9838
-Ep: 3, Time: 160s, (21s test) loss:0.0488 err(val):0.0146 acc(val):0.9854
-Ep: 4, Time: 160s, (20s test) loss:0.0367 err(val):0.0119 acc(val):0.9881
-Ep: 5, Time: 160s, (20s test) loss:0.0335 err(val):0.0114 acc(val):0.9886
-Ep: 6, Time: 159s, (20s test) loss:0.0195 err(val):0.0113 acc(val):0.9887
-Ep: 7, Time: 159s, (20s test) loss:0.0232 err(val):0.0090 acc(val):0.9910
-Ep: 8, Time: 161s, (20s test) loss:0.0177 err(val):0.0096 acc(val):0.9904
-Ep: 9, Time: 165s, (25s test) loss:0.0151 err(val):0.0100 acc(val):0.9900
-Ep: 10, Time: 159s, (20s test) loss:0.0156 err(val):0.0086 acc(val):0.9914
-Ep: 11, Time: 160s, (20s test) loss:0.0096 err(val):0.0092 acc(val):0.9908
-Ep: 12, Time: 160s, (20s test) loss:0.0080 err(val):0.0081 acc(val):0.9919
-Ep: 13, Time: 163s, (23s test) loss:0.0088 err(val):0.0084 acc(val):0.9916
-Ep: 14, Time: 160s, (20s test) loss:0.0065 err(val):0.0085 acc(val):0.9915
-Ep: 15, Time: 162s, (21s test) loss:0.0048 err(val):0.0087 acc(val):0.9913
-Ep: 16, Time: 160s, (20s test) loss:0.0033 err(val):0.0080 acc(val):0.9920
-Ep: 17, Time: 158s, (20s test) loss:0.0047 err(val):0.0084 acc(val):0.9916
-Ep: 18, Time: 159s, (20s test) loss:0.0027 err(val):0.0081 acc(val):0.9919
-Ep: 19, Time: 165s, (25s test) loss:0.0053 err(val):0.0076 acc(val):0.9924
-Ep: 20, Time: 160s, (20s test) loss:0.0068 err(val):0.0082 acc(val):0.9918
-Ep: 21, Time: 160s, (20s test) loss:0.0039 err(val):0.0077 acc(val):0.9923
-Ep: 22, Time: 160s, (20s test) loss:0.0041 err(val):0.0079 acc(val):0.9921
-Ep: 23, Time: 158s, (19s test) loss:0.0029 err(val):0.0082 acc(val):0.9918
-Ep: 24, Time: 158s, (20s test) loss:0.0023 err(val):0.0075 acc(val):0.9925
-Ep: 25, Time: 160s, (20s test) loss:0.0024 err(val):0.0071 acc(val):0.9929
-Ep: 26, Time: 159s, (20s test) loss:0.0018 err(val):0.0072 acc(val):0.9928
-Ep: 27, Time: 159s, (20s test) loss:0.0012 err(val):0.0073 acc(val):0.9927
-Ep: 28, Time: 159s, (20s test) loss:0.0014 err(val):0.0070 acc(val):0.9930
-Ep: 29, Time: 158s, (20s test) loss:0.0024 err(val):0.0073 acc(val):0.9927
-Ep: 30, Time: 160s, (20s test) loss:0.0014 err(val):0.0070 acc(val):0.9930
-Ep: 31, Time: 160s, (20s test) loss:0.0027 err(val):0.0072 acc(val):0.9928
-Ep: 32, Time: 159s, (20s test) loss:0.0021 err(val):0.0075 acc(val):0.9925
-Ep: 33, Time: 160s, (20s test) loss:0.0009 err(val):0.0070 acc(val):0.9930
-Ep: 34, Time: 160s, (20s test) loss:0.0011 err(val):0.0075 acc(val):0.9925
-Ep: 35, Time: 159s, (20s test) loss:0.0015 err(val):0.0079 acc(val):0.9921
-Ep: 36, Time: 161s, (21s test) loss:0.0016 err(val):0.0075 acc(val):0.9925
-Ep: 37, Time: 161s, (20s test) loss:0.0016 err(val):0.0076 acc(val):0.9924
-Ep: 38, Time: 162s, (20s test) loss:0.0016 err(val):0.0073 acc(val):0.9927
-Ep: 39, Time: 161s, (20s test) loss:0.0013 err(val):0.0074 acc(val):0.9926
-Ep: 40, Time: 162s, (21s test) loss:0.0007 err(val):0.0074 acc(val):0.9926
+Ep: 1, Time: 155s, (16s test) loss:0.1003 err(val):0.0197 acc(val):0.9803
+Ep: 2, Time: 155s, (17s test) loss:0.0697 err(val):0.0164 acc(val):0.9836
+Ep: 3, Time: 157s, (17s test) loss:0.0522 err(val):0.0130 acc(val):0.9870
+Ep: 4, Time: 155s, (16s test) loss:0.0395 err(val):0.0117 acc(val):0.9883
+Ep: 5, Time: 156s, (17s test) loss:0.0335 err(val):0.0110 acc(val):0.9890
+Ep: 6, Time: 154s, (16s test) loss:0.0234 err(val):0.0085 acc(val):0.9915
+Ep: 7, Time: 156s, (17s test) loss:0.0255 err(val):0.0095 acc(val):0.9905
+Ep: 8, Time: 156s, (17s test) loss:0.0158 err(val):0.0095 acc(val):0.9905
+Ep: 9, Time: 195s, (18s test) loss:0.0160 err(val):0.0096 acc(val):0.9904
+Ep: 10, Time: 162s, (17s test) loss:0.0176 err(val):0.0076 acc(val):0.9924
+Ep: 11, Time: 159s, (18s test) loss:0.0104 err(val):0.0088 acc(val):0.9912
+Ep: 12, Time: 168s, (17s test) loss:0.0095 err(val):0.0080 acc(val):0.9920
+Ep: 13, Time: 160s, (17s test) loss:0.0089 err(val):0.0068 acc(val):0.9932
+Ep: 14, Time: 156s, (16s test) loss:0.0122 err(val):0.0078 acc(val):0.9922
+Ep: 15, Time: 156s, (17s test) loss:0.0058 err(val):0.0079 acc(val):0.9921
+Ep: 16, Time: 158s, (16s test) loss:0.0083 err(val):0.0074 acc(val):0.9926
+Ep: 17, Time: 158s, (17s test) loss:0.0041 err(val):0.0076 acc(val):0.9924
+Ep: 18, Time: 158s, (16s test) loss:0.0032 err(val):0.0069 acc(val):0.9931
+Ep: 19, Time: 158s, (17s test) loss:0.0046 err(val):0.0075 acc(val):0.9925
+Ep: 20, Time: 156s, (16s test) loss:0.0050 err(val):0.0075 acc(val):0.9925
+Ep: 21, Time: 158s, (17s test) loss:0.0035 err(val):0.0063 acc(val):0.9937
+Ep: 22, Time: 159s, (16s test) loss:0.0051 err(val):0.0064 acc(val):0.9936
+Ep: 23, Time: 156s, (17s test) loss:0.0022 err(val):0.0066 acc(val):0.9934
+Ep: 24, Time: 165s, (17s test) loss:0.0034 err(val):0.0064 acc(val):0.9936
+Ep: 25, Time: 164s, (16s test) loss:0.0030 err(val):0.0057 acc(val):0.9943
+Ep: 26, Time: 160s, (16s test) loss:0.0025 err(val):0.0066 acc(val):0.9934
+Ep: 27, Time: 160s, (16s test) loss:0.0024 err(val):0.0059 acc(val):0.9941
+Ep: 28, Time: 156s, (16s test) loss:0.0024 err(val):0.0060 acc(val):0.9940
+Ep: 29, Time: 156s, (16s test) loss:0.0038 err(val):0.0059 acc(val):0.9941
+Ep: 30, Time: 155s, (16s test) loss:0.0024 err(val):0.0061 acc(val):0.9939
+Ep: 31, Time: 156s, (16s test) loss:0.0011 err(val):0.0060 acc(val):0.9940
+Ep: 32, Time: 155s, (17s test) loss:0.0025 err(val):0.0055 acc(val):0.9945
+Ep: 33, Time: 155s, (17s test) loss:0.0006 err(val):0.0054 acc(val):0.9946
+Ep: 34, Time: 155s, (16s test) loss:0.0015 err(val):0.0060 acc(val):0.9940
+Ep: 35, Time: 156s, (17s test) loss:0.0008 err(val):0.0055 acc(val):0.9945
+Ep: 36, Time: 156s, (16s test) loss:0.0010 err(val):0.0056 acc(val):0.9944
+Ep: 37, Time: 155s, (16s test) loss:0.0007 err(val):0.0063 acc(val):0.9937
+Ep: 38, Time: 155s, (16s test) loss:0.0008 err(val):0.0059 acc(val):0.9941
+Ep: 39, Time: 155s, (16s test) loss:0.0010 err(val):0.0064 acc(val):0.9936
+Ep: 40, Time: 155s, (16s test) loss:0.0005 err(val):0.0059 acc(val):0.9941
 Final results on MNIST after 40.0000 epochs:
-      Train-error: 0.0000 train-acc: 1.0000
- Validation-error: 0.0074   val-acc: 0.9926
-       Test-error: 0.0080  test-acc: 0.9920
+      Train-error: 0.0001 train-acc: 0.9999
+ Validation-error: 0.0059   val-acc: 0.9941
+       Test-error: 0.0066  test-acc: 0.9934
 ```
