@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
     int H=128; // 400;
-    int BS=64; // 96;
+    int BS=256; // 96;
     float clip=5.0;
 
     //int D=64;
@@ -223,20 +223,20 @@ int main(int argc, char *argv[]) {
     //cerr << jc.dump(4) << endl;
 
     // preseverstates no longer necessary for training!
-    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
+    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    json j_opt(R"({"learning_rate":5.e-2})"_json);
+    json j_opt(R"({"name": "Adam", "beta1": 0.9, "beta2": 0.999, "epsilon": 1.0e-8, "learning_rate":8e-2})"_json);
     j_opt["inputShape"]=vector<int>{H,T};
     json j_loss(R"({"name":"temporalsoftmax"})"_json);
     j_loss["inputShape"]=vector<int>{H,T};
-    floatN dep=3.0; // 70.0;
+    floatN dep=5.0; // 70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
     jo["batch_size"]=BS;
-    jo["lr_decay"] = 0.99;
+    jo["lr_decay"] = 1.0;
     // XXX: regularization crashes the training.
-    //jo["regularization"]=1e-5;
-    //jo["regularization_decay"]=0.95;
+    // jo["regularization"]=1.0e-5;
+    // jo["regularization_decay"]=0.95;
 
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     t_cppl OptimizerState{};

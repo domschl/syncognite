@@ -346,7 +346,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             lr *= lr_decay;
             popti->j["learning_rate"]=lr;
         }
-        if (regularization_decay!=1.0) {
+        if (regularization_decay!=0.0) {
             regularization *= regularization_decay;
         }
 /*        for (unsigned int i=0; i<ack.size(); i++) {

@@ -1,6 +1,7 @@
 Build/
 datasets/gutenberg
 shakespeare.txt
+women_writers.txt
 doc/.ipynb_checkpoints/
 *.gch
 *.o
