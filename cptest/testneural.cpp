@@ -60,31 +60,6 @@ bool checkForTest(string tc) {
     }
 }
 
-bool registerTest() {
-    bool allOk = true;
-    cerr << "Registered Layers:" << endl;
-    int nr = 1;
-    for (auto it : _syncogniteLayerFactory.mapl) {
-        cerr << nr << ".: " << it.first << " ";
-        t_layer_props_entry te = _syncogniteLayerFactory.mapprops[it.first];
-        json j;
-        j["inputShape"] = std::vector<int>(te);
-        Layer *l = CREATE_LAYER(it.first, j) if (l->layerType == LT_NORMAL) {
-            cerr << "normal layer" << endl;
-        }
-        else if (l->layerType == LT_LOSS) {
-            cerr << "loss-layer (final)" << endl;
-        }
-        else {
-            cerr << "unspecified layer -- ERROR!" << endl;
-            allOk = false;
-        }
-        delete l;
-        ++nr;
-    }
-    return allOk;
-}
-
 vector<string> failedTests{};
 
 void registerTestResult(string testcase, string subtest, bool result,
@@ -110,7 +85,7 @@ bool testLayerBlock(int verbose) {
     bool bOk = true;
     cerr << lblue << "LayerBlock Layer (Affine-ReLu-Affine-Softmax): " << def
          << endl;
-    LayerBlock lb(R"({"name": "Testblock"})"_json);
+    LayerBlockOldStyle lb(R"({"name": "Testblock"})"_json);
     if (verbose > 1)
         cerr << "  LayerName for lb: " << lb.layerName << endl;
     lb.addLayer((string) "Affine", (string) "af1",
@@ -123,6 +98,7 @@ bool testLayerBlock(int verbose) {
     if (verbose > 3)
         bCT = true;
     bool res = lb.checkTopology(bCT);
+    cerr << "  Topology check: " << res << endl;
     registerTestResult("LayerBlock", "Topology check", res, "");
     if (!res)
         bOk = false;
@@ -142,7 +118,9 @@ bool testLayerBlock(int verbose) {
     t_cppl lbstates;
     lbstates["y"] = &yml;
 
-    res = lb.selfTest(xml, &lbstates, h, eps, verbose);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", "{}"_json);
+    res = lb.selfTest(xml, &lbstates, h, eps, verbose, pLoss);
+    delete pLoss;
     if (!res)
         bOk = false;
     registerTestResult("LayerBlock", "Numerical self-test", res, "");
@@ -151,7 +129,7 @@ bool testLayerBlock(int verbose) {
     H5::H5File h5file((H5std_string)filepath, H5F_ACC_TRUNC);
     lb.saveLayerConfiguration(&h5file);
     lb.saveParameters(&h5file);
-    LayerBlock lb2(R"({"name": "restoreblock"})"_json);
+    LayerBlockOldStyle lb2(R"({"name": "restoreblock"})"_json);
     lb2.addLayer((string) "Affine", (string) "af1",
                  (string) R"({"inputShape":[10],"hidden":10})",
                  {(string) "input"});
@@ -241,7 +219,7 @@ bool testTrainTwoLayerNet(int verbose) {
         yt(i, 0) = tFunc(Xt.row(i), C);
 
     json jo =
-        R"({"epochs":300.0,"batch_size":10,"shuffle":true,"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8,"regularization":7e-4,"maxthreads":4})"_json;
+        R"({"epochs":300.0,"batch_size":10,"shuffle":true,"regularization":7e-4,"maxthreads":1})"_json;
     if (verbose > 1)
         jo["verbosetitle"] = true;
     else
@@ -256,8 +234,15 @@ bool testTrainTwoLayerNet(int verbose) {
     states["y"] = &y;
     statesv["y"] = &yv;
     statest["y"] = &yt;
+    json j_opt = R"({"learning_rate":1e-2,"lr_decay":1.0,"epsilon":1e-8})"_json;
+    Optimizer *pOptimizer = optimizerFactory("Adam", j_opt);
+    json j_loss = R"({"name":"SparseCategoricalCrossEntropy"})"_json;
+    Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j_loss);
     cerr << "  ";
-    tln.train(X, &states, Xv, &statesv, "Adam", jo);
+    t_cppl OptimizerState{};
+    tln.train(X, &states, Xv, &statesv, pOptimizer, &OptimizerState, pLoss, jo);
+    delete pOptimizer;
+    delete pLoss;
     // tln.train(X, y, Xv, yv, "SDG", cpo);
     train_err = tln.test(X, &states, 10);
     val_err = tln.test(Xv, &statesv, 10);
@@ -272,6 +257,7 @@ bool testTrainTwoLayerNet(int verbose) {
         test_err < -10.0 || val_err < -10.0 || train_err < -10.0)
         bOk = false;
     registerTestResult("TrainTest", "TwoLayerNet training", bOk, "");
+    cppl_delete(&OptimizerState);
     return bOk;
 }
 
@@ -338,8 +324,6 @@ int doTests() {
     if (checkForTest("LSTM"))
         if (!testLSTM(verbose))
             allOk = false;
-    // XXX: Faulty implementation requires rewrite:
-    // if (checkForTest("RAN")) if (!testRAN(verbose)) allOk=false;
     if (checkForTest("WordEmbedding"))
         if (!testWordEmbedding(verbose))
             allOk = false;
@@ -381,6 +365,8 @@ bool getArgs(int argc, char *argv[]) {
                 verbose = 2;
             else if (opt == "vvv")
                 verbose = 3;
+            else if (opt == "vvvv")
+                verbose = 4;
             else {
                 cerr << "Invalid option: " << opt << endl;
                 cerr << "Valid options are: -v -vv -vvv (increasing verbosity)"

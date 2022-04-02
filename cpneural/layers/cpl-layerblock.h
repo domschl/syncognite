@@ -1,49 +1,8 @@
-#ifndef _CP_LAYERS_H
-#define _CP_LAYERS_H
+#pragma once
 
 #include "cp-neural.h"
 
-#include "layers/cpl-affine.h"
-#include "layers/cpl-relu.h"
-#include "layers/cpl-affinerelu.h"
-#include "layers/cpl-batchnorm.h"
-#include "layers/cpl-dropout.h"
-#include "layers/cpl-convolution.h"
-#include "layers/cpl-pooling.h"
-#include "layers/cpl-spatialbatchnorm.h"
-#include "layers/cpl-svm.h"
-#include "layers/cpl-softmax.h"
-#include "layers/cpl-twolayernet.h"
-#include "layers/cpl-rnn.h"
-#include "layers/cpl-lstm.h"
-#include "layers/cpl-wordembedding.h"
-#include "layers/cpl-temporalaffine.h"
-#include "layers/cpl-temporalsoftmax.h"
-#include "layers/cpl-nonlinearity.h"
-#include "layers/cpl-onehot.h"
-
-void registerLayers() {
-    REGISTER_LAYER("Affine", Affine, 1)
-    REGISTER_LAYER("Relu", Relu, 1)
-    REGISTER_LAYER("Nonlinearity", Nonlinearity, 1)
-    REGISTER_LAYER("AffineRelu", AffineRelu, 1)
-    REGISTER_LAYER("BatchNorm", BatchNorm, 1)
-    REGISTER_LAYER("Dropout", Dropout, 1)
-    REGISTER_LAYER("Convolution", Convolution, 3)
-    REGISTER_LAYER("Pooling", Pooling, 3)
-    REGISTER_LAYER("SpatialBatchNorm", SpatialBatchNorm, 3)
-    REGISTER_LAYER("RNN", RNN, 1)
-    REGISTER_LAYER("LSTM", LSTM, 1)
-    REGISTER_LAYER("WordEmbedding", WordEmbedding, 1)
-    REGISTER_LAYER("TemporalAffine", TemporalAffine, 1)
-    REGISTER_LAYER("TemporalSoftmax", TemporalSoftmax, 1)
-    REGISTER_LAYER("Softmax", Softmax, 1)
-    REGISTER_LAYER("Svm", Svm, 1)
-    REGISTER_LAYER("TwoLayerNet", TwoLayerNet, 1)
-    REGISTER_LAYER("OneHot", OneHot, 1)
-}
-
-class LayerBlockOldStyle : public Layer {
+class LayerBlock : public Layer {
   private:
     bool bench;
     string inittype{"standard"};
@@ -51,10 +10,10 @@ class LayerBlockOldStyle : public Layer {
     void setup(const json &jx) {
         j = jx;
         layerName = j.value("name", "block");
-        layerClassName = "LayerBlockOldStyle";
+        layerClassName = "LayerBlock";
         bench = j.value("bench", false);
-        lossLayer = "";
-        layerType = LayerType::LT_NORMAL;
+        firstLayer = "";
+        lastLayer = "";
         trainMode = j.value("train", false);
         inittype = j.value("init", "standard");
         initfactor = j.value("initfactor", (floatN)1.0);
@@ -64,18 +23,20 @@ class LayerBlockOldStyle : public Layer {
   public:
     map<string, Layer *> layerMap;
     map<string, vector<string>> layerInputs;
-    string lossLayer;
+    string firstLayer;
+    string lastLayer;
     bool checked;
     bool trainMode;
 
-    LayerBlockOldStyle(const json &jx) {
+    LayerBlock(const json &jx) {
         setup(jx);
+        layerInit = true;
     }
-    LayerBlockOldStyle(const string conf) {
+    LayerBlock(const string conf) {
         setup(json::parse(conf));
         layerInit = true;
     }
-    ~LayerBlockOldStyle() {
+    ~LayerBlock() {
         for (auto pli : layerMap) {
             if (pli.second != nullptr) {
                 delete pli.second;
@@ -166,14 +127,14 @@ class LayerBlockOldStyle : public Layer {
         jl["initfactor"] = ifc;
 
         layerMap[name] = CREATE_LAYER(layerclass, jl)  // Macro!
-
-        Layer *pLayer = layerMap[name];
+            Layer *pLayer = layerMap[name];
         if (pLayer->layerInit == false) {
             cerr << "Attempt to add layer " << name
                  << " failed: Bad initialization." << endl;
             removeLayer(name);
             return false;
         }
+        /*
         if (pLayer->layerType & LayerType::LT_LOSS) {
             if (lossLayer != "") {
                 cerr << "ERROR: a loss layer with name: " << lossLayer
@@ -185,6 +146,7 @@ class LayerBlockOldStyle : public Layer {
             layerType = layerType | LayerType::LT_LOSS;
             lossLayer = name;
         }
+        */
         layerInputs[name] = inputLayers;
         mlPush(name, &(pLayer->params), &params);
         checked = false;
@@ -203,12 +165,12 @@ class LayerBlockOldStyle : public Layer {
         return addLayer(layerclass, name, jl, inputLayers);
     }
     bool checkTopology(bool verbose = false) {
-        if (lossLayer == "") {
+        if (lastLayer == "") {
             cerr << "No loss layer defined!" << endl;
             return false;
         }
         vector<string> lyr;
-        lyr = getLayerFromInput("input");
+        lyr = getNextLayers("input");
         if (lyr.size() != 1) {
             cerr << "One (1) layer with name >input< needed, got: "
                  << lyr.size() << endl;
@@ -223,10 +185,10 @@ class LayerBlockOldStyle : public Layer {
                     return false;
                 }
             lst.push_back(cl);
-            if (cl == lossLayer)
+            if (cl == lastLayer)
                 done = true;
             else {
-                lyr = getLayerFromInput(cl);
+                lyr = getNextLayers(cl);
                 if (lyr.size() != 1) {
                     cerr << "One (1) layer that uses " << cl
                          << " as input needed, got: " << lyr.size() << endl;
@@ -236,11 +198,11 @@ class LayerBlockOldStyle : public Layer {
         }
         if (verbose) {
             bool done = false;
-            string cLay = "input";
-            vector<string> nLay;
+            string currentLayer = "input";
+            vector<string> nextLayers;
             while (!done) {
-                nLay = getLayerFromInput(cLay);
-                string name = nLay[0];
+                nextLayers = getNextLayers(currentLayer);
+                string name = nextLayers[0];
                 Layer *p = layerMap[name];
 
                 int inputShapeFlat = 1;
@@ -260,7 +222,7 @@ class LayerBlockOldStyle : public Layer {
 
                 if (p->layerInit == false)
                     cerr << "  " << name << ": bad initialization!" << endl;
-                cLay = nLay[0];
+                currentLayer = nextLayers[0];
                 if (p->layerType & LayerType::LT_LOSS)
                     done = true;
             }
@@ -268,7 +230,7 @@ class LayerBlockOldStyle : public Layer {
         checked = true;
         return true;
     }
-    vector<string> getLayerFromInput(string input) {
+    vector<string> getNextLayers(string input) {
         vector<string> lys;
         for (auto li : layerInputs) {
             for (auto lii : li.second) {
@@ -280,21 +242,21 @@ class LayerBlockOldStyle : public Layer {
     }
     virtual MatrixN forward(const MatrixN &x, t_cppl *pcache, t_cppl *pstates,
                             int id = 0) override {
-        string cLay = "input";
-        vector<string> nLay;
+        string currentLayer = "input";
+        vector<string> nextLayers;
         bool done = false;
         MatrixN x0 = x;
         MatrixN xn;
         Timer t;
         trainMode = j.value("train", false);
         while (!done) {
-            nLay = getLayerFromInput(cLay);
-            if (nLay.size() != 1) {
-                cerr << "Unexpected topology: " << nLay.size()
-                     << " layer follow layer " << cLay << " 1 expected.";
+            nextLayers = getNextLayers(currentLayer);
+            if (nextLayers.size() != 1) {
+                cerr << "Unexpected topology: " << nextLayers.size()
+                     << " layer follow layer " << currentLayer << " 1 expected.";
                 return x;
             }
-            string name = nLay[0];
+            string name = nextLayers[0];
             Layer *p = layerMap[name];
             t_cppl cache;
             if (pcache != nullptr)
@@ -311,7 +273,7 @@ class LayerBlockOldStyle : public Layer {
             }
             if (p->layerType & LayerType::LT_LOSS)
                 done = true;
-            cLay = name;
+            currentLayer = name;
             int oi = -10;
             int fi = -10;
             bool cont = false;
@@ -364,29 +326,16 @@ class LayerBlockOldStyle : public Layer {
         }
         return xn;
     }
-    /*
-    virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
-        t_cppl cache;
-        if (lossLayer == "") {
-            cerr << "Invalid configuration, no loss layer defined!" << endl;
-            return 1000.0;
-        }
-        Layer *pl = layerMap[lossLayer];
-        mlPop(lossLayer, pcache, &cache);
-        floatN ls = pl->loss(&cache, pstates);
-        return ls;
-    }
-    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
-        if (lossLayer == "") {
+        if (lastLayer == "") {
             cerr << "Invalid configuration, no loss layer defined!" << endl;
             return dy;
         }
         bool done = false;
         Timer t;
         MatrixN dxn;
-        string cl = lossLayer;
+        string cl = lastLayer;
         MatrixN dx0 = dy;
         trainMode = j.value("train", false);
         while (!done) {
@@ -429,18 +378,18 @@ class LayerBlockOldStyle : public Layer {
         }
     }
     virtual void getLayerConfiguration(json &jlc) override {
-        string cLay = "input";
-        vector<string> nLay;
+        string currentLayer = "input";
+        vector<string> nextLayers;
         bool done = false;
         vector<json> jlayers{};
         while (!done) {
-            nLay = getLayerFromInput(cLay);
-            if (nLay.size() != 1) {
-                cerr << "Unexpected topology: " << nLay.size()
-                     << " layer follow layer " << cLay << " 1 expected.";
+            nextLayers = getNextLayers(currentLayer);
+            if (nextLayers.size() != 1) {
+                cerr << "Unexpected topology: " << nextLayers.size()
+                     << " layer follow layer " << currentLayer << " 1 expected.";
                 break;
             }
-            string name = nLay[0];
+            string name = nextLayers[0];
             Layer *p = layerMap[name];
             json ji;
             p->getLayerConfiguration(ji);
@@ -448,7 +397,7 @@ class LayerBlockOldStyle : public Layer {
             if (p->layerType & LayerType::LT_LOSS)
                 done = true;
             else
-                cLay = name;
+                currentLayer = name;
         }
         jlc[layerName] = j;
         jlc["layerclassname"] = layerClassName;
@@ -487,11 +436,11 @@ class LayerBlockOldStyle : public Layer {
 
     virtual bool saveParameters(H5::H5File *pfile) override {
         bool done = false;
-        string cLay = "input";
-        vector<string> nLay;
+        string currentLayer = "input";
+        vector<string> nextLayers;
         while (!done) {
-            nLay = getLayerFromInput(cLay);
-            string name = nLay[0];
+            nextLayers = getNextLayers(currentLayer);
+            string name = nextLayers[0];
             Layer *p = layerMap[name];
             if (!p->saveParameters(pfile)) {
                 cerr << "Saving parameters of layerblock " << layerName
@@ -499,7 +448,7 @@ class LayerBlockOldStyle : public Layer {
                      << ", aborting!" << endl;
                 return false;
             }
-            cLay = nLay[0];
+            currentLayer = nextLayers[0];
             if (p->layerType & LayerType::LT_LOSS)
                 done = true;
         }
@@ -507,11 +456,11 @@ class LayerBlockOldStyle : public Layer {
     }
     virtual bool loadParameters(H5::H5File *pfile) override {
         bool done = false;
-        string cLay = "input";
-        vector<string> nLay;
+        string currentLayer = "input";
+        vector<string> nextLayers;
         while (!done) {
-            nLay = getLayerFromInput(cLay);
-            string name = nLay[0];
+            nextLayers = getNextLayers(currentLayer);
+            string name = nextLayers[0];
             Layer *p = layerMap[name];
             if (!p->loadParameters(pfile)) {
                 cerr << "Loading parameters of layerblock " << layerName
@@ -519,11 +468,10 @@ class LayerBlockOldStyle : public Layer {
                      << ", aborting!" << endl;
                 return false;
             }
-            cLay = nLay[0];
+            currentLayer = nextLayers[0];
             if (p->layerType & LayerType::LT_LOSS)
                 done = true;
         }
         return true;
     }
 };
-#endif

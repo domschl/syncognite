@@ -16,9 +16,14 @@ make rnnreader
 
 ## Dataset
 
-Use any (UTF-8) text-file, or `tiny-shakespeare.txt` from `datasets`.
+`rnnreader` can be trained with any UTF-8 encoded text file. A sample (about a 1/4 of William Shakespeares works) is
+available at `datasets/tiny-shakespeare.txt`.
 
-To download the Complete Collected Works of William Shakespeare (5x the size of `tiny_shakespeare.txt`), use:
+Additionally, longer training text can be downloaded:
+
+### Shakespeare's complete works
+
+To download the Complete Collected Works of William Shakespeare (5x the size of `tiny_shakespeare.txt`) from Project Gutenberg, use:
 
 In directory `datasets`:
 
@@ -27,8 +32,25 @@ pip install -U ml-indie-tools
 python download_shakespeare.py
 ```
 
+The resulting file `shakespeare.txt`, containing the complete collected works, can be use instead of `tiny-shakespeare.txt`.
+
 This uses [`ml-indie-tools`](https://github.com/domschl/ml-indie-tools) to download the Complete Works from Project Gutenberg.
 The library can be used to download arbitrary book-collections from Project Gutenberg, see [Documentation](https://github.com/domschl/ml-indie-tools#gutenberg_dataset).
+
+### Women-writers
+
+To download a collecting of writing by Emilie Brontë, Jane Austen, and Virginia Woolf from Project Gutenberg, use:
+
+In directory `datasets`:
+
+```bash
+pip install -U ml-indie-tools
+python download_women_writers.py
+```
+
+Note: have a look at the download script, it can be easily modified for other authors, subjects or collections.
+
+The resulting file `women_writers.txt`, which contains all book texts (about 12MB) concatenated, can be use instead of `tiny-shakespeare.txt`.
 
 ## Training
 
@@ -42,6 +64,12 @@ or, if you have downloaded the full Works:
 
 ```bash
 rnnreader/rnnreader ../datasets/shakespeare.txt
+```
+
+or,
+
+```bash
+rnnreader/rnnreader ../datasets/women_writers.txt
 ```
 
 ## Output

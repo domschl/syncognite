@@ -6,7 +6,6 @@
  *
  */
 class SDG : public Optimizer {
-    floatN lr;
 public:
     SDG(const json& jx) {
         /** Most simple optimizer: stochastic gradient descent.
@@ -14,18 +13,20 @@ public:
          * @param jx JSON object that should contain "learning_rate".
          */
         j=jx;
+        if (j.find("learning_rate") == j.end()) {
+            j["learning_rate"] = 0.01;
+        }
     }
-    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pCache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
          *
          * @param w Matrix of parameters.
          * @param dw Gradient of the loss function.
          * @param wName Name of the parameter w. (Unused for SDG, since no state)
-         * @param pCache Pointer to the state-cache for the optimizer. (Unused for SDG, since no state)
+         * @param pOptimizerState Pointer to the state-cache for the optimizer. (Unused for SDG, since no state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-2);
-        w=w-lr*dw;
+        w=w-j["learning_rate"]*dw;
         return w;
     }
 };
@@ -34,8 +35,6 @@ public:
  * Algorithm based on CS231 course notes.
  */
 class SDGmomentum : public Optimizer {
-    floatN lr;
-    floatN mm;
 public:
     SDGmomentum(const json& jx) {
         /** Stochastic gradient descent with momentum.
@@ -45,29 +44,30 @@ public:
          * @param jx JSON object that should contain "learning_rate" and "momentum".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-2);
+        lr=j["learning_rate"];
+        j["momentum"]=j.value("momentum",(floatN)0.9);
     }
-    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pStateCache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
          *
          * @param w Matrix of parameters.
          * @param dw Gradient of the loss function.
          * @param wName Name of the parameter w. (used for naming the cache-state of momentum)
-         * @param pStateCache Pointer to the state-cache for the optimizer. (will hold momentum state)
+         * @param pOptimizerState Pointer to the state-cache for the optimizer. (will hold momentum state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-2);
-        mm=j.value("momentum",(floatN)0.9);
         string vName=wName+"-velocity";
-        if (pStateCache->find(vName)==pStateCache->end()) {
+        if (pOptimizerState->find(vName)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
             z.setZero();
-            cppl_update(pStateCache, vName, &z);
+            cppl_update(pOptimizerState, vName, &z);
         }
         MatrixN dwm;
         MatrixN v;
-        v=*(*pStateCache)[vName];
-        dwm = lr*dw - mm*v;
-        *(*pStateCache)[vName]= (-1.0) * dwm;
+        v=*(*pOptimizerState)[vName];
+        dwm = j["learning_rate"]*dw - j["momentum"]*v;
+        *(*pOptimizerState)[vName]= (-1.0) * dwm;
         w=w-dwm;
         return w;
     }
@@ -78,7 +78,6 @@ public:
  *  Algorithm based on CS231 course notes. 
  */
 class RMSprop : public Optimizer {
-    floatN lr; /** learning rate */
     floatN dc; /** decay rate */
     floatN ep; /** epsilon */
 public:
@@ -88,27 +87,31 @@ public:
          * @param jx JSON object that should contain "learning_rate", "decay_rate" and "epsilon".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-3);
+        lr=j["learning_rate"];
+        j["decay_rate"]=j.value("decay_rate", (floatN)0.9);
+        j["epsilon"]=j.value("epsilon", (floatN)1e-7);
     }
-    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pStateCache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
          *
          * @param w Matrix of parameters.
          * @param dw Gradient of the loss function.
          * @param wName Name of the parameter w. (used for naming the cache-state of moving average)
-         * @param pStateCache Pointer to the state-cache for the optimizer. (will hold moving average state)
+         * @param pOptimizerState Pointer to the state-cache for the optimizer. (will hold moving average state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-3);
-        dc=j.value("decay_rate", (floatN)0.9);
-        ep=j.value("epsilon", (floatN)1e-7);
+
+        dc=j["decay_rate"];
+        ep=j["epsilon"];
         string cName=wName+"-movavr";
-        if (pStateCache->find(cName)==pStateCache->end()) {
+        if (pOptimizerState->find(cName)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
             z.setZero();
-            cppl_update(pStateCache, cName, &z);
+            cppl_update(pOptimizerState, cName, &z);
         }
-        *(*pStateCache)[cName]=dc * (*(*pStateCache)[cName]) + ((1.0 - dc) * (dw.array() * dw.array())).matrix();
-        MatrixN dv=((*(*pStateCache)[cName]).array().sqrt() + ep).matrix();
+        *(*pOptimizerState)[cName]=dc * (*(*pOptimizerState)[cName]) + ((1.0 - dc) * (dw.array() * dw.array())).matrix();
+        MatrixN dv=((*(*pOptimizerState)[cName]).array().sqrt() + ep).matrix();
         for (int i=0; i<dv.size(); i++) {
             if (dv(i)>0.0) dv(i)=1.0/dv(i);
             else cerr<<"BAD ALGO!" << endl;
@@ -129,7 +132,6 @@ public:
  *  Algorithm based on CS231 course notes. 
  */
 class Adam : public Optimizer {
-    floatN lr; /** learning rate */
     floatN b1; /** beta1: decay rate for first moment */
     floatN b2; /** beta2: decay rate for second moment */
     floatN ep; /** epsilon */
@@ -140,44 +142,48 @@ public:
          * @param jx JSON object that should contain "learning_rate", "beta1" and "beta2".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-3);
+        lr=j["learning_rate"];
+        j["beta1"]=j.value("beta1", (floatN)0.9);
+        j["beta2"]=j.value("beta2", (floatN)0.999);
+        j["epsilon"]=j.value("epsilon", (floatN)1e-7);
     }
-    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pStateCache) override {
+    virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
          *
          * @param w Matrix of parameters.
          * @param dw Gradient of the loss function.
-         * @param wName Name of the parameter w. (used for naming the cache-state of optimizer state parameters)
-         * @param pStateCache Pointer to the state-cache for the optimizer. (will hold optimizer state parameter cache)
+         * @param wName Name of the parameter w. (used for naming the state-variables of optimizer state parameters)
+         * @param pOptimizerState Pointer to the state for the optimizer. (will hold optimizer state parameters)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-3);
-        b1=j.value("beta1", (floatN)0.9);
-        b2=j.value("beta2", (floatN)0.999);
-        ep=j.value("epsilon", (floatN)1e-7);
+        b1=j["beta1"];
+        b2=j["beta2"];
+        ep=j["epsilon"];
         string cName_m=wName+"-m";
-        if (pStateCache->find(cName_m)==pStateCache->end()) {
+        if (pOptimizerState->find(cName_m)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
             z.setZero();
-            cppl_update(pStateCache, cName_m, &z);
+            cppl_update(pOptimizerState, cName_m, &z);
         }
         string cName_v=wName+"-v";
-        if (pStateCache->find(cName_v)==pStateCache->end()) {
+        if (pOptimizerState->find(cName_v)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
             z.setZero();
-            cppl_update(pStateCache, cName_v, &z);
+            cppl_update(pOptimizerState, cName_v, &z);
         }
         string cName_t=wName+"-t";
-        if (pStateCache->find(cName_t)==pStateCache->end()) {
+        if (pOptimizerState->find(cName_t)==pOptimizerState->end()) {
             MatrixN z1(1,1);
             z1.setZero();
-            cppl_update(pStateCache, cName_t, &z1);
+            cppl_update(pOptimizerState, cName_t, &z1);
         }
-        floatN t=(*(*pStateCache)[cName_t])(0,0) + 1.0;
-        (*(*pStateCache)[cName_t])(0,0)=t;
-        *(*pStateCache)[cName_m]=b1 * (*(*pStateCache)[cName_m]) + (1.0 -b1) * dw;
-        *(*pStateCache)[cName_v]=b2 * (*(*pStateCache)[cName_v]).array() + (1.0 -b2) * (dw.array() * dw.array());
-        MatrixN mc = 1.0/(1.0-pow(b1,t)) * (*(*pStateCache)[cName_m]);
-        MatrixN vc = 1.0/(1.0-pow(b2,t)) * (*(*pStateCache)[cName_v]);
+        floatN t=(*(*pOptimizerState)[cName_t])(0,0) + 1.0;
+        (*(*pOptimizerState)[cName_t])(0,0)=t;
+        *(*pOptimizerState)[cName_m]=b1 * (*(*pOptimizerState)[cName_m]) + (1.0 -b1) * dw;
+        *(*pOptimizerState)[cName_v]=b2 * (*(*pOptimizerState)[cName_v]).array() + (1.0 -b2) * (dw.array() * dw.array());
+        MatrixN mc = 1.0/(1.0-pow(b1,t)) * (*(*pOptimizerState)[cName_m]);
+        MatrixN vc = 1.0/(1.0-pow(b2,t)) * (*(*pOptimizerState)[cName_v]);
         w = w.array() - lr * mc.array() / (vc.array().sqrt() + ep);
         return w;
     }

@@ -5,7 +5,7 @@
 
 class TemporalSoftmax : public Layer {
   private:
-    int T, D;  //,V;
+    int T, D;  
     void setup(const json &jx) {
         int allOk = true;
         j = jx;
@@ -20,7 +20,6 @@ class TemporalSoftmax : public Layer {
         }
         D = inputShape[0];  // cp.getPar("D",128);
         T = inputShape[1];  // cp.getPar("T",128);
-        // V=cp.getPar("V",10);
         outputShape = {T};
 
         layerInit = allOk;
@@ -36,6 +35,30 @@ class TemporalSoftmax : public Layer {
     ~TemporalSoftmax() {
         cppl_delete(&params);
     }
+
+    // Not useful?
+    MatrixN _convert_N_TD_2_NT_D(const MatrixN &x) {
+        int n,t,d;
+        if (x.cols() != D * T) {
+            cerr << layerName << ": "
+                 << "Forward: dimension mismatch TemporalSoftmax in x(cols) in N_TD to NT_D:"
+                 << x.cols() << " D*T:" << D * T << endl;
+            MatrixN probs(0, 0);
+            return probs;
+        }
+        int N = (int)x.rows();
+        // x: [N, (T * D)] -> [(N * T), D]
+        MatrixN xt = MatrixN(N * T, D);
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
+                    xt(n * T + t, d) = x(n, t * D + d);
+                }
+            }
+        }
+        return xt;
+    }
+
     /*
     A temporal version of softmax loss for use in RNNs. We assume that we are
     making predictions over a vocabulary of size V for each timestep of a
@@ -67,7 +90,9 @@ class TemporalSoftmax : public Layer {
             cerr << "TSM-fw: pstates does not contain y -> fatal!" << endl;
         }
         MatrixN y = *((*pstates)["y"]);
-*/ if (x.cols() != D * T) {
+       */
+        int n,t,d;
+        if (x.cols() != D * T) {
             cerr << layerName << ": "
                  << "Forward: dimension mismatch TemporalSoftmax in x(cols):"
                  << x.cols() << " D*T:" << D * T << endl;
@@ -77,9 +102,9 @@ class TemporalSoftmax : public Layer {
         int N = (int)x.rows();
         // x: [N, (T * D)] -> [(N * T), D]
         MatrixN xt = MatrixN(N * T, D);
-        for (int n = 0; n < N; n++) {
-            for (int t = 0; t < T; t++) {
-                for (int d = 0; d < D; d++) {
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
                     xt(n * T + t, d) = x(n, t * D + d);
                 }
             }
@@ -153,16 +178,22 @@ class TemporalSoftmax : public Layer {
         if (pcache != nullptr)
             cppl_set(pcache, "probs", new MatrixN(probs));
 
-        // probst: [(N * T), D] -> [N, (T * D)]
+        // probst: [(N * T), D] -> [N, (T * D)]  (this *is* needed)
         MatrixN probst = MatrixN(N, T * D);
-        for (int n = 0; n < N; n++) {
-            for (int t = 0; t < T; t++) {
-                for (int d = 0; d < D; d++) {
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
                     probst(n, t * D + d) = probs(n * T + t, d);
                 }
             }
         }
-        return probst;
+        /*
+        if (pcache != nullptr)
+            cppl_set(pcache, "probst", new MatrixN(probst));
+        else
+            cerr << "TSM-fw: pcache is nullptr -> fatal!" << endl;
+        */
+        return probst;   // N,TD
     }
     /*
     N, T, V = x.shape
@@ -181,6 +212,8 @@ class TemporalSoftmax : public Layer {
     dx = dx_flat.reshape(N, T, V)
     return loss, dx
     */
+
+    /*
     virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
         if (pstates->find("y") == pstates->end()) {
             cerr << "TSM-loss: pstates does not contain y -> fatal!" << endl;
@@ -198,15 +231,6 @@ class TemporalSoftmax : public Layer {
         } else {
             mask = *((*pcache)["mask"]);
         }
-        /*
-            if (y.rows() != probs.rows() || y.cols() != 1) {
-            cerr << layerName << ": "  << "Loss, dimension mismatch in
-        Softmax(x), Probs: "; cerr << shape(probs) << " y:" << shape(y) << "
-        y.cols=" << y.cols() << "(should be 1)" << endl; return 1000.0;
-        }
-        */
-        // if (pcache!=nullptr) cppl_set(pcache, "y", new MatrixN(y));
-
         floatN loss = 0.0;
         for (int n = 0; n < N; n++) {
             for (int t = 0; t < T; t++) {
@@ -225,6 +249,7 @@ class TemporalSoftmax : public Layer {
                     // differentiation fails.
         return loss;
     }
+    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
         MatrixN probs = *((*pcache)["probs"]);

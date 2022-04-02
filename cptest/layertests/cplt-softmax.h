@@ -50,7 +50,11 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN probs0=sm.forward(x, &cache, &states);
     bool ret=matCompT(probs,probs0,"Softmax probabilities",eps,verbose);
     if (!ret) allOk=false;
-    floatN loss0=sm.loss(&cache, &states);
+    json j(R"({})"_json);
+    t_cppl lossStates;
+    Loss *pLoss = lossFactory("SparseCategoricalCrossEntropy", j);
+    floatN loss0=pLoss->loss(probs0, y, &lossStates);
+    // floatN loss0=sm.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -66,6 +70,8 @@ bool checkSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     if (!ret) allOk=false;
     cppl_delete(&grads);
     cppl_delete(&cache);
+    cppl_delete(&lossStates);
+    delete pLoss;
     return allOk;
 }
 
@@ -94,7 +100,9 @@ bool testSoftmax(int verbose) {
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=mx.selfTest(xmx, &smstates, h, eps, verbose);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", R"({"inputShape":[5]})"_json);
+	bool res=mx.selfTest(xmx, &smstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("Softmax", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

@@ -111,20 +111,20 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int T=96;
+    int timeSteps=80;
 
-    int N=(int)txt.text.size() / (T+1);
+    int N=(int)txt.text.size() / (timeSteps+1);
     cerr << N << " Max datasets" << endl;
-    MatrixN Xr(N,T);
-    MatrixN yr(N,T);
+    MatrixN Xr(N,timeSteps);
+    MatrixN yr(N,timeSteps);
 
     wstring chunk,chunky;
     int n=0;
     for (int i=0; i<N; i++) {
-        wstring smp = txt.sample(T+1);
-        chunk=smp.substr(0,T);
-        chunky=smp.substr(1,T);
-        for (int t=0; t<T; t++) {
+        wstring smp = txt.sample(timeSteps+1);
+        chunk=smp.substr(0,timeSteps);
+        chunky=smp.substr(1,timeSteps);
+        for (int t=0; t<timeSteps; t++) {
             Xr(i,t)=txt.w2v[chunk[t]];
             yr(i,t)=txt.w2v[chunky[t]];
         }
@@ -141,19 +141,12 @@ int main(int argc, char *argv[]) {
 
     cerr << n1 << " datasets, " << dn << " test-sets, " << dn << " validation-sets" << endl;
 
-/*    MatrixN X(n1,T);
-    MatrixN y(n1,T);
-    MatrixN Xv(dn,T);
-    MatrixN yv(dn,T);
-    MatrixN Xt(dn,T);
-    MatrixN yt(dn,T);
-*/
-    MatrixN X=Xr.block(0,0,n1,T);
-    MatrixN y=yr.block(0,0,n1,T);
-    MatrixN Xv=Xr.block(n1,0,dn,T);
-    MatrixN yv=yr.block(n1,0,dn,T);
-    MatrixN Xt=Xr.block(n1+dn,0,dn,T);
-    MatrixN yt=yr.block(n1+dn,0,dn,T);
+    MatrixN X=Xr.block(0,0,n1,timeSteps);
+    MatrixN y=yr.block(0,0,n1,timeSteps);
+    MatrixN xVal=Xr.block(n1,0,dn,timeSteps);
+    MatrixN yVal=yr.block(n1,0,dn,timeSteps);
+    MatrixN xTest=Xr.block(n1+dn,0,dn,timeSteps);
+    MatrixN yTest=yr.block(n1+dn,0,dn,timeSteps);
     
     unsigned int ctm=(unsigned int)std::time(0);
     std::srand(ctm);
@@ -161,96 +154,94 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlock lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
-    int VS=txt.vocsize();
-    int H=400;
-    int BS=96;
+    // LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
+    LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthogonal"})"_json);
+    int vocabularySize=txt.vocsize();
+    int H=192; // 400;
+    int batchSize=256;
     float clip=5.0;
-
-    //int D=64;
-    // CpParams cp0;
-    // cp0.setPar("inputShape",vector<int>{T});
-    // cp0.setPar("V",VS);
-    // cp0.setPar("D",D);
-    // cp0.setPar("clip",clip);
-    // cp0.setPar("init",(string)"orthonormal");
-    // lb.addLayer("WordEmbedding","WE0",cp0,{"input"});
 
     string rnntype="LSTM"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
 
     json j0;
     string oName{"OH0"};
-    j0["inputShape"]=vector<int>{T};
-    j0["V"]=VS;
+    j0["inputShape"]=vector<int>{timeSteps};
+    j0["V"]=vocabularySize;
     lb.addLayer("OneHot",oName,j0,{"input"});
 
     string nName;
     json j1;
-    j1["inputShape"]=vector<int>{VS,T};
-    j1["N"]=BS;
+    j1["inputShape"]=vector<int>{vocabularySize,timeSteps};
+    j1["N"]=batchSize;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    //j1["forgetbias"]=0.10;
+    j1["forgetbias"]=0.25;
     j1["clip"]=clip;
-    int layer_depth1=6;
+    int layerDepth=4; // 6;
     j1["H"]=H;
-    for (auto l=0; l<layer_depth1; l++) {
-        if (l>0) j1["inputShape"]=vector<int>{H,T};
+    for (auto l=0; l<layerDepth; l++) {
+        if (l>0) j1["inputShape"]=vector<int>{H,timeSteps};
         nName="lstm"+std::to_string(l);
         lb.addLayer(rnntype,nName,j1,{oName});
         oName=nName;
     }
 
     json j10;
-    j10["inputShape"]=vector<int>{H,T};
-    j10["M"]=VS;
+    j10["inputShape"]=vector<int>{H,timeSteps};
+    j10["M"]=vocabularySize;
     lb.addLayer("TemporalAffine","af1",j10,{oName});
 
     json j11;
-    j11["inputShape"]=vector<int>{VS,T};
+    j11["inputShape"]=vector<int>{vocabularySize,timeSteps}; // currently inputShape of TempSoftmax MUST match inputShape of TemporalLoss
     lb.addLayer("TemporalSoftmax","sm1",j11,{"af1"});
 
     if (!lb.checkTopology(true)) {
         allOk=false;
         cerr << red << "Topology-check for LayerBlock: ERROR." << def << endl;
+        exit(-1);
     } else {
         cerr << green << "Topology-check for LayerBlock: ok." << def << endl;
     }
 
-    //json jc;
-    //lb.getLayerConfiguration(jc);
-    //cerr << jc.dump(4) << endl;
+    floatN episodes=5.0; // 70.0;
+    floatN currentEpoch=0.0;
 
-    // preseverstates no longer necessary for training!
-    json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true,"epsilon":1e-8})"_json);
-    jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    jo["learning_rate"]=(floatN)1e-1; //2.2e-2);
+    json train_params(R"({"verbose":true,"shuffle":false,"notests":false,"nofragmentbatches":true})"_json);
+    train_params["lossfactor"]=1.0/(floatN)timeSteps;  // Allows to normalize the loss with timeSteps.
+    train_params["epochs"]=(floatN)episodes;
+    train_params["batch_size"]=batchSize;
+    train_params["lr_decay"] = 0.945; // every 40 epochs, lr = lr/10 (0.945^40 = 0.104)
 
-    floatN dep=70.0;
-    floatN sep=0.0;
-    jo["epochs"]=(floatN)dep;
-    jo["batch_size"]=BS;
-    floatN lr_decay = 0.15;
+    json j_opt(R"({"learning_rate": 1e-2})"_json);
+    Optimizer *pOpt=optimizerFactory("Adam",j_opt);
+    t_cppl OptimizerState{};
+    
+    json j_loss(R"({"name":"temporalsoftmax"})"_json);
+    j_loss["inputShape"]=vector<int>{vocabularySize,timeSteps};
+    Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
-    for (int i=0; i<10; i++) {
-        jo["startepoch"]=(floatN)sep;
-        jo["learning_rate"] = floatN(jo["learning_rate"]) * lr_decay;
+    cerr << "Training parameters: " << train_params.dump(4) << endl;
+    cerr << "Optimizer parameters: " << pOpt->getOptimizerParameters().dump(4) << endl;
+    cerr << "Loss parameters: " << pLoss->getLossParameters().dump(4) << endl;
+
+    for (int i=0; i<1000; i++) {
+        train_params["startepoch"]=(floatN)currentEpoch;
         t_cppl states;
-        t_cppl statesv;
+        t_cppl statesVal;
         states["y"] = new MatrixN(y);
-        statesv["y"] = new MatrixN(yv);
-        lb.train(X, &states, Xv, &statesv, "Adam", jo);
+        statesVal["y"] = new MatrixN(yVal);
+        lb.train(X, &states, xVal, &statesVal, pOpt, &OptimizerState, pLoss, train_params);
         cppl_delete(&states);
-        cppl_delete(&statesv);
+        cppl_delete(&statesVal);
 
-        sep+=dep;
+        currentEpoch+=episodes;
 
         int pos=rand() % 1000 + 5000;
-        wstring instr=txt.text.substr(pos,T);
+        wstring instr=txt.text.substr(pos,timeSteps);
 
-        MatrixN xg(1,T);
-        for (int i=0; i<T; i++) {
+        MatrixN xg(1,timeSteps);
+        for (int i=0; i<timeSteps; i++) {
             xg(0,i)=txt.w2v[instr[i]];
        }
         wstring sout{};
@@ -259,21 +250,21 @@ int main(int argc, char *argv[]) {
         plstm0->genZeroStates(&statesg, 1);
 
         int g,t,v;
-        for (g=0; g<2500; g++) {
+        for (g=0; g<300; g++) {
             t_cppl cache{};
 
             MatrixN probst=lb.forward(xg,&cache, &statesg);
-            MatrixN probsd=MatrixN(T,VS);
-            for (t=0; t<T; t++) {
-                for (v=0; v<VS; v++) {
-                    probsd(t,v)=probst(0,t*VS+v);
+            MatrixN probsd=MatrixN(timeSteps,vocabularySize);
+            for (t=0; t<timeSteps; t++) {
+                for (v=0; v<vocabularySize; v++) {
+                    probsd(t,v)=probst(0,t*vocabularySize+v);
                 }
             }
-            int li=-1;
-            for (t=0; t<T; t++) {
-                vector<floatN> probs(VS);
-                vector<floatN> index(VS);
-                for (v=0; v<VS; v++) {
+            int li = -1;
+            for (t=0; t<timeSteps; t++) {
+                vector<floatN> probs(vocabularySize);
+                vector<floatN> index(vocabularySize);
+                for (v=0; v<vocabularySize; v++) {
                     probs[v]=probsd(t,v);
                     index[v]=v;
                 }
@@ -281,19 +272,22 @@ int main(int argc, char *argv[]) {
             }
             cppl_delete(&cache);
 
-            for (int t=0; t<T-1; t++) {
+            for (int t=0; t<timeSteps-1; t++) {
                 xg(0,t)=xg(0,t+1);
             }
-            xg(0,T-1)=li;
+            xg(0,timeSteps-1)=li;
             sout += txt.v2w[li];
         }
         wcout << "output: " << sout << endl;
         wstring timestr;
         currentDateTime(timestr);
         std::wofstream fl("rnnreader.txt", std::ios_base::app);
-        fl << "---- " << timestr << ", ep:" << sep << " ---" << endl;
+        fl << "---- " << timestr << ", ep:" << currentEpoch << " ---" << endl;
         fl << sout << endl;
         fl.close();
         cppl_delete(&statesg);
     }
+    delete pOpt;
+    cppl_delete(&OptimizerState);
+    delete pLoss;
 }

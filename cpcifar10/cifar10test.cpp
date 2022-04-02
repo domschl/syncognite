@@ -136,8 +136,10 @@ bool  getcifar10Data(string filepath) {
 }
 
 
-floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, bool evalFinal=false, bool verbose=false, int mode=0) {
-    LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal","initfactor":0.1})"_json);
+floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv, MatrixN& Xt, MatrixN& yt, 
+                      Optimizer *pOpt, t_cppl *pOptimizerState, Loss *pLoss, 
+                      bool evalFinal=false, bool verbose=false, int mode=0) {
+    LayerBlockOldStyle lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal","initfactor":0.1})"_json);
     if (mode==0) {
         lb.addLayer("Convolution", "cv1", R"({"inputShape":[3,32,32],"kernel":[64,5,5],"stride":1,"pad":2})",{"input"});
         lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
@@ -247,8 +249,7 @@ floatN evalMultilayer(json& jo, MatrixN& X, MatrixN& y, MatrixN& Xv, MatrixN& yv
         if (verbose) cerr << "Topology-check for LayerBLock: ok." << endl;
     }
 
-    floatN cAcc=lb.train(X, y, Xv, yv, "Adam", jo);
-
+    floatN cAcc=lb.train(X, y, Xv, yv, pOpt, pOptimizerState, pLoss, jo);
     floatN train_err, val_err, test_err;
     if (evalFinal) {
         train_err=lb.test(X, y, jo.value("batch_size", 50));
@@ -313,17 +314,23 @@ int main(int argc, char *argv[]) {
     MatrixN Xt=*(cpcifar10Data["test-data"]);
     MatrixN yt=*(cpcifar10Data["test-labels"]);
 
-    json jo(R"({"verbose":true,"shuffle":true,"epsion":1e-8})"_json);
-    // (s.b.) jo["learning_rate"]=(floatN)1e-3; //2.2e-2);
+    json jo(R"({"verbose":true,"shuffle":true})"_json);
     jo["lr_decay"]=(floatN)1.0;
-    // (s.b.) jo["regularization"]=(floatN)1e-6;
-
-    // (s.b.) jo["epochs"]=(floatN)40.0;
     jo["batch_size"]=50;
+
+    json j_opt(R"({"type":"Adam"})"_json);
+    json j_loss(R"({"type":"CrossEntropy"})"_json);
+
+    Optimizer *pOpt=optimizerFactory("Adam", j_opt);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
 
     bool autoOpt=false;
 
-    floatN bReg, bLearn;
+    floatN regularization, regularization_decay, learning_rate, lr_decay;
+    learning_rate=1.e-2;
+    regularization=1.e-4;
+    lr_decay=0.9;
+    regularization_decay=0.88;
     if (autoOpt) {
         vector<floatN> regi{1e-3,1e-4,1e-5,1e-6,1e-7}; // -> 1e-5
         vector<floatN> learni{5e-2,1e-2,5e-3,1e-3}; // -> 1e-2
@@ -332,37 +339,44 @@ int main(int argc, char *argv[]) {
         jo["epochs"]=(floatN)0.1;
         floatN cmAcc=0.0, cAcc;
         for (auto learn : learni) {
-            jo["learning_rate"]=learn;
+            j_opt["learning_rate"]=learn;
+            pOpt->updateOptimizerParameters(j_opt);
             for (auto reg : regi) {
                 jo["regularization"]=reg;
-                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
+                t_cppl OptimizerState{};
+                cAcc=evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
+                cppl_delete(&OptimizerState);
                 if (cAcc > cmAcc) {
-                    bReg=reg;
-                    bLearn=learn;
+                    regularization=reg;
+                    learning_rate=learn;
                     cmAcc=cAcc;
-                    cerr << green << "Best: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
+                    cerr << green << "Best: Acc:" << cmAcc << ", Reg:" << regularization << ", Learn:" << learning_rate << def << endl;
                 } else {
                     cerr << red << "      Acc:" << cAcc << ", Reg:" << reg << ", Learn:" << learn << def << endl;
                 }
             }
         }
-        cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << bReg << ", Learn:" << bLearn << def << endl;
-    } else {
-        bLearn=1.e-3;
-        bReg=3.e-8;
+        cerr << endl << green << "Starting training with: Acc:" << cmAcc << ", Reg:" << regularization << ", Learn:" << learning_rate << def << endl;
     }
 
-    jo["learning_rate"]=bLearn;
-    jo["regularization"]=bReg;
-    jo["epochs"]=(floatN)40.0;
-    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, true, true, mode);
+    j_opt["learning_rate"]=learning_rate;
+    pOpt->updateOptimizerParameters(j_opt);
+    jo["regularization"]=regularization;
+    jo["lr_decay"]=(floatN)lr_decay;
+    jo["regularization_decay"]=(floatN)regularization_decay;
+    jo["epochs"]=(floatN)200.0;
+    t_cppl OptimizerState{};
+    evalMultilayer(jo, X, y, Xv, yv, Xt, yt, pOpt, &OptimizerState, pLoss, true, true, mode);
 
     for (auto it : cpcifar10Data) {
          free(it.second);
          it.second=nullptr;
-     }
-     return 0;
- }
+    }
+    delete pOpt;
+    cppl_delete(&OptimizerState);
+    delete pLoss;
+    return 0;
+}
 
  /*    int id=15;
      cerr << "Class: " << y(id,0) << "=" << classes[y(id,0)] << endl;

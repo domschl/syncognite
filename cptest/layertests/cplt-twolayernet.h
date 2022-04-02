@@ -28,11 +28,16 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
            0.3,  0.4;
     MatrixN b2(1,C);
     b2 << -0.9,  0.1;
-
-    MatrixN sc(N,C); // Scores
+    /*
+    MatrixN sc(N,C); // Scores WITHOUT softmax (somehow old version of 2lnet used those for tests, changed to softmax)
     sc << -0.88621554,  2.56401003,
          -0.69824561,  2.46626566,
          -0.51027569,  2.3685213;
+    */
+    MatrixN sc(N,C); // Scores WITH softmax
+    sc << 0.03076,  0.9692,
+          0.04052,  0.9595,
+          0.05321,  0.9468;
 
     json j;
     j["inputShape"]=vector<int>{D};
@@ -69,7 +74,10 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 
     // XXX reg parameter
     floatN reg=0.0;
-    floatN ls = tln.loss(&cache, &states);
+    json jl(R"({})"_json);
+    t_cppl lossStates;
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy",jl);
+    floatN ls = pLoss->loss(sc0, yc, &lossStates);
     floatN lsc = 1.1925059294331903;
     floatN lse=std::abs(ls-lsc);
     if (lse < eps) {
@@ -98,6 +106,8 @@ bool checkTwoLayerNet(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 
     cppl_delete(&cache);
     cppl_delete(&grads);
+    cppl_delete(&lossStates);
+    delete pLoss;
     return allOk;
 }
 
@@ -128,7 +138,9 @@ bool testTwoLayerNet(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
 	t_cppl tlstates;
 	tlstates["y"] = &y2;
-	bool res=tl.selfTest(xtl, &tlstates, h, eps, verbose);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy",j);
+	bool res=tl.selfTest(xtl, &tlstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("TwoLayerNet", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

@@ -86,7 +86,7 @@ floatN Layer::test(const MatrixN& x, const MatrixN& y, int batchsize=100) {
     return test(x, &states, batchsize);
 }
 
-retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
+retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id, Loss *pLoss) {
     t_cppl cache;
     t_cppl grads;
     retdict rd;
@@ -94,8 +94,9 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
         cerr << "workerThread: pstates does not contain y -> fatal!" << endl;
     }
     MatrixN yb=*((*pstates)["y"]);
-    forward(*pxb, &cache, pstates, id);
-    floatN thisloss=loss(&cache, pstates);
+    MatrixN yhat = forward(*pxb, &cache, pstates, id);
+    //MatrixN yhat=*((*pstates)["probs"]); // XXX: just use return of forward()? old: ["y"]);
+    floatN thisloss=pLoss->loss(yhat, yb, pstates);
     lossQueueMutex.lock();
     lossQueue.push(thisloss);
     lossQueueMutex.unlock();
@@ -109,12 +110,10 @@ retdict Layer::workerThread(MatrixN *pxb, t_cppl* pstates, int id) {
 }
 
 floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl* pstatesv,
-                string optimizer, const json& j) {
-    Optimizer* popti=optimizerFactory(optimizer, j);
-    t_cppl optiCache;
+                Optimizer *popti, t_cppl* pOptimizerState, Loss *pLoss, const json& job_params) {
     t_cppl states[MAX_NUMTHREADS];
     MatrixN* pxbi[MAX_NUMTHREADS];
-
+    
     setFlag("train",true);
     floatN lastAcc;
     Color::Modifier red(Color::FG_RED);
@@ -124,31 +123,33 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
 
     if (pstates->find("y") == pstates->end()) {
         cerr << "Layer::train: pstates does not contain y -> fatal!" << endl;
+        exit(-1);
     }
     MatrixN y = *((*pstates)["y"]);
     if (pstatesv->find("y") == pstatesv->end()) {
-        cerr << "pstates does not contain y -> fatal!" << endl;
+        cerr << "pstatesv does not contain y -> fatal!" << endl;
+        exit(-1);
     }
     MatrixN yv = *((*pstatesv)["y"]);
 
-    float epf=popti->j.value("epochs", (float)1.0); //Default only!
+    float epf=job_params.value("epochs", (float)1.0); //Default only!
     int ep=(int)ceil(epf);
-    float sepf=popti->j.value("startepoch", (float)0.0);
-    int bs=popti->j.value("batch_size", (int)100); // Defaults only! are overwritten!
-    floatN lr_decay=popti->j.value("lr_decay", (floatN)1.0); //Default only!
-    bool verbose=popti->j.value("verbose", (bool)false);
-    bool verbosetitle=popti->j.value("verbosetitle", (bool)true);
-    bool bShuffle=popti->j.value("shuffle", (bool)false);
-    float lossfactor=popti->j.value("lossfactor",(float)1.0);
-    bool bPreserveStates=popti->j.value("preservestates", (bool)false);
-    bool noTests=popti->j.value("notests", (bool)false);
-    bool noFragmentBatches=popti->j.value("nofragmentbatches",false);
-    floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
-    floatN regularization = popti->j.value("regularization", (floatN)0.0); // Default only!
-    //cerr << ep << " " << bs << " " << lr << endl;
-
+    float sepf=job_params.value("startepoch", (float)0.0);
+    int bs=job_params.value("batch_size", (int)100); // Defaults only! are overwritten!
+    floatN lr_decay=job_params.value("lr_decay", (floatN)1.0); //Default only!
+    bool verbose=job_params.value("verbose", (bool)false);
+    bool verbosetitle=job_params.value("verbosetitle", (bool)true);
+    bool bShuffle=job_params.value("shuffle", (bool)false);
+    bool bPreserveStates=job_params.value("preservestates", (bool)false);
+    bool noTests=job_params.value("notests", (bool)false);
+    bool noFragmentBatches=job_params.value("nofragmentbatches",false);
+    
+    floatN regularization = job_params.value("regularization", (floatN)0.0); // Default only!
+    floatN regularization_decay = job_params.value("regularization_decay", (floatN)1.0); // Default only!
+    float lossfactor=job_params.value("lossfactor",(float)1.0);
+    
     int nt=cpGetNumCpuThreads();
-    int maxThreads=popti->j.value("maxthreads",(int)0);
+    int maxThreads=job_params.value("maxthreads",(int)0);
     if (maxThreads>1 && bPreserveStates) {
         cerr << "ERROR: cannnot preserve states, if thread-count > 1, reducint to 1." << endl;
         maxThreads=1;
@@ -175,9 +176,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lastloss=0.0;
     floatN accval=0.0;
     //bs=bs/nt;
-    lr=lr/nt;
     Timer tw;
-    popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=((int)x.rows()+bs-1) / bs;
     if (verbosetitle) {
@@ -252,7 +251,9 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             pxbi[bi] = new MatrixN(xb);
             MatrixN *pxb = pxbi[bi];
             t_cppl *pst = &(states[bi]);
-            retFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi]{ return this->workerThread(pxb, pst, bi); }));
+            
+            
+            retFut.push_back(std::async(std::launch::async, [this, pxb, pst, bi, pLoss]{ return workerThread(pxb, pst, bi, pLoss); }));
             if (bi==nt-1 || b==chunks-1) {
                 t_cppl sgrad;
                 bool first=true;
@@ -287,25 +288,23 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
                         *(sgrad[gi.first]) += *(params[gi.first]) * regularization;
                     }
                 }
-                update(popti, &sgrad, "", &optiCache);
+                update(popti, &sgrad, "", pOptimizerState);
                 cppl_delete(&sgrad);
                 retFut.clear();
 
-                float dv1=10.0;
-                float dv2=50.0;
+                floatN dv1=10.0;
+                floatN dv2=50.0;
 
                 lossQueueMutex.lock();
                 while (!lossQueue.empty()) {
                     lastloss=lossQueue.front()*lossfactor;
                     lossQueue.pop();
-                    //cerr << "lossQueue pop: " << lastloss << endl;
                     if (meanloss==0) meanloss=lastloss;
                     else meanloss=((dv1-1.0)*meanloss+lastloss)/dv1;
                     if (m2loss==0) m2loss=lastloss;
                     else m2loss=((dv2-1.0)*m2loss+lastloss)/dv2;
                 }
                 lossQueueMutex.unlock();
-
                 if (verbose && b-bold>=5) {
                     floatN twt=tw.stopWallMicro();
                     floatN ett=twt/1000000.0 / (floatN)b * (floatN)chunks;
@@ -342,8 +341,10 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         }
         setFlag("train",true);
         if (lr_decay!=1.0) {
-            lr *= lr_decay;
-            popti->j["learning_rate"]=lr;
+            popti->updateLearningRate(popti->getLearningRate()*lr_decay);
+        }
+        if (regularization_decay!=0.0) {
+            regularization *= regularization_decay;
         }
 /*        for (unsigned int i=0; i<ack.size(); i++) {
             if (ack[i]!=1) {
@@ -351,18 +352,50 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
             }
         }
 */    }
-    cppl_delete(&optiCache);
-    delete popti;
     return lastAcc;
 }
 
+// Legacy interface
+/*
 floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &xv, const MatrixN& yv,
                 string optimizer, const json& j) {
     t_cppl states, statesv;
+    cerr << "train: legacy interface (1) called, using default optimizer and losses" << endl;
+    Optimizer* pOptimizer=optimizerFactory(optimizer, j);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
     states["y"]=new MatrixN(y);
     statesv["y"]=new MatrixN(yv);
-    auto loss = train(x, &states, xv, &statesv, optimizer, j);
+    auto loss = train(x, &states, xv, &statesv, pOptimizer, pLoss, j);
     cppl_delete(&states);
     cppl_delete(&statesv);
+    delete pLoss;
+    delete pOptimizer;
     return loss;
 }
+*/
+floatN Layer::train(const MatrixN& x, const MatrixN& y, const MatrixN &x_val, const MatrixN& y_val,
+        Optimizer *pOptimizer, t_cppl *pOptimizerState, Loss *pLoss, const json& job_parameters) {
+    t_cppl states, states_val;
+    states["y"]=new MatrixN(y);
+    states_val["y"]=new MatrixN(y_val);
+
+
+    auto loss = train(x, &states, x_val, &states_val, pOptimizer, pOptimizerState, pLoss, job_parameters);
+    cppl_delete(&states);
+    cppl_delete(&states_val);
+    return loss;
+}
+
+// legacy interface
+/*
+floatN Layer::train(const MatrixN& x, t_cppl *pStates, const MatrixN &xv, t_cppl *pStatesVal,
+        string optimizer, const json& j) {
+    cerr << "train: legacy interface (2) called, using default optimizer and losses" << endl;
+    Optimizer* pOptimizer=optimizerFactory(optimizer, j);
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j);
+    auto loss = train(x, pStates, xv, pStatesVal, pOptimizer, pLoss, j);
+    delete pLoss;
+    delete pOptimizer;
+    return loss;
+}
+*/
