@@ -50,7 +50,7 @@ cifar10test <path-to-database>/cifar10.h5
 
 ## RNNReader: texts
 
-The recurrent text generator `rnnreader` is training with an UTF-8 text file.
+The recurrent text generator `rnnreader` is trained with an UTF-8 text file.
 
 ### Included: tiny_shakespeare.txt
 
