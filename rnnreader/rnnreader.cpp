@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int timeSteps=80;
+    int timeSteps=64;
 
     int N=(int)txt.text.size() / (timeSteps+1);
     cerr << N << " Max datasets" << endl;
@@ -157,8 +157,8 @@ int main(int argc, char *argv[]) {
     // LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthogonal"})"_json);
     int vocabularySize=txt.vocsize();
-    int H=192; // 400;
-    int batchSize=256;
+    int H=128; // 400;
+    int batchSize=64;
     float clip=5.0;
 
     string rnntype="LSTM"; // or "RNN"
@@ -176,9 +176,9 @@ int main(int argc, char *argv[]) {
     j1["N"]=batchSize;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    j1["forgetbias"]=0.25;
-    j1["clip"]=clip;
-    int layerDepth=4; // 6;
+    //j1["forgetbias"]=0.85;
+    //j1["clip"]=clip;
+    int layerDepth=2; // 6;
     j1["H"]=H;
     for (auto l=0; l<layerDepth; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,timeSteps};
@@ -211,9 +211,9 @@ int main(int argc, char *argv[]) {
     train_params["lossfactor"]=1.0/(floatN)timeSteps;  // Allows to normalize the loss with timeSteps.
     train_params["epochs"]=(floatN)episodes;
     train_params["batch_size"]=batchSize;
-    train_params["lr_decay"] = 0.945; // every 40 epochs, lr = lr/10 (0.945^40 = 0.104)
+    // train_params["lr_decay"] = 1.0; // every 40 epochs, lr = lr/10 (0.945^40 = 0.104)
 
-    json j_opt(R"({"learning_rate": 1e-2})"_json);
+    json j_opt(R"({"learning_rate": 2.75e-3})"_json);
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     t_cppl OptimizerState{};
     
