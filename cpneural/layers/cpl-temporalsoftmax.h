@@ -6,10 +6,12 @@
 class TemporalSoftmax : public Layer {
   private:
     int T, D;  
+    floatN temperature;
     void setup(const json &jx) {
         int allOk = true;
         j = jx;
         layerName = j.value("name", (string) "TemporalSoftmax");
+        temperature = j.value("temperature", (floatN) 1.0);
         layerClassName = "TemporalSoftmax";
         inputShapeRang = 2;
         layerType = LayerType::LT_LOSS;
@@ -34,6 +36,10 @@ class TemporalSoftmax : public Layer {
     }
     ~TemporalSoftmax() {
         cppl_delete(&params);
+    }
+
+    void setTemperature(floatN t) {
+        temperature = t;
     }
 
     // Not useful?
@@ -105,7 +111,7 @@ class TemporalSoftmax : public Layer {
         for (n = 0; n < N; n++) {
             for (t = 0; t < T; t++) {
                 for (d = 0; d < D; d++) {
-                    xt(n * T + t, d) = x(n, t * D + d);
+                    xt(n * T + t, d) = x(n, t * D + d) * temperature;
                 }
             }
         }

@@ -247,38 +247,45 @@ int main(int argc, char *argv[]) {
         wstring sout{};
         Layer* plstm0=lb.layerMap["lstm0"];
         t_cppl statesg{};
-        plstm0->genZeroStates(&statesg, 1);
-
         int g,t,v;
-        for (g=0; g<300; g++) {
-            t_cppl cache{};
+        TemporalSoftmax *pSm1=(TemporalSoftmax *)lb.layerMap["sm1"];
 
-            MatrixN probst=lb.forward(xg,&cache, &statesg);
-            MatrixN probsd=MatrixN(timeSteps,vocabularySize);
-            for (t=0; t<timeSteps; t++) {
-                for (v=0; v<vocabularySize; v++) {
-                    probsd(t,v)=probst(0,t*vocabularySize+v);
-                }
-            }
-            int li = -1;
-            for (t=0; t<timeSteps; t++) {
-                vector<floatN> probs(vocabularySize);
-                vector<floatN> index(vocabularySize);
-                for (v=0; v<vocabularySize; v++) {
-                    probs[v]=probsd(t,v);
-                    index[v]=v;
-                }
-                li=(int)index[randomChoice(index, probs)];
-            }
-            cppl_delete(&cache);
+        for (floatN temp : {0.8, 1.0, 1.2, 1.4, 1.7}) {
+            plstm0->genZeroStates(&statesg, 1);
+            pSm1->setTemperature(temp);
+            cerr << "---- Temperature: " << temp << " ------------------" << endl;
+            sout=wstring{};
+            for (g=0; g<300; g++) {
+                t_cppl cache{};
 
-            for (int t=0; t<timeSteps-1; t++) {
-                xg(0,t)=xg(0,t+1);
+                MatrixN probst=lb.forward(xg,&cache, &statesg);
+                MatrixN probsd=MatrixN(timeSteps,vocabularySize);
+                for (t=0; t<timeSteps; t++) {
+                    for (v=0; v<vocabularySize; v++) {
+                        probsd(t,v)=probst(0,t*vocabularySize+v);
+                    }
+                }
+                int li = -1;
+                for (t=0; t<timeSteps; t++) {
+                    vector<floatN> probs(vocabularySize);
+                    vector<floatN> index(vocabularySize);
+                    for (v=0; v<vocabularySize; v++) {
+                        probs[v]=probsd(t,v);
+                        index[v]=v;
+                    }
+                    li=(int)index[randomChoice(index, probs)];
+                }
+                cppl_delete(&cache);
+
+                for (int t=0; t<timeSteps-1; t++) {
+                    xg(0,t)=xg(0,t+1);
+                }
+                xg(0,timeSteps-1)=li;
+                sout += txt.v2w[li];
             }
-            xg(0,timeSteps-1)=li;
-            sout += txt.v2w[li];
+            wcout << sout << endl;
         }
-        wcout << "output: " << sout << endl;
+        pSm1->setTemperature(1.0);
         wstring timestr;
         currentDateTime(timestr);
         std::wofstream fl("rnnreader.txt", std::ios_base::app);
