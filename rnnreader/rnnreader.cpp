@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     Color::Modifier green(Color::FG_GREEN);
     Color::Modifier def(Color::FG_DEFAULT);
 
-    int timeSteps=96;
+    int timeSteps=80;
 
     int N=(int)txt.text.size() / (timeSteps+1);
     cerr << N << " Max datasets" << endl;
@@ -154,10 +154,11 @@ int main(int argc, char *argv[]) {
     cpInitCompute("Rnnreader");
     registerLayers();
 
-    LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
+    // LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
+    LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthogonal"})"_json);
     int vocabularySize=txt.vocsize();
-    int H=128; // 400;
-    int batchSize=128; // 96;
+    int H=192; // 400;
+    int batchSize=256;
     float clip=5.0;
 
     string rnntype="LSTM"; // or "RNN"
@@ -175,9 +176,9 @@ int main(int argc, char *argv[]) {
     j1["N"]=batchSize;
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
-    //j1["forgetbias"]=0.10;
+    j1["forgetbias"]=0.25;
     j1["clip"]=clip;
-    int layerDepth=8; // 6;
+    int layerDepth=4; // 6;
     j1["H"]=H;
     for (auto l=0; l<layerDepth; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,timeSteps};
@@ -212,13 +213,17 @@ int main(int argc, char *argv[]) {
     train_params["batch_size"]=batchSize;
     train_params["lr_decay"] = 0.945; // every 40 epochs, lr = lr/10 (0.945^40 = 0.104)
 
-    json j_opt(R"({"learning_rate": 1e-3})"_json);
+    json j_opt(R"({"learning_rate": 1e-2})"_json);
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     t_cppl OptimizerState{};
     
     json j_loss(R"({"name":"temporalsoftmax"})"_json);
     j_loss["inputShape"]=vector<int>{vocabularySize,timeSteps};
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
+
+    cerr << "Training parameters: " << train_params.dump(4) << endl;
+    cerr << "Optimizer parameters: " << j_opt.dump(4) << endl;
+    cerr << "Loss parameters: " << j_loss.dump(4) << endl;
 
     for (int i=0; i<1000; i++) {
         train_params["startepoch"]=(floatN)currentEpoch;
