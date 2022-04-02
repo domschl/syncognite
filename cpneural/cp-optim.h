@@ -13,6 +13,9 @@ public:
          * @param jx JSON object that should contain "learning_rate".
          */
         j=jx;
+        if (j.find("learning_rate") == j.end()) {
+            j["learning_rate"] = 0.01;
+        }
     }
     virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
@@ -23,8 +26,7 @@ public:
          * @param pOptimizerState Pointer to the state-cache for the optimizer. (Unused for SDG, since no state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-2);
-        w=w-lr*dw;
+        w=w-j["learning_rate"]*dw;
         return w;
     }
 };
@@ -33,7 +35,6 @@ public:
  * Algorithm based on CS231 course notes.
  */
 class SDGmomentum : public Optimizer {
-    floatN mm;
 public:
     SDGmomentum(const json& jx) {
         /** Stochastic gradient descent with momentum.
@@ -43,6 +44,9 @@ public:
          * @param jx JSON object that should contain "learning_rate" and "momentum".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-2);
+        lr=j["learning_rate"];
+        j["momentum"]=j.value("momentum",(floatN)0.9);
     }
     virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
@@ -53,8 +57,6 @@ public:
          * @param pOptimizerState Pointer to the state-cache for the optimizer. (will hold momentum state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-2);
-        mm=j.value("momentum",(floatN)0.9);
         string vName=wName+"-velocity";
         if (pOptimizerState->find(vName)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
@@ -64,7 +66,7 @@ public:
         MatrixN dwm;
         MatrixN v;
         v=*(*pOptimizerState)[vName];
-        dwm = lr*dw - mm*v;
+        dwm = j["learning_rate"]*dw - j["momentum"]*v;
         *(*pOptimizerState)[vName]= (-1.0) * dwm;
         w=w-dwm;
         return w;
@@ -85,6 +87,10 @@ public:
          * @param jx JSON object that should contain "learning_rate", "decay_rate" and "epsilon".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-3);
+        lr=j["learning_rate"];
+        j["decay_rate"]=j.value("decay_rate", (floatN)0.9);
+        j["epsilon"]=j.value("epsilon", (floatN)1e-7);
     }
     virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
@@ -95,9 +101,9 @@ public:
          * @param pOptimizerState Pointer to the state-cache for the optimizer. (will hold moving average state)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-3);
-        dc=j.value("decay_rate", (floatN)0.9);
-        ep=j.value("epsilon", (floatN)1e-7);
+
+        dc=j["decay_rate"];
+        ep=j["epsilon"];
         string cName=wName+"-movavr";
         if (pOptimizerState->find(cName)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);
@@ -136,6 +142,11 @@ public:
          * @param jx JSON object that should contain "learning_rate", "beta1" and "beta2".
          */
         j=jx;
+        j["learning_rate"]=j.value("learning_rate", (floatN)1e-3);
+        lr=j["learning_rate"];
+        j["beta1"]=j.value("beta1", (floatN)0.9);
+        j["beta2"]=j.value("beta2", (floatN)0.999);
+        j["epsilon"]=j.value("epsilon", (floatN)1e-7);
     }
     virtual MatrixN update(MatrixN& w, MatrixN& dw, string wName, t_cppl* pOptimizerState) override {
         /** Update the parameters of the neural network.
@@ -146,10 +157,9 @@ public:
          * @param pOptimizerState Pointer to the state for the optimizer. (will hold optimizer state parameters)
          * @return Updated parameters.
          */
-        lr=j.value("learning_rate", (floatN)1e-3);
-        b1=j.value("beta1", (floatN)0.9);
-        b2=j.value("beta2", (floatN)0.999);
-        ep=j.value("epsilon", (floatN)1e-7);
+        b1=j["beta1"];
+        b2=j["beta2"];
+        ep=j["epsilon"];
         string cName_m=wName+"-m";
         if (pOptimizerState->find(cName_m)==pOptimizerState->end()) {
             MatrixN z=MatrixN(w);

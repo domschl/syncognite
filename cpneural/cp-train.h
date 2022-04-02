@@ -148,10 +148,8 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN regularization_decay = job_params.value("regularization_decay", (floatN)1.0); // Default only!
     float lossfactor=job_params.value("lossfactor",(float)1.0);
     
-    floatN lr = popti->j.value("learning_rate", (floatN)1.0e-2); // Default only!
-    
     int nt=cpGetNumCpuThreads();
-    int maxThreads=popti->j.value("maxthreads",(int)0);
+    int maxThreads=job_params.value("maxthreads",(int)0);
     if (maxThreads>1 && bPreserveStates) {
         cerr << "ERROR: cannnot preserve states, if thread-count > 1, reducint to 1." << endl;
         maxThreads=1;
@@ -178,9 +176,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
     floatN lastloss=0.0;
     floatN accval=0.0;
     //bs=bs/nt;
-    //lr=lr/nt;
     Timer tw;
-    // popti->j["learning_rate"]=lr; // adpated to thread-count XXX here?
     //int ebs=bs*nt;
     int chunks=((int)x.rows()+bs-1) / bs;
     if (verbosetitle) {
@@ -345,8 +341,7 @@ floatN Layer::train(const MatrixN& x, t_cppl* pstates, const MatrixN &xv, t_cppl
         }
         setFlag("train",true);
         if (lr_decay!=1.0) {
-            lr *= lr_decay;
-            popti->j["learning_rate"]=lr;
+            popti->updateLearningRate(popti->getLearningRate()*lr_decay);
         }
         if (regularization_decay!=0.0) {
             regularization *= regularization_decay;

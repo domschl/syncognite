@@ -75,16 +75,19 @@ MatrixN xavierInit(const MatrixN &w, XavierMode xavierMode=XavierMode::XAV_STAND
 }
 
 class Loss {
-public:
+protected:
     json j;
+public:
     virtual ~Loss() {}; // Otherwise destructor of derived classes is never called!
+    virtual json getLossParameters() { return j; }
     virtual floatN loss(MatrixN& yhat, MatrixN& y, t_cppl *pParams) {return 1001.0;};
 };
 
 class Optimizer {
-public:
+protected:
     json j;
     floatN lr;
+public:
     virtual ~Optimizer() {}; // Otherwise destructor of derived classes is never called!
     virtual void updateOptimizerParameters(const json &opt_params) {
         for (auto& el : opt_params.items()) {
@@ -95,6 +98,10 @@ public:
     virtual void updateLearningRate(floatN lr) {
         this->lr = lr;
         j["learning_rate"] = lr;
+    };
+    virtual floatN getLearningRate() { return lr; };
+    virtual json getOptimizerParameters() {
+        return j;
     };
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pCache) {return x;};
 };

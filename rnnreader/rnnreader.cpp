@@ -222,8 +222,8 @@ int main(int argc, char *argv[]) {
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
     cerr << "Training parameters: " << train_params.dump(4) << endl;
-    cerr << "Optimizer parameters: " << j_opt.dump(4) << endl;
-    cerr << "Loss parameters: " << j_loss.dump(4) << endl;
+    cerr << "Optimizer parameters: " << pOpt->getOptimizerParameters().dump(4) << endl;
+    cerr << "Loss parameters: " << pLoss->getLossParameters().dump(4) << endl;
 
     for (int i=0; i<1000; i++) {
         train_params["startepoch"]=(floatN)currentEpoch;
