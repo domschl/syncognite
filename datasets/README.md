@@ -48,12 +48,46 @@ Then use [cifar10test](../cpcifar10/):
 cifar10test <path-to-database>/cifar10.h5
 ```
 
-## RNNReader: tiny-shakespeare.txt
+## RNNReader: texts
 
-From Justin Johnson's [torch-rnn](https://github.com/jcjohnson/torch-rnn/blob/master/data/tiny-shakespeare.txt) repository.
+The recurrent text generator `rnnreader` is trained with an UTF-8 text file.
+
+### Included: tiny_shakespeare.txt
+
+Part of the repository is a subset of Shakespeare's collected works, taken
+from Justin Johnson's [torch-rnn](https://github.com/jcjohnson/torch-rnn/blob/master/data/tiny-shakespeare.txt) repository.
 
 To test text generation via RNNs, use [rnnreader](../rnnreader):
 
 ```bash
 rnnreader <path-to-text>/tiny-shakespeare.txt
 ```
+### The Complete Collected Works of William Shakespeare
+
+Use the python script `download_shakespeare.py` to get the unabrivated version, about 5x larger:
+
+```bash
+pip install -U ml-indie-tools
+python download_shakespeare.py
+```
+
+Results in `shakespeare.txt` with the complete works.
+
+### Women writers
+
+Use the python script `download_women_writers` to download a collection of about 20 books by
+authors Emilie Brontë, Jane Austen, and Virginia Woolf from Project Gutenberg:
+
+```bash
+pip install -U ml-indie-tools
+python download_women_writers.py
+```
+
+Note: have a look at the download script, it can be easily modified for other authors, subjects or collections.
+
+The resulting file `women_writers.txt`, which contains all book texts (about 12MB) concatenated.
+
+## References
+
+This uses [`ml-indie-tools`](https://github.com/domschl/ml-indie-tools) to download the Complete Works from Project Gutenberg.
+The library can be used to download arbitrary book-collections from Project Gutenberg, see [Documentation](https://github.com/domschl/ml-indie-tools#gutenberg_dataset).

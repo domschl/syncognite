@@ -38,7 +38,7 @@ For live logging of the training progress, use gnuplot:
 gnuplot ../plot/liveplot.gnu
 ```
 
-![after 7 episodes](../doc/images/cifar10-7.png)
+![after 40 episodes](../doc/images/cifar10-graph.png)
 
 Note: Currently, this works only after 1. episode is complete.
 
@@ -57,10 +57,9 @@ train-data (50000, 3072)
 train-labels (50000, 1)
 test-data tensor-4
 train-data tensor-4
-Compile-time options: FLOAT AVX FMA OPENMP
+Compile-time options: FLOAT
 Eigen is using:      1 threads.
 CpuPool is using:    8 threads.
-Cpu+GpuPool is using:    0 threads.
 Checking LayerBlock topology...
 cv1: (3, 32, 32)[3072] -> (64, 32, 32)[65536]
 sb1: (64, 32, 32)[65536] -> (64, 32, 32)[65536]
@@ -97,50 +96,50 @@ do2: (512)[512] -> (512)[512]
 af3: (512)[512] -> (10)[10]
 sm1: (10)[10] -> (1)[1]
 Topology-check for LayerBLock: ok.
-Training net: data-size: 49000, chunks: 980, batch_size: 50, threads: 8 (bz*ch): 49000
-Ep: 1, Time: 1369s, (13s test) loss:1.773042 err(val):0.609000 acc(val):0.391000.773101453
-Ep: 2, Time: 1361s, (14s test) loss:1.597675 err(val):0.516000 acc(val):0.484000.603656972
-Ep: 3, Time: 1362s, (12s test) loss:1.433608 err(val):0.479000 acc(val):0.521000.436751770
-Ep: 4, Time: 1359s, (12s test) loss:1.359592 err(val):0.457000 acc(val):0.543000.369401933
-Ep: 5, Time: 1343s, (12s test) loss:1.286471 err(val):0.436000 acc(val):0.564000.273972529
-Ep: 6, Time: 1346s, (13s test) loss:1.223408 err(val):0.424000 acc(val):0.576000.225793357
-Ep: 7, Time: 1356s, (12s test) loss:1.178642 err(val):0.397000 acc(val):0.603000.177728710
-Ep: 8, Time: 1361s, (13s test) loss:1.137488 err(val):0.374000 acc(val):0.626000.141184944
-Ep: 9, Time: 1364s, (13s test) loss:1.116926 err(val):0.362000 acc(val):0.638000.119372196
-Ep: 10, Time: 1354s, (13s test) loss:1.059759 err(val):0.336000 acc(val):0.664000.054725048
-Ep: 11, Time: 1368s, (12s test) loss:0.997422 err(val):0.325000 acc(val):0.675000.003670459
-Ep: 12, Time: 1356s, (12s test) loss:0.969635 err(val):0.296000 acc(val):0.704000.964603988
-Ep: 13, Time: 1356s, (12s test) loss:0.944014 err(val):0.293000 acc(val):0.707000.956385960
-Ep: 14, Time: 1363s, (14s test) loss:0.904938 err(val):0.296000 acc(val):0.704000.907651125
-Ep: 15, Time: 1359s, (12s test) loss:0.852439 err(val):0.267000 acc(val):0.733000.850288041
-Ep: 16, Time: 1359s, (12s test) loss:0.857193 err(val):0.266000 acc(val):0.734000.850574656
-Ep: 17, Time: 1361s, (13s test) loss:0.815470 err(val):0.255000 acc(val):0.745000.820043432
-Ep: 18, Time: 1338s, (12s test) loss:0.782973 err(val):0.256000 acc(val):0.744000.783037590
-Ep: 19, Time: 1326s, (12s test) loss:0.743810 err(val):0.247000 acc(val):0.753000.731883702
-Ep: 20, Time: 1332s, (12s test) loss:0.734768 err(val):0.239000 acc(val):0.761000.727214807
-Ep: 21, Time: 1326s, (12s test) loss:0.689683 err(val):0.240000 acc(val):0.760000.694405632
-Ep: 22, Time: 1323s, (12s test) loss:0.679138 err(val):0.227000 acc(val):0.773000.677342569
-Ep: 23, Time: 1325s, (12s test) loss:0.658063 err(val):0.234000 acc(val):0.766000.664037277
-Ep: 24, Time: 1310s, (12s test) loss:0.612781 err(val):0.225000 acc(val):0.775000.603546196
-Ep: 25, Time: 1321s, (12s test) loss:0.632008 err(val):0.208000 acc(val):0.792000.625720851
-Ep: 26, Time: 1330s, (12s test) loss:0.559627 err(val):0.212000 acc(val):0.788000.564914247
-Ep: 27, Time: 1324s, (12s test) loss:0.570422 err(val):0.213000 acc(val):0.787000.564646240
-Ep: 28, Time: 1323s, (12s test) loss:0.534862 err(val):0.213000 acc(val):0.787000.535824721
-Ep: 29, Time: 1319s, (12s test) loss:0.506240 err(val):0.209000 acc(val):0.791000.506116784
-Ep: 30, Time: 1324s, (12s test) loss:0.507575 err(val):0.200000 acc(val):0.800000.504689279
-Ep: 31, Time: 1326s, (12s test) loss:0.486595 err(val):0.194000 acc(val):0.806000.488777527
-Ep: 32, Time: 1325s, (12s test) loss:0.496329 err(val):0.196000 acc(val):0.804000.484871926
-Ep: 33, Time: 1324s, (13s test) loss:0.466785 err(val):0.199000 acc(val):0.801000.467273205
-Ep: 34, Time: 1318s, (12s test) loss:0.451971 err(val):0.195000 acc(val):0.805000.443404932
-Ep: 35, Time: 1326s, (12s test) loss:0.423440 err(val):0.196000 acc(val):0.804000.427621099
-Ep: 36, Time: 1326s, (12s test) loss:0.381521 err(val):0.200000 acc(val):0.800000.386783803
-Ep: 37, Time: 1323s, (12s test) loss:0.385132 err(val):0.197000 acc(val):0.803000.384276088
-Ep: 38, Time: 1328s, (12s test) loss:0.375425 err(val):0.205000 acc(val):0.795000.374075503
-Ep: 39, Time: 1320s, (12s test) loss:0.356085 err(val):0.192000 acc(val):0.808000.362570721
-Ep: 40, Time: 1327s, (12s test) loss:0.347994 err(val):0.186000 acc(val):0.814000.350700600
-Final results on CIFAR10 after 40.000000 epochs:
-      Train-error: 0.036735 train-acc: 0.963265
- Validation-error: 0.186000   val-acc: 0.814000
-       Test-error: 0.212600  test-acc: 0.787400
 
+Training net: data-size: 49000, chunks: 980, batch_size: 50, threads: 8 (bz*ch): 49000
+Ep: 1, Time: 370s, (4s test) loss:1.6063 err(val):0.5420 acc(val):0.4580
+Ep: 2, Time: 355s, (4s test) loss:1.3319 err(val):0.4510 acc(val):0.5490
+Ep: 3, Time: 360s, (4s test) loss:1.1549 err(val):0.3910 acc(val):0.6090
+Ep: 4, Time: 364s, (4s test) loss:1.0088 err(val):0.3420 acc(val):0.6580
+Ep: 5, Time: 362s, (4s test) loss:0.9439 err(val):0.2810 acc(val):0.7190
+Ep: 6, Time: 362s, (3s test) loss:0.8407 err(val):0.2720 acc(val):0.7280
+Ep: 7, Time: 357s, (4s test) loss:0.7668 err(val):0.2600 acc(val):0.7400
+Ep: 8, Time: 1357s, (3s test) loss:0.6940 err(val):0.2330 acc(val):0.76703
+Ep: 9, Time: 571s, (6s test) loss:0.6705 err(val):0.2330 acc(val):0.7670
+Ep: 10, Time: 706s, (6s test) loss:0.5921 err(val):0.2180 acc(val):0.7820
+Ep: 11, Time: 913s, (7s test) loss:0.5813 err(val):0.1930 acc(val):0.8070
+Ep: 12, Time: 1075s, (7s test) loss:0.5183 err(val):0.2120 acc(val):0.78801
+Ep: 13, Time: 1446s, (3s test) loss:0.4818 err(val):0.2060 acc(val):0.7940
+Ep: 14, Time: 474s, (15s test) loss:0.4520 err(val):0.1940 acc(val):0.8060
+Ep: 15, Time: 863s, (5s test) loss:0.4411 err(val):0.1780 acc(val):0.822030
+Ep: 16, Time: 572s, (3s test) loss:0.4173 err(val):0.1850 acc(val):0.8150
+Ep: 17, Time: 361s, (4s test) loss:0.3772 err(val):0.1810 acc(val):0.8190
+Ep: 18, Time: 366s, (4s test) loss:0.3464 err(val):0.1860 acc(val):0.8140
+Ep: 19, Time: 1023s, (3s test) loss:0.3346 err(val):0.1780 acc(val):0.8220
+Ep: 20, Time: 651s, (15s test) loss:0.2954 err(val):0.1810 acc(val):0.81908
+Ep: 21, Time: 711s, (4s test) loss:0.2995 err(val):0.1670 acc(val):0.833006
+Ep: 22, Time: 364s, (3s test) loss:0.2469 err(val):0.1780 acc(val):0.8220
+Ep: 23, Time: 359s, (3s test) loss:0.2423 err(val):0.1750 acc(val):0.8250
+Ep: 24, Time: 361s, (4s test) loss:0.2331 err(val):0.1730 acc(val):0.8270
+Ep: 25, Time: 427s, (4s test) loss:0.2023 err(val):0.1720 acc(val):0.8280
+Ep: 26, Time: 1049s, (4s test) loss:0.2258 err(val):0.1710 acc(val):0.8290
+Ep: 27, Time: 353s, (3s test) loss:0.2006 err(val):0.1700 acc(val):0.8300
+Ep: 28, Time: 357s, (4s test) loss:0.1868 err(val):0.1660 acc(val):0.8340
+Ep: 29, Time: 439s, (3s test) loss:0.1908 err(val):0.1680 acc(val):0.8320
+Ep: 30, Time: 371s, (4s test) loss:0.1653 err(val):0.1750 acc(val):0.8250
+Ep: 31, Time: 378s, (4s test) loss:0.1546 err(val):0.1760 acc(val):0.8240
+Ep: 32, Time: 405s, (4s test) loss:0.1355 err(val):0.1640 acc(val):0.8360
+Ep: 33, Time: 350s, (4s test) loss:0.1340 err(val):0.1620 acc(val):0.8380
+Ep: 34, Time: 347s, (4s test) loss:0.1279 err(val):0.1610 acc(val):0.8390
+Ep: 35, Time: 347s, (3s test) loss:0.1361 err(val):0.1700 acc(val):0.8300
+Ep: 36, Time: 553s, (4s test) loss:0.1333 err(val):0.1650 acc(val):0.8350
+Ep: 37, Time: 353s, (4s test) loss:0.1200 err(val):0.1620 acc(val):0.8380
+Ep: 38, Time: 346s, (4s test) loss:0.1197 err(val):0.1730 acc(val):0.8270
+Ep: 39, Time: 351s, (4s test) loss:0.0957 err(val):0.1660 acc(val):0.8340
+Ep: 40, Time: 370s, (4s test) loss:0.1108 err(val):0.1730 acc(val):0.8270
+Final results on CIFAR10 after 40.0000 epochs:
+      Train-error: 0.0047 train-acc: 0.9953
+ Validation-error: 0.1730   val-acc: 0.8270
+       Test-error: 0.1778  test-acc: 0.8222
 ```

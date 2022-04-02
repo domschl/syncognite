@@ -96,8 +96,9 @@ public:
         t_cppl c4;
         MatrixN yu=sm->forward(yo,&c4, pstates, id);
         mlPush("sm",&c4,pcache);
-        return yo;
+        return yu;
     }
+    /*
     virtual floatN loss(t_cppl* pcache, t_cppl* pstates) override {
         if (pstates->find("y") == pstates->end()) {
             cerr << endl << endl << "TLN-loss: pstates does not contain y -> fatal!" << endl << endl;
@@ -107,6 +108,7 @@ public:
         mlPop("sm",pcache,&c4);
         return sm->loss(&c4, pstates);
     }
+    */
     virtual MatrixN backward(const MatrixN& y, t_cppl* pcache, t_cppl* pstates, t_cppl* pgrads, int id=0) override {
         t_cppl c4;
         t_cppl g4;

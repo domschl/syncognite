@@ -60,7 +60,10 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN margins0=sv.forward(x, &cache, &states);
     bool ret=matCompT(margins,margins0,"Svm probabilities",eps,verbose);
     if (!ret) allOk=false;
-    floatN loss0=sv.loss(&cache, &states);
+    json j(R"({})"_json);
+    Loss *pLoss=lossFactory("SVMMargin", j);
+    floatN loss0=pLoss->loss(margins0, y, &states);
+    // floatN loss0=sv.loss(&cache, &states);
     floatN d=loss-loss0;
     floatN err=std::abs(d);
     if (err > eps) {
@@ -72,6 +75,7 @@ bool checkSvm(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     MatrixN dx0=sv.backward(y, &cache, &states, &grads);
     ret=matCompT(dx,dx0,"Softmax dx",eps,verbose);
     if (!ret) allOk=false;
+    delete pLoss;
     cppl_delete(&grads);
     cppl_delete(&cache);
     return allOk;
@@ -102,7 +106,9 @@ bool testSvm(int verbose) {
 	floatN eps = 1e-6;
 	if (eps < CP_DEFAULT_NUM_EPS)
 		eps = CP_DEFAULT_NUM_EPS;
-	bool res=sv.selfTest(xsv, &svmstates, h, eps, verbose);
+    Loss *pLoss=lossFactory("SVMMargin", R"({})");
+	bool res=sv.selfTest(xsv, &svmstates, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("SVM", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

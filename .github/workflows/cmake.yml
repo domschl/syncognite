@@ -48,11 +48,12 @@ jobs:
       # Execute the build.  You can specify a specific target with "--target <NAME>"
       run: cmake --build . --config $BUILD_TYPE
 
-    - name: Install valgrind
-      shell: bash
-      run: |
-        sudo apt update
-        sudo apt install --fix-missing valgrind
+    # Since valgrind is broken with current ubuntu, no point in installing it.
+    # - name: Install valgrind
+    #   shell: bash
+    #   run: |
+    #     sudo apt update
+    #     sudo apt install --fix-missing valgrind
     
     - name: Test
       working-directory: ${{github.workspace}}/build

@@ -47,9 +47,11 @@ private:
 
         cppl_set(&params, "Wxh", new MatrixN(xavierInit(MatrixN(D,4*H),inittype,initfactor)));
         cppl_set(&params, "Whh", new MatrixN(xavierInit(MatrixN(H,4*H),inittype,initfactor)));
-        cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
         if (forgetGateInitOnes) {
-            params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array() + forgetBias;
+            cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
+            params["bh"]->block(0,H,1,H) = params["bh"]->block(0,H,1,H).array()*0.0 + forgetBias;
+        } else {
+            cppl_set(&params, "bh", new MatrixN(xavierInit(MatrixN(1,4*H),inittype,initfactor)));
         }
 
         numCpuThreads=cpGetNumCpuThreads();

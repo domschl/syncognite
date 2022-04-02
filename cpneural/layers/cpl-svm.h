@@ -59,11 +59,13 @@ class Svm : public Layer {
             cppl_set(pcache, "margins", new MatrixN(margins));
         return margins;
     }
+    /*
     virtual floatN loss(t_cppl *pcache, t_cppl *pstates) override {
         MatrixN margins = *((*pcache)["margins"]);
         floatN loss = margins.sum() / margins.rows();
         return loss;
     }
+    */
     virtual MatrixN backward(const MatrixN &dy, t_cppl *pcache, t_cppl *pstates,
                              t_cppl *pgrads, int id = 0) override {
         MatrixN margins = *((*pcache)["margins"]);

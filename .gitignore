@@ -1,4 +1,7 @@
 Build/
+datasets/gutenberg
+shakespeare.txt
+women_writers.txt
 doc/.ipynb_checkpoints/
 *.gch
 *.o
@@ -24,3 +27,5 @@ GRTAGS
 log.txt
 .ccls-cache/
 FindHDFS.cmake
+.DS_Store
+

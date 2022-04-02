@@ -3,28 +3,31 @@
 
 #include "../testneural.h"
 
-float getTemporalSMLoss(int N, int T, int V, float p) {
-    MatrixN x(N,V*T);
+float getTemporalSMLoss(int N, int T, int D, float p) {
+    MatrixN x(N,D*T);
     x.setRandom();
     x = (x.array()+1.0) * 0.005;
     MatrixN y(N,T);
-    for (int i=0; i<y.size(); i++) y(i)=rand() % V;
+    for (int i=0; i<y.size(); i++) y(i)=rand() % D;
     MatrixN mask(N,T);
     for (int i=0; i<mask.size(); i++) {
         if (rand()%1000 < p*1000.0) mask(i)=1.0;
         else mask(i)=0.0;
     }
     json j;
-    j["inputShape"]=vector<int>{V,T};
+    j["inputShape"]=vector<int>{D,T};
     TemporalSoftmax tsm(j);
     t_cppl cache;
     cppl_set(&cache,"mask",new MatrixN(mask));
     t_cppl states;
     states["y"] = &y;
-    tsm.forward(x,&cache, &states);
+    MatrixN yhat=tsm.forward(x,&cache, &states);
     float loss;
-    loss=tsm.loss(&cache, &states);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &cache);
+    //loss=tsm.loss(&cache, &states);
     cppl_delete(&cache);
+    delete pLoss;
     return loss;
 }
 
@@ -57,8 +60,8 @@ bool checkTemporalSoftmaxLoss(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
 }
 
 bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
-    int N=7, T=8, V=9;
-    MatrixN x(N,T*V);
+    int N=7, T=8, D=9;
+    MatrixN x(N,T*D);
     x << -1.23246054,  0.01065191,  0.54041174,  0.86820939,  0.14530547,
          -1.43534012, -2.21043114, -0.33182685,  0.42640048,
          -0.03021426,  0.79209013, -0.70492907, -1.1088065 ,  0.10722934,
@@ -196,7 +199,7 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
          0.,  0.,  1.,  1.,  0.,  1.,  0.,  1.,
          0.,  1.,  0.,  1.,  0.,  0.,  1.,  0.;
 
-    MatrixN dx(N,T*V);
+    MatrixN dx(N,T*D);
     dx << -0.13830737,  0.01577127,  0.02678789,  0.03717912,  0.01804455,
           0.00371433,  0.00171105,  0.01119773,  0.02390143,
           0.01229501,  0.02798022,  0.00626187, -0.13867593,  0.01410652,
@@ -319,16 +322,18 @@ bool checkTemporalSoftmax(float eps=CP_DEFAULT_NUM_EPS, int verbose=1) {
     floatN lossTheo=9.9761896117014111;
 
     json j;
-    j["inputShape"]=vector<int>{V,T};
+    j["inputShape"]=vector<int>{D,T};
     j["nohupdate"]=(bool)true;
     TemporalSoftmax tsm(j);
     t_cppl cache;
     t_cppl states;
     cppl_set(&cache,"mask",new MatrixN(mask));
     states["y"]=&y;
-    tsm.forward(x,&cache,&states);
+    MatrixN yhat = tsm.forward(x,&cache,&states);
     float loss;
-    loss=tsm.loss(&cache, &states);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+    loss=pLoss->loss(yhat, y, &cache);
+    delete pLoss;
 
     bool allOk=true;
 
@@ -374,7 +379,9 @@ bool testTemporalSoftmax(int verbose) {
 		eps = CP_DEFAULT_NUM_EPS;
 	t_cppl states;
 	states["y"] = &ty;
-	bool res=tmx.selfTest(txmx, &states, h, eps, verbose);
+    Loss *pLoss=lossFactory("TemporalCrossEntropy", j);
+	bool res=tmx.selfTest(txmx, &states, h, eps, verbose, pLoss);
+    delete pLoss;
 	registerTestResult("TemporalSoftmax", "Numerical gradient", res, "");
 	if (!res) bOk = false;
 

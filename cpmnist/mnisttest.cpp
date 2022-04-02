@@ -135,7 +135,7 @@ int main(int argc, char *argv[]) {
 	MatrixN Xt=*(cpMnistData["x_test"]);
 	MatrixN yt=*(cpMnistData["t_test"]);
 
-	LayerBlock lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
+	LayerBlockOldStyle lb(R"({"name":"DomsNet","bench":false,"init":"orthonormal"})"_json);
 
 	lb.addLayer("Convolution", "cv1", R"({"inputShape":[1,28,28],"kernel":[48,5,5],"stride":1,"pad":2})",{"input"});
 	lb.addLayer("BatchNorm","sb1","{}",{"cv1"});
@@ -155,8 +155,6 @@ int main(int argc, char *argv[]) {
 	lb.addLayer("Dropout","doc3",R"({"drop":0.8})",{"rl5"});
 	lb.addLayer("Convolution", "cv6", R"({"kernel":[128,3,3],"stride":1,"pad":1})",{"doc3"});
 	lb.addLayer("Relu","rl6","{}",{"cv6"});
-	//lb.addLayer("Convolution", "cv7", R"({"kernel":[64,3,3],"stride":1,"pad":1})",{"rl6"});
-	//lb.addLayer("Relu","rl7","{}",{"cv7"});
 
 	lb.addLayer("Affine","af1",R"({"hidden":1024})",{"rl6"});
 	lb.addLayer("BatchNorm","bn1","{}",{"af1"});
@@ -178,13 +176,24 @@ int main(int argc, char *argv[]) {
 		if (verbose) cerr << "Topology-check for MultiLayer: ok." << endl;
 	}
 
-	json jo(R"({"verbose":true,"shuffle":true})"_json);
+	json jo(R"({"verbose":true,"shuffle":true, "lr_decay": 0.9})"_json);
 	jo["epochs"]=(floatN)40.0;
 	jo["batch_size"]=50;
-	jo["learning_rate"]=(floatN)2e-3;
-	jo["regularization"]=(floatN)2e-8;
+	jo["regularization"]=(floatN)1e-4;
+    jo["regularization_decay"]=(floatN)0.87;
 
-	lb.train(X, y, Xv, yv, "Adam", jo);
+    json j_opt(R"({"name":"Adam","beta1":0.9,"beta2":0.999,"epsilon":1e-8})"_json);
+	j_opt["learning_rate"]=(floatN)2e-2;
+    json j_loss(R"({"name":"CrossEntropy"})"_json);
+    Optimizer *pOptimizer=optimizerFactory("Adam", j_opt);
+    t_cppl OptimizerState{};
+    Loss *pLoss=lossFactory("SparseCategoricalCrossEntropy", j_loss);
+
+	lb.train(X, y, Xv, yv, pOptimizer, &OptimizerState, pLoss, jo);
+
+    delete pOptimizer;
+    cppl_delete(&OptimizerState);
+    delete pLoss;
 
 	floatN train_err, val_err, test_err;
 	train_err=lb.test(X, y, jo.value("batch_size", 50));
