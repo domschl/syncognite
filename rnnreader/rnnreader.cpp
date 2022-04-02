@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
     int vocabularySize=txt.vocsize();
     int H=128; // 400;
     int batchSize=128; // 96;
-    //float clip=5.0;
+    float clip=5.0;
 
     string rnntype="LSTM"; // or "RNN"
     cerr << "RNN-type: " << rnntype << endl;
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
     //j1["forgetbias"]=0.10;
-    //j1["clip"]=clip;
+    j1["clip"]=clip;
     int layerDepth=8; // 6;
     j1["H"]=H;
     for (auto l=0; l<layerDepth; l++) {
@@ -212,7 +212,7 @@ int main(int argc, char *argv[]) {
     train_params["batch_size"]=batchSize;
     train_params["lr_decay"] = 0.945; // every 40 epochs, lr = lr/10 (0.945^40 = 0.104)
 
-    json j_opt(R"({"learning_rate": 1e-2})"_json);
+    json j_opt(R"({"learning_rate": 1e-3})"_json);
     Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     t_cppl OptimizerState{};
     
