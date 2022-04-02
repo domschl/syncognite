@@ -65,7 +65,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_r_m_sprop-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">RMSprop Class Reference</div></div>
 </div><!--header-->
@@ -89,14 +89,29 @@ Inheritance diagram for RMSprop:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ac689324295324fde1743c43ce6a6c064"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_m_sprop.html#ac689324295324fde1743c43ce6a6c064">RMSprop</a> (const json &amp;jx)</td></tr>
 <tr class="separator:ac689324295324fde1743c43ce6a6c064"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adcec39abe94c8d052126365ec1d7ff14"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_m_sprop.html#adcec39abe94c8d052126365ec1d7ff14">update</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;w, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dw, string wName, t_cppl *pStateCache) override</td></tr>
-<tr class="separator:adcec39abe94c8d052126365ec1d7ff14"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa587dd7bcdf1266c7fd0386bcc1df875"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_m_sprop.html#aa587dd7bcdf1266c7fd0386bcc1df875">update</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;w, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;dw, string wName, t_cppl *pOptimizerState) override</td></tr>
+<tr class="separator:aa587dd7bcdf1266c7fd0386bcc1df875"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2eb0593e836d7dd2c6f3108440faadce"><td class="memItemLeft" align="right" valign="top"><a id="a2eb0593e836d7dd2c6f3108440faadce" name="a2eb0593e836d7dd2c6f3108440faadce"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>updateOptimizerParameters</b> (const json &amp;opt_params)</td></tr>
+<tr class="separator:a2eb0593e836d7dd2c6f3108440faadce"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a665dca4836f69372c1de7601a95a9f4f"><td class="memItemLeft" align="right" valign="top"><a id="a665dca4836f69372c1de7601a95a9f4f" name="a665dca4836f69372c1de7601a95a9f4f"></a>
+virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>updateLearningRate</b> (floatN lr)</td></tr>
+<tr class="separator:a665dca4836f69372c1de7601a95a9f4f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94644486d42f657d8e540b8ff569752"><td class="memItemLeft" align="right" valign="top"><a id="ac94644486d42f657d8e540b8ff569752" name="ac94644486d42f657d8e540b8ff569752"></a>
+virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><b>getLearningRate</b> ()</td></tr>
+<tr class="separator:ac94644486d42f657d8e540b8ff569752"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a294b044840ec0bf977289488169244"><td class="memItemLeft" align="right" valign="top"><a id="a4a294b044840ec0bf977289488169244" name="a4a294b044840ec0bf977289488169244"></a>
+virtual json&#160;</td><td class="memItemRight" valign="bottom"><b>getOptimizerParameters</b> ()</td></tr>
+<tr class="separator:a4a294b044840ec0bf977289488169244"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
 <tr class="memitem:a88d4c8763f58b438c8a469786459dd2c"><td class="memItemLeft" align="right" valign="top"><a id="a88d4c8763f58b438c8a469786459dd2c" name="a88d4c8763f58b438c8a469786459dd2c"></a>
 json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 <tr class="separator:a88d4c8763f58b438c8a469786459dd2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab6376d43719142bccb9ee25b04472b49"><td class="memItemLeft" align="right" valign="top"><a id="ab6376d43719142bccb9ee25b04472b49" name="ab6376d43719142bccb9ee25b04472b49"></a>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>lr</b></td></tr>
+<tr class="separator:ab6376d43719142bccb9ee25b04472b49"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p >RMSProp optimizer. Algorithm based on CS231 course notes. </p>
@@ -136,8 +151,8 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="adcec39abe94c8d052126365ec1d7ff14" name="adcec39abe94c8d052126365ec1d7ff14"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#adcec39abe94c8d052126365ec1d7ff14">&#9670;&nbsp;</a></span>update()</h2>
+<a id="aa587dd7bcdf1266c7fd0386bcc1df875" name="aa587dd7bcdf1266c7fd0386bcc1df875"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa587dd7bcdf1266c7fd0386bcc1df875">&#9670;&nbsp;</a></span>update()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -167,7 +182,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">t_cppl *&#160;</td>
-          <td class="paramname"><em>pStateCache</em>&#160;</td>
+          <td class="paramname"><em>pOptimizerState</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -187,7 +202,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
     <tr><td class="paramname">w</td><td>Matrix of parameters. </td></tr>
     <tr><td class="paramname">dw</td><td>Gradient of the loss function. </td></tr>
     <tr><td class="paramname">wName</td><td>Name of the parameter w. (used for naming the cache-state of moving average) </td></tr>
-    <tr><td class="paramname">pStateCache</td><td>Pointer to the state-cache for the optimizer. (will hold moving average state) </td></tr>
+    <tr><td class="paramname">pOptimizerState</td><td>Pointer to the state-cache for the optimizer. (will hold moving average state) </td></tr>
   </table>
   </dd>
 </dl>

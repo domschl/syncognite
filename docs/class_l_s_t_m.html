@@ -112,12 +112,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>tensorchunkinsert</b>
 <tr class="memitem:a6b8c5dd025d0e4b5ea65675471f9bbd2"><td class="memItemLeft" align="right" valign="top"><a id="a6b8c5dd025d0e4b5ea65675471f9bbd2" name="a6b8c5dd025d0e4b5ea65675471f9bbd2"></a>
 virtual vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>getOutputShape</b> ()</td></tr>
 <tr class="separator:a6b8c5dd025d0e4b5ea65675471f9bbd2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a19bbe1a6fcd7f19bfd41632100cd621b"><td class="memItemLeft" align="right" valign="top"><a id="a19bbe1a6fcd7f19bfd41632100cd621b" name="a19bbe1a6fcd7f19bfd41632100cd621b"></a>
-virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><b>loss</b> (t_cppl *pcache, t_cppl *pstates)</td></tr>
-<tr class="separator:a19bbe1a6fcd7f19bfd41632100cd621b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb8426ab00ec9b317fc8bb85161d8801"><td class="memItemLeft" align="right" valign="top"><a id="abb8426ab00ec9b317fc8bb85161d8801" name="abb8426ab00ec9b317fc8bb85161d8801"></a>
-virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (<a class="el" href="class_optimizer.html">Optimizer</a> *popti, t_cppl *pgrads, string var, t_cppl *pocache)</td></tr>
-<tr class="separator:abb8426ab00ec9b317fc8bb85161d8801"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2a761c208953e9a7512c4d4ece10e142"><td class="memItemLeft" align="right" valign="top"><a id="a2a761c208953e9a7512c4d4ece10e142" name="a2a761c208953e9a7512c4d4ece10e142"></a>
+virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (<a class="el" href="class_optimizer.html">Optimizer</a> *pOptimizer, t_cppl *pGrads, string var, t_cppl *pOptimizerState)</td></tr>
+<tr class="separator:a2a761c208953e9a7512c4d4ece10e142"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb21780f90227185f9372a8f84b3c9df"><td class="memItemLeft" align="right" valign="top"><a id="abb21780f90227185f9372a8f84b3c9df" name="abb21780f90227185f9372a8f84b3c9df"></a>
 virtual void&#160;</td><td class="memItemRight" valign="bottom"><b>setFlag</b> (string name, bool val)</td></tr>
 <tr class="separator:abb21780f90227185f9372a8f84b3c9df"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -133,24 +130,24 @@ virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>saveParameter
 <tr class="memitem:acb2bd845cee93029d958412171ad29d8"><td class="memItemLeft" align="right" valign="top"><a id="acb2bd845cee93029d958412171ad29d8" name="acb2bd845cee93029d958412171ad29d8"></a>
 virtual bool&#160;</td><td class="memItemRight" valign="bottom"><b>loadParameters</b> (H5::H5File *pfile)</td></tr>
 <tr class="separator:acb2bd845cee93029d958412171ad29d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac984d6eaa7fd9befe7f327aa92102ab8"><td class="memItemLeft" align="right" valign="top"><a id="ac984d6eaa7fd9befe7f327aa92102ab8" name="ac984d6eaa7fd9befe7f327aa92102ab8"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xv, t_cppl *pstatesv, string optimizer, const json &amp;j)</td></tr>
-<tr class="separator:ac984d6eaa7fd9befe7f327aa92102ab8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72fa4067def88cf2b68ee201a6557721"><td class="memItemLeft" align="right" valign="top"><a id="a72fa4067def88cf2b68ee201a6557721" name="a72fa4067def88cf2b68ee201a6557721"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xv, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yv, string optimizer, const json &amp;j)</td></tr>
-<tr class="separator:a72fa4067def88cf2b68ee201a6557721"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a011a25b8fde594a83954836b18db1bda"><td class="memItemLeft" align="right" valign="top"><a id="a011a25b8fde594a83954836b18db1bda" name="a011a25b8fde594a83954836b18db1bda"></a>
-retdict&#160;</td><td class="memItemRight" valign="bottom"><b>workerThread</b> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pxb, t_cppl *pstates, int id)</td></tr>
-<tr class="separator:a011a25b8fde594a83954836b18db1bda"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a352715ad397e918f1290dfe165be9fc3"><td class="memItemLeft" align="right" valign="top"><a id="a352715ad397e918f1290dfe165be9fc3" name="a352715ad397e918f1290dfe165be9fc3"></a>
-floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, int batchsize)</td></tr>
-<tr class="separator:a352715ad397e918f1290dfe165be9fc3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa855d095ad294a85ef86ad7bd559a575"><td class="memItemLeft" align="right" valign="top"><a id="aa855d095ad294a85ef86ad7bd559a575" name="aa855d095ad294a85ef86ad7bd559a575"></a>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pStates, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xVal, t_cppl *pStatesVal, <a class="el" href="class_optimizer.html">Optimizer</a> *pOptimizer, t_cppl *pOptimizerState, <a class="el" href="class_loss.html">Loss</a> *pLoss, const json &amp;j)</td></tr>
+<tr class="separator:aa855d095ad294a85ef86ad7bd559a575"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a497cb5e6a3c6abe0194216fbe43ec736"><td class="memItemLeft" align="right" valign="top"><a id="a497cb5e6a3c6abe0194216fbe43ec736" name="a497cb5e6a3c6abe0194216fbe43ec736"></a>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>train</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;xVal, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yVal, <a class="el" href="class_optimizer.html">Optimizer</a> *pOptimizer, t_cppl *pOptimizerState, <a class="el" href="class_loss.html">Loss</a> *pLoss, const json &amp;j)</td></tr>
+<tr class="separator:a497cb5e6a3c6abe0194216fbe43ec736"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8f02005277e1e0a8270910a207b21e08"><td class="memItemLeft" align="right" valign="top"><a id="a8f02005277e1e0a8270910a207b21e08" name="a8f02005277e1e0a8270910a207b21e08"></a>
+retdict&#160;</td><td class="memItemRight" valign="bottom"><b>workerThread</b> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> *pxb, t_cppl *pStates, int id, <a class="el" href="class_loss.html">Loss</a> *pLoss)</td></tr>
+<tr class="separator:a8f02005277e1e0a8270910a207b21e08"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae90689dd9c563d2aa0866664e12e7c00"><td class="memItemLeft" align="right" valign="top"><a id="ae90689dd9c563d2aa0866664e12e7c00" name="ae90689dd9c563d2aa0866664e12e7c00"></a>
+floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pStates, int batchsize)</td></tr>
+<tr class="separator:ae90689dd9c563d2aa0866664e12e7c00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5bfaf6d7c631cb4c2a489a237d0dff98"><td class="memItemLeft" align="right" valign="top"><a id="a5bfaf6d7c631cb4c2a489a237d0dff98" name="a5bfaf6d7c631cb4c2a489a237d0dff98"></a>
 floatN&#160;</td><td class="memItemRight" valign="bottom"><b>test</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, int batchsize)</td></tr>
 <tr class="separator:a5bfaf6d7c631cb4c2a489a237d0dff98"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af4dc2a8140f48d9b6b3e55d560660d51"><td class="memItemLeft" align="right" valign="top"><a id="af4dc2a8140f48d9b6b3e55d560660d51" name="af4dc2a8140f48d9b6b3e55d560660d51"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>selfTest</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pstates, floatN h, floatN eps, int verbose)</td></tr>
-<tr class="separator:af4dc2a8140f48d9b6b3e55d560660d51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88e4fbf5fa48c9e4c7cc95a78deb0a80"><td class="memItemLeft" align="right" valign="top"><a id="a88e4fbf5fa48c9e4c7cc95a78deb0a80" name="a88e4fbf5fa48c9e4c7cc95a78deb0a80"></a>
+bool&#160;</td><td class="memItemRight" valign="bottom"><b>selfTest</b> (const <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;x, t_cppl *pStates, floatN h, floatN eps, int verbose, <a class="el" href="class_loss.html">Loss</a> *pLoss)</td></tr>
+<tr class="separator:a88e4fbf5fa48c9e4c7cc95a78deb0a80"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>

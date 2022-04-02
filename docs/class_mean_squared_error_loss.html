@@ -65,7 +65,7 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pro-attribs">Protected Attributes</a> &#124;
 <a href="class_mean_squared_error_loss-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">MeanSquaredErrorLoss Class Reference</div></div>
 </div><!--header-->
@@ -89,11 +89,14 @@ Inheritance diagram for MeanSquaredErrorLoss:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a48b99d4a1246fcf654fd02258f6e9817"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_mean_squared_error_loss.html#a48b99d4a1246fcf654fd02258f6e9817">MeanSquaredErrorLoss</a> (const json &amp;jx)</td></tr>
 <tr class="separator:a48b99d4a1246fcf654fd02258f6e9817"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab7dcad4fe915c9a732dccec40f0c9c4d"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_mean_squared_error_loss.html#ab7dcad4fe915c9a732dccec40f0c9c4d">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams)</td></tr>
-<tr class="separator:ab7dcad4fe915c9a732dccec40f0c9c4d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b2b32fc550b318020d04c9a4e9c2835"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_mean_squared_error_loss.html#a1b2b32fc550b318020d04c9a4e9c2835">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams) override</td></tr>
+<tr class="separator:a1b2b32fc550b318020d04c9a4e9c2835"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af459381ffdc28fe052a172c146048e9a"><td class="memItemLeft" align="right" valign="top"><a id="af459381ffdc28fe052a172c146048e9a" name="af459381ffdc28fe052a172c146048e9a"></a>
+virtual json&#160;</td><td class="memItemRight" valign="bottom"><b>getLossParameters</b> ()</td></tr>
+<tr class="separator:af459381ffdc28fe052a172c146048e9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
+Protected Attributes</h2></td></tr>
 <tr class="memitem:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memItemLeft" align="right" valign="top"><a id="a24ca2b3f4564faf1f5ad41e7225f63d8" name="a24ca2b3f4564faf1f5ad41e7225f63d8"></a>
 json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 <tr class="separator:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,8 +137,8 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ab7dcad4fe915c9a732dccec40f0c9c4d" name="ab7dcad4fe915c9a732dccec40f0c9c4d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab7dcad4fe915c9a732dccec40f0c9c4d">&#9670;&nbsp;</a></span>loss()</h2>
+<a id="a1b2b32fc550b318020d04c9a4e9c2835" name="a1b2b32fc550b318020d04c9a4e9c2835"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b2b32fc550b318020d04c9a4e9c2835">&#9670;&nbsp;</a></span>loss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -169,7 +172,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">

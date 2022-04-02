@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.3"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Syncognite: SparseCategoricalCrossEntropyLoss Class Reference</title>
+<title>Syncognite: SVMMarginLoss Class Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -65,45 +65,35 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
-<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a> &#124;
-<a href="class_sparse_categorical_cross_entropy_loss-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">SparseCategoricalCrossEntropyLoss Class Reference</div></div>
+<a href="class_s_v_m_margin_loss-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">SVMMarginLoss Class Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
-<p>Categorical cross-entropy loss function.  
- <a href="class_sparse_categorical_cross_entropy_loss.html#details">More...</a></p>
+<p>SVM margin loss function.  
+ <a href="class_s_v_m_margin_loss.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="cp-loss_8h_source.html">cp-loss.h</a>&gt;</code></p>
 <div class="dynheader">
-Inheritance diagram for SparseCategoricalCrossEntropyLoss:</div>
+Inheritance diagram for SVMMarginLoss:</div>
 <div class="dyncontent">
  <div class="center">
-  <img src="class_sparse_categorical_cross_entropy_loss.png" usemap="#SparseCategoricalCrossEntropyLoss_map" alt=""/>
-  <map id="SparseCategoricalCrossEntropyLoss_map" name="SparseCategoricalCrossEntropyLoss_map">
-<area href="class_loss.html" alt="Loss" shape="rect" coords="0,0,220,24"/>
+  <img src="class_s_v_m_margin_loss.png" usemap="#SVMMarginLoss_map" alt=""/>
+  <map id="SVMMarginLoss_map" name="SVMMarginLoss_map">
+<area href="class_loss.html" alt="Loss" shape="rect" coords="0,0,106,24"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a0bffa9c1e425d97c62c4a3292541facc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_sparse_categorical_cross_entropy_loss.html#a0bffa9c1e425d97c62c4a3292541facc">SparseCategoricalCrossEntropyLoss</a> (const json &amp;jx)</td></tr>
-<tr class="separator:a0bffa9c1e425d97c62c4a3292541facc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a78783951eec0ab5dee7f2d86c75925fc"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_sparse_categorical_cross_entropy_loss.html#a78783951eec0ab5dee7f2d86c75925fc">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams) override</td></tr>
-<tr class="separator:a78783951eec0ab5dee7f2d86c75925fc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa1d93a57de081ec90df8dc6b1c6b2670"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_v_m_margin_loss.html#aa1d93a57de081ec90df8dc6b1c6b2670">SVMMarginLoss</a> (const json &amp;jx)</td></tr>
+<tr class="separator:aa1d93a57de081ec90df8dc6b1c6b2670"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab97a54e6baf4780ff9274c0bd686ddc5"><td class="memItemLeft" align="right" valign="top">virtual floatN&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_s_v_m_margin_loss.html#ab97a54e6baf4780ff9274c0bd686ddc5">loss</a> (<a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;yhat, <a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;y, t_cppl *pParams) override</td></tr>
+<tr class="separator:ab97a54e6baf4780ff9274c0bd686ddc5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af459381ffdc28fe052a172c146048e9a"><td class="memItemLeft" align="right" valign="top"><a id="af459381ffdc28fe052a172c146048e9a" name="af459381ffdc28fe052a172c146048e9a"></a>
 virtual json&#160;</td><td class="memItemRight" valign="bottom"><b>getLossParameters</b> ()</td></tr>
 <tr class="separator:af459381ffdc28fe052a172c146048e9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
-Public Attributes</h2></td></tr>
-<tr class="memitem:a3aa95a89487d9a06e4a60901b094f2e4"><td class="memItemLeft" align="right" valign="top"><a id="a3aa95a89487d9a06e4a60901b094f2e4" name="a3aa95a89487d9a06e4a60901b094f2e4"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>hasErr</b> = false</td></tr>
-<tr class="separator:a3aa95a89487d9a06e4a60901b094f2e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a645f686345cd8f8b54bc52ef2e930fd0"><td class="memItemLeft" align="right" valign="top"><a id="a645f686345cd8f8b54bc52ef2e930fd0" name="a645f686345cd8f8b54bc52ef2e930fd0"></a>
-string&#160;</td><td class="memItemRight" valign="bottom"><b>name</b></td></tr>
-<tr class="separator:a645f686345cd8f8b54bc52ef2e930fd0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -112,11 +102,10 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 <tr class="separator:a24ca2b3f4564faf1f5ad41e7225f63d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p >Categorical cross-entropy loss function. </p>
-<p >Used to calculate the loss in multi-class classification problems. Inputs are the result of a softmax layer ('probabilities') and the labels of the correct class. </p>
+<div class="textblock"><p >SVM margin loss function. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a0bffa9c1e425d97c62c4a3292541facc" name="a0bffa9c1e425d97c62c4a3292541facc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0bffa9c1e425d97c62c4a3292541facc">&#9670;&nbsp;</a></span>SparseCategoricalCrossEntropyLoss()</h2>
+<a id="aa1d93a57de081ec90df8dc6b1c6b2670" name="aa1d93a57de081ec90df8dc6b1c6b2670"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1d93a57de081ec90df8dc6b1c6b2670">&#9670;&nbsp;</a></span>SVMMarginLoss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -125,7 +114,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">SparseCategoricalCrossEntropyLoss::SparseCategoricalCrossEntropyLoss </td>
+          <td class="memname">SVMMarginLoss::SVMMarginLoss </td>
           <td>(</td>
           <td class="paramtype">const json &amp;&#160;</td>
           <td class="paramname"><em>jx</em></td><td>)</td>
@@ -138,9 +127,9 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Sparse categorical cross entropy loss for multi-class classification. </p><dl class="params"><dt>Parameters</dt><dd>
+<p >SVM margin loss function. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">jx</td><td>- JSON object with configuration parameters. Not used. Optional content: "name": (string) name of this loss function instance.</td></tr>
+    <tr><td class="paramname">jx</td><td>- JSON object with configuration parameters. Not used.</td></tr>
   </table>
   </dd>
 </dl>
@@ -148,8 +137,8 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a78783951eec0ab5dee7f2d86c75925fc" name="a78783951eec0ab5dee7f2d86c75925fc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a78783951eec0ab5dee7f2d86c75925fc">&#9670;&nbsp;</a></span>loss()</h2>
+<a id="ab97a54e6baf4780ff9274c0bd686ddc5" name="ab97a54e6baf4780ff9274c0bd686ddc5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab97a54e6baf4780ff9274c0bd686ddc5">&#9670;&nbsp;</a></span>loss()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -158,7 +147,7 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual floatN SparseCategoricalCrossEntropyLoss::loss </td>
+          <td class="memname">virtual floatN SVMMarginLoss::loss </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="cp-neural_8h.html#ac7ab0189fb9240290671d6cd8aaacdee">MatrixN</a> &amp;&#160;</td>
           <td class="paramname"><em>yhat</em>, </td>
@@ -187,14 +176,6 @@ json&#160;</td><td class="memItemRight" valign="bottom"><b>j</b></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Compute the loss for a batch of predictions and targets. </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">yhat</td><td>- predictions (output of softmax layer) </td></tr>
-    <tr><td class="paramname">y</td><td>- targets, integer class labels i are in y(i,0) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>loss - cross entropy loss, normalized by the number of samples</dd></dl>
 
 <p>Reimplemented from <a class="el" href="class_loss.html">Loss</a>.</p>
 
