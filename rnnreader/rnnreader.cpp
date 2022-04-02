@@ -226,10 +226,7 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    json j_opt(R"({})"_json);
     //j_opt["inputShape"]=vector<int>{H,T};
-    json j_loss(R"({"name":"temporalsoftmax"})"_json);
-    j_loss["inputShape"]=vector<int>{VS,T};
     floatN dep=5.0; // 70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
@@ -239,8 +236,12 @@ int main(int argc, char *argv[]) {
     // jo["regularization"]=1.0e-5;
     // jo["regularization_decay"]=0.95;
 
-    Optimizer *pOpt=optimizerFactory("RMSprop",j_opt);
+    json j_opt(R"({"learning_rate": 1e-2})"_json);
+    Optimizer *pOpt=optimizerFactory("Adam",j_opt);
     t_cppl OptimizerState{};
+    
+    json j_loss(R"({"name":"temporalsoftmax"})"_json);
+    j_loss["inputShape"]=vector<int>{VS,T};
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
     for (int i=0; i<1000; i++) {
