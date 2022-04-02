@@ -245,14 +245,14 @@ int main(int argc, char *argv[]) {
             xg(0,i)=txt.w2v[instr[i]];
        }
         wstring sout{};
-        Layer* plstm0=lb.layerMap["lstm0"];
         t_cppl statesg{};
+        Layer* plstm0=lb.layerMap["lstm0"];
+        plstm0->genZeroStates(&statesg, 1);
         int g,t,v;
         TemporalSoftmax *pSm1=(TemporalSoftmax *)lb.layerMap["sm1"];
 
         for (floatN temp : {0.8, 1.0, 1.2, 1.4, 1.7}) {
-            plstm0->genZeroStates(&statesg, 1);
-            pSm1->setTemperature(temp);
+            pSm1->setTemperature(temp); // XXX we should reset LSTM states here.
             cerr << "---- Temperature: " << temp << " ------------------" << endl;
             sout=wstring{};
             for (g=0; g<300; g++) {
