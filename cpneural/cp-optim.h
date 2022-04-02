@@ -6,7 +6,6 @@
  *
  */
 class SDG : public Optimizer {
-    floatN lr;
 public:
     SDG(const json& jx) {
         /** Most simple optimizer: stochastic gradient descent.
@@ -34,7 +33,6 @@ public:
  * Algorithm based on CS231 course notes.
  */
 class SDGmomentum : public Optimizer {
-    floatN lr;
     floatN mm;
 public:
     SDGmomentum(const json& jx) {
@@ -78,7 +76,6 @@ public:
  *  Algorithm based on CS231 course notes. 
  */
 class RMSprop : public Optimizer {
-    floatN lr; /** learning rate */
     floatN dc; /** decay rate */
     floatN ep; /** epsilon */
 public:
@@ -133,7 +130,6 @@ class Adam : public Optimizer {
     floatN b2; /** beta2: decay rate for second moment */
     floatN ep; /** epsilon */
 public:
-    floatN lr; /** learning rate */
     Adam(const json& jx) {
         /** Adam optimizer.
          *

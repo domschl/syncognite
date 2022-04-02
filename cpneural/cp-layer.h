@@ -84,12 +84,17 @@ public:
 class Optimizer {
 public:
     json j;
+    floatN lr;
     virtual ~Optimizer() {}; // Otherwise destructor of derived classes is never called!
     virtual void updateOptimizerParameters(const json &opt_params) {
         for (auto& el : opt_params.items()) {
             j[el.key()] = el.value();
         }
-        //j = opt_params;
+        lr = j["learning_rate"];
+    };
+    virtual void updateLearningRate(floatN lr) {
+        this->lr = lr;
+        j["learning_rate"] = lr;
     };
     virtual MatrixN update(MatrixN& x, MatrixN& dx, string var, t_cppl *pCache) {return x;};
 };

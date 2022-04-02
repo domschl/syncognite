@@ -90,10 +90,10 @@ class TemporalCrossEntropyLoss : public Loss {
           */
         j = jx;
         vector<int> inputShape = j.value("inputShape", vector<int>{});
-        int inputShapeFlat = 1;
-        for (int j : inputShape) {
-            inputShapeFlat *= j;
-        }
+        //int inputShapeFlat = 1;
+        //for (int j : inputShape) {
+        //    inputShapeFlat *= j;
+        //}
         D = inputShape[0];
         T = inputShape[1];
     }
@@ -114,17 +114,30 @@ class TemporalCrossEntropyLoss : public Loss {
             mask = *((*pParams)["mask"]);
         }
 
-        // cerr << "yhat: " << shape(yhat) << " N: " << N << " T: " << T << endl;
-        // cerr << "y: " << shape(y) << " max: " << y.maxCoeff() << " min: " << y.minCoeff() << endl;
+        // Alternative: (ab)use pParams to cache permuted yhat.
+        int n,t,d;
+        //int N = (int)yhat.rows();
+        // x: [N, (T * D)] -> [(N * T), D]
+        MatrixN probs = MatrixN(N * T, D);
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
+                    probs(n * T + t, d) = yhat(n, t * D + d);
+                }
+            }
+        }
         floatN curLoss = 0.0;
         for (int n = 0; n < N; n++) {
             for (int t = 0; t < T; t++) {
-                floatN pr_i = yhat(n * T + t, (int)y(n, t));
+                floatN pr_i = /*yhat*/ probs(n * T + t, (int)y(n, t));
                 // floatN pr_i = yhat(n, (int)y(n, 0));
-                if (pr_i <= 0.0) {
+                if (mask(n,t)>0.0 && pr_i <= 0.0) {
                     cerr << "Invalid zero log-probability at n=" << n
                          << " t=" << t << " pri=" << pr_i << endl;
                     curLoss += 10000.0;
+
+                    exit(-2);
+
                 } else {
                     // cerr << "[" << pr_i << "," << mask(n,t) << "]";
                     curLoss -= log(pr_i) * mask(n, t);

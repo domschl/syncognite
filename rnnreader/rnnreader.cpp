@@ -164,8 +164,8 @@ int main(int argc, char *argv[]) {
     LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     int VS=txt.vocsize();
     int H=128; // 400;
-    int BS=256; // 96;
-    float clip=5.0;
+    int BS=128; // 96;
+    //float clip=5.0;
 
     //int D=64;
     // CpParams cp0;
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
     j1["H"]=H;
     j1["forgetgateinitones"]=true;
     //j1["forgetbias"]=0.10;
-    j1["clip"]=clip;
+    //j1["clip"]=clip;
     int layer_depth1=2; // 6;
     j1["H"]=H;
     for (auto l=0; l<layer_depth1; l++) {
@@ -209,6 +209,7 @@ int main(int argc, char *argv[]) {
 
     json j11;
     j11["inputShape"]=vector<int>{VS,T};
+    cerr << "Adding softmax layer, inputShape: " << j11["inputShape"] << " VS: " << VS << " T: " << T << endl;
     lb.addLayer("TemporalSoftmax","sm1",j11,{"af1"});
 
     if (!lb.checkTopology(true)) {
@@ -225,10 +226,10 @@ int main(int argc, char *argv[]) {
     // preseverstates no longer necessary for training!
     json jo(R"({"verbose":true,"shuffle":false,"preservestates":false,"notests":false,"nofragmentbatches":true})"_json);
     jo["lossfactor"]=1.0/(floatN)T;  // Allows to normalize the loss with T.
-    json j_opt(R"({"name": "Adam", "beta1": 0.9, "beta2": 0.999, "epsilon": 1.0e-8, "learning_rate":8e-2})"_json);
-    j_opt["inputShape"]=vector<int>{H,T};
+    json j_opt(R"({})"_json);
+    //j_opt["inputShape"]=vector<int>{H,T};
     json j_loss(R"({"name":"temporalsoftmax"})"_json);
-    j_loss["inputShape"]=vector<int>{H,T};
+    j_loss["inputShape"]=vector<int>{VS,T};
     floatN dep=5.0; // 70.0;
     floatN sep=0.0;
     jo["epochs"]=(floatN)dep;
@@ -238,7 +239,7 @@ int main(int argc, char *argv[]) {
     // jo["regularization"]=1.0e-5;
     // jo["regularization_decay"]=0.95;
 
-    Optimizer *pOpt=optimizerFactory("Adam",j_opt);
+    Optimizer *pOpt=optimizerFactory("RMSprop",j_opt);
     t_cppl OptimizerState{};
     Loss *pLoss=lossFactory("TemporalCrossEntropy",j_loss);
 
@@ -270,13 +271,15 @@ int main(int argc, char *argv[]) {
         for (g=0; g<300; g++) {
             t_cppl cache{};
 
-            /* MatrixN probs_xx=*/ lb.forward(xg,&cache, &statesg);
+            MatrixN probst=lb.forward(xg,&cache, &statesg);
+            /* Wrong idea:
             // Forward generates the 'wrong' permutation of output. QUick-hack is abusing the 'cache' to get the permutation.
             if (cache.find("sm1-probst")==cache.end()) {
                 cerr << "probst didn't make it, FATAL" << endl;
                 exit(1);
             }
             MatrixN probst=*(cache["sm1-probst"]); // XXX check if temporal softmax uses redundant morpher!
+            */
             MatrixN probsd=MatrixN(T,VS);
             for (t=0; t<T; t++) {
                 for (v=0; v<VS; v++) {

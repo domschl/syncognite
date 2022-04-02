@@ -35,6 +35,30 @@ class TemporalSoftmax : public Layer {
     ~TemporalSoftmax() {
         cppl_delete(&params);
     }
+
+    // Not useful?
+    MatrixN _convert_N_TD_2_NT_D(const MatrixN &x) {
+        int n,t,d;
+        if (x.cols() != D * T) {
+            cerr << layerName << ": "
+                 << "Forward: dimension mismatch TemporalSoftmax in x(cols) in N_TD to NT_D:"
+                 << x.cols() << " D*T:" << D * T << endl;
+            MatrixN probs(0, 0);
+            return probs;
+        }
+        int N = (int)x.rows();
+        // x: [N, (T * D)] -> [(N * T), D]
+        MatrixN xt = MatrixN(N * T, D);
+        for (n = 0; n < N; n++) {
+            for (t = 0; t < T; t++) {
+                for (d = 0; d < D; d++) {
+                    xt(n * T + t, d) = x(n, t * D + d);
+                }
+            }
+        }
+        return xt;
+    }
+
     /*
     A temporal version of softmax loss for use in RNNs. We assume that we are
     making predictions over a vocabulary of size V for each timestep of a
@@ -154,8 +178,7 @@ class TemporalSoftmax : public Layer {
         if (pcache != nullptr)
             cppl_set(pcache, "probs", new MatrixN(probs));
 
-        // XXX this morph is no longer needed? Genertor uses is, but that needs to be checked:
-        // probst: [(N * T), D] -> [N, (T * D)]
+        // probst: [(N * T), D] -> [N, (T * D)]  (this *is* needed)
         MatrixN probst = MatrixN(N, T * D);
         for (n = 0; n < N; n++) {
             for (t = 0; t < T; t++) {
@@ -164,11 +187,13 @@ class TemporalSoftmax : public Layer {
                 }
             }
         }
+        /*
         if (pcache != nullptr)
             cppl_set(pcache, "probst", new MatrixN(probst));
         else
             cerr << "TSM-fw: pcache is nullptr -> fatal!" << endl;
-        return probs; // probst;   // this is NT,D vs N,TD
+        */
+        return probst;   // N,TD
     }
     /*
     N, T, V = x.shape

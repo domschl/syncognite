@@ -166,7 +166,8 @@ class LayerBlockOldStyle : public Layer {
         jl["initfactor"] = ifc;
 
         layerMap[name] = CREATE_LAYER(layerclass, jl)  // Macro!
-            Layer *pLayer = layerMap[name];
+
+        Layer *pLayer = layerMap[name];
         if (pLayer->layerInit == false) {
             cerr << "Attempt to add layer " << name
                  << " failed: Bad initialization." << endl;
