@@ -157,7 +157,7 @@ int main(int argc, char *argv[]) {
     // LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthonormal"})"_json);
     LayerBlockOldStyle lb(R"({"name":"rnnreader","init":"orthogonal"})"_json);
     int vocabularySize=txt.vocsize();
-    int H=128; // 400;
+    int H=256; // 400;
     int batchSize=64;
     float clip=5.0;
 
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
     j1["forgetgateinitones"]=true;
     //j1["forgetbias"]=0.85;
     //j1["clip"]=clip;
-    int layerDepth=2; // 6;
+    int layerDepth=4; // 6;
     j1["H"]=H;
     for (auto l=0; l<layerDepth; l++) {
         if (l>0) j1["inputShape"]=vector<int>{H,timeSteps};
