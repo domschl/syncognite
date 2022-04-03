@@ -8,7 +8,7 @@ Check the [main page](../../..) for build requirements.
 
 After configuration of CMake, `rnnreader` can be built directly by:
 
-Note: M1 users should use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`. This uses the M1 hardware accelerators for matrix multiplication and leads to 3x-6x speedup. With M1 processors, even with 16GB, the memory limit above which macOS will swap seems to be around 4-5GB (2021-07-19), if a model uses more memory, speed degradation due to swapping is caused by macOS.
+Note: M1 users should use `ccmake` to configure `USE_SYSTEM_BLAS` to `ON`. This uses the M1 hardware accelerators for matrix multiplication and leads to 3x-6x speedup.
 
 ```bash
 make rnnreader
