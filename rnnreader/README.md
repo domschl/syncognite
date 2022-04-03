@@ -73,9 +73,15 @@ rnnreader/rnnreader ../datasets/women_writers.txt
 ```
 ![lstm training](https://github.com/domschl/syncognite/blob/main/doc/images/rnnreader-graph.png)
 
+_6-layer LSTM with 2x 384 units trained on Complete Shakespeare_
+
+![lstm training](https://github.com/domschl/syncognite/blob/main/doc/images/rnnreader-graph-2.png)
+
+_4-layer LSTM with 2x 256 units trained on women_writers
+
 ## Output
 
-### LSTM network
+### LSTM network, Shakespeare Complete Works
 
 Training of a 6-layer LSTM network with 2x384 hidden units. The generator uses different 'temperatures' during generation:
 
@@ -249,6 +255,83 @@ Stoppes the poting.
 
 ANGELO:
 Now, when She be remember you to send in wont.
+```
+
+### Output, women_writers
+
+```markdown
+Training net: data-size: 90000, chunks: 1407, batch_size: 64, threads: 8 (bz*ch): 90048
+Ep: 166, Time: 223s, (7s test) loss:1.0310 err(val):0.3929 acc(val):0.6071
+Ep: 167, Time: 226s, (7s test) loss:1.0282 err(val):0.3945 acc(val):0.6055
+Ep: 168, Time: 227s, (7s test) loss:1.0265 err(val):0.3935 acc(val):0.6065
+Ep: 169, Time: 226s, (7s test) loss:1.0246 err(val):0.3942 acc(val):0.6058
+Ep: 170, Time: 226s, (7s test) loss:1.0233 err(val):0.3938 acc(val):0.6062
+---- Temperature: 0.8000 ------------------
+iam.”
+
+On, ‘_Smiless, who owerwregd her; only that she is got but the regret support or quittyed women, 
+on his way and then supplantation before one's getting Eleanor's spirits
+Hall, veise engaged; Katharine neverther intelless for one accus to make her quite so
+earnestness of who so asknesses
+---- Temperature: 1.0000 ------------------
+failed for several young friend, and then made her stupidity as they were but spoken of luss to the competicurras between 
+them could myself in faults in Margaret’s requestic stabbelists. But this was one voices, connected with sake and freedy 
+one of these owner, and fond of Mr. Rushworth and Susan,
+---- Temperature: 1.2000 ------------------
+ she would not make up her mind to believe life or the mail.
+
+Rachel devoors reported a sunstitute and adviser, he did not think how I’ve had it to her more good thing 
+of the old Shartomber-would be kind. Why I wanted me, borked with what might be supported.
+
+They were as varied by the guardin
+---- Temperature: 1.4000 ------------------
+g fitter to speak from the fortnight the door of the house and value by themselves of a quarter of an hour 
+than before the book in a pleasing compliment to Mansfield, with no way that she was evidently angry, 
+and she still sunk. She had an invitation of her chance which she had never been welcome, a
+---- Temperature: 1.7000 ------------------
+nd in her sister’s begs ten minutes, and as they were as she disposed to
+bring an anxiety of the room, and a great deal of one of her son and anxious with an anger, the lady 
+superintended her to see her to make her spirits, had been at all to animald, he would not deserve him of a 
+prints agitation w
+
+Training net: data-size: 90000, chunks: 1407, batch_size: 64, threads: 8 (bz*ch): 90048
+Ep: 171, Time: 223s, (7s test) loss:1.0225 err(val):0.3929 acc(val):0.6071
+Ep: 172, Time: 225s, (7s test) loss:1.0223 err(val):0.3943 acc(val):0.6057
+Ep: 173, Time: 226s, (7s test) loss:1.0222 err(val):0.3949 acc(val):0.6051
+Ep: 174, Time: 226s, (7s test) loss:1.0226 err(val):0.3950 acc(val):0.6050
+Ep: 175, Time: 227s, (7s test) loss:1.0252 err(val):0.3956 acc(val):0.6044
+---- Temperature: 0.8000 ------------------
+er of having recombing well satisfied, for on separating spirits easily; he percepting it; 
+and trught completing adopped over Emma's art slowly; amongst attending their work to him now; 
+at that subject, the sweetness of his; and whether the ancient walk was evidently
+before bread, softed back once;
+---- Temperature: 1.0000 ------------------
+and they could speak with the flowing mania with the corner which he had thus remained that Ralph and Emma, 
+on a charm, which, her great houses feared she went on accord to be on the fingers’ morpoper; 
+it would be so, but her staying was comfortably refused to be secured, gazing a little purth again
+---- Temperature: 1.2000 ------------------
+. He had a first company. Everybody can so please.  No long sentencting a cross creature she is excellent. 
+We were excellent in the Temple away, but you looked ill.
+
+She should be carried to Catherine began so near them soon that we see the difference, 
+and does not, but she is losing me!"
+
+"Th
+---- Temperature: 1.4000 ------------------
+en you are engaged, in the argument of dancing when the worst of the fire down they may come 
+in them where nothing to tell you that she would not expect a moment to comply a sort of warmth 
+than before, and could tell him the whole of his mother, whom they should have life was still a table. 
+Her fris
+---- Temperature: 1.7000 ------------------
+h sometimes thought her felicity in the world when the streets of the words which Mrs. Norris did not 
+perfectly do no spride-son and three years ago, and what was in front day.
+
+But the spots of the street as a really way was gone, and which might say, and she was gone, 
+when the extent to the whole
+
+Training net: data-size: 90000, chunks: 1407, batch_size: 64, threads: 8 (bz*ch): 90048
+Ep: 176, Time: 223s, (7s test) loss:1.0276 err(val):0.3958 acc(val):0.6042
+Ep: 177, Time: 226s, (7s test) loss:1.0323 err(val):0.3964 acc(val):0.6036
 ```
 
 ## References
