@@ -220,14 +220,14 @@ See [jupyter notebook](https://github.com/domschl/syncognite/blob/master/doc/res
 <!-- the folloing uses the hack from https://gist.github.com/a-rodin/fef3f543412d6e1ec5b6cf55bf197d7b to display latex. Seriously. -->
 <!-- Good code generator latex -> github: https://jsfiddle.net/8ndx694g/ -->
 
-(1) <img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{1-e^{-x}}">
+(1) $\quad rsi(x)=\frac{x}{1-e^{-x}}$
 
-<img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> can be rewritten as:
+$rsi(x)$ can be rewritten as:
 
-(2) <img src="https://render.githubusercontent.com/render/math?math=rsi(x)=\frac{x}{e^{x}-1}%2Bx">
+(2) $\quad rsi(x)=\frac{x}{e^{x}-1}+x$
 
 thus can be interpreted as a residual combination of linearity and non-linearity via addition.
 
-Since <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> shows a phase-transition instability at <img src="https://render.githubusercontent.com/render/math?math=x=0">, a taylor <img src="https://render.githubusercontent.com/render/math?math=O(4)"> approximation is used for <img src="https://render.githubusercontent.com/render/math?math=rsi(x)"> and <img src="https://render.githubusercontent.com/render/math?math=%5Cnabla rsi(x)"> for <img src="https://render.githubusercontent.com/render/math?math=-h%20%3C%200%20%3C%20h">.
+Since $rsi(x)$ shows a phase-transition instability at $x=0$, a taylor $O(4)$ approximation is used for $rsi(x)$ and $\nabla rsi(x)$ for $-h\lt 0\lt h$.
 
-Both <img src="https://render.githubusercontent.com/render/math?math=e%5E%7Bx%7D"> quotients (1) and (2) have as limit relu(x) or, in case of (2): -relu(x), if <img src="https://render.githubusercontent.com/render/math?math=e%5E%7Bx%7D"> is replaced by <img src="https://render.githubusercontent.com/render/math?math=e%5E%7B%5Cfrac%7Bx%7D%7Ba%7D%7D"> for small constants a.
+Both $e^x$ quotients (1) and (2) have as limit $ReLU(x)$ or, in case of (2): $-ReLU(x)$, if $e^x$ is replaced by $e^{\frac{x}{a}}$  for small constants $a$.
