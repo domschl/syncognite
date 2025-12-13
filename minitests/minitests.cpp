@@ -1,6 +1,6 @@
 #include <cp-neural.h>
 
-// Manual build:
+// Manual build: 
 // g++ -g -ggdb -I ../cpneural -I /usr/local/include/eigen3 minitest.cpp -L ../Build/cpneural/ -lcpneural -lpthread -o test
 
 using std::cerr; using std::endl;
